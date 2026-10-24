@@ -6,6 +6,7 @@
     "\"garbled\": true on an editor step: the line reaches the board damaged (the board runner sends a line that isn't base64).",
     "\"lost\": true on a board step: the board sends it but the editor never receives it (the editor runner doesn't deliver it).",
     "\"illegal\": true on an editor step: the board must announce an illegal transition (SPEC §7.6) for it; every other step must announce none. On a board step: the editor must.",
+    "\"sides\": [\"editor\"] marks an exchange only the editor runs: its board lines are a misbehaving board's, which the real listener would never send.",
     "{\"editorRaw\": hex}: a frame the board runner sends as-is (board-only exchanges).",
     "{\"editorRaw\": hex} with a frame cut short stands for a line that lost bytes but is still valid base64.",
     "Board messages are compared on every key except free-memory figures and the human-readable error/message text.",
@@ -196,6 +197,23 @@
         {"editor": {"type": "DEPLOY_ACK", "freeFlashBytes": 1, "freeRamBytes": 1}, "illegal": true},
         {"editor": {"type": "FLOW_PUT", "offset": 0, "total": 4, "data": {"$bytes": "00010203"}}},
         {"board": {"type": "FLOW_ACK", "offset": 0, "ok": true}}
+      ]
+    },
+    {
+      "name": "editor-reports-a-stray-answer",
+      "spec": "§7.6; editor.transfer",
+      "sides": ["editor"],
+      "editor": {"deploy": {"bytes": {"$bytes": "0001020304050607"}, "pieceBytes": 4}},
+      "outcome": {"kind": "refused", "code": "MissingDependency"},
+      "steps": [
+        {"editor": {"type": "FLOW_PUT", "offset": 0, "total": 8, "data": {"$bytes": "00010203"}}},
+        {"board": {"type": "FLOW_ACK", "offset": 0, "ok": true}},
+        {"board": {"type": "DEPLOY_ACK", "freeFlashBytes": 1, "freeRamBytes": 1}, "illegal": true},
+        {"editor": {"type": "FLOW_PUT", "offset": 4, "total": 8, "data": {"$bytes": "04050607"}}},
+        {"board": {"type": "FLOW_ACK", "offset": 12, "ok": true}, "illegal": true},
+        {"board": {"type": "FLOW_ACK", "offset": 4, "ok": true}},
+        {"editor": {"type": "FLOW_COMMIT", "total": 8, "flowName": "x", "deployId": "d1", "dependencies": {"ts_not_installed": "h"}}},
+        {"board": {"type": "DEPLOY_ERROR", "code": "MissingDependency", "message": ""}}
       ]
     }
   ]

@@ -1,51 +1,34 @@
 // SPDX-License-Identifier: Apache-2.0
 // editor/test/protocol-transfer.test.ts
 //
-// protocol/transfer.ts against a scripted fake board: the editor's half of SPEC §7 (resends, the commit's wait,
-// restarts, failures). The shared exchange vectors (protocol-exchanges.test.ts) check the same conversations
-// against the script both sides run; these cover the editor-only cases (a disconnect, the restart rule).
+// protocol/transfer.ts (the `editor.transfer` machine from interfaces/protocol/states.json) against a scripted fake
+// board: resends, the commit's wait, restarts, failures, a lost connection, and illegal moves -- which must be
+// reported, exactly once, and change nothing. protocol-exchanges.test.ts runs the shared conversation scripts.
 
 import { describe, expect, it } from "vitest";
-import type { Message } from "../src/protocol/messages.js";
-import { deployFlow, flowPieces, installLibrary, sendPieces, type TransferEvent, type TransferLink, type TransferTiming } from "../src/protocol/transfer.js";
+import { Machine } from "../src/protocol/machine.js";
+import type { DepPutMessage, Message } from "../src/protocol/messages.js";
+import { flowPieces, TransferSession, type TransferEvent, type TransferTiming } from "../src/protocol/transfer.js";
 
 const FAST: TransferTiming = { pieceTimeoutMs: 30, pieceRetries: 2, commitTimeoutMs: 60 };
 
 type Board = (sent: Message, reply: (m: Message) => void) => void;
 
-/** A link to a fake board: `board` sees each sent message and may reply. Replies resolve every matching wait,
- * like app/main.ts's onMessage does. */
-function fakeLink(board: Board): { link: TransferLink; sent: Message[]; reply: (m: Message) => void } {
-  type Waiter = { match: (m: Message) => boolean; resolve: (m: Message) => void; timer: ReturnType<typeof setTimeout> };
-  let waiters: Waiter[] = [];
+/** A session talking to a fake board: `board` sees each sent line and may reply. */
+function harness(board: Board, options: { isRestartHello?: () => boolean; send?: () => Promise<void> } = {}) {
   const sent: Message[] = [];
-  const reply = (m: Message): void => {
-    waiters = waiters.filter((w) => {
-      if (!w.match(m)) return true;
-      clearTimeout(w.timer);
-      w.resolve(m);
-      return false;
-    });
-  };
-  const link: TransferLink = {
-    send: async (m) => {
-      sent.push(m);
-      setTimeout(() => board(m, reply), 0);
-    },
-    waitFor: (match, timeoutMs) =>
-      new Promise((resolve, reject) => {
-        const w: Waiter = {
-          match,
-          resolve,
-          timer: setTimeout(() => {
-            waiters = waiters.filter((x) => x !== w);
-            reject(new Error("timeout waiting for device response"));
-          }, timeoutMs),
-        };
-        waiters.push(w);
+  const events: TransferEvent[] = [];
+  const session: TransferSession = new TransferSession(
+    {
+      send: options.send ?? (async (m) => {
+        sent.push(m);
+        setTimeout(() => board(m, (r) => session.receive(r)), 0);
       }),
-  };
-  return { link, sent, reply };
+    },
+    { timing: FAST, isRestartHello: options.isRestartHello, onEvent: (e) => events.push(e) },
+  );
+  const illegal = () => events.filter((e) => e.kind === "illegal");
+  return { session, sent, events, illegal };
 }
 
 const flowAck = (offset: number, ok = true, code: string | null = null, error: string | null = null): Message => ({
@@ -60,8 +43,8 @@ const hello = (deployId: string | null): Message => ({
 });
 const COMMIT = { flowName: "f", deployId: "d1", wifiProvision: null, dependencies: null, staticData: null };
 const BYTES = new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+const PIECE = 4;
 
-/** A well-behaved board: stores every piece, answers the commit. */
 const goodBoard: Board = (m, reply) => {
   if (m.type === "FLOW_PUT") reply(flowAck(m.offset));
   if (m.type === "FLOW_COMMIT") reply(deployAck);
@@ -69,7 +52,7 @@ const goodBoard: Board = (m, reply) => {
   if (m.type === "DEP_COMMIT") reply({ type: "DEP_RESULT", name: m.name, ok: true, code: null, error: null, freeFlashBytes: 5 });
 };
 
-const types = (sent: Message[]) => sent.map((m) => (m.type === "FLOW_PUT" ? `FLOW_PUT@${m.offset}` : m.type));
+const lines = (sent: Message[]) => sent.map((m) => (m.type === "FLOW_PUT" ? `FLOW_PUT@${m.offset}` : m.type));
 
 describe("flowPieces", () => {
   it("splits at pieceBytes and keeps an empty flow as one empty piece", () => {
@@ -78,147 +61,192 @@ describe("flowPieces", () => {
   });
 });
 
-describe("deployFlow", () => {
+describe("TransferSession: deploy", () => {
   it("sends each piece after the last is answered, then the commit", async () => {
-    const { link, sent } = fakeLink(goodBoard);
-    const out = await deployFlow(link, BYTES, COMMIT, { pieceBytes: 4, timing: FAST });
+    const h = harness(goodBoard);
+    const out = await h.session.deploy(BYTES, COMMIT, PIECE);
     expect(out.kind).toBe("deployed");
-    expect(types(sent)).toEqual(["FLOW_PUT@0", "FLOW_PUT@4", "FLOW_PUT@8", "FLOW_COMMIT"]);
-    expect(sent[3]).toMatchObject({ type: "FLOW_COMMIT", total: 10, flowName: "f", deployId: "d1" });
+    expect(lines(h.sent)).toEqual(["FLOW_PUT@0", "FLOW_PUT@4", "FLOW_PUT@8", "FLOW_COMMIT"]);
+    expect(h.sent[3]).toMatchObject({ type: "FLOW_COMMIT", total: 10, flowName: "f", deployId: "d1" });
+    expect(h.illegal()).toEqual([]);
+    expect(h.session.state).toBe("idle");
   });
 
-  it("resends a piece whose answer was lost, then carries on (SPEC §7.2: any piece may be resent)", async () => {
-    let lost = true;
-    const events: TransferEvent[] = [];
-    const { link, sent } = fakeLink((m, reply) => {
-      if (m.type === "FLOW_PUT" && m.offset === 4 && lost) {
-        lost = false; // stored, but the ack never arrives
+  it("resends a piece whose answer was lost; the late answer is stale, not illegal", async () => {
+    let slow = true;
+    const h = harness((m, reply) => {
+      if (m.type === "FLOW_PUT" && m.offset === 4 && slow) {
+        slow = false;
+        setTimeout(() => reply(flowAck(4)), 45); // arrives after the resend went out
         return;
       }
       goodBoard(m, reply);
     });
-    const out = await deployFlow(link, BYTES, COMMIT, { pieceBytes: 4, timing: FAST, onEvent: (e) => events.push(e) });
+    const out = await h.session.deploy(BYTES, COMMIT, PIECE);
     expect(out.kind).toBe("deployed");
-    expect(types(sent)).toEqual(["FLOW_PUT@0", "FLOW_PUT@4", "FLOW_PUT@4", "FLOW_PUT@8", "FLOW_COMMIT"]);
-    expect(events).toMatchObject([{ kind: "resend", reason: "timeout", attempt: 1 }]);
+    expect(lines(h.sent).slice(0, 3)).toEqual(["FLOW_PUT@0", "FLOW_PUT@4", "FLOW_PUT@4"]);
+    expect(h.events.filter((e) => e.kind === "resend")).toMatchObject([{ reason: "timeout", attempt: 1 }]);
+    await new Promise((r) => setTimeout(r, 60));
+    expect(h.illegal()).toEqual([]);
   });
 
-  it("resends straight away on a Garbled answer", async () => {
-    let garble = true;
-    const events: TransferEvent[] = [];
-    const { link, sent } = fakeLink((m, reply) => {
-      if (m.type === "FLOW_PUT" && m.offset === 0 && garble) {
-        garble = false;
+  it("resends straight away on a Garbled answer, for a piece or for the commit", async () => {
+    const garble = new Set(["FLOW_PUT@0", "FLOW_COMMIT"]);
+    const h = harness((m, reply) => {
+      const key = lines([m])[0]!;
+      if (garble.delete(key)) {
         reply(flowAck(0, false, "Garbled", "bad base64"));
         return;
       }
       goodBoard(m, reply);
     });
-    const out = await deployFlow(link, BYTES, COMMIT, { pieceBytes: 4, timing: { ...FAST, pieceTimeoutMs: 5000 }, onEvent: (e) => events.push(e) });
+    const out = await h.session.deploy(BYTES, COMMIT, PIECE);
     expect(out.kind).toBe("deployed");
-    expect(types(sent).slice(0, 2)).toEqual(["FLOW_PUT@0", "FLOW_PUT@0"]);
-    expect(events).toMatchObject([{ reason: "garbled", detail: "bad base64" }]);
+    expect(lines(h.sent)).toEqual(["FLOW_PUT@0", "FLOW_PUT@0", "FLOW_PUT@4", "FLOW_PUT@8", "FLOW_COMMIT", "FLOW_COMMIT"]);
   });
 
   it("gives up after pieceRetries resends with no answer, and sends no commit", async () => {
-    const { link, sent } = fakeLink(() => {});
-    const out = await deployFlow(link, BYTES, COMMIT, { pieceBytes: 4, timing: FAST });
+    const h = harness(() => {});
+    const out = await h.session.deploy(BYTES, COMMIT, PIECE);
     expect(out).toMatchObject({ kind: "pieces-failed", failure: { code: "Timeout" } });
-    expect(types(sent)).toEqual(["FLOW_PUT@0", "FLOW_PUT@0", "FLOW_PUT@0"]);
+    expect(lines(h.sent)).toEqual(["FLOW_PUT@0", "FLOW_PUT@0", "FLOW_PUT@0"]);
   });
 
   it("stops at any refusal other than Garbled", async () => {
-    const { link, sent } = fakeLink((m, reply) => {
+    const h = harness((m, reply) => {
       if (m.type === "FLOW_PUT") reply(flowAck(m.offset, false, "WriteFailed", "flash error"));
     });
-    const out = await deployFlow(link, BYTES, COMMIT, { pieceBytes: 4, timing: FAST });
+    const out = await h.session.deploy(BYTES, COMMIT, PIECE);
     expect(out).toMatchObject({ kind: "pieces-failed", failure: { code: "WriteFailed", message: "flash error" } });
-    expect(sent).toHaveLength(1);
+    expect(h.sent).toHaveLength(1);
   });
 
-  it("does not take a DEPLOY_ERROR sent during the pieces as the commit's answer (audit finding 4)", async () => {
+  it("takes a DEPLOY_ERROR MemoryError after a Garbled answer as part of that answer, not the result", async () => {
     let first = true;
-    const { link } = fakeLink((m, reply) => {
+    const h = harness((m, reply) => {
       if (m.type === "FLOW_PUT" && m.offset === 0 && first) {
         first = false;
         reply(flowAck(0, false, "Garbled", "MemoryError"));
-        reply({ type: "DEPLOY_ERROR", code: "MemoryError", message: "no room to decode the message" });
+        reply({ type: "DEPLOY_ERROR", code: "MemoryError", message: "no room to receive the message" });
         return;
       }
       goodBoard(m, reply);
     });
-    const out = await deployFlow(link, BYTES, COMMIT, { pieceBytes: 4, timing: FAST });
-    expect(out.kind).toBe("deployed");
+    expect((await h.session.deploy(BYTES, COMMIT, PIECE)).kind).toBe("deployed");
+    expect(h.illegal()).toEqual([]);
   });
 
-  it("reports the commit's refusal", async () => {
-    const { link } = fakeLink((m, reply) => {
+  it("reports the commit's refusal, and no answer to it", async () => {
+    const a = harness((m, reply) => {
       if (m.type === "FLOW_COMMIT") reply({ type: "DEPLOY_ERROR", code: "MissingDependency", message: "mqtt_as is not on the board" });
       else goodBoard(m, reply);
     });
-    expect(await deployFlow(link, BYTES, COMMIT, { timing: FAST })).toEqual({
-      kind: "refused", code: "MissingDependency", message: "mqtt_as is not on the board",
-    });
-  });
-
-  it("reports no answer to the commit", async () => {
-    const { link } = fakeLink((m, reply) => {
+    expect(await a.session.deploy(BYTES, COMMIT)).toEqual({ kind: "refused", code: "MissingDependency", message: "mqtt_as is not on the board" });
+    const b = harness((m, reply) => {
       if (m.type !== "FLOW_COMMIT") goodBoard(m, reply);
     });
-    expect(await deployFlow(link, BYTES, COMMIT, { timing: FAST })).toEqual({ kind: "no-answer", timeoutMs: FAST.commitTimeoutMs });
+    expect(await b.session.deploy(BYTES, COMMIT)).toEqual({ kind: "no-answer", timeoutMs: FAST.commitTimeoutMs });
   });
 
-  it("takes a HELLO in place of the commit's answer as a restart", async () => {
-    const { link } = fakeLink((m, reply) => {
+  it("takes an unrequested HELLO as a restart, during the pieces or the commit", async () => {
+    const a = harness((m, reply) => {
+      if (m.type === "FLOW_PUT" && m.offset === 4) reply(hello(null));
+      else goodBoard(m, reply);
+    });
+    expect(await a.session.deploy(BYTES, COMMIT, PIECE)).toMatchObject({ kind: "restarted" });
+    const b = harness((m, reply) => {
       if (m.type === "FLOW_COMMIT") reply(hello("d1"));
       else goodBoard(m, reply);
     });
-    const out = await deployFlow(link, BYTES, COMMIT, { timing: FAST });
-    expect(out).toMatchObject({ kind: "restarted", hello: { currentFlowDeployId: "d1" } });
+    expect(await b.session.deploy(BYTES, COMMIT)).toMatchObject({ kind: "restarted", hello: { currentFlowDeployId: "d1" } });
   });
 
-  it("ends the pieces on a restart HELLO, but not on one that answers a HELLO_REQUEST", async () => {
-    const restartBoard: Board = (m, reply) => {
-      if (m.type === "FLOW_PUT" && m.offset === 4) reply(hello(null));
-      else goodBoard(m, reply);
-    };
-    const a = fakeLink(restartBoard);
-    expect(await deployFlow(a.link, BYTES, COMMIT, { pieceBytes: 4, timing: FAST })).toMatchObject({ kind: "restarted" });
-    expect(types(a.sent)).toEqual(["FLOW_PUT@0", "FLOW_PUT@4"]);
-
-    const b = fakeLink((m, reply) => {
-      restartBoard(m, reply);
-      if (m.type === "FLOW_PUT" && m.offset === 4) reply(flowAck(4));
-    });
-    const out = await deployFlow(b.link, BYTES, COMMIT, { pieceBytes: 4, timing: FAST, isRestartHello: () => false });
-    expect(out.kind).toBe("deployed");
+  it("ignores a HELLO that answers a HELLO_REQUEST", async () => {
+    const h = harness(
+      (m, reply) => {
+        if (m.type === "FLOW_PUT" && m.offset === 4) reply(hello(null));
+        goodBoard(m, reply);
+      },
+      { isRestartHello: () => false },
+    );
+    expect((await h.session.deploy(BYTES, COMMIT, PIECE)).kind).toBe("deployed");
+    expect(h.illegal()).toEqual([]);
   });
 
-  it("rejects when the link fails (a disconnect), rather than resending", async () => {
-    const link: TransferLink = {
-      send: async () => {},
-      waitFor: () => Promise.reject(new Error("disconnected")),
-    };
-    await expect(deployFlow(link, BYTES, COMMIT, { timing: FAST })).rejects.toThrow("disconnected");
+  it("rejects when the connection is lost, and is idle again afterwards", async () => {
+    const h = harness(() => {});
+    const p = h.session.deploy(BYTES, COMMIT, PIECE);
+    h.session.connectionLost("the board disconnected");
+    await expect(p).rejects.toThrow("the board disconnected");
+    expect(h.session.state).toBe("idle");
+  });
+
+  it("refuses a second transfer while one is under way", async () => {
+    const h = harness(() => {});
+    void h.session.deploy(BYTES, COMMIT, PIECE).catch(() => {});
+    await expect(h.session.deploy(BYTES, COMMIT, PIECE)).rejects.toThrow("already under way");
+    h.session.connectionLost("done");
   });
 });
 
-describe("installLibrary", () => {
-  const pieces = [
-    { type: "DEP_PUT" as const, name: "lib", file: "lib.mpy", offset: 0, total: 6, data: new Uint8Array(3) },
-    { type: "DEP_PUT" as const, name: "lib", file: "lib.mpy", offset: 3, total: 6, data: new Uint8Array(3) },
+describe("TransferSession: illegal moves are reported, once, and change nothing", () => {
+  it("an answer for a piece that was never sent", async () => {
+    const h = harness((m, reply) => {
+      if (m.type === "FLOW_PUT" && m.offset === 0) reply(flowAck(8)); // ahead of anything sent
+      goodBoard(m, reply);
+    });
+    expect((await h.session.deploy(BYTES, COMMIT, PIECE)).kind).toBe("deployed");
+    expect(h.illegal()).toHaveLength(1);
+    expect(h.illegal()[0]).toMatchObject({ move: { event: "strayAck", state: "sending" } });
+  });
+
+  it("a DEPLOY_ACK while pieces are still going", async () => {
+    const h = harness((m, reply) => {
+      if (m.type === "FLOW_PUT" && m.offset === 4) reply(deployAck);
+      goodBoard(m, reply);
+    });
+    expect((await h.session.deploy(BYTES, COMMIT, PIECE)).kind).toBe("deployed");
+    expect(h.illegal()).toMatchObject([{ move: { event: "strayResult", state: "sending" } }]);
+  });
+
+  it("an answer with nothing under way", () => {
+    const h = harness(goodBoard);
+    h.session.receive(deployAck);
+    h.session.receive({ type: "DEP_RESULT", name: "x", ok: true, code: null, error: null, freeFlashBytes: 1 });
+    expect(h.illegal().map((e) => e.kind === "illegal" && e.move.event)).toEqual(["strayResult", "strayResult"]);
+    expect(h.session.state).toBe("idle");
+  });
+
+  it("but a Garbled answer outside a transfer (to an EXEC line, say) is legal", () => {
+    const h = harness(goodBoard);
+    h.session.receive(flowAck(0, false, "Garbled", "bad base64"));
+    expect(h.illegal()).toEqual([]);
+  });
+
+  it("messages that aren't about transfers are not the machine's business", () => {
+    const h = harness(goodBoard);
+    h.session.receive({ type: "NODE_STATUS", nodeId: "n", state: "connected", text: null } as unknown as Message);
+    h.session.receive(hello(null));
+    expect(h.events).toEqual([]);
+  });
+});
+
+describe("TransferSession: install", () => {
+  const pieces: DepPutMessage[] = [
+    { type: "DEP_PUT", name: "lib", file: "lib.mpy", offset: 0, total: 6, data: new Uint8Array(3) },
+    { type: "DEP_PUT", name: "lib", file: "lib.mpy", offset: 3, total: 6, data: new Uint8Array(3) },
   ];
   const commit = { type: "DEP_COMMIT" as const, name: "lib", hash: "h", files: { "lib.mpy": 6 } };
 
   it("installs: pieces, commit, result", async () => {
-    const { link, sent } = fakeLink(goodBoard);
-    expect(await installLibrary(link, pieces, commit, { timing: FAST })).toMatchObject({ kind: "installed", result: { freeFlashBytes: 5 } });
-    expect(types(sent)).toEqual(["DEP_PUT", "DEP_PUT", "DEP_COMMIT"]);
+    const h = harness(goodBoard);
+    expect(await h.session.install(pieces, commit)).toMatchObject({ kind: "installed", result: { freeFlashBytes: 5 } });
+    expect(lines(h.sent)).toEqual(["DEP_PUT", "DEP_PUT", "DEP_COMMIT"]);
   });
 
-  it("resends a library piece the board couldn't read (the Garbled answer is about the last line sent)", async () => {
+  it("resends a library piece the board couldn't read", async () => {
     let garble = true;
-    const { link, sent } = fakeLink((m, reply) => {
+    const h = harness((m, reply) => {
       if (m.type === "DEP_PUT" && m.offset === 3 && garble) {
         garble = false;
         reply(flowAck(0, false, "Garbled", "bad base64"));
@@ -226,37 +254,34 @@ describe("installLibrary", () => {
       }
       goodBoard(m, reply);
     });
-    expect((await installLibrary(link, pieces, commit, { timing: { ...FAST, pieceTimeoutMs: 5000 } })).kind).toBe("installed");
-    expect(types(sent)).toEqual(["DEP_PUT", "DEP_PUT", "DEP_PUT", "DEP_COMMIT"]);
+    expect((await h.session.install(pieces, commit)).kind).toBe("installed");
+    expect(lines(h.sent)).toEqual(["DEP_PUT", "DEP_PUT", "DEP_PUT", "DEP_COMMIT"]);
   });
 
   it("reports a refused piece and a refused commit", async () => {
-    const a = fakeLink((m, reply) => {
+    const a = harness((m, reply) => {
       if (m.type === "DEP_PUT") reply({ type: "DEP_ACK", name: "lib", file: "lib.mpy", offset: m.offset, ok: false, code: "NoSpace", error: "flash full" });
     });
-    expect(await installLibrary(a.link, pieces, commit, { timing: FAST })).toMatchObject({ kind: "pieces-failed", failure: { code: "NoSpace" } });
-    const b = fakeLink((m, reply) => {
+    expect(await a.session.install(pieces, commit)).toMatchObject({ kind: "pieces-failed", failure: { code: "NoSpace" } });
+    const b = harness((m, reply) => {
       if (m.type === "DEP_COMMIT") reply({ type: "DEP_RESULT", name: "lib", ok: false, code: "Incomplete", error: "lib: lib.mpy arrived incomplete", freeFlashBytes: null });
       else goodBoard(m, reply);
     });
-    expect(await installLibrary(b.link, pieces, commit, { timing: FAST })).toEqual({ kind: "refused", code: "Incomplete", message: "lib: lib.mpy arrived incomplete" });
+    expect(await b.session.install(pieces, commit)).toEqual({ kind: "refused", code: "Incomplete", message: "lib: lib.mpy arrived incomplete" });
   });
 
-  it("ignores another library's answers", async () => {
-    const { link } = fakeLink((m, reply) => {
-      if (m.type === "DEP_COMMIT") {
-        reply({ type: "DEP_RESULT", name: "other", ok: false, code: "X", error: "x", freeFlashBytes: null });
-        reply({ type: "DEP_RESULT", name: "lib", ok: true, code: null, error: null, freeFlashBytes: 1 });
-      } else goodBoard(m, reply);
+  it("reports another library's result as illegal, and still takes its own", async () => {
+    const h = harness((m, reply) => {
+      if (m.type === "DEP_COMMIT") reply({ type: "DEP_RESULT", name: "other", ok: false, code: "X", error: "x", freeFlashBytes: null });
+      goodBoard(m, reply);
     });
-    expect((await installLibrary(link, pieces, commit, { timing: FAST })).kind).toBe("installed");
+    expect((await h.session.install(pieces, commit)).kind).toBe("installed");
+    expect(h.illegal()).toMatchObject([{ move: { event: "strayResult", state: "committing" } }]);
   });
 });
 
-describe("sendPieces", () => {
-  it("sends nothing for no pieces", async () => {
-    const { link, sent } = fakeLink(goodBoard);
-    expect(await sendPieces(link, [], { timing: FAST })).toBeNull();
-    expect(sent).toEqual([]);
+describe("Machine", () => {
+  it("refuses a table this side can't run", () => {
+    expect(() => new Machine("editor.transfer", {}, {}, () => {})).toThrow(/needs .*canRetry/);
   });
 });

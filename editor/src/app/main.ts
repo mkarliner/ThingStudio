@@ -151,7 +151,7 @@ import { choiceForConnectedBoard, resolveTarget, type TargetResolution } from ".
 import { renderDefinitionPage, renderUnknownBoardPage } from "../definitions/definition-page.js";
 import type { BoardSettingsResultMessage, HelloMessage, Message, NodeStatusMessage, ProtocolVersion } from "../protocol/messages.js";
 import { checkRuntimeBuild, decideDeploy } from "../protocol/version.js";
-import { deployFlow, installLibrary, DEFAULT_TIMING, type TransferEvent, type TransferFailure, type TransferLink } from "../protocol/transfer.js";
+import { DEFAULT_TIMING, TransferSession, type TransferEvent, type TransferFailure } from "../protocol/transfer.js";
 import { explainDeployImportError, networkWarningBeforeDeploy } from "./import-error-help.js";
 import { editorVersionLabel, editorVersionLine } from "./editor-version.js";
 import { DEPLOY_MEMORY_DOC, DEPLOY_MEMORY_HINT, deployMemoryAdvice, looksLikeOutOfMemory, lowFlowMemoryWarning, lowMemoryWarningBeforeDeploy } from "./memory-advice.js";
@@ -1509,6 +1509,7 @@ const transportEvents: TransportEvents = {
       logLine(formatMemoryLine(message), "");
       logWifiStatus(message);
     }
+    transferSession.receive(message);
     waiters = waiters.filter((w) => {
       if (w.match(message)) {
         clearTimeout(w.timer);
@@ -1541,6 +1542,7 @@ const transportEvents: TransportEvents = {
   onDisconnect(reason) {
     logLine(`[disconnected] ${reason ? String(reason) : "(clean)"}`, "");
     cancelAllWaits("the board disconnected");
+    transferSession.connectionLost("the board disconnected");
     lastHello = null;
     boardDependencies = null;
     lastHelloVersion = null;
@@ -2836,7 +2838,7 @@ async function installFlowDependencies(source: string): Promise<Record<string, s
     // (2026-10-07), and a piece can still arrive garbled, which the transfer resends (any piece may be resent).
     let outcome;
     try {
-      outcome = await installLibrary(transferLink, pieces, commit, transferOptions("libraries"));
+      outcome = await transferSession.install(pieces, commit);
     } catch (err) {
       logLine(`[deploy failed] board stopped answering during library ${name} (${err instanceof Error ? err.message : String(err)}), flow unchanged`, "err");
       boardDependencies = null;
@@ -2850,7 +2852,11 @@ async function installFlowDependencies(source: string): Promise<Record<string, s
             : `library ${name} not accepted: ${outcome.failure.message}`
           : outcome.kind === "refused"
             ? `library ${name} not installed: ${outcome.message}`
-            : `library ${name} not confirmed in ${outcome.timeoutMs / 1000}s`;
+            : outcome.kind === "restarted"
+              ? `the board restarted during library ${name}`
+              : outcome.kind === "no-answer"
+                ? `library ${name} not confirmed in ${outcome.timeoutMs / 1000}s`
+                : `library ${name}: unexpected answer`;
       logLine(`[deploy failed] ${why}, flow unchanged`, "err");
       const text = outcome.kind === "pieces-failed" ? outcome.failure.message : outcome.kind === "refused" ? outcome.message : null;
       if (looksLikeOutOfMemory(text)) logAdvice("[deploy failed]", memoryAdvice(), "err");
@@ -2868,25 +2874,32 @@ function memoryAdvice(): Advice {
   return { text: `board out of memory. ${DEPLOY_MEMORY_HINT}`, doc: DEPLOY_MEMORY_DOC };
 }
 
-/** How a transfer (protocol/transfer.ts) reaches the board: the current transport, and the shared waiters. */
-const transferLink: TransferLink = {
-  send: (message) => transport.send(message),
-  waitFor: (match, timeoutMs) => waitForMessage(match, timeoutMs),
-};
-
-/** Console lines for a transfer's resends, and the rule for when a HELLO means the board restarted: not while
- * a HELLO_REQUEST is unanswered, when it is probably that request's reply. */
-function transferOptions(what: "deploy" | "libraries") {
-  return {
+/** Sends flows and libraries (protocol/transfer.ts, the `editor.transfer` machine in interfaces/protocol/states.json).
+ * One per page: every message from the board goes through it (onMessage), so an answer nothing is waiting for is
+ * reported as illegal rather than dropped. A HELLO means the board restarted unless a HELLO_REQUEST is unanswered,
+ * when it is probably that request's reply. */
+const transferSession = new TransferSession(
+  { send: (message) => transport.send(message) },
+  {
     timing: DEFAULT_TIMING,
     isRestartHello: () => helloRequestsPending === 0,
     onEvent: (event: TransferEvent) => {
-      const piece = event.piece.type === "FLOW_PUT" ? `flow byte ${event.piece.offset}` : `${event.piece.file} byte ${event.piece.offset}`;
-      const why = event.reason === "garbled" ? `board couldn't read ${piece}${event.detail ? ` (${event.detail})` : ""}` : `no reply to ${piece}`;
+      if (event.kind === "illegal") {
+        const m = event.move;
+        logLine(`[protocol] illegal: ${m.event} while ${m.state} (${m.detail})`, "err");
+        return;
+      }
+      const line = event.line;
+      const what = line.type === "FLOW_PUT" || line.type === "FLOW_COMMIT" ? "deploy" : "libraries";
+      const name =
+        line.type === "FLOW_PUT" ? `flow byte ${line.offset}`
+          : line.type === "DEP_PUT" ? `${line.file} byte ${line.offset}`
+            : "the commit";
+      const why = event.reason === "garbled" ? `board couldn't read ${name}${event.detail ? ` (${event.detail})` : ""}` : `no reply to ${name}`;
       logLine(`[${what}] ${why}, resending (${event.attempt}/${DEFAULT_TIMING.pieceRetries})`, "err");
     },
-  };
-}
+  },
+);
 
 /** The board restarted while a deploy was under way; `hello` is its boot HELLO. */
 function reportRestartDuringDeploy(hello: HelloMessage, deployId: string): boolean {
@@ -3025,12 +3038,13 @@ el("btnDeploy").addEventListener("click", async () => {
     try {
       // lastWifiProvision was computed alongside this same compile, by the currentSource() call
       // refreshPreview() (above) just made -- see that field's own doc comment.
-      const outcome = await deployFlow(
-        transferLink,
-        mpyBytes,
-        { flowName, deployId, wifiProvision: lastWifiProvision, dependencies, staticData: new Uint8Array(0) },
-        transferOptions("deploy"),
-      );
+      const outcome = await transferSession.deploy(mpyBytes, {
+        flowName,
+        deployId,
+        wifiProvision: lastWifiProvision,
+        dependencies,
+        staticData: new Uint8Array(0),
+      });
       if (outcome.kind === "restarted") {
         // boardDependencies already came from this HELLO: the board may not have removed unused
         // libraries before restarting, so its own report beats what this deploy asked for.
@@ -3051,7 +3065,7 @@ el("btnDeploy").addEventListener("click", async () => {
         }
       } else if (outcome.kind === "no-answer") {
         logLine(`[deploy timeout] no DEPLOY_ACK/DEPLOY_ERROR within ${outcome.timeoutMs}ms`, "err");
-      } else {
+      } else if (outcome.kind === "deployed") {
         // The board removes libraries the new flow doesn't use once it's running.
         boardDependencies = { ...dependencies };
         logLine("[deploy OK -- flow is running on the device]", "ok");

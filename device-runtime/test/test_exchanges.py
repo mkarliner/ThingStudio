@@ -106,7 +106,7 @@ def main():
     if not T.MICROPYTHON_BIN or not T.MPY_CROSS_BIN:
         T._skip("set MICROPYTHON_BIN and MPY_CROSS_BIN (see device-runtime/test/README.md)")
     with open(VECTORS) as f:
-        exchanges = json.load(f)["exchanges"]
+        exchanges = [e for e in json.load(f)["exchanges"] if "board" in e.get("sides", ["board"])]
     assert exchanges, "no exchanges"
     failed = []
     for exchange in exchanges:
