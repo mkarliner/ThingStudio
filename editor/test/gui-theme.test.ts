@@ -17,6 +17,7 @@ import {
   type Theme,
 } from "../src/node-library/gui-theme-shared.js";
 import { buildRegistry } from "../src/node-library/registry.js";
+import { CONFIG_TYPES } from "../src/app/rete/config-types.js";
 import type { CodegenContext } from "../src/compiler/node-definition.js";
 
 describe("the default theme", () => {
@@ -66,6 +67,10 @@ describe("folding", () => {
 });
 
 describe("presets and a screen's theme", () => {
+  it("the theme config can save and load a named preset in ~/.thingstudio", () => {
+    expect(CONFIG_TYPES["thingstudio/config/gui-theme"]?.presetType).toBe("gui_theme");
+  });
+
   it("each preset has every role", () => {
     for (const [name, preset] of Object.entries(THEME_PRESETS)) {
       for (const role of THEME_ROLES) {

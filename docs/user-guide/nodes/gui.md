@@ -111,6 +111,11 @@ accent**, **ok**, **warn** and **alarm**. Start from **dark slate**, **light pap
 colour; the preset is a starting point, not a lock. **Vivid** is the card demo's scheme: a near-black background,
 violet cards and a cyan accent.
 
+Use the **preset** control in the theme's edit form to save your colours by name under
+`~/.thingstudio/presets/gui_theme/`, and apply them to another theme later
+([Presets](../working-in-the-editor.md#presets)). The three starting points are built in, so a flow that names one
+still compiles without a backend.
+
 A panel with fewer colours than that folds the roles onto the ones it has, rather than refusing the theme:
 
 - a **gs4** panel (16 colours) gets every role as its own colour;

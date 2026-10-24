@@ -243,6 +243,10 @@ export const CONFIG_TYPES: Record<string, ConfigTypeDescriptor> = {
   "thingstudio/config/gui-theme": {
     type: "thingstudio/config/gui-theme",
     label: "GUI theme",
+    // Save/load a named theme as ~/.thingstudio/presets/gui_theme/<name>.json (the same control the touch panel
+    // and display nodes have). The built-in starting points stay in code: a flow that names one must compile
+    // without a backend or a home directory (headless `thingstudio-compile`), so they are the portable floor.
+    presetType: "gui_theme",
     fields: [
       {
         name: "preset",

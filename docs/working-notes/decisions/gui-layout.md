@@ -316,3 +316,11 @@ the msg is open.
   duplicate preset table inside `display_spi`'s Python compile hook, which fell back to the default palette; the
   hook's role list, default and presets are now generated from `gui-theme-shared.ts`, so a preset cannot be added
   on one side only (`learnings/editor-build-tooling.md`).
+
+- 2026-10-24 (Mike): **theme presets a user saves belong in `~/.thingstudio`, like every other preset.** The
+  theme config now opts into the existing per-node-kind preset control (`presetType: "gui_theme"`), so its
+  colours can be saved by name under `~/.thingstudio/presets/gui_theme/` and applied to another theme, with no
+  core change. The three built-in starting points stay in code deliberately: a flow that names one has to compile
+  with the headless `thingstudio-compile` on a machine with no backend and no home directory, so those are the
+  portable floor, not the whole set. The `starting point` dropdown stays built-in-only; a user preset is applied,
+  not named in the flow, which also keeps the flow independent of local files.
