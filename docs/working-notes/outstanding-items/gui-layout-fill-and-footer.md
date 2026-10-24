@@ -1,7 +1,11 @@
 # Layout: filling the page, and page dots in a footer
 
-Status: ruled by Mike 2026-10-24 (`decisions/gui-layout.md`); not built. Both came from looking at the CYD running
-the card demo, and both are about a page looking finished rather than about missing capability.
+Status: ruled by Mike 2026-10-24 (`decisions/gui-layout.md`), **built 2026-10-24**. What shipped is smaller than the
+first shape: no footer feature at all -- a footer is a container, and page dots are an ordinary widget. See "What
+was built" at the bottom.
+
+Both came from looking at the CYD running the card demo, and both are about a page looking finished rather than
+about missing capability.
 
 ## Fill the remaining space on a page
 
@@ -16,7 +20,7 @@ container's main axis is shared among children by `grow` weight, and `justify` c
 bottom 115 rows are blank page. Nothing in the outline suggests a card could take that space, and there is no
 "fill" control -- just a numeric `grow` field next to `gap` and `padding`.
 
-Options to choose between (not decided):
+Options to choose between (option 1 was taken; see "What was built" at the bottom):
 
 1. **A `fill` affordance on the container** -- a checkbox that writes `grow: 1`, the same way `card` writes a
    boolean. Cheapest; keeps the layout engine unchanged.
@@ -60,6 +64,28 @@ all (no dots to show, so no strip -- the content should get the rows back).
 ## Not part of this
 
 Both are layout/style work in the GUI subsystem, not node-format work (`decisions/gui-layout.md`, 2026-10-15).
-Neither changes the flow file format in a way a deployed board would need: the footer is editor layout plus a
-`"footer"` entry in the page table (or dots emitted by the screen node), and `fill` is a `grow` value the current
-device already honours -- so neither needs a runtime version bump until something device-side changes.
+At the time this was scoped, the expectation was that a footer might need a `"footer"` entry in the page table.
+The build did not: `fill` is a `grow` value the current device already honours, and the footer is ordinary
+containers and widgets, so there is no flow-file format change a deployed board would notice and no runtime bump.
+
+## What was built
+
+Mike, later on 2026-10-24: **the footer is a container, and page dots are just another widget.** No reserved
+strip, no footer field, no fixed footer height, no automatic "pages > 1" trigger -- and no pixel-based warning
+about unused space (absolute allowances are what the constraint model exists to avoid). So:
+
+- **Fill:** a `fill` checkbox in the outline's container properties writes `grow: 1` (and clears it when
+  unticked); the numeric `grow` stays for weights. `editor/src/app/rete/ScreenOutline.vue`.
+- **A footer** is a non-growing row after a filling container. The engine already does this: `arrange()` gives
+  every child its natural size and shares the leftover among `grow` children, which is the shape the existing
+  hero test in `editor/test/gui-layout.test.ts` pins (title / `grow` main / non-grow footer).
+- **Composition:** a filling card stops above the row below it, so "fill" and "footer" need no special case.
+- **Demo:** `test-flows/gui-hero-cyd-theme.flow.json` now grows each page's card and holds the dots in a plain
+  trailing row. Its compiled page table puts the card at `(4, 41, 232, 263)` and the dots at `(112, 310, 16, 6)`
+  on a 240x320 screen -- the card ends at 304, the dots sit against the bottom padding.
+- **Tests:** a card/footer layout case in `gui-layout.test.ts`; the demo added to the example-flow compile pass in
+  `gui-compile.test.ts`. No flow-file, compiler or device change, so no runtime bump.
+
+The "outline should show a large unused area" idea from the options above was dropped for that reason. If unused
+space needs surfacing later, express it as a constraint in the outline, not as a pixel count.
+

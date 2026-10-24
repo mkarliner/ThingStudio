@@ -293,3 +293,13 @@ the msg is open.
   anchored, styled once, and stops competing with content for layout space. **The footer shrinks the page rather
   than overlaying it** (Mike, 2026-10-24): the content area is the page minus the footer, so a filling card stops
   above the dots and "fill" and "footer" compose without the author reasoning about it. Same detail file.
+
+- 2026-10-24 (later, Mike): **the footer is not a feature -- it is a container, and the page dots stay an
+  ordinary widget.** Reviewing the options, Mike ruled out a footer concept, a reserved strip, a fixed footer
+  height and an automatic "pages > 1" trigger: a footer is simply a non-growing row after a container that fills,
+  and page dots are whatever the author places in it (dots, text, a button). It follows that the editor must not
+  reason in absolute pixel allowances for this either: the engine's `grow` constraint is the mechanism, and a
+  "page leaves N px unused" warning was rejected as a pixel heuristic. **Built 2026-10-24:** the outline's
+  container properties gained a **fill** checkbox (writes `grow: 1`, clears it when unticked), the CYD theme demo
+  uses it on each page's card with the dots in a plain trailing row, and a layout test pins the shape. No
+  flow-file field, no compiler or device change, no runtime bump.

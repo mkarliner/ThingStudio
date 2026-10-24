@@ -350,6 +350,7 @@
               {
                 "kind": "column",
                 "card": true,
+                "grow": 1,
                 "padding": 6,
                 "gap": 4,
                 "children": [
@@ -376,16 +377,19 @@
                     "font": "font_digits48",
                     "unitsFont": "font_body24",
                     "alignSelf": "center"
-                  },
-                  {
-                    "kind": "spacer",
-                    "grow": 1
                   }
                 ]
               },
               {
-                "kind": "pagedots",
-                "alignSelf": "center"
+                "kind": "row",
+                "alignSelf": "stretch",
+                "justify": "center",
+                "children": [
+                  {
+                    "kind": "pagedots",
+                    "alignSelf": "center"
+                  }
+                ]
               }
             ]
           }
@@ -414,6 +418,7 @@
               {
                 "kind": "column",
                 "card": true,
+                "grow": 1,
                 "padding": 6,
                 "gap": 4,
                 "children": [
@@ -448,16 +453,19 @@
                     ],
                     "card": true,
                     "padding": 6
-                  },
-                  {
-                    "kind": "spacer",
-                    "grow": 1
                   }
                 ]
               },
               {
-                "kind": "pagedots",
-                "alignSelf": "center"
+                "kind": "row",
+                "alignSelf": "stretch",
+                "justify": "center",
+                "children": [
+                  {
+                    "kind": "pagedots",
+                    "alignSelf": "center"
+                  }
+                ]
               }
             ]
           }

@@ -36,14 +36,6 @@ ThingStudioMarketing repo, not here.
   **Custom GUI (authoring/styling widgets) is GUI-line work, not node-format work** (2026-10-15): a widget
   manifests in the flow only partially (value in / event out); styling and the eventual drag-and-drop editor
   belong to the GUI subsystem's own editing model. See `node-context-parity-scoping.md` §4(g).
-- **[LAUNCH]** **GUI: fill the rest of the page, and page dots in a footer -- ruled 2026-10-24, not built.**
-  A layout must be able to fill the remaining space on a page, and the page dots belong in a footer rather
-  than being a widget dropped at (112, 211). `grow` and a full-screen root already exist, so this is a
-  default plus an affordance (a `fill` control, or a last-card default) plus a footer strip the screen draws
-  the dots into; the strip shrinks the page, it does not overlay it. No runtime bump while nothing
-  device-side changes; a page-table `"footer"` entry would be codegen-visible and would need the usual
-  version-bump judgement.
-  ([detail](outstanding-items/gui-layout-fill-and-footer.md))
 - **[LAUNCH]** **Ship 13.0.0 / publish v0.4.0 -- the biggest outstanding item.** 13.0.0 has never shipped;
   `v0.4.0` is runtime 12.1.0 and `firmware/classic-esp32/tested.json` still holds only
   `thingstudio-classic-esp32-12.1.0-8e2f87d.bin`. To ship: flash a committed image on a board, run it,

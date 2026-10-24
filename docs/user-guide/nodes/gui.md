@@ -166,15 +166,21 @@ and a **timeout** above `0` closes it on its own. The modal node's output says w
 Select the gui screen node and open **Properties**: each page is listed as an outline of its rows and columns,
 top to bottom in the order things appear on screen. Use ↑ and ↓ to move an element earlier or later, ⇥ to move
 it into the row or column above it, ⇤ to move it out of its container, ✕ to remove it, and ⚙ to set its font,
-grow, gap or padding. Each row and column has a **+ add…** menu: pick a widget, spacer, text, row, column or page dots and it
-goes at the end of that row or column. Add and reorder pages (the order of the page dots) from the page's own ↑ ↓, and add a layout for a modal. The same widget can be on
-several pages of a screen (a navigation button on every page, say). It must be drawn the same way on each, with
-the same font and options, and it shows the same value everywhere. Each page's **+ add…** menu lists the widgets
-not already on that page. A widget belongs to one screen. Widgets
-in a row share it equally, so two buttons side by side are each half the row (never narrower than their text
-needs). Set **grow** to `0` on one to keep it at its natural size, or to a bigger number for a bigger share. The editor
-doesn't draw the page: if it doesn't fit, Deploy says which widget, on which page. The outline is a view of the
-flow file's `"screens"` section, which you can also edit by hand.
+grow, fill, gap, padding or card. Each row and column has a **+ add…** menu: pick a widget, spacer, text, row,
+column or page dots and it goes at the end of that row or column. Add and reorder pages (the order of the page
+dots) from the page's own ↑ ↓, and add a layout for a modal. The same widget can be on several pages of a
+screen (a navigation button on every page, say). It must be drawn the same way on each, with the same font and
+options, and it shows the same value everywhere. Each page's **+ add…** menu lists the widgets not already on
+that page. A widget belongs to one screen. Widgets in a row share it equally, so two buttons side by side are
+each half the row (never narrower than their text needs). Set **grow** to `0` on one to keep it at its natural
+size, or to a bigger number for a bigger share. The editor doesn't draw the page: if it doesn't fit, Deploy says
+which widget, on which page. The outline is a view of the flow file's `"screens"` section, which you can also
+edit by hand.
+
+Tick **fill** on a row or column to give it the space left on the page (it sets `grow: 1`). Anything after a
+filling container keeps its natural height, so a plain row at the end of a page stays at the bottom: that is how
+a footer is made, and the page dots are just a widget you put in it. There is no separate footer setting, and a
+filling card stops above the row below it.
 
 Pages live in the flow file, under `"screens"`, keyed by the gui screen node's id. A page is a tree of
 `row` and `column` containers holding widgets (`"kind": "widget", "node": "<id>"`), fixed `text`,

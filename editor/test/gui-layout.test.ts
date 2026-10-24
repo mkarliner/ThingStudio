@@ -118,6 +118,21 @@ describe("a hero-style page, measured with the real fonts", () => {
     expect(main.y).toBe(out.rects.get("title")!.height);
   });
 
+  it("a growing card stops above a non-growing footer row", () => {
+    // The CYD shape after 2026-10-24: a card that takes the page's leftover, and a plain row after it holding
+    // the page dots. The footer is not special -- it is simply the non-growing sibling that keeps its height.
+    const card = col("card", [text("t", "font_body16", "Temperature")], { grow: 1, card: true, padding: 6 });
+    const dots = row("footer", [leaf("dots", 20, 6)], { justify: "center" });
+    const root = col("page", [row("title", [text("h", "font_body20", "Living room")], { padding: 6 }), card, dots], { gap: 6, padding: 4 });
+
+    const out = layoutPage(root, { width: 320, height: 320 }, CTX);
+    expect(out.errors).toEqual([]);
+    const f = out.rects.get("footer")!;
+    const c = out.rects.get("card")!;
+    expect(f.y + f.height).toBe(320 - 4); // the last child sits against the bottom padding
+    expect(c.y + c.height).toBe(f.y - 6); // the card takes everything above the footer, gap included
+  });
+
   it("the same page on a 128x64 OLED is a build error naming what doesn't fit", () => {
     const out = layoutPage(page(), { width: 128, height: 64 }, { display: "oled", page: "home" });
     expect(out.errors.length).toBeGreaterThan(0);

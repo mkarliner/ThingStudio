@@ -152,6 +152,24 @@ const TreeRows = defineComponent({
         extras.push(field("grow", "grow", 34, true));
         if (r.container) {
           extras.push(field("gap", "gap", 34, true), field("padding", "padding", 34, true));
+          // Fill: take the space left on the page by growing (the engine's `grow` constraint, no new concept).
+          // A non-growing container after it keeps its natural height, which is how a footer is built -- there is
+          // no separate footer setting (Mike, 2026-10-24).
+          const filled = Number(e.grow ?? 0) > 0;
+          extras.push(h("label", { class: "f", title: "take the space left on the page" }, [
+            "fill",
+            h("input", {
+              type: "checkbox",
+              checked: filled,
+              onChange: (ev: Event) =>
+                emit("op", {
+                  op: "props",
+                  target: p.target,
+                  path: r.path,
+                  props: { grow: (ev.target as HTMLInputElement).checked ? 1 : undefined },
+                }),
+            }),
+          ]));
           // A card: a filled rounded panel in the theme's card colour behind this container's children.
           const carded = e.card === true;
           extras.push(h("label", { class: "f", title: "draw a card behind this container" }, [
