@@ -12,7 +12,7 @@ raises an alert (SPEC §7.6) and then does what the machine's *illegal* rule say
 
 ## `board.listener` (board)
 
-What the board does with each line from the editor. Every editor-to-board message has a row; any other arriving message (one only the board sends, such as DEPLOY_ACK) is illegal.
+What the board does with each line from the editor. Every editor-to-board message has a row; any other arriving message (one only the board sends, such as DEPLOY_ACK) is illegal. The action runs in the from-state; the state moves after it returns (or to onError when it fails).
 
 | State | Meaning |
 |---|---|
@@ -114,7 +114,7 @@ Generated from the `replies` on these rows (SPEC §7.1); a row without any sends
 
 ## `board.stream` (board)
 
-One file arriving in pieces: the flow, or one file of a library. Any piece may be sent again (it rewrites the same bytes); a piece at offset 0 always starts over; a commit ends the stream whatever the outcome.
+One file arriving in pieces: the flow, or one file of a library. Any piece may be sent again (it rewrites the same bytes); a piece at offset 0 always starts over; a commit ends the stream whatever the outcome. The action runs in the from-state; the state moves after it returns (or to onError when it fails).
 
 Runs as:
 
@@ -189,7 +189,7 @@ stateDiagram-v2
 
 ## `editor.transfer` (editor)
 
-The editor sending a flow or a library: each piece answered before the next, then the commit, then its one answer. One instance per connection; it sits in idle between transfers and still checks what arrives.
+The editor sending a flow or a library: each piece answered before the next, then the commit, then its one answer. One instance per connection; it sits in idle between transfers and still checks what arrives. The action runs in the from-state; the state moves after it returns (or to onError when it fails).
 
 | State | Meaning |
 |---|---|

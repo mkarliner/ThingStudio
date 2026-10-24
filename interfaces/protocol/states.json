@@ -6,9 +6,6 @@
     "table: for an event, the first transition whose `from` includes the current state and whose guard holds is",
     "taken. A (state, event) with no such transition is ILLEGAL: the side running the machine raises an alert",
     "(SPEC §7.6) and then does what `illegal` says for that event.",
-    "A row's `do` action runs in the FROM state; the machine moves after the action returns (for an illegal move,",
-    "after the illegal rule's action). An action therefore always sees the state the event arrived in, and both",
-    "interpreters follow that order.",
     "`to: \"same\"` keeps the state. `from: \"*\"` is every state. `onError` is taken instead of the transition's own",
     "`to`/`reply` when its action fails (a flash write, say); `$error` is that failure's code.",
     "Generated from this file, never edited by hand: STATES.md (tables and diagrams), device-runtime/src/protocol_states.py,",
@@ -17,7 +14,7 @@
   "machines": {
     "board.listener": {
       "side": "board",
-      "about": "What the board does with each line from the editor. Every editor-to-board message has a row; any other arriving message (one only the board sends, such as DEPLOY_ACK) is illegal.",
+      "about": "What the board does with each line from the editor. Every editor-to-board message has a row; any other arriving message (one only the board sends, such as DEPLOY_ACK) is illegal. The action runs in the from-state; the state moves after it returns (or to onError when it fails).",
       "initial": "listening",
       "states": {
         "listening": "the listener is running"
@@ -94,7 +91,7 @@
 
     "board.stream": {
       "side": "board",
-      "about": "One file arriving in pieces: the flow, or one file of a library. Any piece may be sent again (it rewrites the same bytes); a piece at offset 0 always starts over; a commit ends the stream whatever the outcome.",
+      "about": "One file arriving in pieces: the flow, or one file of a library. Any piece may be sent again (it rewrites the same bytes); a piece at offset 0 always starts over; a commit ends the stream whatever the outcome. The action runs in the from-state; the state moves after it returns (or to onError when it fails).",
       "instances": {
         "flow": { "piece": "FLOW_PUT", "ack": "FLOW_ACK", "commit": "FLOW_COMMIT", "commitError": "DEPLOY_ERROR", "ackEcho": ["offset"] },
         "library": { "piece": "DEP_PUT", "ack": "DEP_ACK", "commit": "DEP_COMMIT", "commitError": "DEP_RESULT", "ackEcho": ["name", "file", "offset"] }
@@ -139,7 +136,7 @@
 
     "editor.transfer": {
       "side": "editor",
-      "about": "The editor sending a flow or a library: each piece answered before the next, then the commit, then its one answer. One instance per connection; it sits in idle between transfers and still checks what arrives.",
+      "about": "The editor sending a flow or a library: each piece answered before the next, then the commit, then its one answer. One instance per connection; it sits in idle between transfers and still checks what arrives. The action runs in the from-state; the state moves after it returns (or to onError when it fails).",
       "initial": "idle",
       "states": {
         "idle": "no transfer under way",
