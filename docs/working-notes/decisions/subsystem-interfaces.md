@@ -71,3 +71,13 @@ log's scope boundary, and its maintenance rule. Context: `../architecture-review
   and `editor/src/protocol/transfer.ts`; `interfaces/protocol/vectors/exchanges.json` holds whole conversations
   that both sides run, so the two can't each pass while disagreeing. One editor at a time is assumed (no request
   ids). Runtime 13.1.0. `reviews/2026-10-24-protocol-state-machine.md`.
+- **2026-10-24 — The state machines are data, and the data is the ground truth (Mike).** Mike expected a table, not
+  rules written as code: `interfaces/protocol/states.json` defines `board.listener`, `board.stream` and
+  `editor.transfer` (states, events, named guards and actions, ordered transitions, an `illegal` rule).
+  `tools/protocol_states.py` validates it and generates `STATES.md` (diagrams and tables for people) and each
+  side's table; both sides run it with a small interpreter (`device-runtime/src/statemachine.py`,
+  `editor/src/protocol/machine.ts`). Any (state, event) with no row is illegal and raises an alert on the side
+  running the machine: `PROTOCOL_ILLEGAL ...` on the board, `[protocol] illegal ...` in the editor (SPEC §7.6); the
+  exchange vectors say where alerts must and must not happen. Board RAM matters, the editor's code size doesn't:
+  the board's table is a flat tuple of strings, a constant in flash when frozen into a custom image (the intended
+  route for constrained boards).

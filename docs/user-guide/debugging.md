@@ -169,6 +169,13 @@ If a piece still fails after three tries, Deploy stops and says so, and the flow
 again. If it keeps happening, try another USB cable or port, close anything else using the serial port, or connect
 over WiFi.
 
+## The console shows `[protocol] illegal` or `PROTOCOL_ILLEGAL`
+
+The editor and the board follow a fixed set of moves when they talk. A line starting `[protocol] illegal` (from the
+editor) or `PROTOCOL_ILLEGAL` (from the board) means one of them made a move that isn't in that set. It is a bug in
+Thingstudio, not something you did. Deploy carries on or fails cleanly either way. Please
+[report it](https://github.com/mkarliner/ThingStudio/issues) with the console lines around it.
+
 ## Reading a node error
 
 When a node fails on the board, the console shows a `[NODE_ERROR]` line naming the node and the error, and the node

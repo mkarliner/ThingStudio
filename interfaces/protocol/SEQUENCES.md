@@ -3,8 +3,9 @@
 `SPEC.md` §7 sets the rules for how messages are used together. This file draws them: who sends what, what
 answers it, and what happens when something goes wrong. It shows what the code does (editor
 `editor/src/protocol/transfer.ts` and `editor/src/app/main.ts`, board `device-runtime/src/listener.py` and
-`transfer.py`, backend `backend/src/thingstudio_backend/{ws_relay,tcp_relay}.py`). The one known limit still
-open is marked **⚠**.
+`statemachine.py`, backend `backend/src/thingstudio_backend/{ws_relay,tcp_relay}.py`). Where these diagrams and
+`states.json` (the state machines, drawn in `STATES.md`) disagree, the table is right and the diagram is a bug.
+The one known limit still open is marked **⚠**.
 
 The diagrams are Mermaid and render on GitHub and in VS Code's Markdown preview.
 
@@ -104,23 +105,9 @@ when a WiFi session starts can land in the middle of the other editor's deploy a
 ## 3. A file arriving in pieces: the state machine
 
 The flow, and each file of a library, arrive the same way: in pieces, each answered. The board keeps one
-**stream** per file (`transfer.py`), always in one of three states. This is SPEC §7.2's table as a picture.
-
-```mermaid
-stateDiagram-v2
-    direction TB
-    [*] --> idle
-    idle --> receiving : piece at offset 0
-    receiving --> failed : the write fails
-    failed --> receiving : offset 0 starts over
-    receiving --> idle : commit (any outcome)
-    failed --> idle : commit (refused)
-    note right of receiving
-        more pieces stay here:
-        the next one, a resend,
-        or offset 0 (starts over)
-    end note
-```
+**stream** per file, always **idle**, **receiving** or **failed**. The machine is `board.stream` in
+`states.json`, which is the ground truth; [`STATES.md`](STATES.md) draws it, generated from the table, alongside
+`board.listener` and the editor's `editor.transfer`.
 
 Two rules the editor relies on:
 
@@ -128,9 +115,8 @@ Two rules the editor relies on:
   the editor just resends.
 - **Offset 0 always starts over**, whatever came before: an abandoned transfer, a refused commit, a failed write.
 
-Refused without changing state: a piece after a gap, a piece with a different `total`, a piece that runs past
-the end, a piece at offset > 0 while idle (all `BadPiece`), and any piece at offset > 0 while failed (its
-recorded error again).
+Anything else is illegal: a gap, a different `total`, a piece that runs past the end, a piece at offset > 0 while
+idle. The board announces it (`PROTOCOL_ILLEGAL`, SPEC §7.6) and answers `BadPiece`.
 
 ## 4. Deploy a flow
 
