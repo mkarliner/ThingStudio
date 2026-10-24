@@ -1,4 +1,10 @@
 {
+  "39948d966fc1b51b4da049282c62e7795ae79309d8761f22b190d5dc5c3dcf7e": {
+    "image": "thingstudio-classic-esp32-13.0.0-7f607bc.bin",
+    "board": "CYD (ESP32-2432S028)",
+    "date": "2026-10-24",
+    "tested": "install clean (image + /lib/_deps.json) and booted 13.0.0 reporting all 34 libraries frozen; hero GUI flow deployed over serial. Frozen-library hashes reproduced 34/34 from the image's own deps index with the editor's mpy-cross, so Deploy skips them."
+  },
   "f931ca3f4c3da426f3398440526dbf4e643b2d6c5f72aa8440ed31e7151cead0": {
     "image": "thingstudio-classic-esp32-12.1.0-8e2f87d.bin",
     "board": "CYD (ESP32-2432S028)",
