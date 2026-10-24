@@ -118,6 +118,10 @@ working list the same day, per Mike's call.
   ([detail](outstanding-items/inject-node-review.md))
 - **`wifi_status` complete status (IP, network, RSSI)** -- built 2026-09-09/10 and hardware-verified; the
   `debug` node gained `fullMessage` for it. ([detail](outstanding-items/wifi-status-completeness.md))
+- **GUI widget styles and colour** -- built 2026-10-24 (runtime 14.0.0): theme roles resolved per format (earlier),
+  then led chip, segmented bar, switch/filled button, readout caption and the active-page pill. Unstyled flows
+  generate the old calls; the CYD theme demo uses the new ones. Remaining: threshold colours (step 5), header bar,
+  alarm banner, editor preview. ([scoping](gui-widget-styles-and-colour-scoping.md))
 - **Protocol: hardware pass for runtime 13.1.0** -- done 2026-10-24 on the CYD: the 13.1.0 image booted with
   all 34 libraries frozen, the dummy GUI flow deployed twice in one session over the running flow, a resent
   `FLOW_PUT` piece and a resent `DEP_PUT` piece were both ACKed, and `DEP_COMMIT` installed the library

@@ -229,10 +229,6 @@ ThingStudioMarketing repo, not here.
 
 ## UI / editor
 
-- **GUI widget styles and colour -- new item, 2026-10-23 (Mike: "gui widgets are currently very dull"), not
-  yet prioritised.** Cards on containers, status chips, segmented bars, switch toggles; colour by named roles
-  in a theme on the gui screen, resolved per frame format (RGB565, gs4/gs2 palette-bounded, mono ink/paper).
-  ([scoping](gui-widget-styles-and-colour-scoping.md))
 - **Colour values in the flow file are raw decimal RGB565 -- save at least hex, and a picker where one is
   missing -- new item, 2026-10-24 (Mike, reading a theme config: `"bg": 2116, "fg": 65535`).** The GUI theme
   roles and `display_spi`'s palette are edited with a picker plus a hex field, but the saved `.flow.json` keeps

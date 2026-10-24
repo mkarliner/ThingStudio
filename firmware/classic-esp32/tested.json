@@ -5,6 +5,12 @@
     "date": "2026-10-24",
     "tested": "install clean (image + /lib/_deps.json) and booted 13.0.0 reporting all 34 libraries frozen; hero GUI flow deployed over serial. Frozen-library hashes reproduced 34/34 from the image's own deps index with the editor's mpy-cross, so Deploy skips them."
   },
+  "4e6c1399736af7bb7ff6c3b7f2f9aac03d31c2f43d7d5e8b6018c736fbc7c6cd": {
+    "image": "thingstudio-classic-esp32-14.0.0-f260fe7.bin",
+    "board": "CYD (ESP32-2432S028)",
+    "date": "2026-10-24",
+    "tested": "install clean, booted 14.0.0 with all 34 libraries frozen (147 KB free); the theme demo deployed with the new widget styles -- led chip, segmented bar, readout captions, pill page dot -- and ran with no errors; widget drawing and natural sizes covered off-device on the unix port"
+  },
   "5ebcfceb11751b5991c5b6727d10bae8c47de9e0df8749055b4d0066c3e61f40": {
     "image": "thingstudio-classic-esp32-13.1.0-dad343f.bin",
     "board": "CYD (ESP32-2432S028)",
