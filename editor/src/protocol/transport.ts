@@ -28,7 +28,7 @@
 // their own existing header comments, and this file is what actually
 // exercises them against bytes on a wire instead of an in-memory buffer.
 
-import { ProtocolStreamDecoder, encodeMessage, type ProtocolDecodeResult } from "./protocol.js";
+import { decodeLineFrame, encodeMessage, type ProtocolDecodeResult } from "./protocol.js";
 import type { Message } from "./messages.js";
 
 const F64_PREFIX = "F64:";
@@ -101,7 +101,6 @@ export class WebSerialTransport implements DeviceTransport {
   #port: WebSerialPort | null = null;
   #reader: ReadableStreamDefaultReader<Uint8Array> | null = null;
   #writer: WritableStreamDefaultWriter<Uint8Array> | null = null;
-  #decoder = new ProtocolStreamDecoder();
   #lineBuffer = new Uint8Array(0);
   #events: TransportEvents;
   #closing = false;
@@ -114,17 +113,11 @@ export class WebSerialTransport implements DeviceTransport {
     return this.#port !== null;
   }
 
-  /** Bytes buffered but not yet part of a complete frame -- diagnostic use, mirrors ProtocolStreamDecoder.pendingByteCount. */
-  get pendingByteCount(): number {
-    return this.#decoder.pendingByteCount;
-  }
-
   async connect(port: WebSerialPort, baudRate: number = DEFAULT_BAUD_RATE): Promise<void> {
     if (this.#port) throw new Error("WebSerialTransport is already connected -- call disconnect() first");
     await port.open({ baudRate });
     this.#port = port;
     this.#closing = false;
-    this.#decoder.reset();
     this.#lineBuffer = new Uint8Array(0);
 
     if (!port.readable) throw new Error("SerialPort has no readable stream after open()");
@@ -231,12 +224,12 @@ export class WebSerialTransport implements DeviceTransport {
       return;
     }
 
-    for (const result of this.#decoder.push(frameBytes)) {
-      if (result.ok) {
-        this.#events.onMessage?.(result.message);
-      } else {
-        this.#events.onProtocolError?.(result.error as never);
-      }
+    // One line, one frame (SPEC §4): decoded on its own, so a damaged line can't swallow the next one.
+    const result = decodeLineFrame(frameBytes);
+    if (result.ok) {
+      this.#events.onMessage?.(result.message);
+    } else {
+      this.#events.onProtocolError?.(result.error as never);
     }
   }
 }

@@ -63,7 +63,7 @@ import runtime
 import protocol
 import messages
 import transfer
-from errors import UnknownMessageType
+from errors import FramingError, UnknownMessageType
 
 try:
     import machine
@@ -1107,9 +1107,6 @@ async def _dispatch_locked(result, source):
         print("LISTENER_IGNORED unexpected message type from editor: %s" % (msg_type,))
 
 
-_MAX_STALL_PUSHES = 5  # see _listener()'s "stalled decoder" handling below
-
-
 async def _listener():
     await _serve_lines(asyncio.StreamReader(sys.stdin), "serial", None)
 
@@ -1120,7 +1117,6 @@ async def _serve_lines(sreader, source, idle_timeout_s):
     idle_timeout_s with no bytes at all -- the backend sends a blank keepalive line every 30 s, which
     is silently skipped below."""
     decoder = protocol.ProtocolStreamDecoder()
-    stall_pushes = 0
     idle_s = 0
     while True:
         try:
@@ -1165,43 +1161,26 @@ async def _serve_lines(sreader, source, idle_timeout_s):
                 _note_unreadable(e)
                 continue
 
+            # One line holds exactly one whole frame (SPEC §4), so each line is decoded on its own. A line that
+            # isn't one frame -- bytes dropped on a USB-UART, so it ends inside a frame or has bytes left over --
+            # is damaged, and is answered as unreadable at once (SPEC §7.1). Before 13.1.0 the leftover bytes
+            # stayed buffered, waiting for "the rest of the frame", until five more lines had arrived: the
+            # damaged line went unanswered and the editor's resend was read as its continuation (protocol
+            # audit 2026-10-24).
+            decoder.reset()
             results = decoder.push(frame_bytes)
-            if results:
-                stall_pushes = 0
-                for result in results:
-                    await _dispatch(result, source)
-            elif decoder.pending_byte_count > 0:
-                # framing.py's FrameDecoder can legitimately end up
-                # "waiting for more bytes" on a length header that's
-                # structurally plausible but never actually completes
-                # (framing.py's own docstring: garbage that "declares a
-                # plausible but wrong length" isn't distinguishable from a
-                # real frame that hasn't finished arriving yet, by design
-                # -- there's no resync marker). Left unbounded, that's a
-                # real hazard this task's own soak test surfaced: one such
-                # line permanently wedges the decoder, silently discarding
-                # every real frame sent afterward, even though the task
-                # itself never dies or hangs. Same "every wait must be
-                # time-bounded" principle as READ_TIMEOUT_S above, applied
-                # to "waiting to complete a frame" instead of "waiting for
-                # a line" -- a few consecutive non-progressing pushes force
-                # a reset rather than waiting forever.
-                stall_pushes += 1
-                if stall_pushes >= _MAX_STALL_PUSHES:
-                    print(
-                        "LISTENER_ERR frame decoder stalled (%d bytes buffered, no frame/error in %d pushes) -- resetting"
-                        % (decoder.pending_byte_count, stall_pushes)
-                    )
-                    _note_unreadable("a garbled message")
-                    decoder.reset()
-                    stall_pushes = 0
+            if len(results) != 1 or decoder.pending_byte_count > 0:
+                left = decoder.pending_byte_count
+                decoder.reset()
+                await _dispatch({"error": FramingError(
+                    "a damaged line: %d bytes that are not one whole frame (%d decoded, %d left over)"
+                    % (len(frame_bytes), len(results), left))}, source)
             else:
-                stall_pushes = 0
+                await _dispatch(results[0], source)
         except Exception as e:  # noqa: BLE001 -- hardening property 1, second half: dispatch itself must never kill this task either
             print("LISTENER_ERR dispatch %r -- recovering, not crashing" % (e,))
             _note_unreadable(e)
             decoder.reset()
-            stall_pushes = 0
             _report_receive_oom(e)
 
 

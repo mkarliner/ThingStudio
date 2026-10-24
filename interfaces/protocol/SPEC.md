@@ -80,7 +80,13 @@ languages is not required — see §8.
 
 One complete frame is base64-encoded into a single line prefixed `F64:` and ended with a newline. This is the same
 on USB serial and WiFi TCP: a deliberate workaround for partial `read(n)` returns on some USB-UART bridges. Plain
-device `print()` lines share the stream without the prefix and reach the editor as debug text. The backend moves
+device `print()` lines share the stream without the prefix and reach the editor as debug text.
+
+**A line holds exactly one whole frame, and a receiver decodes each line on its own.** A line whose bytes
+are not one whole frame (it ends inside a frame, or has bytes left over) was damaged on the way: the
+receiver drops it as one error and keeps nothing for "the rest of the frame". The board answers it like any
+line it couldn't read (§7.1). Keeping the bytes instead would make the next, good line read as the damaged
+one's continuation. The backend moves
 frame bytes verbatim between WebSocket binary messages and `F64:` lines, and never decodes the CBOR.
 
 ## 5. Messages

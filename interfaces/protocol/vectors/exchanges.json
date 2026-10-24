@@ -1,0 +1,192 @@
+{
+  "protocolVersion": 1,
+  "about": [
+    "Whole conversations between the editor and the board (SPEC.md §7). Each exchange is a list of steps in order.",
+    "{\"editor\": M} is a message the editor sends; {\"board\": M} is one the board must send next.",
+    "\"garbled\": true on an editor step: the line reaches the board damaged (the board runner sends a line that isn't base64).",
+    "\"lost\": true on a board step: the board sends it but the editor never receives it (the editor runner doesn't deliver it).",
+    "{\"editorRaw\": hex}: a frame the board runner sends as-is (board-only exchanges).",
+    "{\"editorRaw\": hex} with a frame cut short stands for a line that lost bytes but is still valid base64.",
+    "Board messages are compared on every key except free-memory figures and the human-readable error/message text.",
+    "\"editor\" at the exchange level says what the editor is asked to do (a deploy or a library), and \"outcome\" what",
+    "it must conclude; exchanges without it are board-only. Byte strings are {\"$bytes\": hex}. {\"$flow\": true} stands",
+    "for the exchange's compiled \"flowSource\" (the board runner compiles it; the editor runner uses the source's bytes),",
+    "and {\"$flowLength\": true} for its length. A board runner starts a fresh listener for each exchange."
+  ],
+  "exchanges": [
+    {
+      "name": "deploy-one-piece",
+      "spec": "§7.2, §7.3",
+      "flowSource": "print('EXCHANGE_FLOW_RAN')\n",
+      "editor": {"deploy": {"bytes": {"$flow": true}, "pieceBytes": 5120}},
+      "outcome": {"kind": "deployed"},
+      "steps": [
+        {"editor": {"type": "FLOW_PUT", "offset": 0, "total": {"$flowLength": true}, "data": {"$flow": true}}},
+        {"board": {"type": "FLOW_ACK", "offset": 0, "ok": true}},
+        {"editor": {"type": "FLOW_COMMIT", "total": {"$flowLength": true}, "flowName": "x", "deployId": "d1"}},
+        {"board": {"type": "DEPLOY_ACK", "freeFlashBytes": 1, "freeRamBytes": 1}}
+      ]
+    },
+    {
+      "name": "lost-flow-ack-is-resent",
+      "spec": "§7.2 any piece may be resent; audit finding 1",
+      "editor": {"deploy": {"bytes": {"$bytes": "00010203040506070809"}, "pieceBytes": 4}},
+      "outcome": {"kind": "refused", "code": "MissingDependency"},
+      "steps": [
+        {"editor": {"type": "FLOW_PUT", "offset": 0, "total": 10, "data": {"$bytes": "00010203"}}},
+        {"board": {"type": "FLOW_ACK", "offset": 0, "ok": true}},
+        {"editor": {"type": "FLOW_PUT", "offset": 4, "total": 10, "data": {"$bytes": "04050607"}}},
+        {"board": {"type": "FLOW_ACK", "offset": 4, "ok": true}, "lost": true},
+        {"editor": {"type": "FLOW_PUT", "offset": 4, "total": 10, "data": {"$bytes": "04050607"}}},
+        {"board": {"type": "FLOW_ACK", "offset": 4, "ok": true}},
+        {"editor": {"type": "FLOW_PUT", "offset": 8, "total": 10, "data": {"$bytes": "0809"}}},
+        {"board": {"type": "FLOW_ACK", "offset": 8, "ok": true}},
+        {"editor": {"type": "FLOW_COMMIT", "total": 10, "flowName": "x", "deployId": "d1", "dependencies": {"ts_not_installed": "h"}}},
+        {"board": {"type": "DEPLOY_ERROR", "code": "MissingDependency", "message": ""}}
+      ]
+    },
+    {
+      "name": "garbled-flow-piece-is-resent",
+      "spec": "§7.1 a line the board can't read",
+      "editor": {"deploy": {"bytes": {"$bytes": "0001020304050607"}, "pieceBytes": 4}},
+      "outcome": {"kind": "refused", "code": "MissingDependency"},
+      "steps": [
+        {"editor": {"type": "FLOW_PUT", "offset": 0, "total": 8, "data": {"$bytes": "00010203"}}},
+        {"board": {"type": "FLOW_ACK", "offset": 0, "ok": true}},
+        {"editor": {"type": "FLOW_PUT", "offset": 4, "total": 8, "data": {"$bytes": "04050607"}}, "garbled": true},
+        {"board": {"type": "FLOW_ACK", "offset": 4, "ok": false, "code": "Garbled", "error": ""}},
+        {"editor": {"type": "FLOW_PUT", "offset": 4, "total": 8, "data": {"$bytes": "04050607"}}},
+        {"board": {"type": "FLOW_ACK", "offset": 4, "ok": true}},
+        {"editor": {"type": "FLOW_COMMIT", "total": 8, "flowName": "x", "deployId": "d1", "dependencies": {"ts_not_installed": "h"}}},
+        {"board": {"type": "DEPLOY_ERROR", "code": "MissingDependency", "message": ""}}
+      ]
+    },
+    {
+      "name": "damaged-line-is-answered-at-once",
+      "spec": "§4 one line, one frame; §7.1",
+      "steps": [
+        {"editor": {"type": "FLOW_PUT", "offset": 0, "total": 8, "data": {"$bytes": "00010203"}}},
+        {"board": {"type": "FLOW_ACK", "offset": 0, "ok": true}},
+        {"editorRaw": "001b15a3666f66667365740465746f74616c086464617461440405"},
+        {"board": {"type": "FLOW_ACK", "offset": 4, "ok": false, "code": "Garbled", "error": ""}},
+        {"editor": {"type": "FLOW_PUT", "offset": 4, "total": 8, "data": {"$bytes": "04050607"}}},
+        {"board": {"type": "FLOW_ACK", "offset": 4, "ok": true}}
+      ]
+    },
+    {
+      "name": "refused-commit-then-next-deploy-starts-over",
+      "spec": "§7.2 offset 0 always starts over, §7.3 a commit ends its stream; audit finding 1c",
+      "steps": [
+        {"editor": {"type": "FLOW_PUT", "offset": 0, "total": 4, "data": {"$bytes": "00010203"}}},
+        {"board": {"type": "FLOW_ACK", "offset": 0, "ok": true}},
+        {"editor": {"type": "FLOW_COMMIT", "total": 4, "flowName": "x", "deployId": "d1", "dependencies": {"ts_not_installed": "h"}}},
+        {"board": {"type": "DEPLOY_ERROR", "code": "MissingDependency", "message": ""}},
+        {"editor": {"type": "FLOW_PUT", "offset": 0, "total": 4, "data": {"$bytes": "00010203"}}},
+        {"board": {"type": "FLOW_ACK", "offset": 0, "ok": true}},
+        {"editor": {"type": "FLOW_COMMIT", "total": 8, "flowName": "x", "deployId": "d2"}},
+        {"board": {"type": "DEPLOY_ERROR", "code": "Incomplete", "message": ""}},
+        {"editor": {"type": "FLOW_PUT", "offset": 0, "total": 4, "data": {"$bytes": "00010203"}}},
+        {"board": {"type": "FLOW_ACK", "offset": 0, "ok": true}}
+      ]
+    },
+    {
+      "name": "abandoned-transfer-then-offset-0-starts-over",
+      "spec": "§7.2",
+      "steps": [
+        {"editor": {"type": "FLOW_PUT", "offset": 0, "total": 12, "data": {"$bytes": "00010203"}}},
+        {"board": {"type": "FLOW_ACK", "offset": 0, "ok": true}},
+        {"editor": {"type": "FLOW_PUT", "offset": 0, "total": 4, "data": {"$bytes": "0a0b0c0d"}}},
+        {"board": {"type": "FLOW_ACK", "offset": 0, "ok": true}},
+        {"editor": {"type": "FLOW_COMMIT", "total": 4, "flowName": "x", "deployId": "d1", "dependencies": {"ts_not_installed": "h"}}},
+        {"board": {"type": "DEPLOY_ERROR", "code": "MissingDependency", "message": ""}}
+      ]
+    },
+    {
+      "name": "flow-piece-rules",
+      "spec": "§7.2 table: gap, different total, past the end, nonzero offset while idle",
+      "steps": [
+        {"editor": {"type": "FLOW_PUT", "offset": 4, "total": 8, "data": {"$bytes": "04050607"}}},
+        {"board": {"type": "FLOW_ACK", "offset": 4, "ok": false, "code": "BadPiece", "error": ""}},
+        {"editor": {"type": "FLOW_PUT", "offset": 0, "total": 2, "data": {"$bytes": "00010203"}}},
+        {"board": {"type": "FLOW_ACK", "offset": 0, "ok": false, "code": "BadPiece", "error": ""}},
+        {"editor": {"type": "FLOW_PUT", "offset": 0, "total": 12, "data": {"$bytes": "00010203"}}},
+        {"board": {"type": "FLOW_ACK", "offset": 0, "ok": true}},
+        {"editor": {"type": "FLOW_PUT", "offset": 8, "total": 12, "data": {"$bytes": "08090a0b"}}},
+        {"board": {"type": "FLOW_ACK", "offset": 8, "ok": false, "code": "BadPiece", "error": ""}},
+        {"editor": {"type": "FLOW_PUT", "offset": 4, "total": 16, "data": {"$bytes": "04050607"}}},
+        {"board": {"type": "FLOW_ACK", "offset": 4, "ok": false, "code": "BadPiece", "error": ""}},
+        {"editor": {"type": "FLOW_PUT", "offset": 4, "total": 12, "data": {"$bytes": "04050607"}}},
+        {"board": {"type": "FLOW_ACK", "offset": 4, "ok": true}},
+        {"editor": {"type": "FLOW_PUT", "offset": 8, "total": 12, "data": {"$bytes": "08090a0b"}}},
+        {"board": {"type": "FLOW_ACK", "offset": 8, "ok": true}}
+      ]
+    },
+    {
+      "name": "library-lost-ack-is-resent",
+      "spec": "§7.2 any piece may be resent; audit finding 2",
+      "editor": {"library": {"name": "ts_ex_lib", "hash": "h1", "files": {"ts_ex_lib.mpy": {"$bytes": "000102030405"}}, "pieceBytes": 3}},
+      "outcome": {"kind": "installed"},
+      "steps": [
+        {"editor": {"type": "DEP_PUT", "name": "ts_ex_lib", "file": "ts_ex_lib.mpy", "offset": 0, "total": 6, "data": {"$bytes": "000102"}}},
+        {"board": {"type": "DEP_ACK", "name": "ts_ex_lib", "file": "ts_ex_lib.mpy", "offset": 0, "ok": true}},
+        {"editor": {"type": "DEP_PUT", "name": "ts_ex_lib", "file": "ts_ex_lib.mpy", "offset": 3, "total": 6, "data": {"$bytes": "030405"}}},
+        {"board": {"type": "DEP_ACK", "name": "ts_ex_lib", "file": "ts_ex_lib.mpy", "offset": 3, "ok": true}, "lost": true},
+        {"editor": {"type": "DEP_PUT", "name": "ts_ex_lib", "file": "ts_ex_lib.mpy", "offset": 3, "total": 6, "data": {"$bytes": "030405"}}},
+        {"board": {"type": "DEP_ACK", "name": "ts_ex_lib", "file": "ts_ex_lib.mpy", "offset": 3, "ok": true}},
+        {"editor": {"type": "DEP_COMMIT", "name": "ts_ex_lib", "hash": "h1", "files": {"ts_ex_lib.mpy": 6}}},
+        {"board": {"type": "DEP_RESULT", "name": "ts_ex_lib", "ok": true, "freeFlashBytes": 1}}
+      ]
+    },
+    {
+      "name": "library-garbled-piece-is-resent",
+      "spec": "§7.1 a Garbled answer is about the line sent last",
+      "editor": {"library": {"name": "ts_ex_lib", "hash": "h1", "files": {"ts_ex_lib.mpy": {"$bytes": "000102030405"}}, "pieceBytes": 3}},
+      "outcome": {"kind": "installed"},
+      "steps": [
+        {"editor": {"type": "DEP_PUT", "name": "ts_ex_lib", "file": "ts_ex_lib.mpy", "offset": 0, "total": 6, "data": {"$bytes": "000102"}}},
+        {"board": {"type": "DEP_ACK", "name": "ts_ex_lib", "file": "ts_ex_lib.mpy", "offset": 0, "ok": true}},
+        {"editor": {"type": "DEP_PUT", "name": "ts_ex_lib", "file": "ts_ex_lib.mpy", "offset": 3, "total": 6, "data": {"$bytes": "030405"}}, "garbled": true},
+        {"board": {"type": "FLOW_ACK", "offset": 0, "ok": false, "code": "Garbled", "error": ""}},
+        {"editor": {"type": "DEP_PUT", "name": "ts_ex_lib", "file": "ts_ex_lib.mpy", "offset": 3, "total": 6, "data": {"$bytes": "030405"}}},
+        {"board": {"type": "DEP_ACK", "name": "ts_ex_lib", "file": "ts_ex_lib.mpy", "offset": 3, "ok": true}},
+        {"editor": {"type": "DEP_COMMIT", "name": "ts_ex_lib", "hash": "h1", "files": {"ts_ex_lib.mpy": 6}}},
+        {"board": {"type": "DEP_RESULT", "name": "ts_ex_lib", "ok": true, "freeFlashBytes": 1}}
+      ]
+    },
+    {
+      "name": "library-refused-piece-then-offset-0-starts-over",
+      "spec": "§7.2; audit finding 2b",
+      "steps": [
+        {"editor": {"type": "DEP_PUT", "name": "ts_ex_lib", "file": "ts_ex_lib.mpy", "offset": 3, "total": 6, "data": {"$bytes": "030405"}}},
+        {"board": {"type": "DEP_ACK", "name": "ts_ex_lib", "file": "ts_ex_lib.mpy", "offset": 3, "ok": false, "code": "BadPiece", "error": ""}},
+        {"editor": {"type": "DEP_PUT", "name": "ts_ex_lib", "file": "ts_ex_lib.mpy", "offset": 0, "total": 6, "data": {"$bytes": "000102"}}},
+        {"board": {"type": "DEP_ACK", "name": "ts_ex_lib", "file": "ts_ex_lib.mpy", "offset": 0, "ok": true}},
+        {"editor": {"type": "DEP_PUT", "name": "ts_ex_lib", "file": "ts_ex_lib.mpy", "offset": 3, "total": 6, "data": {"$bytes": "030405"}}},
+        {"board": {"type": "DEP_ACK", "name": "ts_ex_lib", "file": "ts_ex_lib.mpy", "offset": 3, "ok": true}},
+        {"editor": {"type": "DEP_COMMIT", "name": "ts_ex_lib", "hash": "h1", "files": {"ts_ex_lib.mpy": 6}}},
+        {"board": {"type": "DEP_RESULT", "name": "ts_ex_lib", "ok": true, "freeFlashBytes": 1}}
+      ]
+    },
+    {
+      "name": "library-incomplete-commit-ends-the-stream",
+      "spec": "§7.3 a commit ends its streams whatever the outcome",
+      "steps": [
+        {"editor": {"type": "DEP_PUT", "name": "ts_ex_lib", "file": "ts_ex_lib.mpy", "offset": 0, "total": 6, "data": {"$bytes": "000102"}}},
+        {"board": {"type": "DEP_ACK", "name": "ts_ex_lib", "file": "ts_ex_lib.mpy", "offset": 0, "ok": true}},
+        {"editor": {"type": "DEP_COMMIT", "name": "ts_ex_lib", "hash": "h1", "files": {"ts_ex_lib.mpy": 6}}},
+        {"board": {"type": "DEP_RESULT", "name": "ts_ex_lib", "ok": false, "code": "Incomplete", "error": ""}},
+        {"editor": {"type": "DEP_PUT", "name": "ts_ex_lib", "file": "ts_ex_lib.mpy", "offset": 3, "total": 6, "data": {"$bytes": "030405"}}},
+        {"board": {"type": "DEP_ACK", "name": "ts_ex_lib", "file": "ts_ex_lib.mpy", "offset": 3, "ok": false, "code": "BadPiece", "error": ""}}
+      ]
+    },
+    {
+      "name": "unknown-type-is-not-answered",
+      "spec": "§6, §7.1; audit finding 6",
+      "steps": [
+        {"editorRaw": "000263a0"},
+        {"editor": {"type": "FLOW_PUT", "offset": 0, "total": 4, "data": {"$bytes": "00010203"}}},
+        {"board": {"type": "FLOW_ACK", "offset": 0, "ok": true}}
+      ]
+    }
+  ]
+}
