@@ -57,15 +57,16 @@
       }
     },
     {
-      "id": "n06-pbar",
-      "type": "thingstudio/gui_bar",
+      "id": "n06-hist",
+      "type": "thingstudio/gui_trend",
       "properties": {
-        "name": "Pressure bar",
+        "name": "Pressure history",
         "lo": 950,
         "hi": 1050,
-        "staleAfter": 15,
-        "style": "segments",
-        "segments": 10
+        "columns": 40,
+        "colWidth": 3,
+        "height": 40,
+        "staleAfter": 15
       }
     },
     {
@@ -142,6 +143,16 @@
         "invertColors": false,
         "dataLatchOrder": true
       }
+    },
+    {
+      "id": "n14-journal",
+      "type": "thingstudio/journal",
+      "properties": {
+        "name": "Pressure history",
+        "rows": 40,
+        "stepSeconds": 0,
+        "steps": 0
+      }
     }
   ],
   "edges": [
@@ -167,12 +178,6 @@
       "n02-split",
       2,
       "n05-press",
-      0
-    ],
-    [
-      "n02-split",
-      2,
-      "n06-pbar",
       0
     ],
     [
@@ -203,6 +208,18 @@
       "n12-screen",
       0,
       "n13-display",
+      0
+    ],
+    [
+      "n02-split",
+      2,
+      "n14-journal",
+      0
+    ],
+    [
+      "n14-journal",
+      0,
+      "n06-hist",
       0
     ]
   ],
@@ -237,52 +254,58 @@
         220
       ]
     },
-    "n06-pbar": {
+    "n06-hist": {
       "pos": [
-        520,
-        290
+        740,
+        360
       ]
     },
     "n07-alive": {
       "pos": [
         520,
-        360
+        290
       ]
     },
     "n08-tick": {
       "pos": [
         80,
-        460
+        480
       ]
     },
     "n09-next": {
       "pos": [
         300,
-        460
+        480
       ]
     },
     "n10-nav": {
       "pos": [
         520,
-        460
+        480
       ]
     },
     "n11-navdbg": {
       "pos": [
         740,
-        460
+        480
       ]
     },
     "n12-screen": {
       "pos": [
         80,
-        560
+        580
       ]
     },
     "n13-display": {
       "pos": [
         300,
-        560
+        580
+      ]
+    },
+    "n14-journal": {
+      "pos": [
+        520,
+        360
       ]
     }
   },
@@ -420,7 +443,7 @@
                   },
                   {
                     "kind": "widget",
-                    "node": "n06-pbar",
+                    "node": "n06-hist",
                     "height": 16,
                     "alignSelf": "stretch"
                   },

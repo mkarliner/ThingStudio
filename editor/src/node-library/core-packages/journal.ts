@@ -24,7 +24,7 @@ export const descriptor: NodeDescriptor = {
   width: 100,
   description:
     "Keeps the last rows of a number, as an average with its min and max. The first output sends the series (wire " +
-    "it to a trend); the second sends one summary message every roll-up (wire it to the next journal for a longer " +
+    "it to a histogram); the second sends one summary message every roll-up (wire it to the next journal for a longer " +
     "time scale). Rows with no readings are gaps. With seconds per row set, a row closes when a message arrives " +
     "after its time is up.",
   ports: {

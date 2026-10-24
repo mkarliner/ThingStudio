@@ -427,7 +427,7 @@ export const guiBarNode: NodeDefinition = {
 export const guiTrendNode: NodeDefinition = {
   ...widgetNode("thingstudio/gui_trend"),
   paletteId: "gui_trend",
-  label: "trend",
+  label: "histogram",
   title: "show history",
   group: "GUI",
   priority: 45,
@@ -436,8 +436,8 @@ export const guiTrendNode: NodeDefinition = {
   icon: "▁▃▆",
   width: 100,
   description:
-    "Draws the series a journal sends, newest on the right, or any list of numbers (None is a gap). A wider space " +
-    "shows more history.",
+    "A histogram of the series a journal sends, newest on the right, or any list of numbers (None is a gap). A " +
+    "wider space shows more history.",
   properties: [
     { name: "name", label: "name", kind: "text", default: "" },
     { name: "lo", label: "bottom at", kind: "number", default: 0, step: "any" },

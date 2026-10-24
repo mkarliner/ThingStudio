@@ -230,7 +230,7 @@ Type `thingstudio/gui_screen`, kind source, palette group GUI.
     - `warn`, colour, default none
     - `alarm`, colour, default none
 
-### trend
+### histogram
 
 Type `thingstudio/gui_trend`, kind sink, palette group GUI.
 

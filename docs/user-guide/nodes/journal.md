@@ -1,7 +1,7 @@
 # journal
 
 Keeps the recent history of a number, as rows of average, minimum and maximum, the way RRDtool and Cacti do. Wire
-it to a [trend](gui.md#trend) to see the history, and to another journal for a longer time scale.
+it to a [histogram](gui.md#histogram) to see the history, and to another journal for a longer time scale.
 
 ## Properties
 
@@ -17,7 +17,7 @@ it to a [trend](gui.md#trend) to see the history, and to another journal for a l
 
 - **Input** — `msg.payload` is a number. `None` records a gap. A message that carries `min` and `max` (the
   roll-up of another journal) is folded in with them, so a longer time scale keeps the spikes.
-- **Output 1, series** — sent each time a row is added. The payload is the journal itself, to wire to a trend. It
+- **Output 1, series** — sent each time a row is added. The payload is the journal itself, to wire to a histogram. It
   is the live history, not a copy, so it costs no memory per row.
 - **Output 2, roll-up** — sent every **rows per roll-up** rows: `payload` the average, `min`, `max`, and the
   input's `topic`. Wire it to another journal, a readout or MQTT.
@@ -27,7 +27,7 @@ it to a [trend](gui.md#trend) to see the history, and to another journal for a l
 A gap is empty, never a copy of the last value. The history starts empty each time the flow starts.
 
 With **seconds per row** set, a row closes when a message arrives after its time is up, so a sensor that has gone
-quiet adds no gaps until it speaks again. Set the trend's **stale after** to dim it meanwhile. Choose a row longer
+quiet adds no gaps until it speaks again. Set the histogram's **stale after** to dim it meanwhile. Choose a row longer
 than your sensor's interval (10 seconds for a reading every 5): a row that happens to catch no reading is a gap.
 
 A payload that isn't a number is dropped. The first time that happens, the node reports an error; the flow keeps
@@ -37,9 +37,9 @@ running.
 
 A sensor reads every 5 seconds.
 
-1. Journal A: rows 156, **seconds per row** 10, **rows per roll-up** 6. Its first output goes to a trend: the
+1. Journal A: rows 156, **seconds per row** 10, **rows per roll-up** 6. Its first output goes to a histogram: the
    last 26 minutes.
 2. Journal B, fed from A's second output: rows 156, **seconds per row** 0. Its first output goes to a second
-   trend: the last 2.6 hours, one bar a minute, each with its min to max line.
+   histogram: the last 2.6 hours, one bar a minute, each with its min to max line.
 
 `test-flows/gui-headliner-sensor-freenove-s3-4in.flow.json` does this with a BME280.

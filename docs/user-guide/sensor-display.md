@@ -82,17 +82,17 @@ looks different from a steady room.
 
 ## 3. Add the history
 
-A [journal](nodes/journal.md) keeps the recent readings, and a **gui trend** draws them.
+A [journal](nodes/journal.md) keeps the recent readings, and a **gui histogram** draws them.
 
 1. Wire the temperature output to a journal with **seconds per row** `10`, **rows kept** `156` and **rows per
-   roll-up** `6`. Wire its first output to a gui trend. That trend shows the last 26 minutes.
+   roll-up** `6`. Wire its first output to a gui histogram. That histogram shows the last 26 minutes.
 2. Wire the journal's second output, one summary per minute, to a second journal with **seconds per row** `0`. Wire
-   that journal to a second gui trend, which shows the last 2.6 hours.
-3. Wire output 4, the pressure copy, to a journal with **seconds per row** `60`, and that to a third gui trend.
+   that journal to a second gui histogram, which shows the last 2.6 hours.
+3. Wire output 4, the pressure copy, to a journal with **seconds per row** `60`, and that to a third gui histogram.
 
-Each bar is the average of its row, and the thin line runs from the row's min to its max. Set each trend's
+Each bar is the average of its row, and the thin line runs from the row's min to its max. Set each histogram's
 **bottom at** and **top at** to the range you expect, for example 15 to 30 for temperature. See
-[Trend](nodes/gui.md#trend).
+[Histogram](nodes/gui.md#histogram).
 
 ## 4. Add the clock
 
@@ -122,7 +122,7 @@ outputs 1 to 3 of the function to them, and pick your MQTT broker and WiFi. See
 
 ## Deploy
 
-Click **Compile → Deploy**. The display lights, the readings appear within 5 seconds, the trends fill as the minutes
+Click **Compile → Deploy**. The display lights, the readings appear within 5 seconds, the histograms fill as the minutes
 pass, and the clock starts once the board has the time.
 
 ## If it doesn't work

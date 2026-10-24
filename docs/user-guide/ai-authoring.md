@@ -112,7 +112,7 @@ only the nodes you add, and don't relayout it unless they ask.
 | react to a switch or button | `eswitch` (a debounced switch: open and close events); `ebutton` for press, release, long-press and double-click; `interrupt` for raw edges |
 | drive a pin | `gpio_out` (on/off), `pwm_out` |
 | change or route a message | `function`; `filter` to pass only changes; `delay` |
-| keep a number's history | `journal`, shown by a `gui_trend` |
+| keep a number's history | `journal`, shown by a histogram (`gui_trend`) |
 | show the time | `ntp` (two for time and date: `format` `time` and `date`) |
 | talk MQTT / HTTP / UDP | `mqtt_publish`, `mqtt_subscribe`, `http_request`, `http_in` and `http_response`, `udp_send`, `udp_receive` |
 | draw on a screen | `gui_screen` with `gui_*` widgets, wired to `display_spi` |
@@ -213,7 +213,7 @@ Rules that cause most failures:
   which an orientation refuses; `-1` is always allowed). At `"90"` or `"270"` the picture is the panel turned, so a
   320 x 480 panel gives 480 wide by 320 high to lay out.
 - A modal is laid out in `screens.<screenId>.modals`, not in `pages`: see the format below.
-- A trend takes a journal's first output, and a journal takes numbers: `sensor → journal → trend`.
+- A histogram (`gui_trend`) takes a journal's first output, and a journal takes numbers: `sensor → journal → histogram`.
 
 A modal (`gui_modal`, with `screen` set to the `gui_screen` node's id) is listed next to `pages`. Its `root` holds what
 it shows, and not the modal node itself:
@@ -242,7 +242,7 @@ A button widget takes `font`, `grow` and `alignSelf` like the others. The button
 plug), `gui.md` has the wiring.
 
 Read [GUI nodes](nodes/gui.md) for the details, and copy from `test-flows/`:
-`gui-headliner-sensor-freenove-s3-4in.flow.json` (a sensor display with trends, a clock and MQTT),
+`gui-headliner-sensor-freenove-s3-4in.flow.json` (a sensor display with histograms, a clock and MQTT),
 `gui-touch-freenove-s3-4in.flow.json` (buttons), `gui-orientation-test-freenove-s3-4in.flow.json`.
 
 ## Custom nodes
@@ -260,7 +260,7 @@ Python body on its own with sample messages.
 | Publish to MQTT | `basic-mqtt.flow.json` |
 | Call a web service | `basic-http-request.flow.json` |
 | A BME280 reading | `bmp280-test-flow.flow.json` |
-| A sensor on a display, with trends and a clock | `gui-headliner-sensor-freenove-s3-4in.flow.json` |
+| A sensor on a display, with histograms and a clock | `gui-headliner-sensor-freenove-s3-4in.flow.json` |
 | Touch buttons | `gui-touch-freenove-s3-4in.flow.json` |
 
 ## When you hand the flow back

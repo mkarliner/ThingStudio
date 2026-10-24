@@ -34,7 +34,7 @@ See [flows, nodes and messages](../background/flows-and-nodes.md) for how they f
 | change a message, or decide where it goes | [function](function.md) |
 | set or clear a value between messages | [change](change.md) |
 | send only changes, or limit the rate | [filter](filter.md) |
-| keep a number's history and show its trend | [journal](journal.md) |
+| keep a number's history and show its histogram | [journal](journal.md) |
 | show the time of day | [ntp](ntp.md) |
 | wait before passing a message on | [delay](delay.md) |
 | see what's in a message | [debug](debug.md) |
@@ -58,7 +58,7 @@ Nodes that don't need a network or hardware:
 | [delay](delay.md) | transform | Passes each message on after a set wait. |
 | [filter](filter.md) | transform | Passes a message on only if it changed enough, or enough time has passed. |
 | [change](change.md) | transform | Sets or deletes one message property or flow variable. |
-| [journal](journal.md) | transform | Keeps the recent history of a number as average, min and max rows, for a trend. |
+| [journal](journal.md) | transform | Keeps the recent history of a number as average, min and max rows, for a histogram. |
 | [debug](debug.md) | sink | Prints a message to the editor's console. |
 
 ## Network

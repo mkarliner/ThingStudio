@@ -15,7 +15,7 @@ property panel: see [Laying out pages](#laying-out-pages).
 - **gui label** — shows `msg.payload` as text.
 - **gui bar** — a bar that fills between *empty at* and *full at*. Its **style** is *solid* (the outline) or
   *segments*: a row of cells, lit in the accent colour and unlit in the track, with a cell count to set.
-- **gui trend** — a moving histogram: a row of bars, oldest on the left, newest on the right. See [Trend](#trend).
+- **gui histogram** — a moving histogram: a row of bars, oldest on the left, newest on the right. See [Histogram](#histogram).
 - **gui light** — on when `msg.payload` is true, off when false. Its **style** is *light* (the circle) or
   *chip*: a filled pill showing a short word, with the on and off text both editable ("OK"/"Off").
 - **gui button** — a touch button. It has an input, which sets what it shows, and an output, which sends when it is
@@ -35,7 +35,7 @@ time is dimmed (or underlined, on a black-and-white display), so an old reading 
 On a classic ESP32 without PSRAM, a GUI flow needs the [custom firmware for classic ESP32](../custom-firmware.md):
 stock MicroPython runs out of memory loading the display stack.
 
-## Trend
+## Histogram
 
 Shows what a number can't: which way it is heading. Wire it to the first output of a [journal](journal.md), or to
 any node that sends a list of numbers (a `None` is a gap), such as a spectrum from a function node.
