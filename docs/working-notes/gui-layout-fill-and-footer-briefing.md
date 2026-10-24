@@ -6,18 +6,44 @@ Session: 2026-10-24. Continuation handoff — the next session starts here.
 
 The CYD's cards now draw correctly (two library bugs fixed and on the board), Mike has ruled that a layout must be
 able to fill the rest of a page and that the page dots belong in a footer that **shrinks** the page, and the next
-session builds those two rulings — while 13.0.0 stays unshipped.
+session **triages the backlog first, then** builds those two rulings — while 13.0.0 stays unshipped.
+
+## First action: triage the backlog before picking work
+
+`docs/working-notes/outstanding-items.md` has become unreadable as a working list: **946 lines, 150 top-level
+bullets, and roughly 69 of them say "closed", "done", "settled" or "built" in their own text.** It has not been
+re-audited against `git log` since the 2026-08-19 pass, so the active sections still carry finished work inline —
+the CYD gate, the custom-image build, the deploy-guidance decision and others each take a paragraph to say they are
+over, and the open items are buried between them.
+
+**Spend the first task making it readable, and only then pick work from it** (Mike, 2026-10-24):
+
+- move every bullet whose own text says it is closed into the "Resolved" section (or delete it where it is already
+  there), so each active section holds open work only;
+- keep the one-line pointer plus detail-file link that the file's own convention asks for — compress, don't lose;
+- put a "last audited <date>, against `git log` at <sha>" line in the header, so the next audit knows what it
+  covers;
+- leave the `[LAUNCH]` / `[LAUNCH-NICE]` tags alone unless an item's status actually changed — this is a
+  readability pass, not a re-prioritisation.
 
 ## State at handoff
 
-`main` is at `a2ee2d8`, pushed, tree clean. Runtime/editor are **13.0.0** (`_RUNTIME_VERSION`,
-`EDITOR_TARGET_VERSION`).
+`main` is at `b979395` as this is written (the Dependabot merge; this brief's own commit sits on top), pushed,
+tree clean.
+Runtime/editor are **13.0.0** (`_RUNTIME_VERSION`, `EDITOR_TARGET_VERSION`).
 
 - `7d4a5f4` gui: a card's straight sides are full width, and text clears to what it sits on — the two rendering
   bugs that made the first cards look wrong.
 - `772ee16` test-flows: a card-heavy CYD demo, with a vivid theme.
 - `9452965` docs: a flow-only deploy is not a deploy; fill-the-page and footer rulings.
 - `a2ee2d8` gui layout: the footer shrinks the page rather than overlaying it.
+- `97a92dd` docs: this brief.
+- `eebe4b4` editor: six dev-dependency advisories cleared (npm tree now audits clean).
+- `0873df8` ci: `npm audit --audit-level=high` gate; the editor install documented; Dependabot config.
+- `7fc7f2e` supply chain: Actions pinned to commit SHAs, backend hash-pinned, the general rule in `AGENTS.md`.
+- `3db59f0` backend: the hash lock regenerated on the Python CI uses — the first one broke CI (see below).
+- `60c0457` dependabot: why pip gets alerts and not automated PRs.
+- PR #2 merged (`b979395`): `actions/setup-python` v5 → v7 under the new SHA pin, one line per workflow.
 
 The previous session's briefing (`gui-cards-cyd-panel-briefing.md`) is closed — its hypothesis 4 was right — and now
 carries a dated correction (see next section).
@@ -51,6 +77,8 @@ Verified on the real MicroPython unix port: `test_gui 23/23`, `test_gui_widgets 
 
 ## What is next, in order
 
+0. **Triage the backlog** — see "First action" above. Nothing below should start until the list it comes from can be
+   read.
 1. **Confirm the panel** (probably done by the Mac session): card sides straight edge-to-edge, no dark boxes behind
    `1022`/`Pressure`, dots no longer floating oddly below the card.
 2. **Build the two layout rulings.** Detail, options and open sub-questions:
@@ -102,22 +130,41 @@ Verified on the real MicroPython unix port: `test_gui 23/23`, `test_gui_widgets 
   Never trust `py_compile` for `device-runtime/src`.
 - The `/tmp/opencode/docsvenv` mkdocs is broken (`No module named mkdocs.__main__`); working-notes are outside
   `docs_dir: docs/user-guide` anyway, so only user-guide edits need a site build.
-- `gh` token: `/home/agent/.gh_token` (the `~/.config/gh` token is dead).
+- Only Python **3.13** is installed here; CI runs **3.12**, and the backend's hash lock depends on that difference.
+  `uv python install 3.12` (uv is in `/tmp/opencode/piptools-venv/bin/`) gives you one.
+- `gh` token: `/home/agent/.gh_token`. It can read Dependabot alerts (`Dependabot alerts: Read`) and Actions runs
+  and logs; it cannot read repo settings, so `GET /vulnerability-alerts` and `GET /automated-security-fixes` return
+  403 by design.
 
-## npm on the Mac (added 2026-10-24 after Mike hit it)
+## Builds and installs (`npm` and `pip`)
 
-The editor's dependency tree has two traps, both now fixed and recorded in
-`learnings/editor-build-tooling.md`:
+Both toolchains now have mechanical rules in `AGENTS.md` ("Third-party code: pinned, scriptless, gated") — read that
+before adding a dependency. The traps specific to this tree:
 
-- **`npm install` fails with `Cannot read properties of null (reading 'edgesOut')`** — an npm 10.9.9 arborist bug
-  resolving vitest's optional browser peers. It reproduces on an unchanged tree. Use `npm ci` (works, and is what
-  CI should use), or `npm install --legacy-peer-deps` when a lock has to be regenerated.
-- **Six advisories were in the tree** (2 moderate, 4 high), all dev-tooling: vite's dev server, vitest's mocker,
-  `@vue/server-renderer` (SSR — this app never server-renders), and `source-map-js`. Cleared by `vite` `^8.3.5`,
-  `vitest` `^4.1.12`, `vue` `3.5.44` and the lock's transitives; `npm audit` is now 0. Verified in a scratch
-  extraction, not the live mount: 1189 tests pass, `vite build` and the CLI build succeed.
+**Editor (npm).**
+- Install with `npm ci --ignore-scripts`. A plain `npm install` fails with `Cannot read properties of null
+  (reading 'edgesOut')` — an npm 10 arborist bug resolving vitest's optional browser peers, reproducible on an
+  unchanged tree. Regenerating a lock takes `npm install --ignore-scripts --legacy-peer-deps`.
+- CI fails on `npm audit --audit-level=high`, so a new dependency has to leave the tree clean. The six advisories
+  of 2026-10-24 were cleared this way; `learnings/editor-build-tooling.md` has the detail.
+- Dependabot is on: npm gets **security updates only** (version updates deliberately off), Actions get weekly
+  version PRs because a pinned SHA never moves. pip gets alerts but no PRs — its lock cannot be regenerated by a
+  bot.
 
-Never run `npm ci`/`install`/`build`/`vitest` from the agent sandbox against the shared `editor/` (`CLAUDE.md`):
+**Backend (pip).** The install is no longer `pip install -e 'backend[test]'`. It is:
+
+```
+pip install --require-hashes -r backend/requirements.txt
+pip install --no-deps --no-build-isolation -e ./backend
+```
+
+**The lock must be regenerated on Python 3.12**, which is what CI uses; this box only ships 3.13. The first attempt
+was generated on 3.13, silently dropped aiohttp's `typing_extensions` (marker-gated to `<3.13`), and turned `main`
+red with `In --require-hashes mode, all requirements must have their versions pinned with ==`. `uv python install
+3.12` gives you an interpreter. The exact command, and why `uv --python-version` is not a workaround, are in
+`backend/requirements-build.in`'s header — regenerate there, not from memory.
+
+**Never run `npm ci`/`install`/`build`/`vitest` from the agent sandbox against the shared `editor/`** (`CLAUDE.md`):
 Linux rollup/rolldown binaries land in the Mac's `node_modules`. Extract with `git archive HEAD` and work there.
 
 ## Decisions in force (do not relitigate)
@@ -132,6 +179,8 @@ Linux rollup/rolldown binaries land in the Mac's `node_modules`. Extract with `g
   erroring.
 - A frozen image's library is the fallback source, not the last word — `/lib` wins (runtime 11.1.0).
 - Deploy pieces stay at 5 KB. The classic-ESP32 image is built locally and attached to a release by hand.
+- **Third-party code is pinned, scriptless and gated** — `AGENTS.md` owns the rule and the per-source table; this
+  brief does not restate it. If a step here conflicts with it, `AGENTS.md` wins.
 
 ## Relevant files
 
@@ -146,7 +195,11 @@ Linux rollup/rolldown binaries land in the Mac's `node_modules`. Extract with `g
 - `editor/src/node-library/gui-theme-shared.ts` — `THEME_PRESETS`, `resolveThemeForFormat`.
 - `test-flows/gui-hero-cyd-theme.flow.json` — the demo (vivid theme, carded containers).
 - `docs/working-notes/outstanding-items/gui-layout-fill-and-footer.md` — the two rulings' detail.
+- `docs/working-notes/outstanding-items.md` — the backlog to triage first.
 - `docs/user-guide/nodes/gui.md` — Themes / Cards / Trend sections (update when the footer lands).
+- `.github/workflows/ci.yml` — the audit gate and the backend's hashed install; `.github/dependabot.yml` — what gets
+  a PR and what only gets an alert.
+- `backend/requirements.txt` (generated) and `backend/requirements-build.in` (the command and the 3.12 rule).
 
 ## Suggested filename/commit hygiene
 

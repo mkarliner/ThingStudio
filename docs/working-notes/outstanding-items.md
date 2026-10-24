@@ -20,6 +20,12 @@ inline, not a fresh check.
 
 ## Next up (already flagged before this audit, unstarted)
 
+**2026-10-24: this file is overdue for a compress pass.** Mike, reading it: it is full of completed items and not
+easy to read. 946 lines and 150 top-level bullets, of which roughly 69 say "closed", "done", "settled" or "built"
+in their own text; the last re-audit against `git log` was 2026-08-19. Moving closed bullets into "Resolved" is the
+first task of the next session — see `gui-layout-fill-and-footer-briefing.md`, "First action". Until that happens,
+treat a bullet here as possibly finished and read its own text before acting on it.
+
 - **Prior handoff doc: `framebuffer-st7789-display-briefing.md`.** Written 2026-09-17 as a scoping-only
   briefing for a new display node, prompted by the eswitch/ebutton real-hardware session on the EMF 2022
   TiDAL badge. Superseded the same day, after Mike corrected the badge's actual firmware (stock
