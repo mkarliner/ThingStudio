@@ -8,9 +8,9 @@ run `python3 tools/protocol_coverage.py` after changing the protocol, and `make 
 
 It answers "is there one at all", found by pattern: is the message in the spec, does it have vectors, does
 the side that should send it send it, does the side that should handle it handle it, does a test mention
-it, is it drawn in [`SEQUENCES.md`](SEQUENCES.md). It cannot say whether the behaviour is right. Exchanges
-(which reply answers which request, retries, timeouts) are not covered by any conformance vector today;
-the sequence diagrams are where a person checks those.
+it, is it drawn in [`SEQUENCES.md`](SEQUENCES.md). It cannot say whether the behaviour is right: the
+conversations themselves (SPEC §7) are checked by `vectors/exchanges.json`, run by both sides, and drawn in
+`SEQUENCES.md` for a person to check.
 
 ## Problems
 
@@ -18,43 +18,44 @@ None found.
 
 ## The matrix
 
-"n/a" means the column doesn't apply in that direction. "Editor handles" means the editor waits for or acts
+"Vectors" counts message-shape vectors (`vectors/messages.json`); "Exchanges" counts the conversations in
+`vectors/exchanges.json` the message takes part in. "n/a" means the column doesn't apply in that direction. "Editor handles" means the editor waits for or acts
 on the message somewhere beyond logging it; every arriving message is logged to the console regardless.
 "Tests mention" means a test file names the message, which is a weak signal: it does not mean the
 exchange is tested.
 
-| Id | Message | Direction | Ids agree (json/ts/py) | In SPEC.md | Vectors | Editor sends | Board handles | Board sends | Editor handles | Editor tests mention | Board tests mention | In a diagram |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | `HELLO` | board → editor | yes | yes | 2 | n/a | n/a | yes | yes | yes | yes | yes |
-| 2 | `DEPLOY` | editor → board | yes | yes | 2 | no, on purpose | yes | n/a | n/a | yes | yes | yes |
-| 3 | `DEPLOY_ACK` | board → editor | yes | yes | 2 | n/a | n/a | yes | yes | yes | yes | yes |
-| 4 | `DEPLOY_ERROR` | board → editor | yes | yes | 1 | n/a | n/a | yes | yes | yes | yes | yes |
-| 5 | `VALUE_STREAM` (reserved) | board → editor | yes | yes | 2 | n/a | n/a | **no** | **no** | yes | yes | yes |
-| 6 | `NODE_ERROR` | board → editor | yes | yes | 1 | n/a | n/a | yes | yes | yes | yes | yes |
-| 7 | `STATE_READ` (reserved) | both ways | yes | yes | 2 | **no** | yes | **no** | **no** | yes | yes | yes |
-| 8 | `STATE_WRITE` (reserved) | editor → board | yes | yes | 1 | **no** | yes | n/a | n/a | yes | yes | yes |
-| 9 | `TRIGGER` | editor → board | yes | yes | 1 | yes | yes | n/a | n/a | yes | yes | yes |
-| 10 | `HELLO_REQUEST` | editor → board | yes | yes | 1 | yes | yes | n/a | n/a | yes | yes | yes |
-| 11 | `NODE_STATUS` | board → editor | yes | yes | 2 | n/a | n/a | yes | yes | yes | yes | yes |
-| 12 | `EXEC` | editor → board | yes | yes | 1 | yes | yes | n/a | n/a | yes | yes | yes |
-| 13 | `STOP_TO_PROMPT` | editor → board | yes | yes | 1 | yes | yes | n/a | n/a | yes | yes | yes |
-| 14 | `SET_BOARD_SETTINGS` | editor → board | yes | yes | 2 | yes | yes | n/a | n/a | yes | yes | yes |
-| 15 | `BOARD_SETTINGS_RESULT` | board → editor | yes | yes | 2 | n/a | n/a | yes | yes | yes | yes | yes |
-| 16 | `DEP_PUT` | editor → board | yes | yes | 1 | yes | yes | n/a | n/a | yes | yes | yes |
-| 17 | `DEP_RESULT` | board → editor | yes | yes | 2 | n/a | n/a | yes | yes | yes | yes | yes |
-| 18 | `DEP_COMMIT` | editor → board | yes | yes | 1 | yes | yes | n/a | n/a | yes | yes | yes |
-| 19 | `RESTART` | editor → board | yes | yes | 2 | yes | yes | n/a | n/a | yes | yes | yes |
-| 20 | `DEP_ACK` | board → editor | yes | yes | 2 | n/a | n/a | yes | yes | yes | yes | yes |
-| 21 | `FLOW_PUT` | editor → board | yes | yes | 1 | yes | yes | n/a | n/a | **no** | yes | yes |
-| 22 | `FLOW_COMMIT` | editor → board | yes | yes | 1 | yes | yes | n/a | n/a | **no** | yes | yes |
-| 23 | `FLOW_ACK` | board → editor | yes | yes | 1 | n/a | n/a | yes | yes | **no** | yes | yes |
+| Id | Message | Direction | Ids agree (json/ts/py) | In SPEC.md | Vectors | Exchanges | Editor sends | Board handles | Board sends | Editor handles | Editor tests mention | Board tests mention | In a diagram |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | `HELLO` | board → editor | yes | yes | 2 | 0 | n/a | n/a | yes | yes | yes | yes | yes |
+| 2 | `DEPLOY` | editor → board | yes | yes | 2 | 0 | no, on purpose | yes | n/a | n/a | yes | yes | yes |
+| 3 | `DEPLOY_ACK` | board → editor | yes | yes | 2 | 1 | n/a | n/a | yes | yes | yes | yes | yes |
+| 4 | `DEPLOY_ERROR` | board → editor | yes | yes | 1 | 4 | n/a | n/a | yes | yes | yes | yes | yes |
+| 5 | `VALUE_STREAM` (reserved) | board → editor | yes | yes | 2 | 0 | n/a | n/a | **no** | **no** | yes | yes | yes |
+| 6 | `NODE_ERROR` | board → editor | yes | yes | 1 | 0 | n/a | n/a | yes | yes | yes | yes | yes |
+| 7 | `STATE_READ` (reserved) | both ways | yes | yes | 2 | 0 | **no** | yes | **no** | **no** | yes | yes | yes |
+| 8 | `STATE_WRITE` (reserved) | editor → board | yes | yes | 1 | 0 | **no** | yes | n/a | n/a | yes | yes | yes |
+| 9 | `TRIGGER` | editor → board | yes | yes | 1 | 0 | yes | yes | n/a | n/a | yes | yes | yes |
+| 10 | `HELLO_REQUEST` | editor → board | yes | yes | 1 | 0 | yes | yes | n/a | n/a | yes | yes | yes |
+| 11 | `NODE_STATUS` | board → editor | yes | yes | 2 | 0 | n/a | n/a | yes | yes | yes | yes | yes |
+| 12 | `EXEC` | editor → board | yes | yes | 1 | 0 | yes | yes | n/a | n/a | yes | yes | yes |
+| 13 | `STOP_TO_PROMPT` | editor → board | yes | yes | 1 | 0 | yes | yes | n/a | n/a | yes | yes | yes |
+| 14 | `SET_BOARD_SETTINGS` | editor → board | yes | yes | 2 | 0 | yes | yes | n/a | n/a | yes | yes | yes |
+| 15 | `BOARD_SETTINGS_RESULT` | board → editor | yes | yes | 2 | 0 | n/a | n/a | yes | yes | yes | yes | yes |
+| 16 | `DEP_PUT` | editor → board | yes | yes | 1 | 4 | yes | yes | n/a | n/a | yes | yes | yes |
+| 17 | `DEP_RESULT` | board → editor | yes | yes | 2 | 4 | n/a | n/a | yes | yes | yes | yes | yes |
+| 18 | `DEP_COMMIT` | editor → board | yes | yes | 1 | 4 | yes | yes | n/a | n/a | yes | yes | yes |
+| 19 | `RESTART` | editor → board | yes | yes | 2 | 0 | yes | yes | n/a | n/a | yes | yes | yes |
+| 20 | `DEP_ACK` | board → editor | yes | yes | 2 | 4 | n/a | n/a | yes | yes | yes | yes | yes |
+| 21 | `FLOW_PUT` | editor → board | yes | yes | 1 | 8 | yes | yes | n/a | n/a | yes | yes | yes |
+| 22 | `FLOW_COMMIT` | editor → board | yes | yes | 1 | 5 | yes | yes | n/a | n/a | yes | yes | yes |
+| 23 | `FLOW_ACK` | board → editor | yes | yes | 1 | 9 | n/a | n/a | yes | yes | yes | yes | yes |
 
 ## Where each message lives in the code
 
-- **`HELLO`** (1, board → editor): board sends it in `device-runtime/src/listener.py`; editor acts on it in `editor/src/app/main.ts`.
+- **`HELLO`** (1, board → editor): board sends it in `device-runtime/src/listener.py`; editor acts on it in `editor/src/app/main.ts`, `editor/src/protocol/transfer.ts`.
 - **`DEPLOY`** (2, editor → board): editor sends it nowhere, on purpose: kept for editors before 11.3.0; this editor always deploys in pieces (FLOW_PUT/FLOW_COMMIT), and the board still accepts DEPLOY; board handles it in `device-runtime/src/listener.py`.
-- **`DEPLOY_ACK`** (3, board → editor): board sends it in `device-runtime/src/listener.py`; editor acts on it in `editor/src/app/main.ts`.
-- **`DEPLOY_ERROR`** (4, board → editor): board sends it in `device-runtime/src/listener.py`; editor acts on it in `editor/src/app/main.ts`.
+- **`DEPLOY_ACK`** (3, board → editor): board sends it in `device-runtime/src/listener.py`; editor acts on it in `editor/src/protocol/transfer.ts`.
+- **`DEPLOY_ERROR`** (4, board → editor): board sends it in `device-runtime/src/listener.py`; editor acts on it in `editor/src/protocol/transfer.ts`.
 - **`VALUE_STREAM`** (5, board → editor): board sends it **nothing found**; editor acts on it nowhere beyond logging it.
 - **`NODE_ERROR`** (6, board → editor): board sends it in `device-runtime/src/listener.py`; editor acts on it in `editor/src/app/main.ts`.
 - **`STATE_READ`** (7, both ways): editor sends it **nothing found**; board handles it in `device-runtime/src/listener.py`; board sends it **nothing found**; editor acts on it nowhere beyond logging it.
@@ -67,10 +68,10 @@ exchange is tested.
 - **`SET_BOARD_SETTINGS`** (14, editor → board): editor sends it in `editor/src/app/main.ts`; board handles it in `device-runtime/src/listener.py`.
 - **`BOARD_SETTINGS_RESULT`** (15, board → editor): board sends it in `device-runtime/src/listener.py`; editor acts on it in `editor/src/app/main.ts`.
 - **`DEP_PUT`** (16, editor → board): editor sends it in `editor/src/compiler/flow-dependencies.ts`; board handles it in `device-runtime/src/listener.py`.
-- **`DEP_RESULT`** (17, board → editor): board sends it in `device-runtime/src/listener.py`; editor acts on it in `editor/src/app/main.ts`.
+- **`DEP_RESULT`** (17, board → editor): board sends it in `device-runtime/src/listener.py`; editor acts on it in `editor/src/protocol/transfer.ts`.
 - **`DEP_COMMIT`** (18, editor → board): editor sends it in `editor/src/compiler/flow-dependencies.ts`; board handles it in `device-runtime/src/listener.py`.
 - **`RESTART`** (19, editor → board): editor sends it in `editor/src/app/main.ts`; board handles it in `device-runtime/src/listener.py`.
-- **`DEP_ACK`** (20, board → editor): board sends it in `device-runtime/src/listener.py`; editor acts on it in `editor/src/app/main.ts`.
-- **`FLOW_PUT`** (21, editor → board): editor sends it in `editor/src/app/main.ts`; board handles it in `device-runtime/src/listener.py`.
-- **`FLOW_COMMIT`** (22, editor → board): editor sends it in `editor/src/app/main.ts`; board handles it in `device-runtime/src/listener.py`.
-- **`FLOW_ACK`** (23, board → editor): board sends it in `device-runtime/src/listener.py`; editor acts on it in `editor/src/app/main.ts`.
+- **`DEP_ACK`** (20, board → editor): board sends it in `device-runtime/src/listener.py`; editor acts on it in `editor/src/protocol/transfer.ts`.
+- **`FLOW_PUT`** (21, editor → board): editor sends it in `editor/src/protocol/transfer.ts`; board handles it in `device-runtime/src/listener.py`.
+- **`FLOW_COMMIT`** (22, editor → board): editor sends it in `editor/src/protocol/transfer.ts`; board handles it in `device-runtime/src/listener.py`.
+- **`FLOW_ACK`** (23, board → editor): board sends it in `device-runtime/src/listener.py`; editor acts on it in `editor/src/protocol/transfer.ts`.

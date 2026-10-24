@@ -23,3 +23,5 @@ it reviewed has moved on; write a new one and link back.
 - `2026-10-24-protocol-audit.md` -- board ↔ editor wire protocol: message layer sound; deploy exchanges can
   leave the board refusing every deploy, or overwrite the saved flow. Diagrams in
   `interfaces/protocol/SEQUENCES.md`; re-run with `device-runtime/test/audit_protocol_exchanges.py`.
+- `2026-10-24-protocol-state-machine.md` -- follow-up: the conversation as a specified state machine (SPEC §7),
+  implemented on both sides and checked by shared exchange vectors; what the audit's findings say now.

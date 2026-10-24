@@ -1,20 +1,20 @@
-# Wire protocol — exchanges, as sequence diagrams
+# Wire protocol — exchanges, as diagrams
 
-`SPEC.md` says what each message looks like. This file shows **how they are used together**: who sends
-what, what answers it, and what happens when something goes wrong. It describes what the code does today
-(editor `editor/src/app/main.ts`, board `device-runtime/src/listener.py`, backend
-`backend/src/thingstudio_backend/{ws_relay,tcp_relay}.py`), including its known faults. Those are marked
-**⚠** and numbered after the findings in the latest protocol audit
-(`docs/working-notes/reviews/2026-10-24-protocol-audit.md`).
+`SPEC.md` §7 sets the rules for how messages are used together. This file draws them: who sends what, what
+answers it, and what happens when something goes wrong. It shows what the code does (editor
+`editor/src/protocol/transfer.ts` and `editor/src/app/main.ts`, board `device-runtime/src/listener.py` and
+`transfer.py`, backend `backend/src/thingstudio_backend/{ws_relay,tcp_relay}.py`). The one known limit still
+open is marked **⚠**.
 
 The diagrams are Mermaid and render on GitHub and in VS Code's Markdown preview.
 
 **Keeping this current.** `tools/protocol_coverage.py` (run by `make test`) fails if a message in
-`messages.json` appears in no diagram here, or a diagram names a message that doesn't exist. It cannot tell
-whether a diagram is *right*. When you change an exchange, change its diagram in the same commit. The
-convention the check relies on: on an arrow line, an **unquoted ALL-CAPS first word is a message name**
-(`E->>B: FLOW_PUT offset, data`). Anything that isn't a protocol message (backend JSON, the WiFi
-handshake's text lines, printed console lines) starts with a quote or lower case.
+`messages.json` appears in no diagram here, or a diagram names a message that doesn't exist. It can't tell
+whether a diagram is *right*: the exchange vectors (`vectors/exchanges.json`) check the behaviour, and this file
+should match them. When you change an exchange, change its diagram in the same commit. The convention the
+check relies on: on an arrow line, an **unquoted ALL-CAPS first word is a message name**
+(`E->>B: FLOW_PUT offset, data`). Anything that isn't a protocol message (backend JSON, the WiFi handshake's
+text lines, printed console lines) starts with a quote or lower case.
 
 Participants: **Editor** (the browser app), **Backend** (the local relay, only when connected through it),
 **Board** (the listener on the device). The backend moves frames verbatim and never decodes them, so most
@@ -24,14 +24,15 @@ Contents:
 
 1. [Connect over USB](#1-connect-over-usb)
 2. [Connect over WiFi](#2-connect-over-wifi)
-3. [Deploy a flow — the normal path](#3-deploy-a-flow--the-normal-path)
-4. [Deploy a flow — when a piece goes wrong](#4-deploy-a-flow--when-a-piece-goes-wrong)
-5. [Deploy a flow — when the commit fails](#5-deploy-a-flow--when-the-commit-fails)
-6. [Install a library](#6-install-a-library)
-7. [Change board settings](#7-change-board-settings)
-8. [Commands with no reply](#8-commands-with-no-reply)
-9. [Things the board says unasked](#9-things-the-board-says-unasked)
-10. [Old and reserved messages](#10-old-and-reserved-messages)
+3. [A file arriving in pieces: the state machine](#3-a-file-arriving-in-pieces-the-state-machine)
+4. [Deploy a flow](#4-deploy-a-flow)
+5. [Deploy a flow — when a piece goes wrong](#5-deploy-a-flow--when-a-piece-goes-wrong)
+6. [Deploy a flow — when the commit fails](#6-deploy-a-flow--when-the-commit-fails)
+7. [Install a library](#7-install-a-library)
+8. [Change board settings](#8-change-board-settings)
+9. [Commands with no reply](#9-commands-with-no-reply)
+10. [Things the board says unasked](#10-things-the-board-says-unasked)
+11. [Old and reserved messages](#11-old-and-reserved-messages)
 
 ---
 
@@ -92,35 +93,64 @@ sequenceDiagram
         B-->>BE: "TSAUTH BUSY", then closes
     else no password set on the board
         B-->>BE: "TSAUTH NOPASSWORD", then closes
-        Note over E: WiFi needs a password. Set one over USB (section 7).
+        Note over E: WiFi needs a password. Set one over USB (section 8).
     end
 ```
 
-⚠ **Finding 5.** Everything the board sends goes to USB *and* to the WiFi session. Replies carry no request
-id, so an editor on USB and one on WiFi each see the other's replies, and the `HELLO` sent when a WiFi
-session starts can land in the middle of the other editor's deploy.
+⚠ **One editor at a time** (SPEC §7). Everything the board sends goes to USB *and* to the WiFi session, and
+replies carry no request id, so an editor on USB and one on WiFi each see the other's replies. The `HELLO` sent
+when a WiFi session starts can land in the middle of the other editor's deploy and read as a restart.
 
-## 3. Deploy a flow — the normal path
+## 3. A file arriving in pieces: the state machine
 
-The editor sends the flow in 5 KB pieces, each answered, then a commit. The board writes pieces to a
-temporary file, so a big flow never needs one big block of memory.
+The flow, and each file of a library, arrive the same way: in pieces, each answered. The board keeps one
+**stream** per file (`transfer.py`), always in one of three states. This is SPEC §7.2's table as a picture.
+
+```mermaid
+stateDiagram-v2
+    direction TB
+    [*] --> idle
+    idle --> receiving : piece at offset 0
+    receiving --> failed : the write fails
+    failed --> receiving : offset 0 starts over
+    receiving --> idle : commit (any outcome)
+    failed --> idle : commit (refused)
+    note right of receiving
+        more pieces stay here:
+        the next one, a resend,
+        or offset 0 (starts over)
+    end note
+```
+
+Two rules the editor relies on:
+
+- **Any piece may be sent again.** It rewrites the same bytes and is answered `ok`. So when an answer is lost,
+  the editor just resends.
+- **Offset 0 always starts over**, whatever came before: an abandoned transfer, a refused commit, a failed write.
+
+Refused without changing state: a piece after a gap, a piece with a different `total`, a piece that runs past
+the end, a piece at offset > 0 while idle (all `BadPiece`), and any piece at offset > 0 while failed (its
+recorded error again).
+
+## 4. Deploy a flow
 
 ```mermaid
 sequenceDiagram
     participant E as Editor
     participant B as Board
-    Note over E: Version gate: refuses on a major mismatch,<br/>but only if a HELLO was seen this connection.<br/>None seen: deploys without checking (finding 9).
+    Note over E: Version gate: refuses on a major mismatch,<br/>if a HELLO was seen this connection.<br/>None seen: deploys without checking, and says so.
     Note over E: Compiles the flow to bytecode.
     opt the flow imports libraries
-        Note over E,B: Install any the board lacks first (section 6).<br/>A failure there stops the deploy, flow unchanged.
+        Note over E,B: Install any the board lacks first (section 7).<br/>A failure there stops the deploy, flow unchanged.
     end
     loop each 5 KB piece: offset 0, 5120, 10240 ...
         E->>B: FLOW_PUT offset, total, data
-        Note over B: writes the piece into /_flow.mpy.tmp
+        Note over B: into /_flow.mpy.tmp (section 3)
         B-->>E: FLOW_ACK offset, ok
     end
+    Note over E: only now waits for the commit's answer
     E->>B: FLOW_COMMIT total, flowName, deployId, libraries needed
-    Note over B: 1. checks all bytes arrived<br/>2. renames .tmp to /_flow.mpy<br/>3. checks the libraries are on the board<br/>4. stops the running flow<br/>5. saves name and deployId, imports the new flow<br/>6. removes libraries the new flow doesn't use
+    Note over B: 1. all bytes arrived?<br/>2. libraries installed?<br/>3. move .tmp over the saved flow<br/>4. stop the running flow, save name/deployId,<br/>start the new flow<br/>5. remove libraries no longer used
     alt the flow started
         B-->>E: DEPLOY_ACK free flash, free RAM
         Note over E: "deploy OK"
@@ -132,9 +162,9 @@ sequenceDiagram
 
 The editor waits up to 30 s for the answer to the commit.
 
-## 4. Deploy a flow — when a piece goes wrong
+## 5. Deploy a flow — when a piece goes wrong
 
-Each piece gets up to three tries. What happens depends on why the editor didn't get an `ok`.
+Each piece gets up to three tries. A resend never changes the piece or the plan.
 
 ```mermaid
 sequenceDiagram
@@ -142,28 +172,29 @@ sequenceDiagram
     participant B as Board
     E->>B: FLOW_PUT offset N
     alt the line reached the board damaged (lost bytes on a USB-UART)
-        Note over B: can't decode it, stores nothing
+        Note over B: the line isn't one whole frame:<br/>stores nothing, keeps nothing
         B-->>E: FLOW_ACK offset N, ok false, code Garbled
-        E->>B: FLOW_PUT offset N (resent, up to 2 more times)
+        E->>B: FLOW_PUT offset N (sent again at once)
         B-->>E: FLOW_ACK offset N, ok
     else the board stored the piece, but its FLOW_ACK was lost
         Note over E: no answer in 10 s
-        E->>B: FLOW_PUT offset N (resent)
-        Note over B: ⚠ Finding 1: already has piece N,<br/>expects the next one
-        B-->>E: FLOW_ACK offset N, ok false, code BadPiece
-        Note over E: treats BadPiece as final: deploy failed
-        Note over B: ⚠ still expects the next piece. Every later deploy<br/>starts at offset 0 and is refused the same<br/>way, until the board restarts.
-    else any other refusal (WriteFailed, BadPiece)
+        E->>B: FLOW_PUT offset N (sent again)
+        Note over B: rewrites the same bytes
+        B-->>E: FLOW_ACK offset N, ok
+    else the board restarted
+        B-->>E: HELLO (boot)
+        Note over E: "board restarted during the deploy"
+    else three tries without an ok, or any other refusal
         B-->>E: FLOW_ACK offset N, ok false, code, error
-        Note over E: final: deploy failed, reported once
+        Note over E: deploy failed, reported once.<br/>The next deploy starts at offset 0, cleanly.
     end
 ```
 
-## 5. Deploy a flow — when the commit fails
+## 6. Deploy a flow — when the commit fails
 
-The board answers a commit with exactly one `DEPLOY_ACK` or `DEPLOY_ERROR`. The editor reports the
-error once, with advice. Nothing is retried, and the board never frees memory or restarts by itself to make a
-retry fit.
+The board answers a commit with exactly one `DEPLOY_ACK` or `DEPLOY_ERROR`, and the commit ends the stream
+either way. The checks come before anything under a real name changes. Nothing is retried, and the board never
+frees memory or restarts by itself to make a retry fit.
 
 ```mermaid
 sequenceDiagram
@@ -172,46 +203,32 @@ sequenceDiagram
     E->>B: FLOW_COMMIT total, flowName, deployId, libraries
     alt fewer bytes arrived than total
         B-->>E: DEPLOY_ERROR Incomplete
-        Note over B: old flow keeps running, untouched
+        Note over B: running flow and saved flow untouched
     else a library the flow needs is missing
-        Note over B: ⚠ Finding 3: the new flow file has<br/>ALREADY replaced the old one on flash
         B-->>E: DEPLOY_ERROR MissingDependency
-        Note over B: old flow keeps running in memory and HELLO<br/>names it, but after a reset the board loads<br/>the refused flow, fails, and runs nothing
+        Note over B: running flow and saved flow untouched
         Note over E: forgets what libraries the board has,<br/>so the next Deploy sends them all
+    else the saved flow can't be replaced
+        B-->>E: DEPLOY_ERROR WriteFailed
+        Note over B: running flow and saved flow untouched
     else the new flow raises while starting
         Note over B: old flow already stopped
         B-->>E: DEPLOY_ERROR ImportError / MemoryError / ...
-        Note over B: no flow running now
+        Note over B: no flow running now. The new flow is saved,<br/>so a reset tries it again (safe mode stops a loop)
         Note over E: advice for ImportError and MemoryError
     end
 ```
 
-There is one more way to get a `DEPLOY_ERROR`, while pieces are still being sent: a piece the board has no
-memory to decode.
+A `DEPLOY_ERROR` can also arrive while pieces are still being sent: a piece the board had no memory to read
+gets a `Garbled` answer *and* a `DEPLOY_ERROR MemoryError` (the second is for older editors, which sent the
+whole flow in one `DEPLOY`). This editor isn't waiting for a commit answer yet, so it only logs that line and
+resends the piece.
 
-```mermaid
-sequenceDiagram
-    participant E as Editor
-    participant B as Board
-    Note over E: arms its wait for DEPLOY_ACK or DEPLOY_ERROR<br/>BEFORE sending the first piece
-    E->>B: FLOW_PUT offset N
-    Note over B: MemoryError decoding the line
-    B-->>E: FLOW_ACK offset N, ok false, code Garbled
-    B-->>E: DEPLOY_ERROR MemoryError
-    Note over E: ⚠ Finding 4: the DEPLOY_ERROR fills<br/>the commit's wait. The Garbled ack resends the piece.
-    E->>B: FLOW_PUT offset N (resent, now fits)
-    B-->>E: FLOW_ACK offset N, ok
-    E->>B: FLOW_COMMIT
-    Note over E: reports "deploy failed: MemoryError"<br/>straight away, from the old answer
-    B-->>E: DEPLOY_ACK (logged, nobody waiting for it)
-    Note over B: the new flow is running
-```
-
-## 6. Install a library
+## 7. Install a library
 
 Before a flow that imports libraries is deployed, the editor compares each library's hash with the list the
 board gave in `HELLO` and sends only the missing or changed ones. Same pattern as a flow: 5 KB pieces, each
-answered, then a commit.
+answered (section 3's rules, one stream per file), then a commit.
 
 ```mermaid
 sequenceDiagram
@@ -224,45 +241,31 @@ sequenceDiagram
     loop each library the board lacks
         loop each 5 KB piece of each file
             E->>B: DEP_PUT name, file, offset, total, data
-            Note over B: writes into /lib/file.tmp
-            B-->>E: DEP_ACK name, file, offset, ok
+            alt stored
+                B-->>E: DEP_ACK name, file, offset, ok
+            else the line was damaged
+                B-->>E: FLOW_ACK ok false, code Garbled
+                Note over E: about the line sent last: sends the piece again
+            else no answer in 10 s
+                Note over E: sends the piece again (any piece may be resent)
+            else refused (NoSpace, BadName, WriteFailed)
+                B-->>E: DEP_ACK name, file, offset, ok false, code
+                Note over E: deploy failed, flow unchanged
+            end
         end
         E->>B: DEP_COMMIT name, hash, files and sizes
-        Note over B: checks sizes, renames .tmp files into place,<br/>updates its library index
-        B-->>E: DEP_RESULT name, ok, free flash
+        Note over B: checks sizes, moves the files into place,<br/>updates its library index. Ends the streams.
+        alt installed
+            B-->>E: DEP_RESULT name, ok, free flash
+        else a file is incomplete, or a write failed
+            B-->>E: DEP_RESULT name, ok false, code Incomplete / WriteFailed
+            Note over B: deletes the temporary files
+        end
     end
-    Note over E: then the flow itself (section 3), with the<br/>libraries' hashes in FLOW_COMMIT
+    Note over E: then the flow itself (section 4), with the<br/>libraries' hashes in FLOW_COMMIT
 ```
 
-What goes wrong:
-
-```mermaid
-sequenceDiagram
-    participant E as Editor
-    participant B as Board
-    E->>B: DEP_PUT name L, offset N
-    alt the board stored it but the DEP_ACK was lost
-        Note over E: no answer in 10 s
-        E->>B: DEP_PUT name L, offset N (resent)
-        Note over B: ⚠ Finding 2: expects more bytes than N,<br/>refuses, and remembers library L as failed
-        B-->>E: DEP_ACK name L, ok false, code BadPiece
-        Note over E: deploy failed, and it sends no DEP_COMMIT
-        Note over B: ⚠ L stays "failed" until a DEP_COMMIT for L.<br/>Every later deploy that needs L gets the<br/>same refusal at its first piece, until a restart.
-    else the line reached the board damaged
-        Note over B: decodes nothing. Remembers the decode error<br/>for the next failed DEP_COMMIT. Sends a FLOW_ACK<br/>Garbled (meant for flow pieces, ignored here).
-        Note over E: no DEP_ACK in 10 s: resends the piece,<br/>which the board accepts
-    else no room on flash, bad name
-        B-->>E: DEP_ACK name L, ok false, code NoSpace / BadName
-        Note over E: deploy failed, flow unchanged
-    end
-    E->>B: DEP_COMMIT name L
-    alt a piece is missing or the sizes don't match
-        B-->>E: DEP_RESULT name L, ok false, code Incomplete
-        Note over B: deletes the .tmp files
-    end
-```
-
-## 7. Change board settings
+## 8. Change board settings
 
 Hostname and WiFi password. **USB only**: the password is what makes a WiFi session trusted, so it can't be
 changed over WiFi.
@@ -285,7 +288,7 @@ sequenceDiagram
     Note over E: no answer in 10 s: "is it still connected?"
 ```
 
-## 8. Commands with no reply
+## 9. Commands with no reply
 
 These four have no answering message. What the editor sees is what the board prints, or the `HELLO` after a
 restart.
@@ -311,7 +314,7 @@ sequenceDiagram
 
 `STOP_TO_PROMPT` is also sent before Install runtime and Remove flow, so the board lets go of the port.
 
-## 9. Things the board says unasked
+## 10. Things the board says unasked
 
 ```mermaid
 sequenceDiagram
@@ -324,20 +327,21 @@ sequenceDiagram
     Note over E: sets that node's status dot
     B-->>E: "printed lines" (debug node output, LISTENER_ messages)
     Note over E: shown in the console as plain text
-    Note over B: Any line it can't read, from anyone, including<br/>a message type it doesn't know (finding 6):
-    B-->>E: FLOW_ACK offset next expected, ok false, code Garbled
-    Note over E: ignored unless a flow piece at that<br/>offset is waiting for an answer
+    Note over B: A line it can't read (bad base64, not one<br/>whole frame, a MemoryError reading it):
+    B-->>E: FLOW_ACK offset stored so far, ok false, code Garbled
+    Note over E: about the line it sent last: sends it again.<br/>Ignored when nothing is waiting.
+    Note over B: A whole message of a type it doesn't know:<br/>logged, never answered.
 ```
 
-## 10. Old and reserved messages
+## 11. Old and reserved messages
 
 ```mermaid
 sequenceDiagram
     participant E as Editor
     participant B as Board
-    Note over E,B: Whole-flow deploy, for editors before 11.3.0. This<br/>editor never sends it. The board still accepts it.
+    Note over E,B: Whole-flow deploy, for editors before 11.3.0. This<br/>editor never sends it. The board still accepts it,<br/>with the same checks-first order as FLOW_COMMIT.
     E->>B: DEPLOY bytecode, flowName, deployId, libraries
-    B-->>E: DEPLOY_ACK or DEPLOY_ERROR (as in section 5)
+    B-->>E: DEPLOY_ACK or DEPLOY_ERROR (as in section 6)
     Note over E,B: Reserved: the id is kept, nothing uses it.
     B-->>E: VALUE_STREAM (never sent, decided not to build)
     E->>B: STATE_READ (board logs "not yet implemented")

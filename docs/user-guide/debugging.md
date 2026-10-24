@@ -159,6 +159,16 @@ On an ESP32, deploying a flow with MQTT nodes can fail with "Wifi Internal State
 reconnecting to the network the previous flow used, and refuses a new connection until that finishes. The MQTT nodes
 retry up to three times. If it still fails, deploy again.
 
+## Deploy resends a piece, or fails part-way
+
+Deploy sends the flow, and each library it uses, in pieces, and waits for the board to confirm each one. Over a
+USB-serial chip such as the CYD's, a piece can arrive damaged or its confirmation can get lost. The console then
+shows `resending (1/2)`, and Deploy carries on. That is normal now and then.
+
+If a piece still fails after three tries, Deploy stops and says so, and the flow on the board is unchanged. Deploy
+again. If it keeps happening, try another USB cable or port, close anything else using the serial port, or connect
+over WiFi.
+
 ## Reading a node error
 
 When a node fails on the board, the console shows a `[NODE_ERROR]` line naming the node and the error, and the node

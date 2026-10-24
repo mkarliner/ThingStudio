@@ -26,7 +26,9 @@ SEQUENCES = os.path.join(PROTO, "SEQUENCES.md")
 
 # Where each side's code lives, and how a send or a handler looks there.
 EDITOR_SRC = os.path.join(ROOT, "editor", "src")
-EDITOR_PROTOCOL_DIR = os.path.join(EDITOR_SRC, "protocol")  # the codec itself: not a sender or a handler
+EDITOR_PROTOCOL_DIR = os.path.join(EDITOR_SRC, "protocol")
+# The codec and the message table name every message without sending or handling it.
+EDITOR_CODEC_FILES = ("messages.ts", "codec.ts", "protocol.ts")
 DEVICE_SRC = os.path.join(ROOT, "device-runtime", "src")
 TEST_DIRS = {
     "editor": os.path.join(ROOT, "editor", "test"),
@@ -59,14 +61,13 @@ def rel(path):
     return os.path.relpath(path, ROOT).replace(os.sep, "/")
 
 
-def source_files(top, exts, skip_dir=None):
+def source_files(top, exts, skip_files=()):
     for dirpath, dirnames, filenames in os.walk(top):
         dirnames[:] = sorted(d for d in dirnames if d not in ("node_modules", "__pycache__", "vendor"))
-        if skip_dir and os.path.normpath(dirpath).startswith(os.path.normpath(skip_dir)):
-            continue
         for fn in sorted(filenames):
-            if fn.endswith(exts):
-                yield os.path.join(dirpath, fn)
+            path = os.path.join(dirpath, fn)
+            if fn.endswith(exts) and path not in skip_files:
+                yield path
 
 
 def code_only(path):
@@ -125,8 +126,16 @@ def build():
     for v in vectors:
         t = v.get("message", {}).get("type")
         vector_count[t] = vector_count.get(t, 0) + 1
+    exchange_path = os.path.join(PROTO, "vectors", "exchanges.json")
+    exchanges = json.load(open(exchange_path, encoding="utf-8"))["exchanges"] if os.path.exists(exchange_path) else []
+    exchange_count = {}
+    for ex in exchanges:
+        seen = {s[k]["type"] for s in ex["steps"] for k in ("editor", "board") if k in s}
+        for t in seen:
+            exchange_count[t] = exchange_count.get(t, 0) + 1
 
-    editor_files = list(source_files(EDITOR_SRC, (".ts", ".vue"), skip_dir=EDITOR_PROTOCOL_DIR))
+    codec = tuple(os.path.join(EDITOR_PROTOCOL_DIR, f) for f in EDITOR_CODEC_FILES)
+    editor_files = list(source_files(EDITOR_SRC, (".ts", ".vue"), skip_files=codec))
     board_files = list(source_files(DEVICE_SRC, (".py",)))
     test_files = {k: list(source_files(d, (".ts", ".py"))) for k, d in TEST_DIRS.items()}
     seq_text = read(SEQUENCES) if os.path.exists(SEQUENCES) else ""
@@ -165,10 +174,10 @@ def build():
 
         arrow = {"editor->device": "editor → board", "device->editor": "board → editor", "both": "both ways"}[direction]
         rows.append(
-            "| %d | `%s`%s | %s | %s | %s | %s | %s | %s | %s | %s | %s | %s | %s |"
+            "| %d | `%s`%s | %s | %s | %s | %s | %s | %s | %s | %s | %s | %s | %s | %s |"
             % (
                 mid, name, " (reserved)" if reserved else "", arrow,
-                yes(ids_agree), yes(in_spec), str(n_vec) if n_vec else "**0**",
+                yes(ids_agree), yes(in_spec), str(n_vec) if n_vec else "**0**", exchange_count.get(name, 0),
                 cell(to_board, e_send, "editor_send"), cell(to_board, b_handle, "board_handle"),
                 cell(to_editor, b_send, "board_send"), cell(to_editor, e_handle, "editor_handle"),
                 yes(e_tests), yes(b_tests), yes(name in in_diagrams),
@@ -224,9 +233,9 @@ def build():
         "",
         "It answers \"is there one at all\", found by pattern: is the message in the spec, does it have vectors, does",
         "the side that should send it send it, does the side that should handle it handle it, does a test mention",
-        "it, is it drawn in [`SEQUENCES.md`](SEQUENCES.md). It cannot say whether the behaviour is right. Exchanges",
-        "(which reply answers which request, retries, timeouts) are not covered by any conformance vector today;",
-        "the sequence diagrams are where a person checks those.",
+        "it, is it drawn in [`SEQUENCES.md`](SEQUENCES.md). It cannot say whether the behaviour is right: the",
+        "conversations themselves (SPEC §7) are checked by `vectors/exchanges.json`, run by both sides, and drawn in",
+        "`SEQUENCES.md` for a person to check.",
         "",
         "## Problems",
         "",
@@ -236,13 +245,14 @@ def build():
         "",
         "## The matrix",
         "",
-        "\"n/a\" means the column doesn't apply in that direction. \"Editor handles\" means the editor waits for or acts",
+        "\"Vectors\" counts message-shape vectors (`vectors/messages.json`); \"Exchanges\" counts the conversations in",
+        "`vectors/exchanges.json` the message takes part in. \"n/a\" means the column doesn't apply in that direction. \"Editor handles\" means the editor waits for or acts",
         "on the message somewhere beyond logging it; every arriving message is logged to the console regardless.",
         "\"Tests mention\" means a test file names the message, which is a weak signal: it does not mean the",
         "exchange is tested.",
         "",
-        "| Id | Message | Direction | Ids agree (json/ts/py) | In SPEC.md | Vectors | Editor sends | Board handles | Board sends | Editor handles | Editor tests mention | Board tests mention | In a diagram |",
-        "|---|---|---|---|---|---|---|---|---|---|---|---|---|",
+        "| Id | Message | Direction | Ids agree (json/ts/py) | In SPEC.md | Vectors | Exchanges | Editor sends | Board handles | Board sends | Editor handles | Editor tests mention | Board tests mention | In a diagram |",
+        "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|",
     ]
     lines += rows
     lines += ["", "## Where each message lives in the code", ""]
