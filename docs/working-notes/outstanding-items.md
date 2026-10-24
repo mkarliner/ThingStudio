@@ -71,6 +71,12 @@ not here.
   subsystem is orthogonal to the flow paradigm; a widget manifests in the flow only partially (value in /
   event out), and "style an existing widget", "write a new widget" and the eventual drag-and-drop layout
   editor belong to this subsystem's own (future) editing model. See `node-context-parity-scoping.md` §4(g).
+- **[LAUNCH]** **GUI: fill the rest of the page, and page dots in a footer -- ruled 2026-10-24, not built.** Mike,
+  seeing cards on the CYD: a layout must be able to fill the remaining space on a page, and the page dots belong
+  in a footer rather than being a widget dropped at (112, 211). The demo's content stops at y=205 of 320. `grow`
+  and a full-screen root already exist, so this is a default and an affordance (a `fill` control, or a last-card
+  default) plus a footer strip the screen draws the dots into. No runtime bump while nothing device-side changes.
+  ([detail](outstanding-items/gui-layout-fill-and-footer.md))
 - **[LAUNCH]** **Freenove FNK0104S board support -- built 2026-10-08, hardware checks owed.** Board
   definition `freenove-s3-4in`, ST7796 in `display_spi`, full colour, landscape; install docs name the
   `SPIRAM_OCT` S3 build. Replaces the FNK0104B (2026-10-09, `decisions/launch-scope.md`); ILI9341 is no longer

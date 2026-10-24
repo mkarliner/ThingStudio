@@ -526,25 +526,38 @@ is larger than the page. A 56,722-byte response failed on a C3 reporting 41,120 
 `run()` catches `OSError` only, so the error surfaces as a bare `MemoryError` with no http attribution. Backlog:
 `docs/working-notes/outstanding-items/http-response-size-limit.md`.
 
-## A frozen image is a build-time snapshot: a commit that lands after the build is silently absent, 2026-10-23
+## A flow-only deploy is not a deploy: libraries are half of it, 2026-10-23
 
 The CYD showed no GUI cards after the card support landed (`a4f1e2f`) and the card flow was deployed, and the
 symptom read as a drawing bug. It was not: the image on the board was built at `19c3dbf`, one commit before
-`a4f1e2f`, and `a4f1e2f` is the commit that added `page_cards()`/`_fill_round()` to the *frozen* `thingstudio_gui`.
-The editor emitted `"cards": [...]` into the page table correctly; the board's library had no code that read the key.
-Frozen means the library comes from the image -- not from `/lib`, and not from the deploy -- so no error appeared
-anywhere, the flow deployed clean, and the panel simply drew the old thing.
+`a4f1e2f`, and `a4f1e2f` is the commit that added `page_cards()`/`_fill_round()` to `thingstudio_gui`. The editor
+emitted `"cards": [...]` into the page table correctly; the library on the board had no code that read the key, and
+nothing reported an error -- the flow deployed clean and the panel simply drew the old thing.
 
-Diagnosis order worth keeping: before debugging a device behaviour that the source plainly implements, compare the
-frozen module at the image's *stamped SHA* against HEAD --
+**A frozen image is the fallback source, not the last word** -- worth stating because the first write-up of this got
+it backwards. `deps.ensure_on_path()` puts `/lib` at `sys.path[0]` (runtime 11.1.0), ahead of `.frozen`, and the
+editor's Deploy sends any library whose hash differs from the one HELLO reports (`librariesToSend()`). So an ordinary
+**Deploy from the editor replaces a frozen library and would have shown the cards with no reflash at all**.
 
-```
-git show <image-sha>:device-runtime/src/vendor/thingstudio_gui/gui.py
-```
+What actually happened is narrower: the flow was pushed by `deploy_flow.py`, a scratch script that sends only
+`FLOW_PUT`/`FLOW_COMMIT`. That is the flow half of a deploy, not the library half, so the board kept running the
+library frozen at the image's build SHA. Any script that pushes a flow and not its libraries has this behaviour;
+`test-flows/deploy_runtime.py` and the editor's Deploy both push libraries.
 
-The image filename carries the SHA (`thingstudio-classic-esp32-<version>-<sha>.bin`). HELLO's `runtimeBuild` is
-diagnostic only and reads `null` when it can't confirm.
+Two things follow:
 
-The cost of finding this after the fact: a reflash erases flows, WiFi credentials and board settings, so it is a
-full redeploy plus re-entering credentials. Measured on this box -- incremental rebuild off an existing tree took a
-couple of minutes, and flashing 1.7 MB took about 97 s at the install script's baud rate.
+- Before debugging a device behaviour that the source plainly implements, compare what is *on the board* against
+  HEAD. The frozen module is at the image's stamped SHA:
+
+  ```
+  git show <image-sha>:device-runtime/src/vendor/thingstudio_gui/gui.py
+  ```
+
+  The image filename carries the SHA (`thingstudio-classic-esp32-<version>-<sha>.bin`). HELLO's `runtimeBuild` is
+  diagnostic only and reads `null` when it can't confirm.
+
+- Reflashing is the expensive way to fix this: it erases flows, WiFi credentials and board settings, so it costs a
+  full redeploy plus re-entering credentials. Measured on this box -- an incremental rebuild off an existing tree
+  took a couple of minutes, and flashing 1.7 MB took about 97 s at the install script's baud rate. A Deploy that
+  pushes the library costs seconds.
+

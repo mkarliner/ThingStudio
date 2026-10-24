@@ -33,9 +33,17 @@ Fix: rebuilt at HEAD (`out/thingstudio-classic-esp32-13.0.0-a4f1e2f.bin`), refla
 `card-hero2`. Cards render (header card, readings card, sub-card), rounded, in `0x3A49`.
 
 Two side effects to remember: a reflash **erases flows and WiFi credentials** (board now reports
-`hasWifi: false`; the card demo does not need them), and `Tools → Install runtime…` would *not*
-have fixed this — frozen modules take precedence over `/lib`. Recorded as a learning in
-`learnings/micropython-device-runtime.md`.
+`hasWifi: false`; the card demo does not need them).
+
+**Correction, 2026-10-24 — the reflash was not the only fix, and this briefing first said it was.**
+`deps.ensure_on_path()` puts `/lib` at `sys.path[0]`, ahead of `.frozen` (runtime 11.1.0), and
+`librariesToSend()` sends any library whose hash differs from the one HELLO reports. An ordinary
+**Deploy from the editor would have replaced the frozen `thingstudio_gui` and shown the cards with no
+reflash**. What we actually did was push the flow with `deploy_flow.py`, a scratch script that sends
+only `FLOW_PUT`/`FLOW_COMMIT` — the flow half of a deploy, not the library half. The diagnosis (the
+board ran the old library) stands; the remedy claim does not, and `Tools → Install runtime…` would
+have helped rather than not. See `learnings/micropython-device-runtime.md`, "A flow-only deploy is
+not a deploy".
 
 ## What is committed and shipped (done, don't redo)
 

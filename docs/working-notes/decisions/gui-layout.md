@@ -277,3 +277,17 @@ the msg is open.
   mismatch is now impossible, because the screen has no size of its own to disagree with. Orientation was already
   the display's (2026-10-09). So: on a GUI, set the size, frame format and rotation once, on the display. Docs
   updated (`gui.md`, `display-spi.md`); the screen's three fields no longer appear in the catalog.
+
+- 2026-10-24 (Mike): **a layout must be able to fill the space left on a page, and page dots belong in a footer.**
+  Two rulings from looking at the CYD with cards on it.
+  **Filling the page.** The demo's content ended at y=205 of a 320-row screen, so more than a third of the panel
+  was blank below the cards -- a page that reads as unfinished rather than as a design. `grow` already exists on
+  every element including containers, and `layoutPage` gives the root the whole screen, so the capability is
+  there; the free space still goes nowhere unless a child claims it, and nothing in the outline makes that
+  obvious. What is owed is discoverability and a sensible default, not a new primitive: a card (or any container)
+  should be able to be told "fill what is left" in one obvious action, and the default for a card that is the last
+  thing on a page is worth reconsidering. Detail and options: `outstanding-items/gui-layout-fill-and-footer.md`.
+  **A footer for the page dots.** `pagedots` is currently an ordinary widget dropped into the content flow
+  wherever the author puts it -- in the demo at (112, 211), floating below the card and outside it. It should be
+  a footer: a strip the screen reserves at the bottom of the page, with the dots in it, so the page indicator is
+  anchored, styled once, and stops competing with content for layout space. Same detail file.

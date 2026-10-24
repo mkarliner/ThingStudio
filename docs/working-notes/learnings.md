@@ -82,9 +82,8 @@ facts behind a frozen image: `.frozen` precedes `/lib` on `sys.path` (so a pushe
 override a frozen one unless `/lib` is inserted first), and a frozen module cannot be the boot script, plus a
 manifest replacing the port's own frozen set (no filesystem at boot), `cancel_running()` not freeing the
 flow module's framebuffer, the split heap (`gc.mem_free()` sums several regions, so a large message can fail at
-100 KB free), and a
-frozen image being a build-time snapshot -- a commit landing after the image was built is silently absent on the
-board, with no error (compare the frozen module at the image's stamped SHA against HEAD first). 33 entries:
+100 KB free), and a flow-only deploy not being a deploy -- libraries are the other half, and a frozen library is the
+fallback source, not the last word (`/lib` is ahead of `.frozen` since runtime 11.1.0). 33 entries:
 `docs/working-notes/learnings/micropython-device-runtime.md`.
 
 ## Headless browser testing
