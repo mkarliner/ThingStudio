@@ -36,13 +36,6 @@ ThingStudioMarketing repo, not here.
   **Custom GUI (authoring/styling widgets) is GUI-line work, not node-format work** (2026-10-15): a widget
   manifests in the flow only partially (value in / event out); styling and the eventual drag-and-drop editor
   belong to the GUI subsystem's own editing model. See `node-context-parity-scoping.md` §4(g).
-- **[LAUNCH]** **Ship 13.0.0 / publish v0.5.0 -- the biggest outstanding item.** 13.0.0 has never shipped;
-  `v0.4.0` shipped runtime 12.1.0 and the 12.1.0 image; the 13.0.0 image is built, flashed and recorded in
-  `firmware/classic-esp32/tested.json` (2026-10-24). Remaining: tag `v0.5.0` (backend version bumped to
-  match), let the Release workflow create the draft with the app archives, then
-  `publish.sh v0.5.0 --publish` and delete the orphan v0.4.0 draft. `build.sh` names the image from
-  `git rev-parse HEAD`, so **commit first, build second** -- an image built from a dirty tree carries a SHA
-  it does not contain. (`gui-layout-fill-and-footer-briefing.md`, `classic-esp32-firmware-briefing.md`)
 - **[LAUNCH]** **Button rework -- built and hardware-checked 2026-10-09; these are the leftovers.** Open: the
   touch panel's landscape axes, a GUI view for button properties, and GT911/CST820 panel controllers
   (FT6336U/FT6236 is the supported family; `config-types.ts` says so). The rotation control landed as the

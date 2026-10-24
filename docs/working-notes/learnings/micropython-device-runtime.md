@@ -561,3 +561,14 @@ Two things follow:
   took a couple of minutes, and flashing 1.7 MB took about 97 s at the install script's baud rate. A Deploy that
   pushes the library costs seconds.
 
+
+**The headless device CLI installs every library, so it cannot show a frozen image's skip** (2026-10-24).
+`test/hil/hil_common.py`'s `install_dependencies()` compiles every library the flow imports and `DEP_PUT`s it,
+unconditionally -- it never consults HELLO's `dependencies`. Only the editor's `librariesToSend()` compares hashes.
+On a custom image a `device_cli.py flow deploy` therefore copies libraries into `/lib`, where
+`deps.ensure_on_path()` puts them ahead of the frozen ones: correct, but it loses the heap saving the image exists
+for, and the board's reported hashes now describe the pushed copies rather than the image. Two ways to check the
+skip without a browser: deploy from the editor, or verify the index offline --
+`node firmware/classic-esp32/gen_deps_index.mjs firmware/classic-esp32/out/stage /tmp/deps.json` must reproduce
+`out/_deps.json` (34/34 identical on the 13.0.0 image). If a CLI deploy has already run, reflash to get the frozen
+state back (a reflash is the only reset; deleting `/lib` copies by hand is not the same thing).

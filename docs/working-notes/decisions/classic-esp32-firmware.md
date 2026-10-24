@@ -213,3 +213,10 @@ Two changes, both narrow:
 the already-running GUI flow.** That settles what the image was for: with the libraries frozen there is heap enough
 to start a second flow, so the "cannot deploy over a running flow" limit is a *stock-runtime* limit, not a board
 one. The stop-first sequence still belongs on the list for boards without the image.
+
+**2026-10-24: the 13.0.0 image shipped in v0.5.0.** Built from `7f607bc`, flashed on the CYD, ran 13.0.0 with all
+34 libraries frozen, and was recorded by `record-tested.sh`; `publish.sh v0.5.0 --publish` attached and verified
+the image, `_deps.json` and `main.py` on the release. The orphan v0.4.0 draft (a duplicate left beside the
+published v0.4.0) was deleted. The frozen-library skip was verified by reproducing `_deps.json` with the editor's
+own mpy-cross rather than by a CLI deploy -- see `learnings/micropython-device-runtime.md`, "The headless device
+CLI installs every library".

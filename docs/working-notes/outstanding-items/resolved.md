@@ -10,6 +10,12 @@ working list the same day, per Mike's call.
 
 ## Launch
 
+- **Classic-ESP32 13.0.0 image shipped in v0.5.0** -- built from `7f607bc`, flashed on the CYD, booted 13.0.0
+  with all 34 libraries frozen, recorded in `firmware/classic-esp32/tested.json`; `publish.sh v0.5.0 --publish`
+  attached and verified the image, `_deps.json` and `main.py`. The orphan v0.4.0 draft was deleted. The
+  frozen-library skip was checked by reproducing the image's deps index with the editor's mpy-cross (34/34),
+  because the headless CLI installs libraries unconditionally
+  (`learnings/micropython-device-runtime.md`).
 - **GUI: fill the rest of the page, and page dots in a footer** -- built 2026-10-24. A `fill` checkbox on a
   container writes `grow: 1`; a footer is a non-growing row after a filling container, with the page dots as an
   ordinary widget in it -- no footer field, strip or fixed height, and no pixel-usage warning. The CYD theme
@@ -20,13 +26,13 @@ working list the same day, per Mike's call.
   90/180/270 and the press highlight holds and releases. Replaced the FNK0104B (2026-10-09).
 - **CYD gate for custom firmware images** -- closed 2026-10-23 (`c71ab96`): the image installs on the CYD and
   deploys the hero GUI flow three times over a running flow. The five-cycle gate is retired
-  (`decisions/gui-layout.md`); attaching the tested image to the release is tracked under release debt.
+  (`decisions/gui-layout.md`); the image has since shipped in v0.5.0.
 - **Deploy a second time on a low-memory board: guidance, not a sequence** -- settled 2026-10-23. Remove
   flow… → power cycle → deploy; if it still fails, the flow may be too big. One `DEPLOY_MEMORY_HINT` constant
   serves all three memory failures; no wire message, no HELLO field, no version bump.
 - **Classic-ESP32 custom image** -- built, booting, deploying repeatedly (2026-10-22/23): 1.69 MB, 34 frozen
-  libraries, idle 149 KB free. `decisions/classic-esp32-firmware.md`, `firmware/classic-esp32/`. Publishing is
-  tracked under release debt.
+  libraries, idle 149 KB free. `decisions/classic-esp32-firmware.md`, `firmware/classic-esp32/`. The 13.0.0
+  image shipped in v0.5.0.
 - **Headliner (showreel) flow and task guide** -- flow hardware-checked 2026-10-10 (BME280 readouts, trends,
   MQTT publish, clock page with NTP and summer time); task guide written (`docs/user-guide/sensor-display.md`).
 - **External controls example flow** -- dropped from the launch (Mike, 2026-10-13; ThingStudioMarketing
