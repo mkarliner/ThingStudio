@@ -53,7 +53,7 @@ Flashing erases the board: its saved flows, board settings and WiFi credentials 
    in one folder and go there. Check the image against its checksum:
 
    ```sh
-   IMAGE=thingstudio-classic-esp32-14.0.0-f260fe7.bin
+   IMAGE=thingstudio-classic-esp32-14.0.0-eab1175.bin
    shasum -a 256 -c "$IMAGE.sha256"      # sha256sum -c on Linux
    ```
 

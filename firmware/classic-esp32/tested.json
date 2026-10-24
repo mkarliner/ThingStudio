@@ -1,4 +1,10 @@
 {
+  "19ba3e42e324947ba628c74275b61f298b50b18e20469e9ce792b11a83ca67dc": {
+    "image": "thingstudio-classic-esp32-14.0.0-eab1175.bin",
+    "board": "CYD (ESP32-2432S028)",
+    "date": "2026-10-24",
+    "tested": "install clean, booted 14.0.0 with all 34 libraries frozen; the theme demo ran with the fixed chip/filled-button text background and a journal-fed histogram (chip, captions, pill page dot). Widget drawing, natural sizes and the text-background regression are covered off-device on the unix port."
+  },
   "39948d966fc1b51b4da049282c62e7795ae79309d8761f22b190d5dc5c3dcf7e": {
     "image": "thingstudio-classic-esp32-13.0.0-7f607bc.bin",
     "board": "CYD (ESP32-2432S028)",
