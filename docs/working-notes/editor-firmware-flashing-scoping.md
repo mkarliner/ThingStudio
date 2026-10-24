@@ -93,10 +93,25 @@ Tools → **Install firmware…**:
    sequence and failure lines in the brief.
 5. **Docs**: an install page update and a debugging entry for each refusal.
 
-## Open questions
+## Answers to the open questions (Mike, 2026-10-24)
 
-- Port naming on Windows (`COM7`) and macOS (`/dev/cu.*`) for esptool's argument — the backend already
-  normalises ports for pyserial; confirm esptool accepts the same string on all three.
-- Whether to offer "install runtime only" when the board already runs MicroPython (probably yes: the existing
-  action already does that).
-- Which board an unknown ESP32 variant maps to (refuse, or the generic classic-ESP32 entry).
+- **Runtime only**: yes. A board already running MicroPython gets the "install runtime only" action; the
+  same dialog offers it.
+- **Unknown chip**: refuse. The message says the editor has no firmware for this chip and points at
+  <https://micropython.org/download/> — download the right build for the chip, then use **Choose a file…** to
+  flash it from disk. No guessing a nearby board.
+- **Port naming**: verify with esptool on the CYD and the Mac (the backend already normalises `/dev/cu.*` and
+  `COM7` for pyserial; esptool is given the same string).
+
+## Not just ESP32
+
+The `firmware` block is **tool-neutral** and the job API knows only "run this board's tool". ESP32 is two
+architectures (Xtensa: classic, S2, S3; RISC-V: C3, C6, H2, P4), and the same design must take RP2040/RP2350
+(BOOTSEL + `.uf2` copy, no esptool), STM32 (DFU), and whatever comes later. Concretely:
+
+- `tool` is an open string with a backend registry: `"esptool"` now; `"uf2"` and `"dfu"` are the planned
+  entries, added without changing the board schema or the editor dialog.
+- The block names the architecture/family (`chip` for esptool, a volume/pattern for UF2, a DFU id for STM32),
+  so a board with no matching firmware is refused by name rather than mis-flashed.
+- The editor only ever shows "flash this board's image, then install the runtime if needed"; tool choice and
+  command line stay in the backend.

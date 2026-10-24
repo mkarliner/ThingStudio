@@ -17,7 +17,13 @@ grid editor and the launch backlog. Detail and phasing: `../editor-firmware-flas
   included); the S3 uses stock MicroPython, then the runtime install as the same flow's second step.
 - **The fault rules apply**: one deterministic path, one reset per step, no retry or repair chain, each failure
   naming the step, the figures and the next action; nothing is erased before the warning is confirmed.
-- Not in the slice: RP2040/RP2350 UF2 (BOOTSEL volume), STM32 DFU, auto-flashing an unknown chip.
+- **Runtime-only** is offered for a board already running MicroPython (Mike, 2026-10-24).
+- **An unknown chip is refused**, not mapped to a nearby board: the message points at
+  <https://micropython.org/download/> and the user flashes the downloaded file with **Choose a file…**.
+- **Tool-neutral by design**: the `firmware` block names a tool (`esptool` first; `uf2` and `dfu` planned) and
+  the chip/family. ESP32 spans Xtensa (classic/S2/S3) and RISC-V (C3/C6/H2/P4); RP2040/RP2350 and STM32 follow
+  with their own tool entries, without changing the board schema or the editor dialog.
+- Not in the first slice: RP2040/RP2350 UF2 (BOOTSEL volume), STM32 DFU, auto-flashing an unknown chip.
 
 ## Interface impact
 
