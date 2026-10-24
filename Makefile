@@ -3,7 +3,7 @@
 #   make            build the editor and docs, install the backend into .venv, and link
 #                   thingstudio-backend into a directory on your PATH, so you can start it right away
 #   make run        build, then start the backend (make run ARGS=--no-browser)
-#   make test       editor typecheck + tests, backend tests (make -k test runs all three)
+#   make test       editor typecheck + tests, backend tests, protocol coverage check (make -k test runs all)
 #   make assets     build, then copy the editor, docs, device runtime and definitions into the
 #                   backend package (backend/src/thingstudio_backend/_assets) for packaging
 #   make skill      build the AI-authoring skill (dist/ai-skill/: a folder and a .zip to upload to Claude)
@@ -35,7 +35,7 @@ RUNTIME_SHA := $(shell git log -1 --format=%H -- device-runtime/src 2>/dev/null)
 # Plain `make` means `make all`, whatever order the rules below are in.
 .DEFAULT_GOAL := all
 .DELETE_ON_ERROR:
-.PHONY: all editor docs backend assets skill link run test typecheck test-editor test-backend clean distclean unlink check-node check-python screenshots
+.PHONY: all editor docs backend assets skill link run test typecheck test-editor test-backend check-protocol clean distclean unlink check-node check-python screenshots
 
 # --- prerequisite checks ------------------------------------------------------------
 # Order-only (| check-...) below, so they run first but never force a rebuild.
@@ -150,7 +150,7 @@ unlink:
 
 # --- tests --------------------------------------------------------------------
 
-test: typecheck test-editor test-backend
+test: typecheck test-editor test-backend check-protocol
 
 typecheck: editor/node_modules/.package-lock.json | check-node
 	@find editor/src editor/test -name '*.js' -type f -print -delete | sed 's/^/deleted stray /'
@@ -162,6 +162,12 @@ test-editor: editor/node_modules/.package-lock.json | check-node
 
 test-backend: $(VENV)/.installed
 	cd backend && ../$(VPY) -m pytest -q
+
+# Wire protocol: interfaces/protocol/COVERAGE.md is current, and every message is specified, has vectors, is
+# sent and handled, and is drawn in SEQUENCES.md. Plain Python, no venv. Regenerate with
+# `python3 tools/protocol_coverage.py`.
+check-protocol: | check-python
+	$(PYTHON) tools/protocol_coverage.py --check
 
 # --- cleanup ------------------------------------------------------------------
 
