@@ -347,9 +347,9 @@
             },
             {
               "card": true,
-              "row": 2,
+              "row": 1,
               "col": 0,
-              "rowSpan": 13,
+              "rowSpan": 14,
               "colSpan": 12
             },
             {
@@ -371,9 +371,9 @@
             {
               "kind": "widget",
               "node": "n03-temp",
-              "row": 3,
+              "row": 2,
               "col": 1,
-              "rowSpan": 4,
+              "rowSpan": 5,
               "colSpan": 10
             },
             {
@@ -381,7 +381,7 @@
               "node": "n04-hum",
               "row": 8,
               "col": 2,
-              "rowSpan": 4,
+              "rowSpan": 7,
               "colSpan": 8
             },
             {
@@ -400,13 +400,13 @@
               "card": true,
               "row": 0,
               "col": 0,
-              "rowSpan": 13,
+              "rowSpan": 15,
               "colSpan": 12
             },
             {
               "kind": "widget",
               "node": "n05-press",
-              "row": 0,
+              "row": 1,
               "col": 1,
               "rowSpan": 3,
               "colSpan": 11
@@ -416,13 +416,13 @@
               "node": "n06-hist",
               "row": 4,
               "col": 0,
-              "rowSpan": 2,
+              "rowSpan": 5,
               "colSpan": 11
             },
             {
               "kind": "text",
               "text": "950",
-              "row": 6,
+              "row": 9,
               "col": 1,
               "rowSpan": 1,
               "colSpan": 2
@@ -430,14 +430,14 @@
             {
               "kind": "text",
               "text": "1050",
-              "row": 6,
+              "row": 9,
               "col": 10,
               "rowSpan": 1,
               "colSpan": 2
             },
             {
               "kind": "pagedots",
-              "row": 13,
+              "row": 15,
               "col": 6,
               "rowSpan": 1,
               "colSpan": 1
