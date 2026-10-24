@@ -98,3 +98,27 @@ after editing it: a stale copy runs the old library against newly generated code
 `AttributeError` on a method the new code calls, which looks like a codegen bug and isn't. Also: a build started
 with `nohup ... &` from a tool call dies with that call's shell, so build the MicroPython unix port in
 steps (`make -C mpy-cross`, then `make submodules`, then `make`), each inside one call.
+
+## `npm install` on this tree needs `--legacy-peer-deps`; `npm ci` does not, 2026-10-24
+
+Two separate things, both hit on the editor's dependency tree.
+
+**The resolver bug.** With npm 10.9.9, a plain `npm install` (with or without a `package-lock.json` present) dies
+with `npm error Cannot read properties of null (reading 'edgesOut')`. The stack is
+`arborist/build-ideal-tree.js` `#loadPeerSet`, reached while resolving vitest's optional browser peers
+(`@vitest/browser-playwright@5.0.5` appeared immediately before it in the debug log). Nothing in this project's
+`package.json` is at fault -- it reproduces on a clean extraction with the tree unchanged. `npm install
+--legacy-peer-deps` resolves and installs; the lock it writes is then reproducible with a plain `npm ci`, which is
+what was verified (clean `npm ci` from the generated lock, then the suite). So: generate a lock with
+`--legacy-peer-deps`, consume it with `npm ci`.
+
+**The audits.** A fresh `npm ci` reported 6 vulnerabilities (2 moderate, 4 high) -- all dev-tooling, none shipped:
+`vite` 8.2.1 (dev-server file serving, `?vite-wasm-instance` byte leak, launch-editor on Windows),
+`vitest`/`@vitest/mocker` (test-only path traversal and mock injection), `vue` 3.5.41 via
+`@vue/server-renderer` (SSR XSS -- this app never server-renders), and `source-map-js` 1.2.1 (build-time DoS).
+All had non-major fixes. Fixes applied: `vite` `^8.3.5`, `vitest` `^4.1.12`, `vue` `3.5.44`, plus the lock's
+transitives -- audit now 0. Verified in a scratch extraction (`git archive HEAD` to `/tmp/opencode/npm-check`, never
+the live-mounted `editor/`, per `CLAUDE.md`): 1189 tests pass, `vite build` and the CLI build both succeed.
+
+Raising the floors in `package.json` (not just refreshing the lock) is deliberate: a lock refresh alone would let a
+later resolve pick a vulnerable version again.

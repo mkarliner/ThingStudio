@@ -104,6 +104,22 @@ Verified on the real MicroPython unix port: `test_gui 23/23`, `test_gui_widgets 
   `docs_dir: docs/user-guide` anyway, so only user-guide edits need a site build.
 - `gh` token: `/home/agent/.gh_token` (the `~/.config/gh` token is dead).
 
+## npm on the Mac (added 2026-10-24 after Mike hit it)
+
+The editor's dependency tree has two traps, both now fixed and recorded in
+`learnings/editor-build-tooling.md`:
+
+- **`npm install` fails with `Cannot read properties of null (reading 'edgesOut')`** — an npm 10.9.9 arborist bug
+  resolving vitest's optional browser peers. It reproduces on an unchanged tree. Use `npm ci` (works, and is what
+  CI should use), or `npm install --legacy-peer-deps` when a lock has to be regenerated.
+- **Six advisories were in the tree** (2 moderate, 4 high), all dev-tooling: vite's dev server, vitest's mocker,
+  `@vue/server-renderer` (SSR — this app never server-renders), and `source-map-js`. Cleared by `vite` `^8.3.5`,
+  `vitest` `^4.1.12`, `vue` `3.5.44` and the lock's transitives; `npm audit` is now 0. Verified in a scratch
+  extraction, not the live mount: 1189 tests pass, `vite build` and the CLI build succeed.
+
+Never run `npm ci`/`install`/`build`/`vitest` from the agent sandbox against the shared `editor/` (`CLAUDE.md`):
+Linux rollup/rolldown binaries land in the Mac's `node_modules`. Extract with `git archive HEAD` and work there.
+
 ## Decisions in force (do not relitigate)
 
 - Fail well, not work badly: no automatic recovery inside a user action; warn on a prediction, refuse only on a

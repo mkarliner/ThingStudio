@@ -113,7 +113,7 @@ in one session, never a probe that opens and closes). 18 entries:
 
 ## Editor / build tooling
 
-`vite build` not type-checking, Litegraph's file-picker extension-matching gap, `execFileSync` deadlocking against an in-process test server, Node's chunked-transfer default, the sandbox/`node_modules` native-binding corruption incidents, and the vendored `mpy-cross` WASM never passing `-march=<arch>` (invisible until the first real `@micropython.viper` flow tried to Deploy, fixed with `-march=xtensawin`). 6 entries: `docs/working-notes/learnings/editor-build-tooling.md`.
+`vite build` not type-checking, Litegraph's file-picker extension-matching gap, `execFileSync` deadlocking against an in-process test server, Node's chunked-transfer default, the sandbox/`node_modules` native-binding corruption incidents, the vendored `mpy-cross` WASM never passing `-march=<arch>` (invisible until the first real `@micropython.viper` flow tried to Deploy, fixed with `-march=xtensawin`), and the editor tree's `npm install` needing `--legacy-peer-deps` (npm 10.9.9 arborist `edgesOut` crash on vitest's optional peers) while `npm ci` consumes the resulting lock normally. 7 entries: `docs/working-notes/learnings/editor-build-tooling.md`.
 
 ## Backend / security research
 

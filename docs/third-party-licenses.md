@@ -1,6 +1,9 @@
 # Third-party software in use
 
-Status: living document, last updated 2026-10-09 (this update: micropython-nano-gui acknowledged, under "Vendored in `device-runtime/`". Prior update, 2026-09-17: `st7789py_mpy`/`ssd1306`
+Status: living document, last updated 2026-10-24 (this update: the `editor/` npm tree moved to clear six
+advisories -- `vite` 8.3.5, `vitest` 4.1.12, `vue` 3.5.44, and transitives (`cborg` 6.1.5, `@types/node` 26.6.5,
+`@vitejs/plugin-vue` 6.0.10) -- all versions read from the installed metadata, licenses unchanged). Prior update,
+2026-10-09: micropython-nano-gui acknowledged, under "Vendored in `device-runtime/`". Prior update, 2026-09-17: `st7789py_mpy`/`ssd1306`
 vendored into `device-runtime/src/vendor/` for the new `display_spi`/`display_i2c` node
 types, added under the existing "Vendored in `device-runtime/`" section below. Prior
 update, 2026-09-07: `backend/`'s
@@ -53,10 +56,10 @@ shipped in any built editor artifact.
 | Package | Version installed | License |
 |---|---|---|
 | typescript | 5.9.3 | Apache-2.0 |
-| vite | 8.2.1 | MIT |
-| vitest | 4.1.10 | MIT |
-| @types/node | 26.2.0 | MIT |
-| @vitejs/plugin-vue | ^6.0.0 pinned (scratch-verified at 6.0.8) | MIT |
+| vite | 8.3.5 | MIT |
+| vitest | 4.1.12 | MIT |
+| @types/node | 26.6.5 | MIT |
+| @vitejs/plugin-vue | ^6.0.0 pinned (scratch-verified at 6.0.10) | MIT |
 
 Vue SFC compilation for the Rete canvas layer's `.vue` components — without
 it, `.vue` files don't compile at all (`vite.config.ts`'s own comment).
@@ -70,13 +73,13 @@ checked per `rete-migration-decision.md`'s supply-chain note.
 
 | Package | Version installed | License | Notes |
 |---|---|---|---|
-| cborg | 6.1.1 | Apache-2.0 | CBOR codec for the §13 wire protocol (`editor/src/protocol/`). Chosen over cbor-x/cbor2 for strict-by-default decode (rejects indefinite-length items, non-minimal int encodings, duplicate map keys) — matches the wire protocol's adversarial-input requirement more directly than a permissive-by-default decoder would. Zero runtime dependencies, Apache-2.0 (matches this project's own license), ships its own TS types. Installed with `npm install --ignore-scripts`; no install script present in the package. |
+| cborg | 6.1.5 | Apache-2.0 | CBOR codec for the §13 wire protocol (`editor/src/protocol/`). Chosen over cbor-x/cbor2 for strict-by-default decode (rejects indefinite-length items, non-minimal int encodings, duplicate map keys) — matches the wire protocol's adversarial-input requirement more directly than a permissive-by-default decoder would. Zero runtime dependencies, Apache-2.0 (matches this project's own license), ships its own TS types. Installed with `npm install --ignore-scripts`; no install script present in the package. |
 | rete | 2.0.6 | MIT | Headless core (graph, nodes, sockets, connections, pipes) for the new canvas layer, `editor/src/app/rete/` — replacing Litegraph per `docs/working-notes/rete-migration-decision.md`. Promoted from the `pocs/poc-rete/` spike below, same exact pin (least drift from what was validated hands-on). Registry's own `time` field: this version published 2025-06-30, still the `latest` dist-tag — a release hiatus, not a maintenance hiatus, per the decision doc's dependency-risk check (10 open issues against 12k stars, plugin packages around it genuinely current). Not yet wired into `main.ts`/`index.html` — that's Phase 3; the Litegraph canvas stays the live path until then. |
 | rete-area-plugin | 2.3.2 | MIT | Canvas rendering surface (pan/zoom/drag). Same promotion as `rete` above. |
 | rete-connection-plugin | 2.0.5 | MIT | Wire drag gesture. Same promotion as `rete` above. |
 | rete-render-utils | 2.0.3 | MIT | Shared rendering utilities, peer dependency of `rete-vue-plugin`. Same promotion as `rete` above. |
 | rete-vue-plugin | 2.1.3 | MIT | Vue 3 node/control renderer — `editor/src/app/rete/ThingstudioNode.vue`/`ThingstudioSocket.vue`'s `customize.node`/`customize.socket` hooks. Sole maintainer `ni55an` (Vitaliy Stoliarov, per registry metadata) — the same single-maintainer bus-factor point the decision doc's dependency-risk section makes about the `rete` core. |
-| vue | 3.5.41 | MIT | Peer dependency of `rete-vue-plugin`; the first real framework commitment `editor/` has taken on (not just a library), accepted knowingly per the decision doc. |
+| vue | 3.5.44 | MIT | Peer dependency of `rete-vue-plugin`; the first real framework commitment `editor/` has taken on (not just a library), accepted knowingly per the decision doc. |
 
 `rete-dock-plugin` is deliberately **not** in this table — sub-decision 2
 of the decision doc drops it in favor of the hand-rolled HTML5 drag-and-drop
@@ -180,7 +183,7 @@ favor of the hand-rolled HTML5 drag-and-drop already proven in
 | rete-render-utils | 2.0.3 | MIT | **Promoted to `editor/`.** Shared rendering utilities, peer dep of rete-vue-plugin; published 2024-08-30 |
 | rete-vue-plugin | 2.1.3 | MIT | **Promoted to `editor/`.** Vue 3 node/control renderer; published 2026-07-10, genuinely current |
 | rete-dock-plugin | 2.0.4 | MIT | **Not promoted — deliberately dropped** (sub-decision 2). Palette drag-and-drop plugin; published 2025-04-27. Stays here as the frozen record of what was evaluated, not a candidate going forward. |
-| vue | 3.5.41 | MIT | **Promoted to `editor/`.** Peer dep of rete-vue-plugin |
+| vue | 3.5.44 | MIT | **Promoted to `editor/`.** Peer dep of rete-vue-plugin |
 
 ## Vendored in the POCs (frozen historical reference, not live v1 dependencies)
 
