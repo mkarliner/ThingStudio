@@ -1714,7 +1714,7 @@ Flashing erases the board: its saved flows, board settings and WiFi credentials 
    in one folder and go there. Check the image against its checksum:
 
    ```sh
-   IMAGE=thingstudio-classic-esp32-14.0.0-f260fe7.bin
+   IMAGE=thingstudio-classic-esp32-14.0.0-eab1175.bin
    shasum -a 256 -c "$IMAGE.sha256"      # sha256sum -c on Linux
    ```
 
@@ -3380,17 +3380,17 @@ since there is no display for it to follow.
 ## Modals in the flow file
 
 A modal is laid out like a page, but in the screen's `modals` list, next to `pages`. Each entry names the `gui_modal`
-node and gives its layout as `root`. The modal node is not itself placed inside `root`; `root` holds only what the
+node and gives its layout as `elements`. The modal node is not itself placed there; the elements are what the
 modal shows (text, and widget nodes wired to it or to the flow):
 
 ```json
 "screens": { "<screenId>": {
   "pages": [ ... ],
   "modals": [
-    { "node": "<modalNodeId>", "root": { "kind": "column", "gap": 8, "padding": 8, "children": [
-      { "kind": "text", "text": "Too hot", "font": "font_body24" },
-      { "kind": "widget", "node": "<labelId>", "font": "font_body20", "maxChars": 20 }
-    ] } }
+    { "node": "<modalNodeId>", "elements": [
+      { "kind": "text", "text": "Too hot", "row": 0, "col": 0, "rowSpan": 2, "colSpan": 8 },
+      { "kind": "widget", "node": "<labelId>", "row": 2, "col": 0, "rowSpan": 2, "colSpan": 12 }
+    ] }
   ]
 } }
 ```
@@ -3402,25 +3402,23 @@ and a **timeout** above `0` closes it on its own. The modal node's output says w
 
 ## Laying out pages
 
-Select the gui screen node and open **Properties**: each page is listed as an outline of its rows and columns,
-top to bottom in the order things appear on screen. Use ↑ and ↓ to move an element earlier or later, ⇥ to move
-it into the row or column above it, ⇤ to move it out of its container, ✕ to remove it, and ⚙ to set its font,
-grow, fill, gap, padding or card. Each row and column has a **+ add…** menu: pick a widget, spacer, text, row,
-column or page dots and it goes at the end of that row or column. Add and reorder pages (the order of the page
-dots) from the page's own ↑ ↓, and add a layout for a modal. The same widget can be on several pages of a
-screen (a navigation button on every page, say). It must be drawn the same way on each, with the same font and
-options, and it shows the same value everywhere. Each page's **+ add…** menu lists the widgets not already on
-that page. A widget belongs to one screen. Widgets in a row share it equally, so two buttons side by side are
-each half the row (never narrower than their text needs). Set **grow** to `0` on one to keep it at its natural
-size, or to a bigger number for a bigger share. The editor doesn't draw the page: if it doesn't fit, Deploy says
-which widget, on which page. The outline is a view of the flow file's `"screens"` section, which you can also
-edit by hand.
+Every screen has a **cell grid**: **grid columns** on the gui screen (12 by default) and **grid rows**
+(`0` means "work them out from the display's shape", so cells stay roughly square). A position is a row and a
+column, 0-based; a size is a row span and a column span. Nothing is in pixels, so the same layout works on a
+different panel.
 
-Tick **fill** on a row or column to give it the space left on the page (it sets `grow: 1`). Anything after a
-filling container keeps its natural height, so a plain row at the end of a page stays at the bottom: that is how
-a footer is made, and the page dots are just a widget you put in it. There is no separate footer setting, and a
-filling card stops above the row below it. The current page's dot is drawn as a pill, so it reads at a glance.
+Select the gui screen node and open **Properties**: each page lists its elements. **⚙** on an element opens
+**row**, **col**, **rows** and **cols**; tick **panel** to draw a card behind those cells. **+ add…** puts a
+widget, text, page dots or a panel on the page (it starts at row 0, column 0 — set its cells after).
+The same widget can be on several pages of a screen (a navigation button on every page, say), and it must have
+the same span on each. A widget belongs to one screen.
 
+Text sizes itself: the compiler picks the largest font that fits the element's cells, and Deploy says which
+element, on which page, when even the smallest does not fit. Two elements on the same cells, a span outside the
+grid, or a panel on top of another panel are also Deploy errors naming the element. The editor doesn't draw the
+page; the outline is a view of the flow file's `"screens"` section, which you can also edit by hand.
+
+To put the page dots in a footer, give them the last grid row. The current page's dot is drawn as a pill.
 Pages live in the flow file, under `"screens"`, keyed by the gui screen node's id. A page is a tree of
 `row` and `column` containers holding widgets (`"kind": "widget", "node": "<id>"`), fixed `text`,
 `pagedots` and `spacer`s.
@@ -4160,12 +4158,12 @@ A touch or plain display is two nodes wired together, `gui_screen` then `display
 
 ```json
 "screens": { "<screenId>": { "pages": [
-  { "name": "main", "root": { "kind": "column", "gap": 6, "padding": 4, "children": [
-    { "kind": "text", "text": "Living room", "font": "font_body20" },
-    { "kind": "widget", "node": "<readoutId>", "font": "font_digits48", "unitsFont": "font_body24", "alignSelf": "center" },
-    { "kind": "spacer", "grow": 1 },
-    { "kind": "pagedots", "alignSelf": "center" }
-  ] } }
+  { "name": "main", "elements": [
+    { "card": true, "row": 0, "col": 0, "rowSpan": 1, "colSpan": 12 },
+    { "kind": "text", "text": "Living room", "row": 0, "col": 0, "colSpan": 8 },
+    { "kind": "widget", "node": "<readoutId>", "row": 1, "col": 0, "rowSpan": 4, "colSpan": 12 },
+    { "kind": "pagedots", "row": 15, "col": 4, "colSpan": 4 }
+  ] }
 ] } }
 ```
 
@@ -4177,41 +4175,42 @@ Rules that cause most failures:
   screen's size.
 - A navigate button's `target` is `next`, `prev`, `back`, `home` or the `name` of a page in `screens`; when you edit an
   existing flow, read the page names from its `screens` section.
-- Fonts: `font_body12/16/20/24`, `font_digits16/24/32/48/64` (digits and a few symbols only), `font_seg748/64/96`
-  (seven-segment: `0-9 : . -` and space). A character a font doesn't have is an error.
-- A widget is placed once per page, drawn the same on every page it is on. A label shows a value up to `maxChars` wide.
-- A page that doesn't fit gives an error that names the widget and page and how many pixels it needs. Use a smaller
-  font or fewer things per row. Rows need the screen width minus the container's padding (in landscape on a
-  320-wide panel that is under 312 px).
+- Fonts are chosen to fit an element's cells; nothing in a layout is in pixels. A character no font has is an
+  error.
+- A widget is placed once per page, drawn the same on every page it is on. Its cells decide its size.
+- A page is a cell grid: the gui screen has `gridColumns` (12 by default) and `gridRows` (`0` = from the display's
+  shape). Every element has `row`, `col` (0-based) and spans; an element outside the grid, two on the same cells,
+  or one whose text cannot fit is an error naming it and the page.
 - With an `orientation`, `xstart` and `ystart` must be `-1`, which means "no offset" (the CYD example flow uses 0,
   which an orientation refuses; `-1` is always allowed). At `"90"` or `"270"` the picture is the panel turned, so a
   320 x 480 panel gives 480 wide by 320 high to lay out.
 - A modal is laid out in `screens.<screenId>.modals`, not in `pages`: see the format below.
 - A histogram (`gui_trend`) takes a journal's first output, and a journal takes numbers: `sensor → journal → histogram`.
 
-A modal (`gui_modal`, with `screen` set to the `gui_screen` node's id) is listed next to `pages`. Its `root` holds what
-it shows, and not the modal node itself:
+A modal (`gui_modal`, with `screen` set to the `gui_screen` node's id) is listed next to `pages`. Its `elements` are
+what it shows, and not the modal node itself:
 
 ```json
-"modals": [ { "node": "<modalNodeId>", "root": { "kind": "column", "padding": 8, "children": [
-  { "kind": "text", "text": "Too hot", "font": "font_body24" },
-  { "kind": "widget", "node": "<labelId>", "font": "font_body20", "maxChars": 20 }
-] } } ]
+"modals": [ { "node": "<modalNodeId>", "elements": [
+  { "kind": "text", "text": "Too hot", "row": 0, "col": 0, "rowSpan": 2, "colSpan": 8 },
+  { "kind": "widget", "node": "<labelId>", "row": 2, "col": 0, "rowSpan": 2, "colSpan": 12 }
+] } ]
 ```
 
 Any message opens it; a message with `payload` `None` closes it; `timeout` (seconds, `0` for never) closes it by
 itself; a navigate button with `target` `back` acknowledges it. Its output sends `'ack'`, `'timeout'` or `'closed'`.
 
-Placement keys, in `screens`:
+Placement keys, in `screens` (a page is `{"name", "elements": [...]}`; a modal is `{"node", "elements": [...]}`):
 
 | Element | Keys |
 | --- | --- |
-| `row`, `column` | `children`, `gap`, `padding`, `align`, `justify`, `grow`, `alignSelf` |
-| `widget` | `node` (the widget node's id), `font`, `unitsFont` (readout), `align` and `maxChars` (label), `height` and `minWidth` (bar, trend), `diameter` (light), `grow`, `alignSelf` |
-| `text` | `text`, `font`, `align` |
-| `pagedots`, `spacer` | `diameter`, `gap`; `width`, `height`, `grow` |
+| any element | `row`, `col` (0-based cells), `rowSpan`, `colSpan` (default 1), `card` (draw a panel behind), `align` |
+| `widget` | `kind: "widget"`, `node` (the widget node's id) |
+| `text` | `kind: "text"`, `text` |
+| page dots | `kind: "pagedots"` |
+| panel | `card: true` (no `node` or `text`) |
 
-A button widget takes `font`, `grow` and `alignSelf` like the others. The button's own behaviour (`mode`, `target`,
+No element takes a font, height, width, gap or padding: fonts follow the cells and spacing is the screen's gutter. The button's own behaviour (`mode`, `target`,
 `onValue`, ...) is on the node: see the [catalog](nodes-catalog.md). For a toggle that follows a real device (a smart
 plug), `gui.md` has the wiring.
 
@@ -4609,6 +4608,8 @@ Type `thingstudio/gui_screen`, kind source, palette group GUI.
     - `name`, string, default `"screen"`
     - `minInterval`, number, default `200` — least milliseconds between screen updates
     - `wrap`, boolean, default `true` — whether next/prev wrap around at the ends of the pages
+    - `gridColumns`, number, default `12`
+    - `gridRows`, number, default `0`
     - `touchPanelConfigId`, string, default `""`, the id of a `thingstudio/config/touch-panel` config — the touch-panel config to read touches from; empty for none
     - `themeConfigId`, string, default `""`, the id of a `thingstudio/config/gui-theme` config
     - `themePreset`, string, default `""`

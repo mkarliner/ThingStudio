@@ -3406,12 +3406,12 @@ for them and says so.</p>
 <code>gui_readout</code>, <code>gui_bar</code>, <code>gui_trend</code>, <code>gui_led</code>, <code>gui_button</code>) that you wire data into. Where each widget sits is in
 <code>screens</code>:</p>
 <div class="highlight"><pre><span></span><code><span class="nt">"screens"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"&lt;screenId&gt;"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"pages"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"main"</span><span class="p">,</span><span class="w"> </span><span class="nt">"root"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"kind"</span><span class="p">:</span><span class="w"> </span><span class="s2">"column"</span><span class="p">,</span><span class="w"> </span><span class="nt">"gap"</span><span class="p">:</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span><span class="w"> </span><span class="nt">"padding"</span><span class="p">:</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="nt">"children"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="nt">"kind"</span><span class="p">:</span><span class="w"> </span><span class="s2">"text"</span><span class="p">,</span><span class="w"> </span><span class="nt">"text"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Living room"</span><span class="p">,</span><span class="w"> </span><span class="nt">"font"</span><span class="p">:</span><span class="w"> </span><span class="s2">"font_body20"</span><span class="w"> </span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="nt">"kind"</span><span class="p">:</span><span class="w"> </span><span class="s2">"widget"</span><span class="p">,</span><span class="w"> </span><span class="nt">"node"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;readoutId&gt;"</span><span class="p">,</span><span class="w"> </span><span class="nt">"font"</span><span class="p">:</span><span class="w"> </span><span class="s2">"font_digits48"</span><span class="p">,</span><span class="w"> </span><span class="nt">"unitsFont"</span><span class="p">:</span><span class="w"> </span><span class="s2">"font_body24"</span><span class="p">,</span><span class="w"> </span><span class="nt">"alignSelf"</span><span class="p">:</span><span class="w"> </span><span class="s2">"center"</span><span class="w"> </span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="nt">"kind"</span><span class="p">:</span><span class="w"> </span><span class="s2">"spacer"</span><span class="p">,</span><span class="w"> </span><span class="nt">"grow"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="nt">"kind"</span><span class="p">:</span><span class="w"> </span><span class="s2">"pagedots"</span><span class="p">,</span><span class="w"> </span><span class="nt">"alignSelf"</span><span class="p">:</span><span class="w"> </span><span class="s2">"center"</span><span class="w"> </span><span class="p">}</span>
-<span class="w">  </span><span class="p">]</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"main"</span><span class="p">,</span><span class="w"> </span><span class="nt">"elements"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="nt">"card"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="nt">"row"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="nt">"col"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="nt">"rowSpan"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nt">"colSpan"</span><span class="p">:</span><span class="w"> </span><span class="mi">12</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="nt">"kind"</span><span class="p">:</span><span class="w"> </span><span class="s2">"text"</span><span class="p">,</span><span class="w"> </span><span class="nt">"text"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Living room"</span><span class="p">,</span><span class="w"> </span><span class="nt">"row"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="nt">"col"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="nt">"colSpan"</span><span class="p">:</span><span class="w"> </span><span class="mi">8</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="nt">"kind"</span><span class="p">:</span><span class="w"> </span><span class="s2">"widget"</span><span class="p">,</span><span class="w"> </span><span class="nt">"node"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;readoutId&gt;"</span><span class="p">,</span><span class="w"> </span><span class="nt">"row"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nt">"col"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="nt">"rowSpan"</span><span class="p">:</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="nt">"colSpan"</span><span class="p">:</span><span class="w"> </span><span class="mi">12</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="nt">"kind"</span><span class="p">:</span><span class="w"> </span><span class="s2">"pagedots"</span><span class="p">,</span><span class="w"> </span><span class="nt">"row"</span><span class="p">:</span><span class="w"> </span><span class="mi">15</span><span class="p">,</span><span class="w"> </span><span class="nt">"col"</span><span class="p">:</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="nt">"colSpan"</span><span class="p">:</span><span class="w"> </span><span class="mi">4</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span><span class="w"> </span><span class="p">}</span>
 <span class="p">]</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span>
 </code></pre></div>
 <p>Rules that cause most failures:</p>
@@ -3422,28 +3422,28 @@ for them and says so.</p>
   screen's size.</li>
 <li>A navigate button's <code>target</code> is <code>next</code>, <code>prev</code>, <code>back</code>, <code>home</code> or the <code>name</code> of a page in <code>screens</code>; when you edit an
   existing flow, read the page names from its <code>screens</code> section.</li>
-<li>Fonts: <code>font_body12/16/20/24</code>, <code>font_digits16/24/32/48/64</code> (digits and a few symbols only), <code>font_seg748/64/96</code>
-  (seven-segment: <code>0-9 : . -</code> and space). A character a font doesn't have is an error.</li>
-<li>A widget is placed once per page, drawn the same on every page it is on. A label shows a value up to <code>maxChars</code> wide.</li>
-<li>A page that doesn't fit gives an error that names the widget and page and how many pixels it needs. Use a smaller
-  font or fewer things per row. Rows need the screen width minus the container's padding (in landscape on a
-  320-wide panel that is under 312 px).</li>
+<li>Fonts are chosen to fit an element's cells; nothing in a layout is in pixels. A character no font has is an
+  error.</li>
+<li>A widget is placed once per page, drawn the same on every page it is on. Its cells decide its size.</li>
+<li>A page is a cell grid: the gui screen has <code>gridColumns</code> (12 by default) and <code>gridRows</code> (<code>0</code> = from the display's
+  shape). Every element has <code>row</code>, <code>col</code> (0-based) and spans; an element outside the grid, two on the same cells,
+  or one whose text cannot fit is an error naming it and the page.</li>
 <li>With an <code>orientation</code>, <code>xstart</code> and <code>ystart</code> must be <code>-1</code>, which means "no offset" (the CYD example flow uses 0,
   which an orientation refuses; <code>-1</code> is always allowed). At <code>"90"</code> or <code>"270"</code> the picture is the panel turned, so a
   320 x 480 panel gives 480 wide by 320 high to lay out.</li>
 <li>A modal is laid out in <code>screens.&lt;screenId&gt;.modals</code>, not in <code>pages</code>: see the format below.</li>
 <li>A histogram (<code>gui_trend</code>) takes a journal's first output, and a journal takes numbers: <code>sensor → journal → histogram</code>.</li>
 </ul>
-<p>A modal (<code>gui_modal</code>, with <code>screen</code> set to the <code>gui_screen</code> node's id) is listed next to <code>pages</code>. Its <code>root</code> holds what
-it shows, and not the modal node itself:</p>
-<div class="highlight"><pre><span></span><code><span class="nt">"modals"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"node"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;modalNodeId&gt;"</span><span class="p">,</span><span class="w"> </span><span class="nt">"root"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"kind"</span><span class="p">:</span><span class="w"> </span><span class="s2">"column"</span><span class="p">,</span><span class="w"> </span><span class="nt">"padding"</span><span class="p">:</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span><span class="w"> </span><span class="nt">"children"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="nt">"kind"</span><span class="p">:</span><span class="w"> </span><span class="s2">"text"</span><span class="p">,</span><span class="w"> </span><span class="nt">"text"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Too hot"</span><span class="p">,</span><span class="w"> </span><span class="nt">"font"</span><span class="p">:</span><span class="w"> </span><span class="s2">"font_body24"</span><span class="w"> </span><span class="p">},</span>
-<span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="nt">"kind"</span><span class="p">:</span><span class="w"> </span><span class="s2">"widget"</span><span class="p">,</span><span class="w"> </span><span class="nt">"node"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;labelId&gt;"</span><span class="p">,</span><span class="w"> </span><span class="nt">"font"</span><span class="p">:</span><span class="w"> </span><span class="s2">"font_body20"</span><span class="p">,</span><span class="w"> </span><span class="nt">"maxChars"</span><span class="p">:</span><span class="w"> </span><span class="mi">20</span><span class="w"> </span><span class="p">}</span>
-<span class="p">]</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">]</span>
+<p>A modal (<code>gui_modal</code>, with <code>screen</code> set to the <code>gui_screen</code> node's id) is listed next to <code>pages</code>. Its <code>elements</code> are
+what it shows, and not the modal node itself:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">"modals"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"node"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;modalNodeId&gt;"</span><span class="p">,</span><span class="w"> </span><span class="nt">"elements"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="nt">"kind"</span><span class="p">:</span><span class="w"> </span><span class="s2">"text"</span><span class="p">,</span><span class="w"> </span><span class="nt">"text"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Too hot"</span><span class="p">,</span><span class="w"> </span><span class="nt">"row"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="nt">"col"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="nt">"rowSpan"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="nt">"colSpan"</span><span class="p">:</span><span class="w"> </span><span class="mi">8</span><span class="w"> </span><span class="p">},</span>
+<span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="nt">"kind"</span><span class="p">:</span><span class="w"> </span><span class="s2">"widget"</span><span class="p">,</span><span class="w"> </span><span class="nt">"node"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;labelId&gt;"</span><span class="p">,</span><span class="w"> </span><span class="nt">"row"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="nt">"col"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="nt">"rowSpan"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="nt">"colSpan"</span><span class="p">:</span><span class="w"> </span><span class="mi">12</span><span class="w"> </span><span class="p">}</span>
+<span class="p">]</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">]</span>
 </code></pre></div>
 <p>Any message opens it; a message with <code>payload</code> <code>None</code> closes it; <code>timeout</code> (seconds, <code>0</code> for never) closes it by
 itself; a navigate button with <code>target</code> <code>back</code> acknowledges it. Its output sends <code>'ack'</code>, <code>'timeout'</code> or <code>'closed'</code>.</p>
-<p>Placement keys, in <code>screens</code>:</p>
+<p>Placement keys, in <code>screens</code> (a page is <code>{"name", "elements": [...]}</code>; a modal is <code>{"node", "elements": [...]}</code>):</p>
 <table>
 <thead>
 <tr>
@@ -3453,24 +3453,28 @@ itself; a navigate button with <code>target</code> <code>back</code> acknowledge
 </thead>
 <tbody>
 <tr>
-<td><code>row</code>, <code>column</code></td>
-<td><code>children</code>, <code>gap</code>, <code>padding</code>, <code>align</code>, <code>justify</code>, <code>grow</code>, <code>alignSelf</code></td>
+<td>any element</td>
+<td><code>row</code>, <code>col</code> (0-based cells), <code>rowSpan</code>, <code>colSpan</code> (default 1), <code>card</code> (draw a panel behind), <code>align</code></td>
 </tr>
 <tr>
 <td><code>widget</code></td>
-<td><code>node</code> (the widget node's id), <code>font</code>, <code>unitsFont</code> (readout), <code>align</code> and <code>maxChars</code> (label), <code>height</code> and <code>minWidth</code> (bar, trend), <code>diameter</code> (light), <code>grow</code>, <code>alignSelf</code></td>
+<td><code>kind: "widget"</code>, <code>node</code> (the widget node's id)</td>
 </tr>
 <tr>
 <td><code>text</code></td>
-<td><code>text</code>, <code>font</code>, <code>align</code></td>
+<td><code>kind: "text"</code>, <code>text</code></td>
 </tr>
 <tr>
-<td><code>pagedots</code>, <code>spacer</code></td>
-<td><code>diameter</code>, <code>gap</code>; <code>width</code>, <code>height</code>, <code>grow</code></td>
+<td>page dots</td>
+<td><code>kind: "pagedots"</code></td>
+</tr>
+<tr>
+<td>panel</td>
+<td><code>card: true</code> (no <code>node</code> or <code>text</code>)</td>
 </tr>
 </tbody>
 </table>
-<p>A button widget takes <code>font</code>, <code>grow</code> and <code>alignSelf</code> like the others. The button's own behaviour (<code>mode</code>, <code>target</code>,
+<p>No element takes a font, height, width, gap or padding: fonts follow the cells and spacing is the screen's gutter. The button's own behaviour (<code>mode</code>, <code>target</code>,
 <code>onValue</code>, ...) is on the node: see the <a href="../nodes-catalog/">catalog</a>. For a toggle that follows a real device (a smart
 plug), <code>gui.md</code> has the wiring.</p>
 <p>Read <a href="../nodes/gui/">GUI nodes</a> for the details, and copy from <code>test-flows/</code>:
