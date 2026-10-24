@@ -13,6 +13,7 @@ import minitest
 minitest.add_src_to_path()
 
 import statemachine  # noqa: E402
+import listener  # noqa: E402
 
 _PATH = "/tmp/ts_transfer_test.tmp"
 _alerts = []
@@ -165,6 +166,28 @@ def test_a_table_this_side_cant_run_is_refused():
         assert "continues" in str(e), e
 
 
+def test_an_unknown_guard_or_action_raises_instead_of_falling_through():
+    """check() only sees names in the hand-written tuple, so the dispatchers themselves must refuse an
+    unknown name rather than treat it as another guard/action (the pre-merge smell, 2026-10-24)."""
+    ctx = (_fresh(), 0, 0, b"")
+    for fn, what in ((statemachine._guard, "guard"), (statemachine._act, "action")):
+        try:
+            fn("no-such-" + what, ctx)
+            assert False, "an unknown %s must raise" % what
+        except ValueError as e:
+            assert "not implemented" in str(e), e
+
+
+def test_the_listener_guard_is_not_a_catch_all():
+    assert listener._listener_guard("overUsb", (None, None, "serial")) is True
+    assert listener._listener_guard("overUsb", (None, None, "wifi")) is False
+    try:
+        listener._listener_guard("no-such-guard", (None, None, "serial"))
+        assert False, "an unknown listener guard must raise"
+    except ValueError as e:
+        assert "not implemented" in str(e), e
+
+
 minitest.run(
     [
         test_offset_0_from_idle_starts_receiving,
@@ -182,5 +205,7 @@ minitest.run(
         test_incomplete_commit_is_illegal_and_ends_the_stream,
         test_commit_with_nothing_under_way_is_illegal,
         test_a_table_this_side_cant_run_is_refused,
+        test_an_unknown_guard_or_action_raises_instead_of_falling_through,
+        test_the_listener_guard_is_not_a_catch_all,
     ]
 )

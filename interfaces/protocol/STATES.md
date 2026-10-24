@@ -37,6 +37,28 @@ What the board does with each line from the editor. Every editor-to-board messag
 | 15 | listening | `unreadable` |  | answerGarbled | same | FLOW_ACK, DEPLOY_ERROR |
 | 16 | listening | `unknownType` |  | ignoreUnknown | same | nothing |
 
+**Who answers what**
+
+| Event | The board answers |
+|---|---|
+| `HELLO_REQUEST` | HELLO |
+| `DEPLOY` | DEPLOY_ACK, DEPLOY_ERROR |
+| `FLOW_PUT` | FLOW_ACK |
+| `FLOW_COMMIT` | DEPLOY_ACK, DEPLOY_ERROR |
+| `DEP_PUT` | DEP_ACK |
+| `DEP_COMMIT` | DEP_RESULT |
+| `TRIGGER` | nothing |
+| `EXEC` | nothing |
+| `RESTART` | nothing |
+| `STOP_TO_PROMPT` | nothing |
+| `SET_BOARD_SETTINGS` | BOARD_SETTINGS_RESULT, HELLO |
+| `STATE_READ` | nothing |
+| `STATE_WRITE` | nothing |
+| `unreadable` | FLOW_ACK, DEPLOY_ERROR |
+| `unknownType` | nothing |
+
+Generated from the `replies` on these rows (SPEC §7.1); a row without any sends no message. Printed lines (`EXEC` output, `STOP_TO_PROMPT`/`RESTART` notices) are not replies.
+
 **Illegal** (no row matches): alert, then
 - any event: state same.
 

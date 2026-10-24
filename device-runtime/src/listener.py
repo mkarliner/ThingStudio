@@ -1079,8 +1079,11 @@ statemachine.check("board.listener", ("overUsb",), _LISTENER_ACTIONS)
 
 
 def _listener_guard(name, ctx):
-    """board.listener's one guard, overUsb; the context is (msg, error, source)."""
-    return ctx[2] == "serial"
+    """board.listener's guards, over its (msg, error, source) context. An unknown name raises: `check()` only
+    knows the name is in the table, so a guard listed but not implemented must not fall through as another."""
+    if name == "overUsb":
+        return ctx[2] == "serial"
+    raise ValueError("board.listener: guard %r is not implemented" % (name,))
 
 
 async def _dispatch_locked(result, source):

@@ -331,21 +331,17 @@ and the gaps between them left a board refusing every deploy.
 **One editor at a time is assumed.** Replies carry no request id, and a board connected over USB and WiFi
 at once sends every message to both. Two editors talking to one board can each take the other's replies.
 
+**How a transition runs.** The row's action (`do`) runs in the state the event arrived in; the machine moves to
+the row's `to` after the action returns, or to its `onError` target when the action fails (§7.5). An illegal move
+is announced first (§7.6), then the machine's illegal rule runs. Both sides follow that order, and each machine's
+`about` in `states.json` says so.
+
 ### 7.1 Who answers what
 
-| The editor sends | The board answers | Notes |
-|---|---|---|
-| `HELLO_REQUEST` | `HELLO` | no side effects |
-| `FLOW_PUT` | `FLOW_ACK`, same `offset` | always exactly one |
-| `FLOW_COMMIT` | `DEPLOY_ACK` or `DEPLOY_ERROR` | always exactly one |
-| `DEPLOY` (older editors) | `DEPLOY_ACK` or `DEPLOY_ERROR` | always exactly one |
-| `DEP_PUT` | `DEP_ACK`, same `name`, `file`, `offset` | always exactly one |
-| `DEP_COMMIT` | `DEP_RESULT`, same `name` | always exactly one |
-| `SET_BOARD_SETTINGS` | `BOARD_SETTINGS_RESULT`, then `HELLO` if `ok` | |
-| `TRIGGER`, `EXEC`, `STOP_TO_PROMPT`, `RESTART` | nothing | `EXEC` output and `STOP_TO_PROMPT`/`RESTART` notices are plain printed lines; a restart ends with the boot `HELLO` |
-| `STATE_READ`, `STATE_WRITE` | nothing | reserved, logged |
-| a type the board doesn't know | nothing | logged (§6) |
-| a line the board can't read | `FLOW_ACK`, `ok` false, `code` `Garbled` | see below |
+Which event is answered with which message is a property of the `board.listener` rows themselves (`replies`), so
+the list is generated into `STATES.md` ("Who answers what") rather than restated here, where it could drift from
+the table the board runs. A row with no replies sends nothing: `EXEC` output and the `STOP_TO_PROMPT`/`RESTART`
+notices are printed console lines, not protocol messages, and a restart ends with the boot `HELLO`.
 
 The board also sends, unasked: `HELLO` at boot and when a WiFi session starts, `NODE_ERROR` and
 `NODE_STATUS` while a flow runs, and printed lines.

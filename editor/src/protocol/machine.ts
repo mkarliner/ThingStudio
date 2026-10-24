@@ -51,7 +51,11 @@ export class Machine<Ctx> {
   }
 
   /** Takes `event`: runs the matching row's action and moves, or reports the move as illegal and applies the
-   * machine's illegal rule. Returns whether the move was legal. */
+   * machine's illegal rule. Returns whether the move was legal.
+   *
+   * The action runs in the **from-state**; the state changes after it returns (or, for an illegal move, after
+   * the illegal rule's action). Both sides follow that rule (SPEC §7.1), so an action sees the state the event
+   * arrived in. */
   fire(event: string, ctx: Ctx, detail = ""): boolean {
     const row = this.#rows.find((r) => r.on === event && r.from.includes(this.state) && (!r.if || this.guards[r.if]!(ctx)));
     if (!row) {
@@ -61,9 +65,8 @@ export class Machine<Ctx> {
       if (rule.to && rule.to !== "same") this.state = rule.to;
       return false;
     }
-    // Move first: an action may end the transfer and start the caller's next step, which must see the new state.
-    if (row.to !== "same") this.state = row.to;
     if (row.do) this.actions[row.do]!(ctx);
+    if (row.to !== "same") this.state = row.to;
     return true;
   }
 }

@@ -93,7 +93,11 @@ def _remove(path):
 
 
 def _guard(name, c):
-    """board.stream's guards. A piece's context is (stream, offset, total, data); a commit's (stream, total)."""
+    """board.stream's guards. A piece's context is (stream, offset, total, data); a commit's (stream, total).
+
+    Every name is matched explicitly and an unknown one raises: `check()` can only see that the name is in
+    _STREAM_GUARDS, so a guard added to the table without an implementation here must fail loudly rather than
+    fall through as another guard (`complete`, previously)."""
     s = c[0]
     if name == "startsOver":
         return c[1] == 0 and len(c[3]) <= c[2]
@@ -101,15 +105,19 @@ def _guard(name, c):
         return 0 < c[1] <= s.stored and c[2] == s.total and c[1] + len(c[3]) <= c[2]
     if name == "afterFailure":
         return c[1] > 0
-    return c[1] == s.total and s.stored == c[1]  # complete
+    if name == "complete":
+        return c[1] == s.total and s.stored == c[1]
+    raise ValueError("board.stream: guard %r is not implemented" % (name,))
 
 
 def _act(name, c):
-    """board.stream's actions; start and writeAt raise Failure."""
+    """board.stream's actions; start and writeAt raise Failure. Unknown names raise, like _guard."""
     s = c[0]
     if name == "discard":
         _remove(s.path)
-    elif name != "release":
+    elif name == "release":
+        pass
+    elif name == "start" or name == "writeAt":
         offset, total, data = c[1], c[2], c[3]
         if name == "start" and s.before_start is not None:
             s.before_start(total)  # may raise Failure (a library's free-space check)
@@ -121,6 +129,8 @@ def _act(name, c):
         except OSError as e:
             raise Failure("NoSpace" if (e.args and e.args[0] == _ENOSPC) else "WriteFailed", "writing %s failed: %r" % (s.path, e))
         s.stored, s.total = (max(s.stored, offset + len(data)) if offset else len(data)), total
+    else:
+        raise ValueError("board.stream: action %r is not implemented" % (name,))
 
 
 class Stream:

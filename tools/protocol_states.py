@@ -151,6 +151,23 @@ def _diagram(name, m):
     return lines
 
 
+def _who_answers(m):
+    """The board.listener rows as a table: event -> the replies its rows may send, in row order. A row with no
+    `replies` sends none. Grouped, so an event with two guarded rows (SET_BOARD_SETTINGS) appears once."""
+    out = ["**Who answers what**", "", "| Event | The board answers |", "|---|---|"]
+    seen = {}
+    for t in m["transitions"]:
+        replies = seen.setdefault(t["on"], [])
+        for r in t.get("replies", []):
+            if r not in replies:
+                replies.append(r)
+    for event, replies in seen.items():
+        out.append("| `%s` | %s |" % (event, ", ".join(replies) if replies else "nothing"))
+    out += ["", "Generated from the `replies` on these rows (SPEC §7.1); a row without any sends no message. Printed "
+            "lines (`EXEC` output, `STOP_TO_PROMPT`/`RESTART` notices) are not replies.", ""]
+    return out
+
+
 def render_md(table):
     out = ["<!-- %s -->" % GENERATED, "", "# Wire protocol — state machines", ""]
     out += [
@@ -184,6 +201,8 @@ def render_md(table):
             if "onError" in t:
                 out.append("| | | | | *%s fails* | %s | %s |" % (t["do"], t["onError"]["to"], _reply_text(t["onError"])))
         out.append("")
+        if name == "board.listener":
+            out += _who_answers(m)
         out += ["**Illegal** (no row matches): alert, then"]
         for ev, rule in m["illegal"].items():
             what = []

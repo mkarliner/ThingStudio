@@ -93,9 +93,9 @@ const DEFAULT_BAUD_RATE = 115200; // matches every prior POC's harness.py / this
 
 /**
  * One connected device's serial link. Owns exactly one open SerialPort at
- * a time; framing/CBOR decode state (ProtocolStreamDecoder) lives here,
- * not in the port itself, so a caller can inspect `pendingByteCount` for
- * diagnostics the same way protocol.ts's own tests do.
+ * a time. It splits the byte stream into lines; each line is decoded on its
+ * own with protocol.decodeLineFrame, so there is no frame-decoder state to
+ * keep (the old ProtocolStreamDecoder reset every line and was removed).
  */
 export class WebSerialTransport implements DeviceTransport {
   #port: WebSerialPort | null = null;
