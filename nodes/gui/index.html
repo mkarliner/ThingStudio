@@ -3235,9 +3235,10 @@ so use them on boards with little RAM.</p>
 Keshikan (SIL Open Font License 1.1); see
 <a href="https://github.com/mkarliner/ThingStudio/blob/main/docs/third-party-licenses.md">third-party licenses</a>.</p>
 <h2 id="themes">Themes</h2>
-<p>By default a screen draws in the GUI's own colours. To choose your own, add a <strong>GUI theme</strong> config (+ on the
-gui screen's <strong>theme</strong> property) and name it there: one theme can serve several screens, and a screen with no theme
-keeps the default colours.</p>
+<p>By default a screen draws in the GUI's own colours. To choose your own, select the gui screen and set <strong>theme</strong>
+(a starting point) and any of the role colours in its Properties: the screen owns its look, and a screen with no
+theme keeps the default colours. An older flow may still use a shared <strong>GUI theme</strong> config; the screen's own
+colours win when both are set.</p>
 <p>A theme is ten roles, so the widgets stay consistent and one theme works on different panels: <strong>background</strong>, <strong>card</strong>,
 <strong>foreground</strong>, <strong>muted</strong> (stale values), <strong>track</strong> (a bar's empty part), <strong>accent</strong> (bar fill, lights on), <strong>text on
 accent</strong>, <strong>ok</strong>, <strong>warn</strong> and <strong>alarm</strong>. Start from <strong>dark slate</strong>, <strong>light paper</strong> or <strong>vivid</strong> and change any
