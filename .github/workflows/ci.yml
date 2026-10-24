@@ -24,6 +24,12 @@ jobs:
           cache: npm
           cache-dependency-path: editor/package-lock.json
       - run: npm ci --ignore-scripts
+      # A known-vulnerable version is a fact, not a prediction: fail on it rather than let the next release
+      # discover it (2026-10-24: six advisories had accumulated since the August lock, two of them high, with
+      # every other CI step green). `high`, not `moderate`: the moderates here were test-only, and blocking on
+      # those trains people to bypass the gate. If a high ever has no fix, that is an explicit accepted-risk
+      # decision in docs/working-notes/, not a step to comment out.
+      - run: npm audit --audit-level=high
       - run: npx tsc --noEmit
       - run: npm test
       # The real bundle, not just the typecheck: tsc does not look inside .vue files, so a stale import

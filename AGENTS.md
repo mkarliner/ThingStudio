@@ -250,6 +250,11 @@ packages):
   silently re-enables scripts.
 - **Use lockfiles and deterministic installs**: `npm ci`, not bare `npm install`, once a lockfile exists; commit the
   lockfile.
+- **In `editor/`, the install command is `npm ci --ignore-scripts`.** A plain `npm install` fails on this tree with
+  `Cannot read properties of null (reading 'edgesOut')` — an npm 10 arborist bug resolving vitest's optional browser
+  peers, reproducible on an unchanged tree. To regenerate the lock, use
+  `npm install --ignore-scripts --legacy-peer-deps`, then consume it with `npm ci`; never delete the lock. Full
+  incident: `docs/working-notes/learnings/editor-build-tooling.md`.
 - **Never blindly bulk-upgrade** (`npm update`, `ncu -u`) — review dependency updates individually, or via
   `npx npm-check-updates --interactive`.
 - **Sanity-check before adding a new dependency**: recent maintenance activity, whether it has an install script at
@@ -403,6 +408,13 @@ the moment this has previously gone wrong.
    the exact mistake made on 2026-09-11.
 4. Before saving, check the new name against `ls docs/working-notes/*briefing*.md` for a collision or near-miss
    (a differently-worded file already covering the same topic) and disambiguate if needed.
+
+**A brief's "environment facts" section covers every toolchain the session used, not just the device.** If the
+session ran `npm ci`, flashed firmware, rebuilt a MicroPython, or started a backend, that goes in — including the
+command that works and the one that doesn't. Mike hit exactly this gap on 2026-10-24: the brief listed the serial
+port, ESP-IDF and the device interpreter, and had no npm line at all, so a broken `npm install` and six dependency
+advisories were rediscovered by hand on a Mac an hour later. The section is written for the person about to touch
+the same things, not as a summary of what the author found interesting.
 
 Existing `next-session-picks-briefing-*.md` files are left as-is -- this only governs naming going forward, not
 a retroactive rename pass.
