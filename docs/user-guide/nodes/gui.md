@@ -154,17 +154,17 @@ since there is no display for it to follow.
 ## Modals in the flow file
 
 A modal is laid out like a page, but in the screen's `modals` list, next to `pages`. Each entry names the `gui_modal`
-node and gives its layout as `root`. The modal node is not itself placed inside `root`; `root` holds only what the
+node and gives its layout as `elements`. The modal node is not itself placed there; the elements are what the
 modal shows (text, and widget nodes wired to it or to the flow):
 
 ```json
 "screens": { "<screenId>": {
   "pages": [ ... ],
   "modals": [
-    { "node": "<modalNodeId>", "root": { "kind": "column", "gap": 8, "padding": 8, "children": [
-      { "kind": "text", "text": "Too hot", "font": "font_body24" },
-      { "kind": "widget", "node": "<labelId>", "font": "font_body20", "maxChars": 20 }
-    ] } }
+    { "node": "<modalNodeId>", "elements": [
+      { "kind": "text", "text": "Too hot", "row": 0, "col": 0, "rowSpan": 2, "colSpan": 8 },
+      { "kind": "widget", "node": "<labelId>", "row": 2, "col": 0, "rowSpan": 2, "colSpan": 12 }
+    ] }
   ]
 } }
 ```
@@ -176,25 +176,23 @@ and a **timeout** above `0` closes it on its own. The modal node's output says w
 
 ## Laying out pages
 
-Select the gui screen node and open **Properties**: each page is listed as an outline of its rows and columns,
-top to bottom in the order things appear on screen. Use ↑ and ↓ to move an element earlier or later, ⇥ to move
-it into the row or column above it, ⇤ to move it out of its container, ✕ to remove it, and ⚙ to set its font,
-grow, fill, gap, padding or card. Each row and column has a **+ add…** menu: pick a widget, spacer, text, row,
-column or page dots and it goes at the end of that row or column. Add and reorder pages (the order of the page
-dots) from the page's own ↑ ↓, and add a layout for a modal. The same widget can be on several pages of a
-screen (a navigation button on every page, say). It must be drawn the same way on each, with the same font and
-options, and it shows the same value everywhere. Each page's **+ add…** menu lists the widgets not already on
-that page. A widget belongs to one screen. Widgets in a row share it equally, so two buttons side by side are
-each half the row (never narrower than their text needs). Set **grow** to `0` on one to keep it at its natural
-size, or to a bigger number for a bigger share. The editor doesn't draw the page: if it doesn't fit, Deploy says
-which widget, on which page. The outline is a view of the flow file's `"screens"` section, which you can also
-edit by hand.
+Every screen has a **cell grid**: **grid columns** on the gui screen (12 by default) and **grid rows**
+(`0` means "work them out from the display's shape", so cells stay roughly square). A position is a row and a
+column, 0-based; a size is a row span and a column span. Nothing is in pixels, so the same layout works on a
+different panel.
 
-Tick **fill** on a row or column to give it the space left on the page (it sets `grow: 1`). Anything after a
-filling container keeps its natural height, so a plain row at the end of a page stays at the bottom: that is how
-a footer is made, and the page dots are just a widget you put in it. There is no separate footer setting, and a
-filling card stops above the row below it. The current page's dot is drawn as a pill, so it reads at a glance.
+Select the gui screen node and open **Properties**: each page lists its elements. **⚙** on an element opens
+**row**, **col**, **rows** and **cols**; tick **panel** to draw a card behind those cells. **+ add…** puts a
+widget, text, page dots or a panel on the page (it starts at row 0, column 0 — set its cells after).
+The same widget can be on several pages of a screen (a navigation button on every page, say), and it must have
+the same span on each. A widget belongs to one screen.
 
+Text sizes itself: the compiler picks the largest font that fits the element's cells, and Deploy says which
+element, on which page, when even the smallest does not fit. Two elements on the same cells, a span outside the
+grid, or a panel on top of another panel are also Deploy errors naming the element. The editor doesn't draw the
+page; the outline is a view of the flow file's `"screens"` section, which you can also edit by hand.
+
+To put the page dots in a footer, give them the last grid row. The current page's dot is drawn as a pill.
 Pages live in the flow file, under `"screens"`, keyed by the gui screen node's id. A page is a tree of
 `row` and `column` containers holding widgets (`"kind": "widget", "node": "<id>"`), fixed `text`,
 `pagedots` and `spacer`s.

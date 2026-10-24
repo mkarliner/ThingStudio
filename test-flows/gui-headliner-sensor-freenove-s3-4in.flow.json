@@ -24,7 +24,7 @@
       "type": "thingstudio/gui_readout",
       "properties": {
         "name": "Temperature",
-        "units": "\u00b0C",
+        "units": "°C",
         "decimals": 1,
         "lo": -20,
         "hi": 50,
@@ -113,7 +113,9 @@
         "name": "tft",
         "minInterval": 200,
         "wrap": true,
-        "touchPanelConfigId": "cfg-touch"
+        "touchPanelConfigId": "cfg-touch",
+        "gridColumns": 12,
+        "gridRows": 0
       }
     },
     {
@@ -640,199 +642,175 @@
       "pages": [
         {
           "name": "climate",
-          "root": {
-            "kind": "column",
-            "gap": 6,
-            "padding": 4,
-            "children": [
-              {
-                "kind": "row",
-                "padding": 6,
-                "alignSelf": "stretch",
-                "children": [
-                  {
-                    "kind": "text",
-                    "text": "Living room",
-                    "font": "font_body20",
-                    "grow": 1
-                  },
-                  {
-                    "kind": "widget",
-                    "node": "n07-alive",
-                    "diameter": 14
-                  }
-                ]
-              },
-              {
-                "kind": "row",
-                "alignSelf": "stretch",
-                "justify": "space-around",
-                "padding": 6,
-                "children": [
-                  {
-                    "kind": "column",
-                    "gap": 4,
-                    "children": [
-                      {
-                        "kind": "text",
-                        "text": "Temperature",
-                        "font": "font_body16"
-                      },
-                      {
-                        "kind": "widget",
-                        "node": "n03-temp",
-                        "font": "font_digits48",
-                        "unitsFont": "font_body24"
-                      }
-                    ]
-                  },
-                  {
-                    "kind": "column",
-                    "gap": 4,
-                    "children": [
-                      {
-                        "kind": "text",
-                        "text": "Humidity",
-                        "font": "font_body16"
-                      },
-                      {
-                        "kind": "widget",
-                        "node": "n04-hum",
-                        "font": "font_digits48",
-                        "unitsFont": "font_body24"
-                      }
-                    ]
-                  }
-                ]
-              },
-              {
-                "kind": "text",
-                "text": "Last 26 minutes",
-                "font": "font_body12"
-              },
-              {
-                "kind": "widget",
-                "node": "n22-ttrend1",
-                "alignSelf": "stretch",
-                "height": 52
-              },
-              {
-                "kind": "text",
-                "text": "Last 2.6 hours",
-                "font": "font_body12"
-              },
-              {
-                "kind": "widget",
-                "node": "n23-ttrend2",
-                "alignSelf": "stretch",
-                "height": 52
-              },
-              {
-                "kind": "spacer",
-                "grow": 1
-              },
-              {
-                "kind": "pagedots",
-                "alignSelf": "center"
-              }
-            ]
-          }
+          "elements": [
+            {
+              "kind": "text",
+              "text": "Living room",
+              "row": 0,
+              "col": 0,
+              "rowSpan": 1,
+              "colSpan": 3
+            },
+            {
+              "kind": "widget",
+              "node": "n07-alive",
+              "row": 0,
+              "col": 3,
+              "rowSpan": 2,
+              "colSpan": 9
+            },
+            {
+              "kind": "text",
+              "text": "Temperature",
+              "row": 2,
+              "col": 0,
+              "rowSpan": 1,
+              "colSpan": 5
+            },
+            {
+              "kind": "widget",
+              "node": "n03-temp",
+              "row": 3,
+              "col": 0,
+              "rowSpan": 1,
+              "colSpan": 5
+            },
+            {
+              "kind": "text",
+              "text": "Humidity",
+              "row": 2,
+              "col": 5,
+              "rowSpan": 1,
+              "colSpan": 4
+            },
+            {
+              "kind": "widget",
+              "node": "n04-hum",
+              "row": 3,
+              "col": 5,
+              "rowSpan": 1,
+              "colSpan": 4
+            },
+            {
+              "kind": "text",
+              "text": "Last 26 minutes",
+              "row": 4,
+              "col": 0,
+              "rowSpan": 1,
+              "colSpan": 12
+            },
+            {
+              "kind": "widget",
+              "node": "n22-ttrend1",
+              "row": 5,
+              "col": 0,
+              "rowSpan": 1,
+              "colSpan": 12
+            },
+            {
+              "kind": "text",
+              "text": "Last 2.6 hours",
+              "row": 6,
+              "col": 0,
+              "rowSpan": 1,
+              "colSpan": 12
+            },
+            {
+              "kind": "widget",
+              "node": "n23-ttrend2",
+              "row": 7,
+              "col": 0,
+              "rowSpan": 1,
+              "colSpan": 12
+            },
+            {
+              "kind": "pagedots",
+              "row": 2,
+              "col": 9,
+              "rowSpan": 1,
+              "colSpan": 1
+            }
+          ]
         },
         {
           "name": "pressure",
-          "root": {
-            "kind": "column",
-            "gap": 6,
-            "padding": 4,
-            "children": [
-              {
-                "kind": "row",
-                "padding": 6,
-                "alignSelf": "stretch",
-                "children": [
-                  {
-                    "kind": "text",
-                    "text": "Pressure",
-                    "font": "font_body20",
-                    "grow": 1
-                  }
-                ]
-              },
-              {
-                "kind": "widget",
-                "node": "n05-press",
-                "font": "font_digits48",
-                "unitsFont": "font_body20",
-                "alignSelf": "center"
-              },
-              {
-                "kind": "widget",
-                "node": "n06-pbar",
-                "alignSelf": "stretch",
-                "height": 120
-              },
-              {
-                "kind": "text",
-                "text": "Last 2.6 hours, 970 to 1050 hPa",
-                "font": "font_body12"
-              },
-              {
-                "kind": "spacer",
-                "grow": 1
-              },
-              {
-                "kind": "pagedots",
-                "alignSelf": "center"
-              }
-            ]
-          }
+          "elements": [
+            {
+              "kind": "text",
+              "text": "Pressure",
+              "row": 0,
+              "col": 0,
+              "rowSpan": 1,
+              "colSpan": 12
+            },
+            {
+              "kind": "widget",
+              "node": "n05-press",
+              "row": 1,
+              "col": 3,
+              "rowSpan": 1,
+              "colSpan": 5
+            },
+            {
+              "kind": "widget",
+              "node": "n06-pbar",
+              "row": 2,
+              "col": 0,
+              "rowSpan": 3,
+              "colSpan": 12
+            },
+            {
+              "kind": "text",
+              "text": "Last 2.6 hours, 970 to 1050 hPa",
+              "row": 6,
+              "col": 0,
+              "rowSpan": 1,
+              "colSpan": 12
+            },
+            {
+              "kind": "pagedots",
+              "row": 7,
+              "col": 6,
+              "rowSpan": 1,
+              "colSpan": 1
+            }
+          ]
         },
         {
           "name": "clock",
-          "root": {
-            "kind": "column",
-            "gap": 6,
-            "padding": 4,
-            "children": [
-              {
-                "kind": "row",
-                "padding": 6,
-                "alignSelf": "stretch",
-                "children": [
-                  {
-                    "kind": "text",
-                    "text": "Clock",
-                    "font": "font_body20",
-                    "grow": 1
-                  }
-                ]
-              },
-              {
-                "kind": "spacer",
-                "grow": 1
-              },
-              {
-                "kind": "widget",
-                "node": "n42-ctime",
-                "font": "font_seg764",
-                "alignSelf": "center"
-              },
-              {
-                "kind": "widget",
-                "node": "n43-cdate",
-                "font": "font_body24",
-                "alignSelf": "center"
-              },
-              {
-                "kind": "spacer",
-                "grow": 2
-              },
-              {
-                "kind": "pagedots",
-                "alignSelf": "center"
-              }
-            ]
-          }
+          "elements": [
+            {
+              "kind": "text",
+              "text": "Clock",
+              "row": 0,
+              "col": 0,
+              "rowSpan": 1,
+              "colSpan": 12
+            },
+            {
+              "kind": "widget",
+              "node": "n42-ctime",
+              "row": 2,
+              "col": 3,
+              "rowSpan": 2,
+              "colSpan": 6
+            },
+            {
+              "kind": "widget",
+              "node": "n43-cdate",
+              "row": 4,
+              "col": 3,
+              "rowSpan": 1,
+              "colSpan": 6
+            },
+            {
+              "kind": "pagedots",
+              "row": 7,
+              "col": 6,
+              "rowSpan": 1,
+              "colSpan": 1
+            }
+          ]
         }
       ]
     }

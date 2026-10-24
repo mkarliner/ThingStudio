@@ -255,6 +255,10 @@ export const guiScreenNode: NodeDefinition = {
     },
     { name: "minInterval", label: "fastest redraw (ms)", kind: "number", default: 200, min: 0 },
     { name: "wrap", label: "next/prev wrap round", kind: "boolean", default: true },
+    // The layout grid (gui-grid-layout-scoping.md, 2026-10-24). Rows 0 = derived from the display's shape so a
+    // cell stays roughly square: rows = round(columns * display height / display width).
+    { name: "gridColumns", label: "grid columns", kind: "number", default: 12, min: 2, max: 48 },
+    { name: "gridRows", label: "grid rows (0 = from the display's shape)", kind: "number", default: 0, min: 0, max: 64 },
     { name: "touchPanelConfigId", label: "touch panel (blank: no touch)", kind: "configRef", configType: "thingstudio/config/touch-panel", default: "" },
     {
       name: "themeConfigId",

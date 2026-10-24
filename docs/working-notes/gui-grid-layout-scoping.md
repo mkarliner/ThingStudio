@@ -1,7 +1,8 @@
 # GUI grid layout: scoping
 
-Status: scoped 2026-10-24. Mike's ruling: **pixel sizes are not acceptable in the GUI; a screen specifies an
-H x W grid, and widget sizes are grid units** (decisions/gui-layout.md). This note is the plan; nothing is built.
+Status: scoped and **step 1 built, 2026-10-24**. Mike's ruling: **pixel sizes are not acceptable in the GUI; a
+screen specifies an H x W grid, and widget sizes are grid units** (decisions/gui-layout.md). Steps 1 and 2 are
+in: the model/compiler and the existing flows, re-authored from their old pixel tables.
 
 ## Decisions
 

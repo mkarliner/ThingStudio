@@ -216,6 +216,8 @@ Type `thingstudio/gui_screen`, kind source, palette group GUI.
     - `name`, string, default `"screen"`
     - `minInterval`, number, default `200` — least milliseconds between screen updates
     - `wrap`, boolean, default `true` — whether next/prev wrap around at the ends of the pages
+    - `gridColumns`, number, default `12`
+    - `gridRows`, number, default `0`
     - `touchPanelConfigId`, string, default `""`, the id of a `thingstudio/config/touch-panel` config — the touch-panel config to read touches from; empty for none
     - `themeConfigId`, string, default `""`, the id of a `thingstudio/config/gui-theme` config
     - `themePreset`, string, default `""`

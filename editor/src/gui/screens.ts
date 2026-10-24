@@ -1,93 +1,52 @@
 // SPDX-License-Identifier: Apache-2.0
 // editor/src/gui/screens.ts
 //
-// The `screens` section of a flow and its compile step (gui-layout-widget-system-scoping.md, "Two views, one
-// model"). Wiring says how data moves; `screens` says where widgets sit: per GUI screen node, its pages and
-// modals as trees of rows, columns and elements. Widget nodes are referenced by id, so the flow view and
-// the GUI view share one record. Placement properties (font, size, alignment) live here, on the placement;
-// data properties (range, decimals, staleAfter) stay on the node.
+// The `screens` section of a flow and its compile step (gui-layout-widget-system-scoping.md; the grid model is
+// gui-grid-layout-scoping.md, 2026-10-24). Wiring says how data moves; `screens` says where widgets sit: per GUI
+// screen node, its pages and modals as elements placed on a cell grid. Widget nodes are referenced by id, so the
+// flow view and the GUI view share one record.
 //
-// compileScreens() lays every page and modal out with layout.ts, measuring each element with widgets.ts,
-// and returns the device tables plus the Python that registers each widget's draw routine. Every problem --
-// overflow, a widget placed twice, an unknown node, a font missing a character -- is collected with its
-// screen and page named, never thrown one at a time.
+// A screen declares `gridColumns` x `gridRows` (rows 0 = from the display's shape). An element has a row, a
+// column and spans; the compiler maps cells to pixels for the wired display and auto-fits each font to its span,
+// so no layout value is in pixels. Every problem -- an overlap, a span outside the grid, text that cannot fit --
+// is collected with its screen and page named, never thrown one at a time.
 
-import { getFont, missingChars, textWidth } from "./font-metrics.js";
-import { layoutPage, type Align, type Container, type Justify, type LayoutNode, type Rect } from "./layout.js";
-import { barNatural, buttonNatural, labelNatural, ledNatural, pageDotsNatural, readoutNatural, trendNatural } from "./widgets.js";
+import { getFont, fontIds, missingChars, textWidth } from "./font-metrics.js";
+import type { Rect } from "./layout.js";
+import { readoutField } from "./widgets.js";
 import type { GraphNode } from "../compiler/graph.js";
 
 // ---- the format ------------------------------------------------------------------------------------------
 
-interface Placed {
-  readonly grow?: number;
-  readonly alignSelf?: Align;
-}
-
-export interface ContainerSpec extends Placed {
-  readonly kind: "row" | "column";
-  readonly children: readonly ElementSpec[];
-  readonly gap?: number;
-  readonly padding?: number;
-  /** Draw a card behind this container's children: a filled rounded rectangle in the theme's card colour
-   * (gui-widget-styles-and-colour-scoping.md, 2026-10-23). Padding keeps the contents off the card's edge. */
+/** One element placed on a page's or modal's grid. Row/col are 0-based cells; spans default to 1. */
+export interface GridElement {
+  readonly row: number;
+  readonly col: number;
+  readonly rowSpan?: number;
+  readonly colSpan?: number;
+  /** A panel drawn behind this span (and anything placed on it). Its own `node`/`text` are not used. */
   readonly card?: boolean;
-  readonly align?: Align;
-  readonly justify?: Justify;
-}
-
-/** A widget node placed here. Which font and size it uses on this screen are placement properties. */
-export interface WidgetSpec extends Placed {
-  readonly kind: "widget";
-  readonly node: string;
-  readonly font?: string;
-  readonly unitsFont?: string;
-  /** label: text alignment inside its rect. */
-  readonly align?: "left" | "center" | "right";
-  /** bound label: room for this many characters. */
-  readonly maxChars?: number;
-  /** bar */
-  readonly minWidth?: number;
-  readonly height?: number;
-  /** status light */
-  readonly diameter?: number;
-}
-
-/** Static text: GUI view only, no node. */
-export interface TextSpec extends Placed {
-  readonly kind: "text";
-  readonly text: string;
-  readonly font: string;
+  /** Defaults to "widget" when `node` is set, else "text". */
+  readonly kind?: "widget" | "text" | "pagedots";
+  /** A widget node's id (kind "widget"). */
+  readonly node?: string;
+  /** Static text (kind "text"). */
+  readonly text?: string;
+  /** Text alignment inside the span (text, and a label's value). */
   readonly align?: "left" | "center" | "right";
 }
-
-/** Page indicator: GUI view only, no node. */
-export interface PageDotsSpec extends Placed {
-  readonly kind: "pagedots";
-  readonly diameter?: number;
-  readonly gap?: number;
-}
-
-/** Empty space; with grow, pushes its neighbours apart. */
-export interface SpacerSpec extends Placed {
-  readonly kind: "spacer";
-  readonly width?: number;
-  readonly height?: number;
-}
-
-export type ElementSpec = ContainerSpec | WidgetSpec | TextSpec | PageDotsSpec | SpacerSpec;
 
 export interface PageSpec {
   readonly name: string;
   /** A child page (drill-down); absent for a carousel page. */
   readonly parent?: string;
-  readonly root: ElementSpec;
+  readonly elements: readonly GridElement[];
 }
 
 export interface ModalSpec {
   /** The gui_modal node this is the GUI face of. */
   readonly node: string;
-  readonly root: ElementSpec;
+  readonly elements: readonly GridElement[];
 }
 
 export interface ScreenSpec {
@@ -126,8 +85,6 @@ export function nodeLabel(node: GraphNode): string {
   return n ? `"${n}"` : `${node.type.replace("thingstudio/", "")} ${node.id.slice(0, 6)}`;
 }
 
-// ---- compile -----------------------------------------------------------------------------------------------
-
 export interface CompiledSurface {
   /** gui_screen node id. */
   readonly screen: string;
@@ -137,7 +94,7 @@ export interface CompiledSurface {
   readonly modalsPy: string;
   /** Static elements (text, page dots) registered for this screen: Python statements. */
   readonly staticRegistrations: string[];
-  /** Every rect, for the editor's preview and tests: element id -> rect, per page or modal name. */
+  /** Every leaf's rect, for the editor's preview and tests: element id -> rect, per page or modal name. */
   readonly rects: ReadonlyMap<string, ReadonlyMap<string, Rect>>;
 }
 
@@ -170,6 +127,26 @@ function num(v: unknown, fallback: number): number {
   return v === undefined || v === null || v === "" || !Number.isFinite(n) ? fallback : n;
 }
 
+/** How many cells a screen has: `gridColumns` (default 12) and `gridRows` (0 = from the display's shape). */
+export function gridSize(screen: GraphNode, display: ScreenSize): { columns: number; rows: number } {
+  const columns = Math.max(2, Math.round(num(screen.properties.gridColumns, 12)));
+  const declared = Math.round(num(screen.properties.gridRows, 0));
+  const rows = declared > 0 ? declared : Math.max(1, Math.round((columns * display.height) / Math.max(1, display.width)));
+  return { columns, rows };
+}
+
+const FONTS_BY_HEIGHT = (): string[] => fontIds().sort((a, b) => getFont(b).height - getFont(a).height);
+
+/** The largest known font whose height fits `height` and whose text passes `fits`, or an error. */
+function pickFont(height: number, fits?: (font: string) => boolean): string {
+  for (const font of FONTS_BY_HEIGHT()) {
+    if (getFont(font).height <= height && (!fits || fits(font))) return font;
+  }
+  throw new Error(`does not fit its cells (no font fits ${height}px high)`);
+}
+
+// ---- compile -----------------------------------------------------------------------------------------------
+
 /** Lays out and checks every screen. `sizeOf` gives a gui_screen node's pixel size; `modalName` a gui_modal
  * node's name. Nothing here throws for a problem in the flow: they come back in `errors`. */
 export function compileScreens(
@@ -193,6 +170,7 @@ export function compileScreens(
     }
     const sname = nodeLabel(screen);
     const size = sizeOf(screen);
+    const { columns, rows } = gridSize(screen, size);
     const pageNames = new Set<string>();
     for (const p of spec.pages) {
       if (pageNames.has(p.name)) errors.push(`screen ${sname}: two pages are called "${p.name}"`);
@@ -208,217 +186,240 @@ export function compileScreens(
     let staticCount = 0;
     const staticRegistrations: string[] = [];
     const rectsByPage = new Map<string, ReadonlyMap<string, Rect>>();
+    const cellW = size.width / columns;
+    const cellH = size.height / rows;
+    // A gutter in the gap between spans, derived from the cell so it scales with the display; also used as a
+    // card's inside padding (a widget on the card insets by the same amount).
+    const gutter = Math.max(0, Math.round(0.10 * Math.min(cellW, cellH)));
+    const round = Math.round;
 
-    // Turns an element into a layout node, registering what it draws. `where` names it in errors.
-    const toLayout = (el: ElementSpec, where: string, path: string, inRow = false): LayoutNode | null => {
-      // Widgets in a row fill it equally unless told otherwise (grow: 0 keeps one at its natural size).
-      const fill = el.kind === "widget" && inRow && el.grow === undefined;
-      const common = { grow: fill ? 1 : el.grow, alignSelf: el.alignSelf, ...(fill ? { flex: true } : {}) };
-      switch (el.kind) {
-        case "row":
-        case "column": {
-          const children = el.children.map((c, i) => toLayout(c, where, `${path}.${i}`, el.kind === "row")).filter((c): c is LayoutNode => c !== null);
-          const c: Container = { kind: el.kind, id: `${screenId}:${path}`, label: `${el.kind} ${path}`, children, gap: el.gap, padding: el.padding, align: el.align, justify: el.justify, card: el.card === true, ...common };
-          return c;
+    const spanOf = (e: GridElement): { rs: number; cs: number } => ({
+      rs: Math.max(1, Math.round(num(e.rowSpan, 1))),
+      cs: Math.max(1, Math.round(num(e.colSpan, 1))),
+    });
+
+    const rectOf = (e: GridElement): Rect => {
+      const { rs, cs } = spanOf(e);
+      const x0 = round(e.col * cellW) + gutter;
+      const y0 = round(e.row * cellH) + gutter;
+      const x1 = round((e.col + cs) * cellW) - gutter;
+      const y1 = round((e.row + rs) * cellH) - gutter;
+      return { x: x0, y: y0, width: Math.max(1, x1 - x0), height: Math.max(1, y1 - y0) };
+    };
+
+    const elementLabel = (e: GridElement): string => {
+      if (e.card) return `panel at row ${e.row}, column ${e.col}`;
+      if (e.kind === "text") return `text "${e.text ?? ""}"`;
+      if (e.kind === "pagedots") return "page dots";
+      const n = e.node ? byId.get(e.node) : undefined;
+      return n ? `widget ${nodeLabel(n)}` : `widget "${e.node ?? "?"}"`;
+    };
+
+    /** Bounds and overlap checks for one page or modal. Cards may sit under elements, not under each other. */
+    const checkPlacement = (elements: readonly GridElement[], where: string): void => {
+      const leafCells = new Map<string, string>();
+      const cardCells = new Map<string, string>();
+      for (const e of elements) {
+        const { rs, cs } = spanOf(e);
+        const label = elementLabel(e);
+        if (!Number.isInteger(e.row) || !Number.isInteger(e.col) || e.row < 0 || e.col < 0) {
+          errors.push(`${label} ${where}: row and column must be whole cells, got row ${String(e.row)}, column ${String(e.col)}`);
+          continue;
         }
-        case "spacer":
-          return { kind: "leaf", id: `${screenId}:${path}`, label: "spacer", natural: { width: el.width ?? 0, height: el.height ?? 0 }, ...common };
-        case "text": {
-          const id = `${screenId.slice(0, 8)}_s${staticCount++}`;
-          if (!fontOk(el.font, el.text, `text "${el.text}" ${where}`)) return null;
-          imports.add(el.font);
-          imports.add("tsgui_label");
-          staticRegistrations.push(`_gui.widget(${pyStr(id)}, tsgui_label.make(${el.font}, ${pyStr(el.text)}, ${pyStr(el.align ?? "left")}))`);
-          return { kind: "leaf", id, label: `text "${el.text}"`, natural: labelNatural({ font: el.font, text: el.text }), ...common };
+        if (e.row + rs > rows || e.col + cs > columns) {
+          errors.push(
+            `${label} ${where}: ${rs}x${cs} cells at row ${e.row}, column ${e.col} goes outside the ${rows}x${columns} grid`,
+          );
+          continue;
         }
-        case "pagedots": {
-          const id = `${screenId.slice(0, 8)}_s${staticCount++}`;
-          imports.add("tsgui_pagedots");
-          staticRegistrations.push(`_gui.widget(${pyStr(id)}, tsgui_pagedots.make(${el.diameter ?? 6}, ${el.gap ?? 4}))`);
-          return { kind: "leaf", id, label: "page dots", natural: pageDotsNatural({ pages: Math.max(1, carousel.length), diameter: el.diameter, gap: el.gap }), ...common };
+        const grid = e.card ? cardCells : leafCells;
+        for (let r = e.row; r < e.row + rs; r++) {
+          for (let c = e.col; c < e.col + cs; c++) {
+            const key = `${r},${c}`;
+            const other = grid.get(key);
+            if (other) {
+              errors.push(`${label} ${where} overlaps ${other} at row ${r}, column ${c}`);
+              break;
+            }
+            grid.set(key, label);
+          }
         }
-        case "widget":
-          return placeWidget(el, where, common);
       }
     };
 
-    const fontOk = (font: string, text: string, what: string): boolean => {
-      try {
-        getFont(font);
-      } catch {
-        errors.push(`${what}: unknown font "${font}"`);
-        return false;
-      }
-      const missing = missingChars(font, text);
-      if (missing.length > 0) {
-        errors.push(`${what}: font ${font} has no ${missing.map((c) => `"${c}"`).join(", ")}`);
-        return false;
-      }
-      return true;
-    };
-
-    const placeWidget = (el: WidgetSpec, where: string, common: Placed): LayoutNode | null => {
-      const node = byId.get(el.node);
-      if (!node || !isWidgetType(node.type)) {
-        errors.push(`${where}: "${el.node}" isn't a GUI widget node in this flow`);
-        return null;
-      }
+    const placeWidget = (node: GraphNode, rect: Rect, where: string, align: "left" | "center" | "right"): string | null => {
+      const kind = WIDGET_TYPES[node.type as WidgetNodeType];
       const label = nodeLabel(node);
-      const prev = placedOn.get(node.id);
-      // A widget may sit on several pages of one screen (only one page shows at a time), drawn the same way
-      // on each; on two screens it would need two draws, which one widget node cannot give.
-      if (prev && prev.screen !== screenId) {
-        errors.push(`widget ${label} is placed on two screens (${prev.where} and ${where}); a widget belongs to one screen`);
-        return null;
-      }
-      if (!prev) placedOn.set(node.id, { screen: screenId, where });
-      const kind = WIDGET_TYPES[node.type];
       const p = node.properties;
-      let natural;
+      const w = rect.width;
+      const h = rect.height;
       let draw: string;
       try {
         switch (kind) {
           case "label": {
-            const font = el.font ?? "font_body16";
-            if (!fontOk(font, "--", `widget ${label} ${where}`)) return null;
-            const maxChars = el.maxChars ?? num(p.maxChars, 8);
-            natural = labelNatural({ font, max_chars: maxChars });
-            draw = `tsgui_label.make(${font}, None, ${pyStr(el.align ?? "left")})`;
+            const font = pickFont(h, (f) => textWidth(f, "--") <= w);
+            draw = `tsgui_label.make(${font}, None, ${pyStr(align)})`;
             imports.add(font);
             break;
           }
           case "readout": {
-            const font = el.font ?? "font_digits32";
             const units = typeof p.units === "string" ? p.units : "";
-            const caption = typeof p.caption === "string" ? p.caption.trim() : "";
-            const captionFont = caption !== "" ? "font_body16" : undefined;
-            const unitsFont = units ? (el.unitsFont ?? "font_body16") : undefined;
             const decimals = Math.max(0, Math.round(num(p.decimals, 1)));
             const lo = num(p.lo, 0);
             const hi = num(p.hi, 100);
             if (hi < lo) throw new Error(`range low ${lo} is above high ${hi}`);
-            const sample = `${lo.toFixed(decimals)}${hi.toFixed(decimals)}--`;
-            if (!fontOk(font, sample, `widget ${label} ${where}`)) return null;
-            if (unitsFont && !fontOk(unitsFont, units, `widget ${label}'s units ${where}`)) return null;
-            if (captionFont && !fontOk(captionFont, caption, `widget ${label}'s caption ${where}`)) return null;
-            natural = readoutNatural({ font, units_font: unitsFont, units, decimals, lo, hi, caption, caption_font: captionFont });
-            draw =
-              `tsgui_readout.make(${font}, ${unitsFont ?? "None"}, ${pyStr(units)}, ${decimals}, ${pyNum(lo)}, ${pyNum(hi)}` +
-              (captionFont ? `, 4, ${pyStr(caption)}, ${captionFont})` : ")");
-            imports.add(font);
+            const gap = Math.max(2, Math.round(Math.min(w, h) * 0.05));
+            const digits = pickFont(h, (f) => {
+              const field = readoutField(f, lo, hi, decimals);
+              if (!units) return field <= w;
+              return FONTS_BY_HEIGHT().some((u) => getFont(u).height <= h && field + gap + textWidth(u, units) <= w);
+            });
+            const field = readoutField(digits, lo, hi, decimals);
+            const unitsFont = units
+              ? pickFont(h, (u) => field + gap + textWidth(u, units) <= w && missingChars(u, units).length === 0)
+              : undefined;
+            draw = `tsgui_readout.make(${digits}, ${unitsFont ?? "None"}, ${pyStr(units)}, ${decimals}, ${pyNum(lo)}, ${pyNum(hi)}, ${gap})`;
+            imports.add(digits);
             if (unitsFont) imports.add(unitsFont);
-            if (captionFont) imports.add(captionFont);
             break;
           }
           case "bar": {
             const lo = num(p.lo, 0);
             const hi = num(p.hi, 100);
             if (hi <= lo) throw new Error(`range low ${lo} must be below high ${hi}`);
-            natural = barNatural({ min_width: el.minWidth, height: el.height });
-            if (p.style === "segments") {
-              const segments = Math.max(1, Math.round(num(p.segments, 10)));
-              draw = `tsgui_bar.make(${pyNum(lo)}, ${pyNum(hi)}, "segments", ${segments})`;
-            } else {
-              draw = `tsgui_bar.make(${pyNum(lo)}, ${pyNum(hi)})`;
-            }
+            draw =
+              p.style === "segments"
+                ? `tsgui_bar.make(${pyNum(lo)}, ${pyNum(hi)}, "segments", ${Math.max(1, Math.round(num(p.segments, 10)))})`
+                : `tsgui_bar.make(${pyNum(lo)}, ${pyNum(hi)})`;
             break;
           }
           case "trend": {
             const lo = num(p.lo, 0);
             const hi = num(p.hi, 100);
             if (hi <= lo) throw new Error(`range low ${lo} must be below high ${hi}`);
-            const colWidth = Math.max(1, Math.round(num(p.colWidth, 3)));
-            const columns = Math.max(1, Math.round(num(p.columns, 60)));
-            // The node's own height, not a placement height: the height property is the one the panel shows, and
-            // a stale placement height silently overrode it (a bar's leftover, found 2026-10-24).
-            natural = trendNatural({ columns, col_width: colWidth, height: Math.max(8, Math.round(num(p.height, 48))) });
+            // Bars are a fraction of a cell, so the histogram scales with the panel (8 bars per cell by default).
+            const colWidth = Math.max(1, Math.round(cellW / 8));
             draw = `tsgui_trend.make(${pyNum(lo)}, ${pyNum(hi)}, ${colWidth})`;
             break;
           }
           case "button": {
-            const font = el.font ?? "font_body16";
-            const maxChars = el.maxChars ?? num(p.maxChars, 8);
+            const pad = Math.max(2, Math.round(Math.min(w, h) / 8));
             const style = p.style === "switch" ? "switch" : p.style === "filled" ? "filled" : "box";
-            if (style === "switch" && p.mode !== "toggle") {
-              throw new Error("a switch style needs a toggle button (set mode to toggle)");
-            }
+            if (style === "switch" && p.mode !== "toggle") throw new Error("a switch style needs a toggle button (set mode to toggle)");
             if (p.mode === "toggle") {
-              // A toggle shows its on or off text (or "--" while unknown): room for the widest of them.
               const onText = typeof p.onText === "string" && p.onText !== "" ? p.onText : "ON";
               const offText = typeof p.offText === "string" && p.offText !== "" ? p.offText : "OFF";
-              if (!fontOk(font, `${onText}${offText}--`, `widget ${label} ${where}`)) return null;
-              const sizes = [onText, offText, "--"].map((t) => buttonNatural({ font, text: t, max_chars: maxChars }));
-              natural = sizes.reduce((a, b) => (b.width > a.width ? b : a));
+              const widest = [onText, offText, "--"].reduce((a, b) => (textWidth("font_body16", b) > textWidth("font_body16", a) ? b : a));
+              const font = pickFont(h - 2 * pad, (f) => textWidth(f, widest) <= w - 2 * pad && missingChars(f, widest).length === 0);
               draw = `tsgui_button.make(${font}, None, ${pyStr(onText)}, ${pyStr(offText)}${style === "box" ? "" : `, ${pyStr(style)}`})`;
               imports.add(font);
               break;
             }
-            // The board label, else the flow label (so one label is enough for most buttons).
             const text = [p.text, p.label].map((v) => (typeof v === "string" ? v.trim() : "")).find((v) => v !== "") || undefined;
-            // A bound value replaces the text, so the font must have "--" and (for a bound-only button) the room.
-            if (!fontOk(font, text ?? "--", `widget ${label} ${where}`)) return null;
-            natural = buttonNatural({ font, text, max_chars: maxChars });
+            const font = pickFont(h - 2 * pad, (f) => textWidth(f, text ?? "--") <= w - 2 * pad && missingChars(f, text ?? "--").length === 0);
             draw = `tsgui_button.make(${font}, ${text === undefined ? "None" : pyStr(text)}${style === "box" ? "" : `, None, None, ${pyStr(style)}`})`;
             imports.add(font);
             break;
           }
           case "led": {
-            const diameter = el.diameter ?? 12;
+            const diameter = Math.max(2, Math.min(w, h));
             if (p.style === "chip") {
-              const font = el.font ?? "font_body12";
               const onText = typeof p.onText === "string" && p.onText !== "" ? p.onText : "On";
               const offText = typeof p.offText === "string" && p.offText !== "" ? p.offText : "Off";
-              if (!fontOk(font, `${onText}${offText}--`, `widget ${label} ${where}`)) return null;
-              const widest = [onText, offText, "--"].reduce((a, b) => (textWidth(font, b) > textWidth(font, a) ? b : a));
-              natural = ledNatural({ diameter, style: "chip", text: widest, font });
+              const widest = [onText, offText, "--"].reduce((a, b) => (textWidth("font_body12", b) > textWidth("font_body12", a) ? b : a));
+              const font = pickFont(h - 6, (f) => textWidth(f, widest) <= w - 8 && missingChars(f, widest).length === 0);
               draw = `tsgui_led.make(${diameter}, "chip", ${pyStr(onText)}, ${pyStr(offText)}, ${font})`;
               imports.add(font);
             } else {
-              natural = ledNatural({ diameter });
               draw = `tsgui_led.make(${diameter})`;
             }
             break;
           }
         }
       } catch (e) {
-        errors.push(`widget ${label}: ${e instanceof Error ? e.message : String(e)}`);
+        errors.push(`widget ${label}: ${e instanceof Error ? e.message : String(e)} ${where}`);
         return null;
       }
       imports.add(`tsgui_${kind}`);
       const earlier = widgetDraws.get(node.id);
       if (earlier !== undefined && earlier !== draw) {
-        errors.push(`widget ${label} is drawn differently ${prev!.where} and ${where}; give it the same font and options on each page`);
+        errors.push(`widget ${label} is drawn differently on two pages; give it the same size on each`);
         return null;
       }
       widgetDraws.set(node.id, draw);
-      return { kind: "leaf", id: node.id, label: `widget ${label}`, natural, ...common };
+      return draw;
     };
 
-    const tableFor = (name: string, root: ElementSpec, where: string): { leaves: [string, Rect][]; cards: Rect[] } => {
-      const tree = toLayout(root, where, "root");
-      if (!tree) return { leaves: [], cards: [] };
-      const out = layoutPage(tree, size, { display: sname.replace(/"/g, ""), page: name });
-      for (const e of out.errors) errors.push(e.message);
-      rectsByPage.set(name, out.rects);
-      // Only drawable leaves go in the device table (containers draw only when they are a card).
+    const buildTable = (elements: readonly GridElement[], where: string): { leaves: [string, Rect][]; cards: Rect[]; rects: Map<string, Rect> } => {
+      checkPlacement(elements, where);
       const leaves: [string, Rect][] = [];
       const cards: Rect[] = [];
-      const collect = (n: LayoutNode): void => {
-        if (n.kind === "leaf") {
-          if (n.label !== "spacer") leaves.push([n.id, out.rects.get(n.id)!]);
-        } else {
-          if (n.card) cards.push(out.rects.get(n.id)!);
-          n.children.forEach(collect);
+      const rects = new Map<string, Rect>();
+      const here = new Set<string>();
+      for (const e of elements) {
+        const rect = rectOf(e);
+        if (e.card) {
+          cards.push(rect);
+          continue;
         }
-      };
-      collect(tree);
-      return { leaves, cards };
+        if (e.kind === "text") {
+          const id = `${screenId.slice(0, 8)}_s${staticCount++}`;
+          rects.set(id, rect);
+          const text = e.text ?? "";
+          let font: string;
+          try {
+            font = pickFont(rect.height, (f) => textWidth(f, text) <= rect.width && missingChars(f, text).length === 0);
+          } catch (err) {
+            errors.push(`${where}: text "${text}" ${err instanceof Error ? err.message : String(err)}`);
+            continue;
+          }
+          imports.add(font);
+          imports.add("tsgui_label");
+          staticRegistrations.push(`_gui.widget(${pyStr(id)}, tsgui_label.make(${font}, ${pyStr(text)}, ${pyStr(e.align ?? "left")}))`);
+          leaves.push([id, rect]);
+          continue;
+        }
+        if (e.kind === "pagedots") {
+          const id = `${screenId.slice(0, 8)}_s${staticCount++}`;
+          rects.set(id, rect);
+          const diameter = Math.max(2, Math.round(Math.min(cellW, cellH) / 4));
+          const gap = Math.max(1, Math.round(diameter / 2));
+          imports.add("tsgui_pagedots");
+          staticRegistrations.push(`_gui.widget(${pyStr(id)}, tsgui_pagedots.make(${diameter}, ${gap}))`);
+          leaves.push([id, rect]);
+          continue;
+        }
+        const node = e.node ? byId.get(e.node) : undefined;
+        if (!node || !isWidgetType(node.type)) {
+          errors.push(`${where}: "${e.node ?? "?"}" isn't a GUI widget node in this flow`);
+          continue;
+        }
+        if (here.has(node.id)) {
+          errors.push(`"${node.id}" appears twice ${where}`);
+          continue;
+        }
+        here.add(node.id);
+        const prev = placedOn.get(node.id);
+        if (prev && prev.screen !== screenId) {
+          errors.push(`widget ${nodeLabel(node)} is placed on two screens (${prev.where} and ${where}); a widget belongs to one screen`);
+          continue;
+        }
+        if (!prev) placedOn.set(node.id, { screen: screenId, where });
+        const draw = placeWidget(node, rect, where, e.align ?? "left");
+        if (draw === null) continue;
+        rects.set(node.id, rect);
+        leaves.push([node.id, rect]);
+      }
+      return { leaves, cards, rects };
     };
 
     const rectPy = ([id, r]: [string, Rect]): string => `(${pyStr(id)}, (${r.x}, ${r.y}, ${r.width}, ${r.height}))`;
     const rectsPy = (list: Rect[]): string => `[${list.map((r) => `(${r.x}, ${r.y}, ${r.width}, ${r.height})`).join(", ")}]`;
+
     const pageEntries = spec.pages.map((p) => {
-      const table = tableFor(p.name, p.root, `on page "${p.name}" of screen ${sname}`);
+      const where = `on page "${p.name}" of screen ${sname}`;
+      const table = buildTable(p.elements, where);
+      rectsByPage.set(p.name, table.rects);
       return `${pyStr(p.name)}: {"parent": ${p.parent === undefined ? "None" : pyStr(p.parent)}, "widgets": [${table.leaves.map(rectPy).join(", ")}], "cards": ${rectsPy(table.cards)}}`;
     });
 
@@ -433,7 +434,8 @@ export function compileScreens(
       const mname = modalName(node);
       if (modalNames.has(mname) || pageNames.has(mname)) errors.push(`screen ${sname}: two pages or modals are called "${mname}"`);
       modalNames.add(mname);
-      const table = tableFor(mname, m.root, `in modal "${mname}" of screen ${sname}`);
+      const table = buildTable(m.elements, `in modal "${mname}" of screen ${sname}`);
+      rectsByPage.set(mname, table.rects);
       const priority = Math.round(num(node.properties.priority, 0));
       const timeoutMs = Math.round(num(node.properties.timeout, 0) * 1000);
       modalEntries.push(`${pyStr(mname)}: {"widgets": [${table.leaves.map(rectPy).join(", ")}], "cards": ${rectsPy(table.cards)}, "priority": ${priority}, "timeout_ms": ${timeoutMs}}`);

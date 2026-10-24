@@ -186,12 +186,12 @@ A touch or plain display is two nodes wired together, `gui_screen` then `display
 
 ```json
 "screens": { "<screenId>": { "pages": [
-  { "name": "main", "root": { "kind": "column", "gap": 6, "padding": 4, "children": [
-    { "kind": "text", "text": "Living room", "font": "font_body20" },
-    { "kind": "widget", "node": "<readoutId>", "font": "font_digits48", "unitsFont": "font_body24", "alignSelf": "center" },
-    { "kind": "spacer", "grow": 1 },
-    { "kind": "pagedots", "alignSelf": "center" }
-  ] } }
+  { "name": "main", "elements": [
+    { "card": true, "row": 0, "col": 0, "rowSpan": 1, "colSpan": 12 },
+    { "kind": "text", "text": "Living room", "row": 0, "col": 0, "colSpan": 8 },
+    { "kind": "widget", "node": "<readoutId>", "row": 1, "col": 0, "rowSpan": 4, "colSpan": 12 },
+    { "kind": "pagedots", "row": 15, "col": 4, "colSpan": 4 }
+  ] }
 ] } }
 ```
 
@@ -203,41 +203,42 @@ Rules that cause most failures:
   screen's size.
 - A navigate button's `target` is `next`, `prev`, `back`, `home` or the `name` of a page in `screens`; when you edit an
   existing flow, read the page names from its `screens` section.
-- Fonts: `font_body12/16/20/24`, `font_digits16/24/32/48/64` (digits and a few symbols only), `font_seg748/64/96`
-  (seven-segment: `0-9 : . -` and space). A character a font doesn't have is an error.
-- A widget is placed once per page, drawn the same on every page it is on. A label shows a value up to `maxChars` wide.
-- A page that doesn't fit gives an error that names the widget and page and how many pixels it needs. Use a smaller
-  font or fewer things per row. Rows need the screen width minus the container's padding (in landscape on a
-  320-wide panel that is under 312 px).
+- Fonts are chosen to fit an element's cells; nothing in a layout is in pixels. A character no font has is an
+  error.
+- A widget is placed once per page, drawn the same on every page it is on. Its cells decide its size.
+- A page is a cell grid: the gui screen has `gridColumns` (12 by default) and `gridRows` (`0` = from the display's
+  shape). Every element has `row`, `col` (0-based) and spans; an element outside the grid, two on the same cells,
+  or one whose text cannot fit is an error naming it and the page.
 - With an `orientation`, `xstart` and `ystart` must be `-1`, which means "no offset" (the CYD example flow uses 0,
   which an orientation refuses; `-1` is always allowed). At `"90"` or `"270"` the picture is the panel turned, so a
   320 x 480 panel gives 480 wide by 320 high to lay out.
 - A modal is laid out in `screens.<screenId>.modals`, not in `pages`: see the format below.
 - A histogram (`gui_trend`) takes a journal's first output, and a journal takes numbers: `sensor → journal → histogram`.
 
-A modal (`gui_modal`, with `screen` set to the `gui_screen` node's id) is listed next to `pages`. Its `root` holds what
-it shows, and not the modal node itself:
+A modal (`gui_modal`, with `screen` set to the `gui_screen` node's id) is listed next to `pages`. Its `elements` are
+what it shows, and not the modal node itself:
 
 ```json
-"modals": [ { "node": "<modalNodeId>", "root": { "kind": "column", "padding": 8, "children": [
-  { "kind": "text", "text": "Too hot", "font": "font_body24" },
-  { "kind": "widget", "node": "<labelId>", "font": "font_body20", "maxChars": 20 }
-] } } ]
+"modals": [ { "node": "<modalNodeId>", "elements": [
+  { "kind": "text", "text": "Too hot", "row": 0, "col": 0, "rowSpan": 2, "colSpan": 8 },
+  { "kind": "widget", "node": "<labelId>", "row": 2, "col": 0, "rowSpan": 2, "colSpan": 12 }
+] } ]
 ```
 
 Any message opens it; a message with `payload` `None` closes it; `timeout` (seconds, `0` for never) closes it by
 itself; a navigate button with `target` `back` acknowledges it. Its output sends `'ack'`, `'timeout'` or `'closed'`.
 
-Placement keys, in `screens`:
+Placement keys, in `screens` (a page is `{"name", "elements": [...]}`; a modal is `{"node", "elements": [...]}`):
 
 | Element | Keys |
 | --- | --- |
-| `row`, `column` | `children`, `gap`, `padding`, `align`, `justify`, `grow`, `alignSelf` |
-| `widget` | `node` (the widget node's id), `font`, `unitsFont` (readout), `align` and `maxChars` (label), `height` and `minWidth` (bar, trend), `diameter` (light), `grow`, `alignSelf` |
-| `text` | `text`, `font`, `align` |
-| `pagedots`, `spacer` | `diameter`, `gap`; `width`, `height`, `grow` |
+| any element | `row`, `col` (0-based cells), `rowSpan`, `colSpan` (default 1), `card` (draw a panel behind), `align` |
+| `widget` | `kind: "widget"`, `node` (the widget node's id) |
+| `text` | `kind: "text"`, `text` |
+| page dots | `kind: "pagedots"` |
+| panel | `card: true` (no `node` or `text`) |
 
-A button widget takes `font`, `grow` and `alignSelf` like the others. The button's own behaviour (`mode`, `target`,
+No element takes a font, height, width, gap or padding: fonts follow the cells and spacing is the screen's gutter. The button's own behaviour (`mode`, `target`,
 `onValue`, ...) is on the node: see the [catalog](nodes-catalog.md). For a toggle that follows a real device (a smart
 plug), `gui.md` has the wiring.
 

@@ -107,7 +107,9 @@
       "properties": {
         "name": "tft",
         "minInterval": 200,
-        "wrap": true
+        "wrap": true,
+        "gridColumns": 12,
+        "gridRows": 0
       }
     },
     {
@@ -304,124 +306,115 @@
       "pages": [
         {
           "name": "climate",
-          "root": {
-            "kind": "column",
-            "gap": 6,
-            "padding": 4,
-            "children": [
-              {
-                "kind": "row",
-                "padding": 6,
-                "alignSelf": "stretch",
-                "children": [
-                  {
-                    "kind": "text",
-                    "text": "Living room",
-                    "font": "font_body20",
-                    "grow": 1
-                  },
-                  {
-                    "kind": "widget",
-                    "node": "n07-alive",
-                    "diameter": 14
-                  }
-                ]
-              },
-              {
-                "kind": "text",
-                "text": "Temperature",
-                "font": "font_body16"
-              },
-              {
-                "kind": "widget",
-                "node": "n03-temp",
-                "font": "font_digits48",
-                "unitsFont": "font_body24",
-                "alignSelf": "center"
-              },
-              {
-                "kind": "text",
-                "text": "Humidity",
-                "font": "font_body16"
-              },
-              {
-                "kind": "widget",
-                "node": "n04-hum",
-                "font": "font_digits48",
-                "unitsFont": "font_body24",
-                "alignSelf": "center"
-              },
-              {
-                "kind": "spacer",
-                "grow": 1
-              },
-              {
-                "kind": "pagedots",
-                "alignSelf": "center"
-              }
-            ]
-          }
+          "elements": [
+            {
+              "kind": "text",
+              "text": "Living room",
+              "row": 0,
+              "col": 0,
+              "rowSpan": 1,
+              "colSpan": 5
+            },
+            {
+              "kind": "widget",
+              "node": "n07-alive",
+              "row": 0,
+              "col": 6,
+              "rowSpan": 2,
+              "colSpan": 6
+            },
+            {
+              "kind": "text",
+              "text": "Temperature",
+              "row": 2,
+              "col": 0,
+              "rowSpan": 1,
+              "colSpan": 12
+            },
+            {
+              "kind": "widget",
+              "node": "n03-temp",
+              "row": 3,
+              "col": 1,
+              "rowSpan": 3,
+              "colSpan": 10
+            },
+            {
+              "kind": "text",
+              "text": "Humidity",
+              "row": 6,
+              "col": 0,
+              "rowSpan": 1,
+              "colSpan": 12
+            },
+            {
+              "kind": "widget",
+              "node": "n04-hum",
+              "row": 7,
+              "col": 2,
+              "rowSpan": 3,
+              "colSpan": 8
+            },
+            {
+              "kind": "pagedots",
+              "row": 15,
+              "col": 6,
+              "rowSpan": 1,
+              "colSpan": 1
+            }
+          ]
         },
         {
           "name": "pressure",
-          "root": {
-            "kind": "column",
-            "gap": 6,
-            "padding": 4,
-            "children": [
-              {
-                "kind": "row",
-                "padding": 6,
-                "alignSelf": "stretch",
-                "children": [
-                  {
-                    "kind": "text",
-                    "text": "Pressure",
-                    "font": "font_body20",
-                    "grow": 1
-                  }
-                ]
-              },
-              {
-                "kind": "widget",
-                "node": "n05-press",
-                "font": "font_digits48",
-                "unitsFont": "font_body20",
-                "alignSelf": "center"
-              },
-              {
-                "kind": "widget",
-                "node": "n06-pbar",
-                "height": 16,
-                "alignSelf": "stretch"
-              },
-              {
-                "kind": "row",
-                "alignSelf": "stretch",
-                "justify": "space-between",
-                "children": [
-                  {
-                    "kind": "text",
-                    "text": "950",
-                    "font": "font_body12"
-                  },
-                  {
-                    "kind": "text",
-                    "text": "1050",
-                    "font": "font_body12"
-                  }
-                ]
-              },
-              {
-                "kind": "spacer",
-                "grow": 1
-              },
-              {
-                "kind": "pagedots",
-                "alignSelf": "center"
-              }
-            ]
-          }
+          "elements": [
+            {
+              "kind": "text",
+              "text": "Pressure",
+              "row": 0,
+              "col": 0,
+              "rowSpan": 1,
+              "colSpan": 11
+            },
+            {
+              "kind": "widget",
+              "node": "n05-press",
+              "row": 2,
+              "col": 1,
+              "rowSpan": 2,
+              "colSpan": 11
+            },
+            {
+              "kind": "widget",
+              "node": "n06-pbar",
+              "row": 5,
+              "col": 0,
+              "rowSpan": 1,
+              "colSpan": 12
+            },
+            {
+              "kind": "text",
+              "text": "950",
+              "row": 6,
+              "col": 0,
+              "rowSpan": 1,
+              "colSpan": 2
+            },
+            {
+              "kind": "text",
+              "text": "1050",
+              "row": 6,
+              "col": 10,
+              "rowSpan": 1,
+              "colSpan": 2
+            },
+            {
+              "kind": "pagedots",
+              "row": 15,
+              "col": 6,
+              "rowSpan": 1,
+              "colSpan": 1
+            }
+          ]
         }
       ]
     }

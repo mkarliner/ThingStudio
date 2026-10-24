@@ -37,7 +37,7 @@ describe("trend widget", () => {
 
   it("compiles to a tsgui_trend draw with its range and column width, and ships that library", async () => {
     const { source } = await compileFlow();
-    expect(source).toContain('_gui.widget("n22-ttrend1", tsgui_trend.make(15, 30, 3), 30000)');
+    expect(source).toMatch(/_gui\.widget\("n22-ttrend1", tsgui_trend\.make\(15, 30, \d+\), 30000\)/);
     expect(source).toContain("import tsgui_trend");
   });
 

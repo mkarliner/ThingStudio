@@ -83,7 +83,9 @@
         "name": "tft",
         "minInterval": 200,
         "wrap": true,
-        "touchPanelConfigId": "cfg-touch-panel"
+        "touchPanelConfigId": "cfg-touch-panel",
+        "gridColumns": 12,
+        "gridRows": 0
       }
     },
     {
@@ -275,79 +277,72 @@
       "pages": [
         {
           "name": "test",
-          "root": {
-            "kind": "column",
-            "gap": 6,
-            "padding": 4,
-            "children": [
-              {
-                "kind": "text",
-                "text": "TOP OF PICTURE",
-                "font": "font_body16",
-                "alignSelf": "center"
-              },
-              {
-                "kind": "row",
-                "alignSelf": "stretch",
-                "justify": "space-between",
-                "children": [
-                  {
-                    "kind": "widget",
-                    "node": "n01-tl",
-                    "font": "font_body24"
-                  },
-                  {
-                    "kind": "widget",
-                    "node": "n02-tr",
-                    "font": "font_body24"
-                  }
-                ]
-              },
-              {
-                "kind": "spacer",
-                "grow": 1
-              },
-              {
-                "kind": "text",
-                "text": "Last pressed",
-                "font": "font_body16",
-                "alignSelf": "center"
-              },
-              {
-                "kind": "widget",
-                "node": "n11-last",
-                "font": "font_body24",
-                "alignSelf": "center"
-              },
-              {
-                "kind": "widget",
-                "node": "n03-c",
-                "font": "font_body24",
-                "alignSelf": "center"
-              },
-              {
-                "kind": "spacer",
-                "grow": 1
-              },
-              {
-                "kind": "row",
-                "alignSelf": "stretch",
-                "justify": "space-between",
-                "children": [
-                  {
-                    "kind": "widget",
-                    "node": "n04-bl",
-                    "font": "font_body24"
-                  },
-                  {
-                    "kind": "widget",
-                    "node": "n05-br",
-                    "font": "font_body24"
-                  }
-                ]
-              }
-            ]
-          }
+          "elements": [
+            {
+              "kind": "text",
+              "text": "TOP OF PICTURE",
+              "row": 0,
+              "col": 4,
+              "rowSpan": 1,
+              "colSpan": 5
+            },
+            {
+              "kind": "widget",
+              "node": "n01-tl",
+              "row": 1,
+              "col": 0,
+              "rowSpan": 2,
+              "colSpan": 6
+            },
+            {
+              "kind": "widget",
+              "node": "n02-tr",
+              "row": 1,
+              "col": 6,
+              "rowSpan": 2,
+              "colSpan": 6
+            },
+            {
+              "kind": "text",
+              "text": "Last pressed",
+              "row": 8,
+              "col": 4,
+              "rowSpan": 1,
+              "colSpan": 4
+            },
+            {
+              "kind": "widget",
+              "node": "n11-last",
+              "row": 9,
+              "col": 3,
+              "rowSpan": 1,
+              "colSpan": 7
+            },
+            {
+              "kind": "widget",
+              "node": "n03-c",
+              "row": 10,
+              "col": 4,
+              "rowSpan": 2,
+              "colSpan": 4
+            },
+            {
+              "kind": "widget",
+              "node": "n04-bl",
+              "row": 16,
+              "col": 0,
+              "rowSpan": 2,
+              "colSpan": 6
+            },
+            {
+              "kind": "widget",
+              "node": "n05-br",
+              "row": 16,
+              "col": 6,
+              "rowSpan": 2,
+              "colSpan": 6
+            }
+          ]
         }
       ]
     }

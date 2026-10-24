@@ -13,7 +13,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { compile } from "../src/compiler/compile.js";
 import type { GraphData, GraphNode } from "../src/compiler/graph.js";
-import type { ScreensSection } from "../src/gui/screens.js";
+import type { GridElement, ScreensSection } from "../src/gui/screens.js";
 import { bandRowsFor, frameBytes } from "../src/node-library/gui.js";
 import { buildRegistry } from "../src/node-library/registry.js";
 import { compileWithHooks } from "./compile-with-hooks.js";
@@ -57,25 +57,28 @@ function heroGraph(screens?: ScreensSection): GraphData {
         pages: [
           {
             name: "home",
-            root: {
-              kind: "column",
-              padding: 6,
-              gap: 6,
-              children: [
-                { kind: "row", alignSelf: "stretch", children: [{ kind: "text", text: "Living room", font: "font_body20", grow: 1 }, { kind: "widget", node: "alive", diameter: 14 }] },
-                { kind: "text", text: "Temperature", font: "font_body16" },
-                { kind: "widget", node: "temp", font: "font_digits64", unitsFont: "font_body24" },
-                { kind: "row", gap: 8, children: [{ kind: "text", text: "Pressure", font: "font_body16" }, { kind: "widget", node: "press", font: "font_digits24" }] },
-                { kind: "widget", node: "pbar", alignSelf: "stretch" },
-                { kind: "spacer", grow: 1 },
-                { kind: "pagedots", alignSelf: "center" },
-              ],
-            },
+            elements: [
+              { card: true, row: 0, col: 0, rowSpan: 1, colSpan: 12 },
+              { kind: "text", text: "Living room", row: 0, col: 0, colSpan: 8 },
+              { kind: "widget", node: "alive", row: 0, col: 9, rowSpan: 1, colSpan: 3 },
+              { kind: "widget", node: "temp", row: 1, col: 0, rowSpan: 4, colSpan: 12 },
+              { kind: "widget", node: "press", row: 5, col: 0, rowSpan: 2, colSpan: 6 },
+              { kind: "widget", node: "pbar", row: 5, col: 6, rowSpan: 2, colSpan: 6 },
+              { kind: "pagedots", row: 8, col: 4, colSpan: 4 },
+            ],
           },
-          { name: "climate", root: { kind: "column", children: [{ kind: "text", text: "Climate", font: "font_body24" }] } },
-          { name: "detail", parent: "climate", root: { kind: "column", children: [{ kind: "text", text: "Detail", font: "font_body16" }] } },
+          { name: "climate", elements: [{ kind: "text", text: "Climate", row: 0, col: 0, colSpan: 6 }] },
+          { name: "detail", parent: "climate", elements: [{ kind: "text", text: "Detail", row: 0, col: 0, colSpan: 4 }] },
         ],
-        modals: [{ node: "alarm", root: { kind: "column", padding: 10, children: [{ kind: "text", text: "Alarm!", font: "font_body24" }] } }],
+        modals: [
+          {
+            node: "alarm",
+            elements: [
+              { card: true, row: 0, col: 0, rowSpan: 2, colSpan: 12 },
+              { kind: "text", text: "Alarm!", row: 0, col: 0, colSpan: 12, rowSpan: 2 },
+            ],
+          },
+        ],
       },
     },
   };
@@ -87,44 +90,41 @@ describe("compiling a GUI flow", () => {
     expect(warnings).toEqual([]);
     expect(source.match(/_gui = thingstudio_gui\.GUI/g)).toHaveLength(1);
     for (const id of ["temp", "press", "pbar", "alive"]) expect(source.match(new RegExp(`_gui\\.widget\\("${id}"`, "g")), id).toHaveLength(1);
-    expect(source).toContain('tsgui_readout.make(font_digits64, font_body24, "°C", 1, -20, 50)');
+    expect(source).toMatch(/tsgui_readout\.make\(font_digits\d+, font_body\d+, "°C", 1, -20, 50, \d+\)/);
     // Drawn in strips: no full-frame buffer anywhere in the flow.
     expect(source).not.toContain(`bytearray(${frameBytes(320, 240, "gs4")})`);
     expect(source).toMatch(/_gui\.add_surface\(thingstudio_gui\.BandSurface\("screen", 320, 240, framebuf\.GS4_HMSB,/);
     expect(source).toMatch(/_band_y, _band_rows = await \w+_s\.next_band\(\)/);
     expect(source).toContain('"alarm": {"widgets": [');
-    for (const mod of ["thingstudio_gui", "tsgui_readout", "tsgui_bar", "tsgui_led", "tsgui_label", "tsgui_pagedots", "font_digits64", "font_body24", "font_body20"]) {
+    for (const mod of ["thingstudio_gui", "tsgui_readout", "tsgui_bar", "tsgui_led", "tsgui_label", "tsgui_pagedots"]) {
       expect(source).toContain(`import ${mod}\n`);
     }
+    expect(source).toMatch(/import font_digits\d+\n/);
+    expect(source).toMatch(/import font_body\d+\n/);
     // the core block comes before the surface that uses it
     expect(source.indexOf("_gui = thingstudio_gui.GUI")).toBeLessThan(source.indexOf("_gui.add_surface"));
   });
 
-  it("puts a card on a container into the page table, and nothing where there is none", () => {
+  it("puts a panel's span into the page table, and only where one is placed", () => {
     const g = heroGraph();
-    const screens = g.screens as ScreensSection;
-    const base = screens.screen!;
+    const base = (g.screens as ScreensSection).screen!;
     const carded: ScreensSection = {
       screen: {
         ...base,
         pages: [
           {
             name: "home",
-            root: {
-              kind: "column",
-              padding: 4,
-              children: [
-                { kind: "column", card: true, padding: 6, children: [{ kind: "widget", node: "temp" }] },
-                { kind: "widget", node: "alive" },
-              ],
-            },
+            elements: [
+              { card: true, row: 0, col: 0, rowSpan: 2, colSpan: 6 },
+              { kind: "widget", node: "temp", row: 0, col: 0, rowSpan: 1, colSpan: 6 },
+              { kind: "widget", node: "alive", row: 2, col: 0 },
+            ],
           },
         ],
       },
     };
     const { source } = compile({ ...g, screens: carded }, buildRegistry());
     expect(source).toMatch(/"cards": \[\(\d+, \d+, \d+, \d+\)\]/);
-    // The card is the inner container's rect and is smaller than the page: a widget outside it is not inside.
     const cardNumbers = (/"cards": \[([^\]]*)\]/.exec(source)?.[1] ?? "").match(/\d+/g) ?? [];
     expect(cardNumbers).toHaveLength(4);
     const [x, , w, h] = cardNumbers.map(Number);
@@ -133,34 +133,53 @@ describe("compiling a GUI flow", () => {
     expect(x).toBeGreaterThanOrEqual(0);
   });
 
-  it("reports layout problems with the widget, page and screen named", () => {
-    const g = heroGraph();
-    const screens = g.screens as ScreensSection;
-    const wide: ScreensSection = {
-      screen: { ...screens.screen!, pages: [{ name: "home", root: { kind: "row", children: [{ kind: "widget", node: "temp", font: "font_digits64", unitsFont: "font_body24" }, { kind: "widget", node: "press", font: "font_digits64", unitsFont: "font_body24" }] } }] },
-    };
-    expect(() => compile({ ...g, screens: wide }, buildRegistry())).toThrow(/GUI layout:[\s\S]*contents need \d+px of width but it has 320px on page "home" of display "tft": widget "Temperature" \d+px, widget "Pressure" \d+px/);
-  });
-
-  it("refuses a widget placed twice, a font missing a character, and an unknown node", () => {
+  it("reports a span a widget cannot fit, with the widget and page named", () => {
     const g = heroGraph();
     const base = (g.screens as ScreensSection).screen!;
-    const twice: ScreensSection = { screen: { ...base, pages: [{ name: "home", root: { kind: "column", children: [{ kind: "widget", node: "temp" }, { kind: "widget", node: "temp" }] } }] } };
+    const tiny: ScreensSection = {
+      screen: { ...base, pages: [{ name: "home", elements: [{ kind: "widget", node: "temp", row: 0, col: 0 }] }] },
+    };
+    expect(() => compile({ ...g, screens: tiny }, buildRegistry())).toThrow(
+      /GUI layout:[\s\S]*widget "Temperature": does not fit its cells[\s\S]*page "home"/,
+    );
+  });
+
+  it("refuses a widget placed twice, text no font can set, and an unknown node", () => {
+    const g = heroGraph();
+    const base = (g.screens as ScreensSection).screen!;
+    const twice: ScreensSection = {
+      screen: {
+        ...base,
+        pages: [
+          {
+            name: "home",
+            elements: [
+              { kind: "widget", node: "temp", row: 0, col: 0, colSpan: 6 },
+              { kind: "widget", node: "temp", row: 1, col: 0, colSpan: 6 },
+            ],
+          },
+        ],
+      },
+    };
     expect(() => compile({ ...g, screens: twice }, buildRegistry())).toThrow(/"temp" appears twice on page "home"/);
-    const glyph: ScreensSection = { screen: { ...base, pages: [{ name: "home", root: { kind: "text", text: "Größe", font: "font_body16" } }] } };
-    expect(() => compile({ ...g, screens: glyph }, buildRegistry())).toThrow(/font font_body16 has no "ö", "ß"/);
-    const ghost: ScreensSection = { screen: { ...base, pages: [{ name: "home", root: { kind: "widget", node: "nope" } }] } };
+    const glyph: ScreensSection = {
+      screen: { ...base, pages: [{ name: "home", elements: [{ kind: "text", text: "Größe", row: 0, col: 0, colSpan: 6, rowSpan: 2 }] }] },
+    };
+    expect(() => compile({ ...g, screens: glyph }, buildRegistry())).toThrow(/text "Größe" does not fit its cells/);
+    const ghost: ScreensSection = {
+      screen: { ...base, pages: [{ name: "home", elements: [{ kind: "widget", node: "nope", row: 0, col: 0 }] }] },
+    };
     expect(() => compile({ ...g, screens: ghost }, buildRegistry())).toThrow(/"nope" isn't a GUI widget node/);
   });
 
   it("lets one widget sit on several pages of a screen, drawn the same way, and refuses a different draw", () => {
     const g = heroGraph();
     const base = (g.screens as ScreensSection).screen!;
-    const page = (name: string, font?: string) => ({ name, root: { kind: "column" as const, children: [{ kind: "widget" as const, node: "temp", ...(font ? { font } : {}) }] } });
+    const page = (name: string, rowSpan = 4) => ({ name, elements: [{ kind: "widget" as const, node: "temp", row: 0, col: 0, rowSpan, colSpan: 12 }] });
     const ok: ScreensSection = { screen: { ...base, pages: [page("a"), page("b")] } };
     const r = compile({ ...g, screens: ok }, buildRegistry());
     expect(r.source.match(/"temp", \(/g)?.length ?? 0).toBeGreaterThanOrEqual(2);
-    const odd: ScreensSection = { screen: { ...base, pages: [page("a"), page("b", "font_body16")] } };
+    const odd: ScreensSection = { screen: { ...base, pages: [page("a", 4), page("b", 1)] } };
     expect(() => compile({ ...g, screens: odd }, buildRegistry())).toThrow(/drawn differently/);
   });
 
@@ -174,9 +193,12 @@ describe("compiling a GUI flow", () => {
   it("asks which screen a navigator drives when there are two, and wants a modal laid out", () => {
     const g = heroGraph();
     g.nodes.push(node("screen2", "gui_screen", { name: "oled", width: 128, height: 64, frameFormat: "mono" }));
-    const screens = { ...(g.screens as ScreensSection), screen2: { pages: [{ name: "only", root: { kind: "text", text: "hi", font: "font_body12" } }] } } as ScreensSection;
+    const screens = {
+      ...(g.screens as ScreensSection),
+      screen2: { pages: [{ name: "only", elements: [{ kind: "text", text: "hi", row: 0, col: 0, rowSpan: 2, colSpan: 4 }] }] },
+    } as ScreensSection;
     expect(() => compile({ ...g, screens }, buildRegistry())).toThrow(/choose which GUI screen it acts on \(the flow has 2\)/);
-    const noModal = heroGraph({ screen: { pages: [{ name: "home", root: { kind: "text", text: "x", font: "font_body12" } }] } });
+    const noModal = heroGraph({ screen: { pages: [{ name: "home", elements: [{ kind: "text", text: "x", row: 0, col: 0, colSpan: 4 }] }] } });
     noModal.nodes = noModal.nodes.filter((n) => !["temp", "press", "pbar", "alive"].includes(n.id));
     noModal.links = noModal.links.filter((l) => !["temp", "press", "pbar", "alive"].includes(l[3]));
     expect(() => compile(noModal, buildRegistry())).toThrow(/modal "alarm" isn't laid out on its screen yet/);
@@ -298,8 +320,8 @@ describe.skipIf(!MP || !existsSync(MP))("the compiled GUI flow on the MicroPytho
 /** One screen with a button "light" (properties given) and, optionally, a navigate button "go" to page "second".
  * wiredIn: a startup node feeds the button 'OFF'. wiredOut: its output goes to a debug node "out". */
 function buttonFlow(props: Record<string, unknown>, o: { wiredIn?: boolean; wiredOut?: boolean; navigate?: boolean; panel?: boolean } = {}): GraphData {
-  const children: unknown[] = [{ kind: "widget", node: "light", font: "font_body20" }];
-  if (o.navigate) children.push({ kind: "widget", node: "go", font: "font_body20" });
+  const elements: GridElement[] = [{ kind: "widget", node: "light", row: 0, col: 0, rowSpan: 2, colSpan: 6 }];
+  if (o.navigate) elements.push({ kind: "widget", node: "go", row: 2, col: 0, rowSpan: 2, colSpan: 6 });
   const g: GraphData = {
     nodes: [
       node("screen", "gui_screen", { name: "tft", width: 320, height: 240, frameFormat: "gs4", minInterval: 50, ...(o.panel ? { touchPanelConfigId: "panel" } : {}) }),
@@ -310,8 +332,8 @@ function buttonFlow(props: Record<string, unknown>, o: { wiredIn?: boolean; wire
     screens: {
       screen: {
         pages: [
-          { name: "home", root: { kind: "column", padding: 6, gap: 6, children } as never },
-          { name: "second", root: { kind: "column", children: [{ kind: "text", text: "Two", font: "font_body16" }] } },
+          { name: "home", elements },
+          { name: "second", elements: [{ kind: "text", text: "Two", row: 0, col: 0, colSpan: 4 }] },
         ],
       },
     },
@@ -341,7 +363,7 @@ describe("touch buttons", () => {
   it("registers a flow-controlled toggle: touchable, its on/off values, and a two-faced node (input call + output coroutine)", () => {
     const { source, warnings } = compile(buttonFlow({ mode: "toggle", valueType: "string", onValue: "ON", offValue: "OFF" }, { wiredIn: true, wiredOut: true, panel: true }), buildRegistry());
     expect(ownWarnings(warnings)).toEqual([]);
-    expect(source).toContain('_gui.widget("light", tsgui_button.make(font_body20, None, "ON", "OFF"), 0, True)');
+    expect(source).toMatch(/_gui\.widget\("light", tsgui_button\.make\(font_body\d+, None, "ON", "OFF"\), 0, True\)/);
     expect(source).toContain('_gui.button("light", "toggle", controlled=True, send=None, on_val="ON", off_val="OFF", on_press=False, target="", pending_ms=5000, initial=False)');
     expect(source).toContain('_btn = await _gui.event("light")');
     expect(source).toContain("msg = {'payload': _btn, 'topic': \"light\"}");
@@ -394,8 +416,8 @@ describe("touch buttons", () => {
 
   it("a button draws its board label, else its flow label", () => {
     const src = (props: Record<string, unknown>) => compile(buttonFlow(props, { wiredOut: true }), buildRegistry()).source;
-    expect(src({ text: "Go", label: "Fire!" })).toContain('tsgui_button.make(font_body20, "Go")');
-    expect(src({ text: "", label: "Fire!" })).toContain('tsgui_button.make(font_body20, "Fire!")');
+    expect(src({ text: "Go", label: "Fire!" })).toMatch(/tsgui_button\.make\(font_body\d+, "Go"\)/);
+    expect(src({ text: "", label: "Fire!" })).toMatch(/tsgui_button\.make\(font_body\d+, "Fire!"\)/);
   });
 
   describe("a screen follows its wired display", () => {
