@@ -17,6 +17,12 @@
     "date": "2026-10-24",
     "tested": "install clean, booted 14.0.0 with all 34 libraries frozen (147 KB free); the theme demo deployed with the new widget styles -- led chip, segmented bar, readout captions, pill page dot -- and ran with no errors; widget drawing and natural sizes covered off-device on the unix port"
   },
+  "5acd9580170b172551f91310605465379d644689670b1f33d89e4e3724f7afc4": {
+    "image": "thingstudio-classic-esp32-14.0.1-7e7c73b.bin",
+    "board": "CYD (ESP32-2432S028)",
+    "date": "2026-10-24",
+    "tested": "install clean, booted 14.0.1 with all 34 libraries frozen; the grid-based theme demo ran with the compact chip badge, digits-font readouts, captions and pages filled to the dots row. Widget drawing and font fitting covered off-device."
+  },
   "5ebcfceb11751b5991c5b6727d10bae8c47de9e0df8749055b4d0066c3e61f40": {
     "image": "thingstudio-classic-esp32-13.1.0-dad343f.bin",
     "board": "CYD (ESP32-2432S028)",
