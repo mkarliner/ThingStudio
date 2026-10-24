@@ -13,7 +13,8 @@ working list the same day, per Mike's call.
 - **GUI: fill the rest of the page, and page dots in a footer** -- built 2026-10-24. A `fill` checkbox on a
   container writes `grow: 1`; a footer is a non-growing row after a filling container, with the page dots as an
   ordinary widget in it -- no footer field, strip or fixed height, and no pixel-usage warning. The CYD theme
-  demo uses the shape; a layout test and the example-flow compile pass pin it. No runtime bump.
+  demo uses the shape; a layout test and the example-flow compile pass pin it, and it was confirmed on the CYD's
+  panel 2026-10-24. No runtime bump.
   ([detail](outstanding-items/gui-layout-fill-and-footer.md))
 - **Freenove FNK0104S board support** -- built 2026-10-08, hardware-checked 2026-10-10: touch lands right at
   90/180/270 and the press highlight holds and releases. Replaced the FNK0104B (2026-10-09).

@@ -85,6 +85,8 @@ about unused space (absolute allowances are what the constraint model exists to 
   on a 240x320 screen -- the card ends at 304, the dots sit against the bottom padding.
 - **Tests:** a card/footer layout case in `gui-layout.test.ts`; the demo added to the example-flow compile pass in
   `gui-compile.test.ts`. No flow-file, compiler or device change, so no runtime bump.
+- **Hardware:** deployed to the CYD 2026-10-24 (`DEPLOY_ACK`, flow `gui-hero-cyd-theme`); the cards run down to
+  the dots row and the dots sit at the bottom edge, confirmed on the panel.
 
 The "outline should show a large unused area" idea from the options above was dropped for that reason. If unused
 space needs surfacing later, express it as a constraint in the outline, not as a pixel count.

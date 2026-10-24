@@ -302,4 +302,4 @@ the msg is open.
   "page leaves N px unused" warning was rejected as a pixel heuristic. **Built 2026-10-24:** the outline's
   container properties gained a **fill** checkbox (writes `grow: 1`, clears it when unticked), the CYD theme demo
   uses it on each page's card with the dots in a plain trailing row, and a layout test pins the shape. No
-  flow-file field, no compiler or device change, no runtime bump.
+  flow-file field, no compiler or device change, no runtime bump. Confirmed on the CYD's panel the same day.
