@@ -2979,6 +2979,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#why-does-opening-a-flow-ask-save-changes-to-even-though-i-changed-nothing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why does opening a flow ask "Save changes to …?" even though I changed nothing?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#why-does-deploy-say-the-board-needs-the-runtime-installed-again" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3263,6 +3274,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#why-does-opening-a-flow-ask-save-changes-to-even-though-i-changed-nothing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why does opening a flow ask "Save changes to …?" even though I changed nothing?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#why-does-deploy-say-the-board-needs-the-runtime-installed-again" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3492,6 +3514,13 @@ only at lower color depths and with little to spare.</p>
 chip is reset. After a flow that uses a lot of memory, such as a display, WiFi may not have enough left to start.
 The console warns you before you deploy. Use <strong>Tools → Reset board (hard)</strong>: a soft restart doesn't give that
 memory back. See <a href="../debugging/#restarting-the-board">Restarting the board</a>.</p>
+<h2 id="why-does-opening-a-flow-ask-save-changes-to-even-though-i-changed-nothing">Why does opening a flow ask "Save changes to …?" even though I changed nothing?</h2>
+<p>That is the browser's file-permission dialog, not the editor. A page may read a file you pick, but to <em>write</em>
+it back (Save) it needs your permission, and the browser asks with that wording: "Save changes to
+<code>gui-hero-cyd.flow.json</code>? <code>https://127.0.0.1:8765</code> will be able to edit it." Accept it to let the editor save
+back to that file. It is not about unsaved changes on the canvas, and it comes back after a page refresh
+because browsers grant file access per page session. Opening from <strong>Open…</strong> or <strong>Recent</strong> is the same file;
+nothing is written until you press Save.</p>
 <h2 id="why-does-deploy-say-the-board-needs-the-runtime-installed-again">Why does Deploy say the board needs the runtime installed again?</h2>
 <p>The editor and the runtime on the board talk a shared protocol. When an update changes it, a board with the older
 runtime can't run flows from the newer editor, so Deploy stops and says so. Use <strong>Tools → Install runtime…</strong>, then
