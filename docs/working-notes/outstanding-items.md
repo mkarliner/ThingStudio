@@ -218,16 +218,6 @@ ThingStudioMarketing repo, not here.
   loads the current flow. `HELLO` already reports `currentFlowName`/`currentFlowDeployId`; reading the JSON
   back needs a request/response pair, a device-side store and an editor path for missing custom nodes. Safe to
   store: `flow.configs` holds `credentialName`, never a secret.
-- **Protocol: hardware pass for runtime 13.1.0 -- partly done 2026-10-24**
-  (`reviews/2026-10-24-protocol-state-machine.md`). The piece state machine, "one line, one frame" and the
-  commit order are tested on the unix port and by the exchange vectors, not yet on a board. Deploy a GUI flow
-  to the CYD (the USB-UART board that drops bytes) a few times, once with a library, and confirm resends now
-  succeed where they used to end in `BadPiece`.
-  **2026-10-24:** the 13.1.0 image (`thingstudio-classic-esp32-13.1.0-dad343f.bin`) was flashed to the CYD;
-  HELLO reports 13.1.0 with all 34 libraries frozen (147 KB MicroPython free), and the dummy GUI flow deployed
-  twice in one session over the running flow -- both `DEPLOY_ACK` (112 KB, then 90 KB free), no
-  `PROTOCOL_ILLEGAL`, no errors. Still owed: a library transfer (`DEP_PUT`/`DEP_COMMIT`) on hardware, and an
-  induced resend.
 - **Protocol: replies carry no request id -- new item, 2026-10-24** (audit finding 5). SPEC §7 now states that one editor at a time is
   assumed. Fixing it (request ids, or the board refusing a second transfer source mid-deploy) changes the
   interface: Mike's call.

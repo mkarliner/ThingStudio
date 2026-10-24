@@ -5,6 +5,12 @@
     "date": "2026-10-24",
     "tested": "install clean (image + /lib/_deps.json) and booted 13.0.0 reporting all 34 libraries frozen; hero GUI flow deployed over serial. Frozen-library hashes reproduced 34/34 from the image's own deps index with the editor's mpy-cross, so Deploy skips them."
   },
+  "5ebcfceb11751b5991c5b6727d10bae8c47de9e0df8749055b4d0066c3e61f40": {
+    "image": "thingstudio-classic-esp32-13.1.0-dad343f.bin",
+    "board": "CYD (ESP32-2432S028)",
+    "date": "2026-10-24",
+    "tested": "install clean, booted 13.1.0 with all 34 libraries frozen (147 KB free); dummy GUI flow deployed twice in one session over the running flow; a FLOW_PUT piece resent and a DEP_PUT piece resent were both ACKed, and DEP_COMMIT installed the library (DEP_OK) -- the resend cases that used to end in BadPiece"
+  },
   "f931ca3f4c3da426f3398440526dbf4e643b2d6c5f72aa8440ed31e7151cead0": {
     "image": "thingstudio-classic-esp32-12.1.0-8e2f87d.bin",
     "board": "CYD (ESP32-2432S028)",

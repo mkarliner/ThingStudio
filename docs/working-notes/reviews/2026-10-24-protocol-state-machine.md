@@ -79,9 +79,9 @@ Run in a scratch workspace: a fresh `npm ci`, plus MicroPython's unix port and `
 - **Audit script:** `device-runtime/test/audit_protocol_exchanges.py` prints "fixed" for every board-side finding.
 
 **On hardware, 2026-10-24:** the 13.1.0 image was flashed to the CYD, HELLO reported 13.1.0 with 34 frozen
-libraries, and the dummy GUI flow deployed twice in one session over the running flow (both `DEPLOY_ACK`, no
-`PROTOCOL_ILLEGAL`, no errors). A library transfer and an induced resend are still owed;
-`outstanding-items.md` has the detail.
+libraries, and the dummy GUI flow deployed twice in one session over the running flow. A `FLOW_PUT` piece and a
+`DEP_PUT` piece were each sent twice: both ACKs succeeded, and `DEP_COMMIT` installed the library (`DEP_OK`) --
+the resends that used to end in `BadPiece`. No `PROTOCOL_ILLEGAL`.
 
 ## Re-running
 

@@ -118,6 +118,11 @@ working list the same day, per Mike's call.
   ([detail](outstanding-items/inject-node-review.md))
 - **`wifi_status` complete status (IP, network, RSSI)** -- built 2026-09-09/10 and hardware-verified; the
   `debug` node gained `fullMessage` for it. ([detail](outstanding-items/wifi-status-completeness.md))
+- **Protocol: hardware pass for runtime 13.1.0** -- done 2026-10-24 on the CYD: the 13.1.0 image booted with
+  all 34 libraries frozen, the dummy GUI flow deployed twice in one session over the running flow, a resent
+  `FLOW_PUT` piece and a resent `DEP_PUT` piece were both ACKed, and `DEP_COMMIT` installed the library
+  (`DEP_OK`) -- the resend cases that used to end in `BadPiece`. No `PROTOCOL_ILLEGAL`.
+  (`reviews/2026-10-24-protocol-state-machine.md`)
 - **`wifi_status` emit-on-change** -- built 2026-09-02, confirmed on hardware.
   ([detail](outstanding-items/wifi-status-emit-on-change.md))
 - **Single-wifi-owner fix** -- landed 2026-09-04, confirmed on hardware. Whether the one-shot connect needs
