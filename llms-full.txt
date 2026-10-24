@@ -3333,8 +3333,9 @@ keeps the default colours.
 
 A theme is ten roles, so the widgets stay consistent and one theme works on different panels: **background**, **card**,
 **foreground**, **muted** (stale values), **track** (a bar's empty part), **accent** (bar fill, lights on), **text on
-accent**, **ok**, **warn** and **alarm**. Start from **dark slate** or **light paper** and change any colour; the preset
-is a starting point, not a lock.
+accent**, **ok**, **warn** and **alarm**. Start from **dark slate**, **light paper** or **vivid** and change any
+colour; the preset is a starting point, not a lock. **Vivid** is the card demo's scheme: a near-black background,
+violet cards and a cyan accent.
 
 A panel with fewer colours than that folds the roles onto the ones it has, rather than refusing the theme:
 
@@ -4878,7 +4879,7 @@ A config node is listed under `configs` in a flow file as `{id, type, properties
 
 Type `thingstudio/config/gui-theme`.
 
-- `preset`, select: one of `dark-slate`, `light-paper`, ``; Seeds the colours below when the theme is created. Changing a colour keeps the preset as the starting point.
+- `preset`, select: one of `dark-slate`, `light-paper`, `vivid`, ``; Seeds the colours below when the theme is created. Changing a colour keeps the preset as the starting point.
 - `bg`, colour
 - `card`, colour
 - `fg`, colour
