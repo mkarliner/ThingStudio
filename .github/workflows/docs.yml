@@ -36,20 +36,22 @@ jobs:
     name: build + gh-deploy
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0 # vite.config.ts stamps the last commit touching device-runtime/src
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: 22
           cache: npm
           cache-dependency-path: editor/package-lock.json
-      - uses: actions/setup-python@v7
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
         with:
           python-version: "3.12"
       # Pins live in docs/requirements.txt and docs/screenshots/requirements.txt and must match
       # docs/third-party-licenses.md's "Documentation build tooling" entry.
-      - run: pip install -r docs/requirements.txt -r docs/screenshots/requirements.txt ./backend
+      - run: pip install --require-hashes -r backend/requirements.txt
+      - run: pip install -r docs/requirements.txt -r docs/screenshots/requirements.txt
+      - run: pip install --no-deps --no-build-isolation -e ./backend
       - name: Build editor
         working-directory: editor
         run: |

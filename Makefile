@@ -96,8 +96,10 @@ editor/dist/index.html: editor/node_modules/.package-lock.json $(STAMP)/runtime-
 $(VPY): | check-python
 	$(PYTHON) -m venv $(VENV)
 
-$(VENV)/.installed: $(VPY) backend/pyproject.toml docs/requirements.txt
-	$(VPY) -m pip install --quiet -e 'backend[test]' -r docs/requirements.txt
+$(VENV)/.installed: $(VPY) backend/pyproject.toml backend/requirements.txt docs/requirements.txt
+	$(VPY) -m pip install --quiet --require-hashes -r backend/requirements.txt
+	$(VPY) -m pip install --quiet -r docs/requirements.txt
+	$(VPY) -m pip install --quiet --no-deps --no-build-isolation -e ./backend
 	touch $@
 
 # NO_MKDOCS_2_WARNING: mkdocs-material's banner about MkDocs 2.0. We pin mkdocs 1.x (docs/requirements.txt).

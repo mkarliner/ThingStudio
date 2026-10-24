@@ -29,3 +29,16 @@ updates:
         applies-to: "security-updates"
         patterns:
           - "*"
+
+  # Actions are pinned to commit SHAs (AGENTS.md, "Third-party code: pinned, scriptless, gated"), and a
+  # pinned SHA never moves on its own -- so this is the one place version updates stay ON. Dependabot
+  # rewrites the SHA and carries the `# v7` comment through, so each PR is a one-line diff per action,
+  # reviewed like anything else. A stale action is its own supply-chain risk.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      actions:
+        patterns:
+          - "*"

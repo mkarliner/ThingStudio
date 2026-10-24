@@ -235,6 +235,42 @@ Prompt Mike at suitable points to commit — don't assume auto-commit and don't 
 Suitable points: after a coherent unit of work lands (a doc section resolved, a feature/module working), before
 starting something new or risky, and at the end of a work session regardless of how small the change was.
 
+## Third-party code: pinned, scriptless, gated
+
+Anything fetched from outside the repo — npm packages, Python packages, GitHub Actions, the firmware toolchain,
+vendored libraries — is untrusted until it is all three of:
+
+- **pinned to an immutable identifier** — a lockfile with integrity hashes, `requirements.txt` with `--hash`,
+  an Actions commit SHA rather than a tag, a firmware tag plus a locally verified build;
+- **installed without its own code running** — `npm ci --ignore-scripts`, `pip install --require-hashes` with no
+  build isolation, no postinstall hooks;
+- **covered by a check that fails rather than warns when it changes** — `npm audit --audit-level=high` in CI,
+  Dependabot alerts, and the checksums `record-tested.sh` keeps for release images.
+
+Mechanical rather than vigilant, deliberately: a supply-chain compromise is *designed* to survive review — the
+package looks right and behaves until it doesn't (event-stream, ua-parser-js, node-ipc; the xz backdoor was caught
+by an unrelated performance test, not by anyone reading the code). Human care does not scale to that. A pin that
+goes red does. This is the fault-handling priority applied to code we did not write.
+
+| source | the pin | enforced by |
+|---|---|---|
+| npm (`editor/`) | `package-lock.json` integrity hashes; `npm ci --ignore-scripts` | CI audit gate, `.github/dependabot.yml` |
+| Python (`backend/`) | `backend/requirements.txt`, hash-pinned; installed `--require-hashes` | CI, docs and release workflows, `make` |
+| GitHub Actions | 40-char commit SHA with a `# v7` comment, never a tag | every workflow |
+| Firmware toolchain | MicroPython/ESP-IDF tag + a build verified on the board | `firmware/classic-esp32/build.sh`, `tested.json` |
+| Vendored libraries | the reviewed copy in `device-runtime/src/vendor/` | no update path by design |
+
+- **Adding a source is a reviewed decision, not a convenience.** Name it, say why, and add the line to
+  `docs/third-party-licenses.md` in the same change — that ledger doubles as the supply-chain inventory.
+- **Change one thing at a time.** A single reviewed security bump with the tests run is reviewable; `npm update` or
+  `pip install -U` is not.
+- **Refuse on a fact, warn on a prediction.** A hash mismatch, or a version with a published advisory, refuses.
+  "This looks risky" is a note in a brief.
+
+Stated exceptions, not accidents: `docs/requirements.txt` is exact-pinned (`==`) but unhashed — it is build-only
+tooling and hoisting a lock file there buys little. MicroPython and ESP-IDF are pinned by tag rather than by hash
+because we build them locally and verify the resulting image on hardware.
+
 ## npm / Node.js package use
 
 Warn Mike before installing or adding any npm/Node.js package (dependency or dev dependency) — name the package, why
@@ -249,7 +285,8 @@ packages):
 - **Avoid git-based dependency URLs** — they bypass registry scanning/provenance and can ship an `.npmrc` that
   silently re-enables scripts.
 - **Use lockfiles and deterministic installs**: `npm ci`, not bare `npm install`, once a lockfile exists; commit the
-  lockfile.
+  lockfile. See "Third-party code: pinned, scriptless, gated" above — npm is one instance of that rule, not its
+  whole scope.
 - **In `editor/`, the install command is `npm ci --ignore-scripts`.** A plain `npm install` fails on this tree with
   `Cannot read properties of null (reading 'edgesOut')` — an npm 10 arborist bug resolving vitest's optional browser
   peers, reproducible on an unchanged tree. To regenerate the lock, use
