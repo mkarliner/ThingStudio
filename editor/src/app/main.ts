@@ -151,6 +151,7 @@ import { choiceForConnectedBoard, resolveTarget, type TargetResolution } from ".
 import { renderDefinitionPage, renderUnknownBoardPage } from "../definitions/definition-page.js";
 import type { BoardSettingsResultMessage, HelloMessage, Message, NodeStatusMessage, ProtocolVersion } from "../protocol/messages.js";
 import { checkRuntimeBuild, decideDeploy } from "../protocol/version.js";
+import { deployFlow, installLibrary, DEFAULT_TIMING, type TransferEvent, type TransferFailure, type TransferLink } from "../protocol/transfer.js";
 import { explainDeployImportError, networkWarningBeforeDeploy } from "./import-error-help.js";
 import { editorVersionLabel, editorVersionLine } from "./editor-version.js";
 import { DEPLOY_MEMORY_DOC, DEPLOY_MEMORY_HINT, deployMemoryAdvice, looksLikeOutOfMemory, lowFlowMemoryWarning, lowMemoryWarningBeforeDeploy } from "./memory-advice.js";
@@ -2830,65 +2831,29 @@ async function installFlowDependencies(source: string): Promise<Record<string, s
     logLine(`[libraries] sending ${name} (${Math.max(1, Math.round(c.bytes / 1024))} KB)`, "");
     // Small pieces, then a commit the board always answers (libraryMessages' own comment says why).
     const { pieces, commit } = libraryMessages(name, c.hash, c.files);
-    // One piece at a time, each confirmed: a board behind a USB-UART bridge (CYD) has no flow control,
-    // and pieces sent back to back overran its input and arrived garbled (2026-10-07).
-    for (const piece of pieces) {
-      // A USB-UART board has no flow control, and a piece can reach it with bytes missing -- the board
-      // then drops the line ("LISTENER_ERR bad base64 ... recovering") and the deploy would hang until
-      // the timeout. Resending is safe: DEP_PUT is addressed by (name, file, offset) and rewrites from
-      // that offset, so a duplicate piece is the same bytes in the same place. Two extra tries turn a
-      // dropped line into a slower deploy instead of a failed one (seen on the CYD, 2026-10-22).
-      let ack: Message | null = null;
-      let lastErr: unknown = null;
-      for (let attempt = 0; attempt <= PIECE_RETRIES; attempt += 1) {
-        const ackP = waitForMessage(
-          (m) => m.type === "DEP_ACK" && m.name === name && m.file === piece.file && m.offset === piece.offset,
-          PIECE_TIMEOUT_MS,
-        );
-        await transport.send(piece);
-        try {
-          ack = await ackP;
-          break;
-        } catch (err) {
-          lastErr = err;
-          ack = null;
-          if (attempt < PIECE_RETRIES) {
-            logLine(
-              `[libraries] no reply to ${piece.file} byte ${piece.offset}, resending (${attempt + 1}/${PIECE_RETRIES})`,
-              "err",
-            );
-          }
-        }
-      }
-      if (ack === null) {
-        const why = lastErr instanceof Error && lastErr.message.startsWith("timeout")
-          ? `no reply to library ${name} (${piece.file} byte ${piece.offset}) in ${PIECE_TIMEOUT_MS / 1000}s after ${PIECE_RETRIES + 1} tries`
-          : `board stopped answering during library ${name} (${lastErr instanceof Error ? lastErr.message : String(lastErr)})`;
-        logLine(`[deploy failed] ${why}, flow unchanged`, "err");
-        boardDependencies = null;
-        return null;
-      }
-      if (ack.type === "DEP_ACK" && !ack.ok) {
-        logLine(`[deploy failed] library ${name} not accepted, flow unchanged: ${ack.error ?? ack.code ?? "unknown error"}`, "err");
-        if (looksLikeOutOfMemory(ack.error)) logAdvice("[deploy failed]", memoryAdvice(), "err");
-        boardDependencies = null;
-        return null;
-      }
-    }
-    const resultP = waitForMessage((m) => m.type === "DEP_RESULT" && m.name === name, DEPLOY_TIMEOUT_MS);
-    await transport.send(commit);
-    let result: Message;
+    // One piece at a time, each answered, then a commit the board always answers (SPEC §7, protocol/transfer.ts).
+    // A board behind a USB-UART bridge (CYD) has no flow control: pieces sent back to back overran its input
+    // (2026-10-07), and a piece can still arrive garbled, which the transfer resends (any piece may be resent).
+    let outcome;
     try {
-      result = await resultP;
+      outcome = await installLibrary(transferLink, pieces, commit, transferOptions("libraries"));
     } catch (err) {
-      const why = err instanceof Error && err.message.startsWith("timeout") ? `library ${name} not confirmed in ${DEPLOY_TIMEOUT_MS / 1000}s` : `board stopped answering during library ${name} (${err instanceof Error ? err.message : String(err)})`;
-      logLine(`[deploy failed] ${why}, flow unchanged`, "err");
+      logLine(`[deploy failed] board stopped answering during library ${name} (${err instanceof Error ? err.message : String(err)}), flow unchanged`, "err");
       boardDependencies = null;
       return null;
     }
-    if (result.type === "DEP_RESULT" && !result.ok) {
-      logLine(`[deploy failed] library ${name} not installed, flow unchanged: ${result.error ?? result.code ?? "unknown error"}`, "err");
-      if (looksLikeOutOfMemory(result.error)) logAdvice("[deploy failed]", memoryAdvice(), "err");
+    if (outcome.kind !== "installed") {
+      const why =
+        outcome.kind === "pieces-failed"
+          ? outcome.failure.code === "Timeout"
+            ? `no reply to library ${name} (${outcome.failure.message})`
+            : `library ${name} not accepted: ${outcome.failure.message}`
+          : outcome.kind === "refused"
+            ? `library ${name} not installed: ${outcome.message}`
+            : `library ${name} not confirmed in ${outcome.timeoutMs / 1000}s`;
+      logLine(`[deploy failed] ${why}, flow unchanged`, "err");
+      const text = outcome.kind === "pieces-failed" ? outcome.failure.message : outcome.kind === "refused" ? outcome.message : null;
+      if (looksLikeOutOfMemory(text)) logAdvice("[deploy failed]", memoryAdvice(), "err");
       boardDependencies = null;
       return null;
     }
@@ -2903,12 +2868,50 @@ function memoryAdvice(): Advice {
   return { text: `board out of memory. ${DEPLOY_MEMORY_HINT}`, doc: DEPLOY_MEMORY_DOC };
 }
 
-const PIECE_TIMEOUT_MS = 10000; // one 5 KB piece: write to flash and answer
-const PIECE_RETRIES = 2; // resends of a piece that got no answer (a dropped line, see below)
-const FLOW_PIECE_BYTES = 5120; // one FLOW_PUT piece: 5 KB, because deploys should be quick -- a board that
-// cannot take a 5 KB block has a memory problem worth seeing, not one to hide behind smaller pieces (Mike,
-// 2026-10-22)
-const DEPLOY_TIMEOUT_MS = 30000; // comfortably exceeds listener.py's own READ_TIMEOUT_S=8 across a few internal phases
+/** How a transfer (protocol/transfer.ts) reaches the board: the current transport, and the shared waiters. */
+const transferLink: TransferLink = {
+  send: (message) => transport.send(message),
+  waitFor: (match, timeoutMs) => waitForMessage(match, timeoutMs),
+};
+
+/** Console lines for a transfer's resends, and the rule for when a HELLO means the board restarted: not while
+ * a HELLO_REQUEST is unanswered, when it is probably that request's reply. */
+function transferOptions(what: "deploy" | "libraries") {
+  return {
+    timing: DEFAULT_TIMING,
+    isRestartHello: () => helloRequestsPending === 0,
+    onEvent: (event: TransferEvent) => {
+      const piece = event.piece.type === "FLOW_PUT" ? `flow byte ${event.piece.offset}` : `${event.piece.file} byte ${event.piece.offset}`;
+      const why = event.reason === "garbled" ? `board couldn't read ${piece}${event.detail ? ` (${event.detail})` : ""}` : `no reply to ${piece}`;
+      logLine(`[${what}] ${why}, resending (${event.attempt}/${DEFAULT_TIMING.pieceRetries})`, "err");
+    },
+  };
+}
+
+/** The board restarted while a deploy was under way; `hello` is its boot HELLO. */
+function reportRestartDuringDeploy(hello: HelloMessage, deployId: string): boolean {
+  const running = hello.currentFlowDeployId === deployId;
+  logAdvice(
+    "[deploy: board restarted]",
+    {
+      text: running
+        ? "Board restarted starting the flow, probable crash, maybe low memory. Flow running now. If it repeats, " +
+          "try Tools → Reset board (hard) before deploying."
+        : "Board restarted during the deploy, probable crash, maybe low memory. New flow NOT running. " +
+          "Try Tools → Reset board (hard), then deploy again.",
+      doc: DOC_BOARD_STUCK,
+    },
+    running ? "" : "err",
+  );
+  return running;
+}
+
+/** A transfer that stopped at a piece. */
+function reportPiecesFailed(failure: TransferFailure): void {
+  logLine(`[deploy failed] ${failure.code}: ${failure.message}`, "err");
+  const memory = deployMemoryAdvice(failure.code, failure.message);
+  if (memory) logAdvice("[deploy failed]", { text: memory, doc: DEPLOY_MEMORY_DOC }, "err");
+}
 
 el("btnDeploy").addEventListener("click", async () => {
   const btn = el<HTMLButtonElement>("btnDeploy");
@@ -3007,136 +3010,60 @@ el("btnDeploy").addEventListener("click", async () => {
     const deployId = crypto.randomUUID();
     const flowName = currentFlowNameInput();
     logLine(`[deploying "${flowName}" as ${deployId}]`, "");
-    // A HELLO in place of the ack means the board restarted mid-deploy (2026-10-07, CYD: an ESP32 abort()
-    // while the new flow started). It answers the deploy as well as an ack does: it says what's running.
-    // Not while a HELLO_REQUEST is unanswered: that HELLO is probably its reply, not a restart.
+    // The pieces, then FLOW_COMMIT, then its one answer: SPEC §7.3/§7.4, protocol/transfer.ts. Always in pieces: a
+    // whole DEPLOY needs one contiguous block the size of the message, which a split heap on a classic ESP32 may not
+    // have even with 100 KB free (2026-10-22), so there is no whole-DEPLOY fallback. Older boards are refused up
+    // front by the version gate above, when a HELLO was seen.
+    //
+    // A HELLO in place of an answer means the board restarted (2026-10-07, CYD: an ESP32 abort() while the new flow
+    // started); it says what's running, so it answers the deploy as well as an ack does.
     //
     // There is deliberately no recovery sequence here (Mike, 2026-10-22): no retry after a MemoryError, no
-    // stopping the flow for the user, no escalating free-then-restart. Two attempts at exactly that chain
-    // were built and removed -- each fixed the error in front of it and the next one arrived. A deploy that
-    // does not fit says so once, with the board's own figures and what the user can do (memory-advice.ts);
-    // the next move is theirs, and a deploy is a fixed sequence rather than a search.
-
-    // Chunked deploy, always: the flow goes in 5 KB pieces, each answered. A whole DEPLOY needs one
-    // contiguous block the size of the message, which a split heap on a classic ESP32 may not have even with
-    // 100 KB free -- the reason a 9.5 KB flow could not be deployed over a running GUI flow (2026-10-22).
-    // There is no whole-DEPLOY fallback even when no HELLO arrived: that path needs the very block this one
-    // exists to avoid, so it can only fail later and less clearly. Older boards are refused up front by the
-    // version gate above (this editor targets 12.0.0; an 11.x board is a different major).
-
-    /** All the pieces, each paced by its own FLOW_ACK. Returns a DEPLOY_ERROR to report, or null when done. */
-    const sendFlowPieces = async (): Promise<Message | null> => {
-      const total = mpyBytes.length;
-      for (let offset = 0; offset < total; offset += FLOW_PIECE_BYTES) {
-        const data = mpyBytes.subarray(offset, Math.min(offset + FLOW_PIECE_BYTES, total));
-        for (let attempt = 0; attempt <= PIECE_RETRIES; attempt += 1) {
-          const ackP = waitForMessage((m) => m.type === "FLOW_ACK" && m.offset === offset, PIECE_TIMEOUT_MS);
-          await transport.send({ type: "FLOW_PUT", offset, total, data });
-          let ack: Message;
-          try {
-            ack = await ackP;
-          } catch {
-            if (attempt < PIECE_RETRIES) {
-              logLine(`[deploy] no reply to flow byte ${offset}, resending (${attempt + 1}/${PIECE_RETRIES})`, "err");
-              continue;
-            }
-            return {
-              type: "DEPLOY_ERROR",
-              code: "Timeout",
-              message: `no reply to flow byte ${offset} after ${PIECE_RETRIES + 1} tries`,
-            };
-          }
-          if (ack.type === "FLOW_ACK" && !ack.ok) {
-            // A garbled piece is the link losing bytes, not the board refusing the flow: resend it, like a
-            // missing ack -- the same bounded retransmit. The board now says so in one line (runtime 12.1.0)
-            // instead of leaving the editor to sit out its timeout. Any other refusal is final: the board
-            // named a fault a resend cannot fix.
-            if (ack.code === "Garbled" && attempt < PIECE_RETRIES) {
-              logLine(
-                `[deploy] board couldn't read flow byte ${offset} (${ack.error ?? "garbled"}), resending (${attempt + 1}/${PIECE_RETRIES})`,
-                "err",
-              );
-              continue;
-            }
-            return { type: "DEPLOY_ERROR", code: ack.code ?? "BadPiece", message: ack.error ?? "the board refused a flow piece" };
-          }
-          break; // this piece is stored
-        }
-      }
-      return null;
-    };
-
-    const attemptDeploy = async (): Promise<Message> => {
-      const ackP = waitForMessage(
-        (m) => m.type === "DEPLOY_ACK" || m.type === "DEPLOY_ERROR" || (m.type === "HELLO" && helloRequestsPending === 0),
-        DEPLOY_TIMEOUT_MS,
-      );
+    // stopping the flow for the user, no escalating free-then-restart. A deploy that does not fit says so once,
+    // with the board's own figures and what the user can do (memory-advice.ts); the next move is theirs. The only
+    // repeats are a piece's bounded resends, which SPEC §7.2 makes safe.
+    try {
       // lastWifiProvision was computed alongside this same compile, by the currentSource() call
       // refreshPreview() (above) just made -- see that field's own doc comment.
-      const failed = await sendFlowPieces();
-      if (failed !== null) {
-        ackP.catch(() => {}); // the ack we never wait for must not become an unhandled rejection
-        return failed;
-      }
-      await transport.send({
-        type: "FLOW_COMMIT",
-        total: mpyBytes.length,
-        flowName,
-        deployId,
-        wifiProvision: lastWifiProvision,
-        dependencies,
-        staticData: new Uint8Array(0),
-      });
-      return await ackP;
-    };
-    try {
-      const result = await attemptDeploy();
-      if (result.type === "HELLO") {
-        const running = result.currentFlowDeployId === deployId;
-        logAdvice(
-          "[deploy: board restarted]",
-          {
-            text: running
-              ? "Board restarted starting the flow, probable crash, maybe low memory. Flow running now. If it repeats, " +
-                "try Tools → Reset board (hard) before deploying."
-              : "Board restarted starting the flow, probable crash, maybe low memory. New flow NOT running. " +
-                "Try Tools → Reset board (hard), then deploy again.",
-            doc: DOC_BOARD_STUCK,
-          },
-          running ? "" : "err",
-        );
+      const outcome = await deployFlow(
+        transferLink,
+        mpyBytes,
+        { flowName, deployId, wifiProvision: lastWifiProvision, dependencies, staticData: new Uint8Array(0) },
+        transferOptions("deploy"),
+      );
+      if (outcome.kind === "restarted") {
         // boardDependencies already came from this HELLO: the board may not have removed unused
         // libraries before restarting, so its own report beats what this deploy asked for.
-        if (running) deployedClean = true;
-      } else if (result.type === "DEPLOY_ERROR") {
-        logLine(`[deploy failed] ${result.code}: ${result.message}`, "err");
-        const importAdvice = result.code === "ImportError" ? explainDeployImportError(result.message, libraryModules) : null;
+        if (reportRestartDuringDeploy(outcome.hello, deployId)) deployedClean = true;
+      } else if (outcome.kind === "pieces-failed") {
+        reportPiecesFailed(outcome.failure);
+      } else if (outcome.kind === "refused") {
+        logLine(`[deploy failed] ${outcome.code}: ${outcome.message}`, "err");
+        const importAdvice = outcome.code === "ImportError" ? explainDeployImportError(outcome.message, libraryModules) : null;
         if (importAdvice) logAdvice("[deploy failed]", importAdvice, "err");
-        const deployMemory = deployMemoryAdvice(result.code, result.message);
+        const deployMemory = deployMemoryAdvice(outcome.code, outcome.message);
         if (deployMemory) logAdvice("[deploy failed]", { text: deployMemory, doc: DEPLOY_MEMORY_DOC }, "err");
-        if (result.code === "MissingDependency") {
+        if (outcome.code === "MissingDependency") {
           // This editor's idea of the board's libraries was wrong (changed by another editor, or a
           // failed write). Forget it, so the next Deploy sends every library the flow needs.
           boardDependencies = null;
           logLine("[deploy failed] the flow wasn't changed. Deploy again to send the missing libraries.", "err");
         }
+      } else if (outcome.kind === "no-answer") {
+        logLine(`[deploy timeout] no DEPLOY_ACK/DEPLOY_ERROR within ${outcome.timeoutMs}ms`, "err");
       } else {
         // The board removes libraries the new flow doesn't use once it's running.
         boardDependencies = { ...dependencies };
         logLine("[deploy OK -- flow is running on the device]", "ok");
-        if (result.type === "DEPLOY_ACK") logLine(formatMemoryLine(result), "");
+        logLine(formatMemoryLine(outcome.ack), "");
         // Only the real success path marks the button clean (Mike's ask,
-        // 2026-09-09) -- a DEPLOY_ERROR or a timeout below both mean the
+        // 2026-09-09) -- a DEPLOY_ERROR or a timeout both mean the
         // device does NOT have this flow running, so the button must stay
         // available to retry, not go stale-disabled on a failed attempt.
         deployedClean = true;
       }
     } catch (err) {
-      if (err instanceof Error && !err.message.startsWith("timeout")) {
-        logLine(`[deploy failed] ${err.message} before confirming the deploy. Connect again and check its status.`, "err");
-      } else {
-        logLine(`[deploy timeout] no DEPLOY_ACK/DEPLOY_ERROR within ${DEPLOY_TIMEOUT_MS}ms`, "err");
-      }
+      logLine(`[deploy failed] ${err instanceof Error ? err.message : String(err)} before confirming the deploy. Connect again and check its status.`, "err");
     }
   } finally {
     updateDeployButtonEnabled();
