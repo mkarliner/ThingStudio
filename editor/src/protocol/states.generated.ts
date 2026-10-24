@@ -132,9 +132,26 @@ export const MACHINES = {
         "do": "note",
         "from": [
           "idle",
-          "sending"
+          "sending",
+          "committing"
         ],
         "on": "earlyMemoryError",
+        "to": "same"
+      },
+      {
+        "do": "abort",
+        "from": [
+          "sending",
+          "committing"
+        ],
+        "on": "lost",
+        "to": "idle"
+      },
+      {
+        "from": [
+          "idle"
+        ],
+        "on": "lost",
         "to": "same"
       },
       {

@@ -28,7 +28,7 @@ exchange is tested.
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | 1 | `HELLO` | board → editor | yes | yes | 2 | 0 | n/a | n/a | yes | yes | yes | yes | yes |
 | 2 | `DEPLOY` | editor → board | yes | yes | 2 | 0 | no, on purpose | yes | n/a | n/a | yes | yes | yes |
-| 3 | `DEPLOY_ACK` | board → editor | yes | yes | 2 | 1 | n/a | n/a | yes | yes | yes | yes | yes |
+| 3 | `DEPLOY_ACK` | board → editor | yes | yes | 2 | 2 | n/a | n/a | yes | yes | yes | yes | yes |
 | 4 | `DEPLOY_ERROR` | board → editor | yes | yes | 1 | 4 | n/a | n/a | yes | yes | yes | yes | yes |
 | 5 | `VALUE_STREAM` (reserved) | board → editor | yes | yes | 2 | 0 | n/a | n/a | **no** | **no** | yes | yes | yes |
 | 6 | `NODE_ERROR` | board → editor | yes | yes | 1 | 0 | n/a | n/a | yes | yes | yes | yes | yes |
@@ -46,32 +46,32 @@ exchange is tested.
 | 18 | `DEP_COMMIT` | editor → board | yes | yes | 1 | 4 | yes | yes | n/a | n/a | yes | yes | yes |
 | 19 | `RESTART` | editor → board | yes | yes | 2 | 0 | yes | yes | n/a | n/a | yes | yes | yes |
 | 20 | `DEP_ACK` | board → editor | yes | yes | 2 | 4 | n/a | n/a | yes | yes | yes | yes | yes |
-| 21 | `FLOW_PUT` | editor → board | yes | yes | 1 | 8 | yes | yes | n/a | n/a | yes | yes | yes |
+| 21 | `FLOW_PUT` | editor → board | yes | yes | 1 | 9 | yes | yes | n/a | n/a | yes | yes | yes |
 | 22 | `FLOW_COMMIT` | editor → board | yes | yes | 1 | 5 | yes | yes | n/a | n/a | yes | yes | yes |
-| 23 | `FLOW_ACK` | board → editor | yes | yes | 1 | 9 | n/a | n/a | yes | yes | yes | yes | yes |
+| 23 | `FLOW_ACK` | board → editor | yes | yes | 1 | 10 | n/a | n/a | yes | yes | yes | yes | yes |
 
 ## Where each message lives in the code
 
 - **`HELLO`** (1, board → editor): board sends it in `device-runtime/src/listener.py`; editor acts on it in `editor/src/app/main.ts`, `editor/src/protocol/transfer.ts`.
-- **`DEPLOY`** (2, editor → board): editor sends it nowhere, on purpose: kept for editors before 11.3.0; this editor always deploys in pieces (FLOW_PUT/FLOW_COMMIT), and the board still accepts DEPLOY; board handles it in `device-runtime/src/listener.py`.
+- **`DEPLOY`** (2, editor → board): editor sends it nowhere, on purpose: kept for editors before 11.3.0; this editor always deploys in pieces (FLOW_PUT/FLOW_COMMIT), and the board still accepts DEPLOY; board handles it by a board.listener row in `interfaces/protocol/states.json`.
 - **`DEPLOY_ACK`** (3, board → editor): board sends it in `device-runtime/src/listener.py`; editor acts on it in `editor/src/protocol/transfer.ts`.
 - **`DEPLOY_ERROR`** (4, board → editor): board sends it in `device-runtime/src/listener.py`; editor acts on it in `editor/src/protocol/transfer.ts`.
 - **`VALUE_STREAM`** (5, board → editor): board sends it **nothing found**; editor acts on it nowhere beyond logging it.
 - **`NODE_ERROR`** (6, board → editor): board sends it in `device-runtime/src/listener.py`; editor acts on it in `editor/src/app/main.ts`.
-- **`STATE_READ`** (7, both ways): editor sends it **nothing found**; board handles it in `device-runtime/src/listener.py`; board sends it **nothing found**; editor acts on it nowhere beyond logging it.
-- **`STATE_WRITE`** (8, editor → board): editor sends it **nothing found**; board handles it in `device-runtime/src/listener.py`.
-- **`TRIGGER`** (9, editor → board): editor sends it in `editor/src/app/main.ts`; board handles it in `device-runtime/src/listener.py`.
-- **`HELLO_REQUEST`** (10, editor → board): editor sends it in `editor/src/app/main.ts`; board handles it in `device-runtime/src/listener.py`.
+- **`STATE_READ`** (7, both ways): editor sends it **nothing found**; board handles it by a board.listener row in `interfaces/protocol/states.json`; board sends it **nothing found**; editor acts on it nowhere beyond logging it.
+- **`STATE_WRITE`** (8, editor → board): editor sends it **nothing found**; board handles it by a board.listener row in `interfaces/protocol/states.json`.
+- **`TRIGGER`** (9, editor → board): editor sends it in `editor/src/app/main.ts`; board handles it by a board.listener row in `interfaces/protocol/states.json`.
+- **`HELLO_REQUEST`** (10, editor → board): editor sends it in `editor/src/app/main.ts`; board handles it by a board.listener row in `interfaces/protocol/states.json`.
 - **`NODE_STATUS`** (11, board → editor): board sends it in `device-runtime/src/listener.py`; editor acts on it in `editor/src/app/main.ts`.
-- **`EXEC`** (12, editor → board): editor sends it in `editor/src/app/main.ts`; board handles it in `device-runtime/src/listener.py`.
-- **`STOP_TO_PROMPT`** (13, editor → board): editor sends it in `editor/src/app/main.ts`; board handles it in `device-runtime/src/listener.py`.
-- **`SET_BOARD_SETTINGS`** (14, editor → board): editor sends it in `editor/src/app/main.ts`; board handles it in `device-runtime/src/listener.py`.
+- **`EXEC`** (12, editor → board): editor sends it in `editor/src/app/main.ts`; board handles it by a board.listener row in `interfaces/protocol/states.json`.
+- **`STOP_TO_PROMPT`** (13, editor → board): editor sends it in `editor/src/app/main.ts`; board handles it by a board.listener row in `interfaces/protocol/states.json`.
+- **`SET_BOARD_SETTINGS`** (14, editor → board): editor sends it in `editor/src/app/main.ts`; board handles it by a board.listener row in `interfaces/protocol/states.json`.
 - **`BOARD_SETTINGS_RESULT`** (15, board → editor): board sends it in `device-runtime/src/listener.py`; editor acts on it in `editor/src/app/main.ts`.
-- **`DEP_PUT`** (16, editor → board): editor sends it in `editor/src/compiler/flow-dependencies.ts`; board handles it in `device-runtime/src/listener.py`.
+- **`DEP_PUT`** (16, editor → board): editor sends it in `editor/src/compiler/flow-dependencies.ts`; board handles it by a board.listener row in `interfaces/protocol/states.json`.
 - **`DEP_RESULT`** (17, board → editor): board sends it in `device-runtime/src/listener.py`; editor acts on it in `editor/src/protocol/transfer.ts`.
-- **`DEP_COMMIT`** (18, editor → board): editor sends it in `editor/src/compiler/flow-dependencies.ts`; board handles it in `device-runtime/src/listener.py`.
-- **`RESTART`** (19, editor → board): editor sends it in `editor/src/app/main.ts`; board handles it in `device-runtime/src/listener.py`.
+- **`DEP_COMMIT`** (18, editor → board): editor sends it in `editor/src/compiler/flow-dependencies.ts`; board handles it by a board.listener row in `interfaces/protocol/states.json`.
+- **`RESTART`** (19, editor → board): editor sends it in `editor/src/app/main.ts`; board handles it by a board.listener row in `interfaces/protocol/states.json`.
 - **`DEP_ACK`** (20, board → editor): board sends it in `device-runtime/src/listener.py`; editor acts on it in `editor/src/protocol/transfer.ts`.
-- **`FLOW_PUT`** (21, editor → board): editor sends it in `editor/src/protocol/transfer.ts`; board handles it in `device-runtime/src/listener.py`.
-- **`FLOW_COMMIT`** (22, editor → board): editor sends it in `editor/src/protocol/transfer.ts`; board handles it in `device-runtime/src/listener.py`.
+- **`FLOW_PUT`** (21, editor → board): editor sends it in `editor/src/protocol/transfer.ts`; board handles it by a board.listener row in `interfaces/protocol/states.json`.
+- **`FLOW_COMMIT`** (22, editor → board): editor sends it in `editor/src/protocol/transfer.ts`; board handles it by a board.listener row in `interfaces/protocol/states.json`.
 - **`FLOW_ACK`** (23, board → editor): board sends it in `device-runtime/src/listener.py`; editor acts on it in `editor/src/protocol/transfer.ts`.

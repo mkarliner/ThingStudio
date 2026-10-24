@@ -32,7 +32,7 @@ try:
     import board_fs
 except ImportError:
     board_fs = None
-import transfer
+import statemachine
 
 LIB_DIR = board_fs.under_root("lib") if board_fs is not None else "/lib"
 try:
@@ -47,7 +47,7 @@ INDEX_NAME = "_deps.json"
 # on sys.path, so it would never load.
 _RESERVED = (
     "errors", "cbor", "framing", "messages", "protocol", "runtime", "wifi_provision",
-    "board_settings", "board_fs", "net_transport", "listener", "deps", "main", "boot", "_flow", "transfer", "statemachine", "protocol_states",
+    "board_settings", "board_fs", "net_transport", "listener", "deps", "main", "boot", "_flow", "statemachine", "protocol_states",
     "device_settings",
 )
 
@@ -170,7 +170,7 @@ def _free_bytes():
         return None  # unknown (unix port): don't pre-check, rely on the write itself failing
 
 
-# One stream per (library, file) arriving in pieces (SPEC §7.2, transfer.py). A commit removes the
+# One stream per (library, file) arriving in pieces (SPEC §7.2, statemachine.Stream). A commit removes the
 # library's streams, whatever the outcome; a piece at offset 0 starts its stream over.
 _streams = {}
 
@@ -192,9 +192,9 @@ def put_chunk(dep_name, file_name, offset, total, data):
             _ensure_dir()
             free = _free_bytes()
             if free is not None and total + _SPACE_MARGIN > free:
-                raise transfer.Failure("NoSpace", "no space for %s: %s needs %d bytes, %d free" % (dep_name, file_name, total, free))
+                raise statemachine.Failure("NoSpace", "no space for %s: %s needs %d bytes, %d free" % (dep_name, file_name, total, free))
 
-        stream = _streams[key] = transfer.Stream(_path(file_name + ".tmp"), "library", before_start)
+        stream = _streams[key] = statemachine.Stream(_path(file_name + ".tmp"), "library", before_start)
     problem = stream.put(offset, total, data)
     if problem is not None:
         code, message = problem

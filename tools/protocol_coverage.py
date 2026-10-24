@@ -47,8 +47,8 @@ PATTERNS = {
     "editor_handle": r'\.type\s*===\s*"{name}"',
     # board: a message dict, e.g. {"type": "FLOW_ACK", ...}
     "board_send": r'"type":\s*"{name}"',
-    # board: listener.py's dispatch, e.g. msg_type == "FLOW_PUT" or msg_type in ("STATE_READ", ...)
-    "board_handle": r'msg_type\s*==\s*"{name}"|msg_type\s+in\s+\([^)]*"{name}"',
+    # board: handled when board.listener in states.json has a row for it (the board runs that table, and refuses
+    # to boot if it lacks an action the table names) -- see board_handles() below, not a pattern.
 }
 
 
@@ -83,6 +83,15 @@ def code_only(path):
 def files_matching(paths, pattern):
     rx = re.compile(pattern)
     return [rel(p) for p in paths if rx.search(code_only(p))]
+
+
+def board_handles():
+    """Messages board.listener has a legal row for (interfaces/protocol/states.json)."""
+    path = os.path.join(PROTO, "states.json")
+    if not os.path.exists(path):
+        return set()
+    listener = json.load(open(path, encoding="utf-8"))["machines"].get("board.listener", {})
+    return {row["on"] for row in listener.get("transitions", [])}
 
 
 def id_table(path, start_marker):
@@ -140,6 +149,7 @@ def build():
     test_files = {k: list(source_files(d, (".ts", ".py"))) for k, d in TEST_DIRS.items()}
     seq_text = read(SEQUENCES) if os.path.exists(SEQUENCES) else ""
     in_diagrams, unknown_in_diagrams = diagram_names(seq_text, set(names))
+    handled_by_board = board_handles()
 
     ts_ids = id_table(os.path.join(EDITOR_PROTOCOL_DIR, "messages.ts"), "export const MessageType")
     py_ids = id_table(os.path.join(DEVICE_SRC, "messages.py"), "MessageType = {")
@@ -153,9 +163,9 @@ def build():
         reserved = m["summary"].lower().startswith("reserved")
         to_board = direction in ("editor->device", "both")
         to_editor = direction in ("device->editor", "both")
-        pat = {k: p.format(name=name) for k, p in PATTERNS.items()}
+        pat = {k: p.format(name=name) for k, p in PATTERNS.items()}  # editor_send, editor_handle, board_send
         e_send = files_matching(editor_files, pat["editor_send"]) if to_board else []
-        b_handle = files_matching(board_files, pat["board_handle"]) if to_board else []
+        b_handle = (["interfaces/protocol/states.json"] if name in handled_by_board else []) if to_board else []
         b_send = files_matching(board_files, pat["board_send"]) if to_editor else []
         e_handle = files_matching(editor_files, pat["editor_handle"]) if to_editor else []
         quoted = re.compile(r'"%s"' % name)
@@ -193,7 +203,7 @@ def build():
 
         if to_board:
             parts.append("editor sends it %s" % found_in(e_send, "editor_send"))
-            parts.append("board handles it %s" % found_in(b_handle, "board_handle"))
+            parts.append("board handles it %s" % ("by a board.listener row in `interfaces/protocol/states.json`" if b_handle else "**nowhere: no board.listener row**"))
         if to_editor:
             parts.append("board sends it %s" % found_in(b_send, "board_send"))
             parts.append("editor acts on it %s" % found_in(e_handle, "editor_handle", "nowhere beyond logging it"))
@@ -213,7 +223,7 @@ def build():
             if to_board and not e_send and (name, "editor_send") not in ON_PURPOSE:
                 problems.append("`%s` goes editor → board, but nothing in the editor sends it" % name)
             if to_board and not b_handle:
-                problems.append("`%s` goes editor → board, but the board's listener does not dispatch it" % name)
+                problems.append("`%s` goes editor → board, but board.listener in states.json has no row for it" % name)
             if to_editor and not b_send:
                 problems.append("`%s` goes board → editor, but nothing on the board sends it" % name)
     for name in sorted(unknown_in_diagrams):

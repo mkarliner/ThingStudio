@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # device-runtime/test/test_transfer.py
 #
-# transfer.py running the `board.stream` machine from interfaces/protocol/states.json (SPEC §7.2), and
+# statemachine.py running the `board.stream` machine from interfaces/protocol/states.json (SPEC §7.2), and
 # statemachine.py itself, under the real MicroPython unix port: each legal move, each illegal one (which must be
 # announced, exactly once), and a table that names something this side doesn't implement. The exchange vectors
 # (test_exchanges.py) check the same rules through the listener.
@@ -13,7 +13,6 @@ import minitest
 minitest.add_src_to_path()
 
 import statemachine  # noqa: E402
-import transfer  # noqa: E402
 
 _PATH = "/tmp/ts_transfer_test.tmp"
 _alerts = []
@@ -26,7 +25,7 @@ def _fresh(before_start=None):
     except OSError:
         pass
     del _alerts[:]
-    return transfer.Stream(_PATH, "flow", before_start)
+    return statemachine.Stream(_PATH, "flow", before_start)
 
 
 def _file():
@@ -78,7 +77,7 @@ def test_offset_0_always_starts_over():
 
 
 def test_write_failure_moves_to_failed_and_repeats_until_offset_0():
-    s = transfer.Stream("/nonexistent-dir-for-ts-test/x.tmp", "flow")
+    s = statemachine.Stream("/nonexistent-dir-for-ts-test/x.tmp", "flow")
     del _alerts[:]
     code, _ = s.put(0, 6, b"abc")
     assert code == "WriteFailed" and s.state == "failed"
@@ -88,7 +87,7 @@ def test_write_failure_moves_to_failed_and_repeats_until_offset_0():
 
 def test_before_start_failure_is_recorded():
     def no_room(total):
-        raise transfer.Failure("NoSpace", "no space: needs %d" % (total,))
+        raise statemachine.Failure("NoSpace", "no space: needs %d" % (total,))
 
     s = _fresh(no_room)
     assert s.put(0, 6, b"abc") == ("NoSpace", "no space: needs 6")
@@ -104,9 +103,9 @@ def test_abandon_removes_the_file():
 
 def test_stored_offset_reports_progress_only_while_receiving():
     s = _fresh()
-    assert s.stored_offset() == 0
+    assert s.stored == 0
     s.put(0, 6, b"abc")
-    assert s.stored_offset() == 3
+    assert s.stored == 3
 
 
 # --- illegal moves: announced once, answered as the table says ---
@@ -158,12 +157,12 @@ def test_commit_with_nothing_under_way_is_illegal():
     _one_alert("commit")
 
 
-def test_machine_refuses_a_table_it_cant_run():
+def test_a_table_this_side_cant_run_is_refused():
     try:
-        statemachine.Machine("board.stream", {}, {})
-        assert False, "a machine missing guards and actions must not be built"
+        statemachine.check("board.stream", ("startsOver",), ())
+        assert False, "a table naming unimplemented guards and actions must be refused"
     except ValueError as e:
-        assert "startsOver" in str(e) and "writeAt" in str(e), e
+        assert "continues" in str(e), e
 
 
 minitest.run(
@@ -182,6 +181,6 @@ minitest.run(
         test_nonzero_offset_while_idle_is_illegal,
         test_incomplete_commit_is_illegal_and_ends_the_stream,
         test_commit_with_nothing_under_way_is_illegal,
-        test_machine_refuses_a_table_it_cant_run,
+        test_a_table_this_side_cant_run_is_refused,
     ]
 )

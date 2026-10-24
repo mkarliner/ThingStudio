@@ -181,12 +181,13 @@ stateDiagram-v2
     [*] --> idle
     idle --> sending : start / sendPiece
     sending --> committing : pieceOk / sendCommit
-    sending --> idle : garbled / fail<br/>timeout / fail<br/>pieceRefused / fail<br/>restart / finishRestarted
-    committing --> idle : garbled / fail<br/>restart / finishRestarted<br/>commitOk / finishOk<br/>commitRefused / finishRefused<br/>timeout / finishNoAnswer
+    sending --> idle : garbled / fail<br/>timeout / fail<br/>pieceRefused / fail<br/>restart / finishRestarted<br/>lost / abort
+    committing --> idle : garbled / fail<br/>restart / finishRestarted<br/>commitOk / finishOk<br/>commitRefused / finishRefused<br/>timeout / finishNoAnswer<br/>lost / abort
     note right of idle
         stays on:
         staleAck / note
         earlyMemoryError / note
+        lost
         garbled / note
     end note
     note right of sending
@@ -201,6 +202,7 @@ stateDiagram-v2
         stays on:
         garbled (canRetry) / resend
         staleAck / note
+        earlyMemoryError / note
     end note
 ```
 
@@ -219,8 +221,10 @@ stateDiagram-v2
 | 11 | committing | `commitRefused` |  | finishRefused | idle |  |
 | 12 | committing | `timeout` |  | finishNoAnswer | idle |  |
 | 13 | any | `staleAck` |  | note | same |  |
-| 14 | idle, sending | `earlyMemoryError` |  | note | same |  |
-| 15 | idle | `garbled` |  | note | same |  |
+| 14 | any | `earlyMemoryError` |  | note | same |  |
+| 15 | sending, committing | `lost` |  | abort | idle |  |
+| 16 | idle | `lost` |  |  | same |  |
+| 17 | idle | `garbled` |  | note | same |  |
 
 **Illegal** (no row matches): alert, then
 - any event: state same.
@@ -235,10 +239,11 @@ stateDiagram-v2
 - `strayAck`: FLOW_ACK/DEP_ACK for no piece of this transfer or the last one
 - `commitOk`: DEPLOY_ACK, or DEP_RESULT ok for this library, while committing
 - `commitRefused`: DEPLOY_ERROR, or DEP_RESULT not ok for this library, while committing
-- `earlyMemoryError`: DEPLOY_ERROR MemoryError before any commit was sent: the board couldn't read a line (SPEC §7.1)
+- `earlyMemoryError`: DEPLOY_ERROR MemoryError straight after a Garbled answer: the second half of the board's answer to a line it couldn't read (SPEC §7.1), not a commit's answer
 - `strayResult`: DEPLOY_ACK, DEP_RESULT, or another DEPLOY_ERROR, with no commit waiting for it
 - `restart`: a HELLO the editor didn't ask for (no HELLO_REQUEST pending): the board restarted
 - `timeout`: the state's wait ran out
+- `lost`: the connection to the board closed
 
 **Guards**
 
@@ -256,4 +261,5 @@ stateDiagram-v2
 - `finishOk`: end the transfer: deployed, or installed
 - `finishRefused`: end the transfer: refused, with the board's code
 - `finishNoAnswer`: end the transfer: no answer to the commit
+- `abort`: end the transfer: the connection closed (the caller reports the disconnect)
 - `note`: log it, change nothing

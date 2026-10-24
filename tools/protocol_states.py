@@ -218,41 +218,47 @@ def _machine_data(m):
     return data
 
 
-def _py(value):
-    """A Python literal, with lists as tuples: on MicroPython a tuple is smaller than a list or a dict."""
-    if isinstance(value, dict):
-        return "{" + ", ".join("%r: %s" % (k, _py(v)) for k, v in sorted(value.items())) + "}"
-    if isinstance(value, list):
-        return "(" + "".join(_py(v) + ", " for v in value) + ")"
-    return repr(value)
+def _reply_str(reply):
+    """{"ack": {"ok": true}} -> "ack"; {"ack": {"ok": false, "code": "BadPiece"}} -> "ack!BadPiece"; None stays None."""
+    if not reply:
+        return None
+    (kind, fields), = reply.items()
+    return kind if fields.get("ok") else "%s!%s" % (kind, fields.get("code"))
 
 
 def render_py(table):
-    """Each machine as (initial, transitions, illegal, instances). A transition is a tuple:
-    (from_states, event, guard, action, to, replies, reply, on_error) -- None where absent."""
+    """Each board machine as one flat tuple of strings and None: on MicroPython that is one object instead of
+    dozens, and in a frozen firmware image it is a constant in flash."""
     lines = [
         "# SPDX-License-Identifier: Apache-2.0",
         "# " + GENERATED,
-        "# The board's state machines (interfaces/protocol/STATES.md), run by statemachine.py. A machine is",
-        "# (initial, transitions, illegal, instances); a transition is",
-        "# (from_states, event, guard, action, to, replies, reply, on_error), None where absent.",
+        "# The board's state machines (interfaces/protocol/STATES.md), run by statemachine.py. Each is one flat tuple",
+        "# of strings and None -- one object in RAM, and a constant in flash when frozen into a firmware image:",
+        "#   (name, initial state, then 8 fields per row, then 4 fields per illegal rule after a None, None marker)",
+        "# A row: from (a state, space-separated states, or *), event, guard, action, to, replies (space-separated),",
+        "# reply (kind, or kind!code when not ok), on_error (\"to kind!code\"). An illegal rule: event or *, action,",
+        "# to, reply.",
         "",
-        "MACHINES = {",
+        "MACHINES = (",
     ]
     for name, m in table["machines"].items():
         if m["side"] != "board":
             continue
-        lines.append("    %r: (" % name)
-        lines.append("        %r," % m["initial"])
-        lines.append("        (")
-        for t in m["transitions"]:
-            row = (from_states(m, t), t["on"], t.get("if"), t.get("do"), t["to"], t.get("replies"), t.get("reply"), t.get("onError"))
-            lines.append("            %s," % _py(list(row)))
-        lines.append("        ),")
-        lines.append("        %s," % _py(m["illegal"]))
-        lines.append("        %s," % _py(m.get("instances")))
+        lines.append("    (")
+        lines.append("        %r, %r," % (name, m["initial"]))
+        for tr in m["transitions"]:
+            frm = "*" if tr["from"] == "*" else " ".join(from_states(m, tr))
+            on_error = tr.get("onError")
+            row = (frm, tr["on"], tr.get("if"), tr.get("do"), tr["to"],
+                   " ".join(tr["replies"]) if "replies" in tr else None,
+                   _reply_str(tr.get("reply")),
+                   "%s %s" % (on_error["to"], _reply_str(on_error.get("reply"))) if on_error else None)
+            lines.append("        " + " ".join("%r," % v for v in row))
+        lines.append("        None, None,")
+        for ev, rule in m["illegal"].items():
+            lines.append("        " + " ".join("%r," % v for v in (ev, rule.get("do"), rule.get("to", "same"), _reply_str(rule.get("reply")))))
         lines.append("    ),")
-    lines.append("}")
+    lines.append(")")
     return "\n".join(lines) + "\n"
 
 
