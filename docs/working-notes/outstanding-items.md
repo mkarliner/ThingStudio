@@ -227,7 +227,7 @@ ThingStudioMarketing repo, not here.
   interface: Mike's call.
 - **Protocol: the backend leg isn't specified -- new item, 2026-10-24** (audit finding 8): the WebSocket JSON control messages and the
   `TSAUTH1` handshake live only in code comments; `interfaces/protocol/SEQUENCES.md` §1-2 draw them as they are.
-- **Device-runtime exchange vectors aren't in CI -- new item, 2026-10-24.** same gap as the rest of the device suite
+- **Device-runtime exchange vectors aren't in CI -- new item, 2026-10-24.** Same gap as the rest of the device suite
   (`outstanding-items/enforce-interface-conformance-in-ci.md`). `device-runtime/test/test_exchanges.py` needs
   the MicroPython unix port and `mpy-cross`.
 
