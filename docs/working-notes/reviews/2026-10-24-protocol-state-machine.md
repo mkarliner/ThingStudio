@@ -78,7 +78,10 @@ Run in a scratch workspace: a fresh `npm ci`, plus MicroPython's unix port and `
   problems.
 - **Audit script:** `device-runtime/test/audit_protocol_exchanges.py` prints "fixed" for every board-side finding.
 
-None of this has run on hardware yet; `outstanding-items.md` lists the CYD pass.
+**On hardware, 2026-10-24:** the 13.1.0 image was flashed to the CYD, HELLO reported 13.1.0 with 34 frozen
+libraries, and the dummy GUI flow deployed twice in one session over the running flow (both `DEPLOY_ACK`, no
+`PROTOCOL_ILLEGAL`, no errors). A library transfer and an induced resend are still owed;
+`outstanding-items.md` has the detail.
 
 ## Re-running
 
