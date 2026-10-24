@@ -4224,6 +4224,8 @@ checked when the flow is compiled, and the error says what is allowed. See <a hr
 <li>Outputs: none</li>
 <li>Properties (name, type, default):<ul>
 <li><code>name</code>, string, default <code>""</code></li>
+<li><code>style</code>, string, default <code>"solid"</code></li>
+<li><code>segments</code>, number, default <code>10</code></li>
 <li><code>lo</code>, number, default <code>0</code> — the value at which the bar is empty</li>
 <li><code>hi</code>, number, default <code>100</code> — the value at which the bar is full</li>
 <li><code>staleAfter</code>, number, default <code>0</code> — seconds without a new value before it dims; 0 = never</li>
@@ -4238,6 +4240,7 @@ checked when the flow is compiled, and the error says what is allowed. See <a hr
 <li>Properties (name, type, default):<ul>
 <li><code>name</code>, string, default <code>""</code></li>
 <li><code>mode</code>, string, default <code>"momentary"</code> — momentary, toggle or navigate</li>
+<li><code>style</code>, string, default <code>"box"</code></li>
 <li><code>valueType</code>, string, default <code>"bool"</code> — bool, string or number: the type of what it sends</li>
 <li><code>fireOn</code>, string, default <code>"release"</code> — release (default: the finger lifts inside the button) or press</li>
 <li><code>text</code>, string, default <code>""</code> — what is drawn on the button; empty uses <code>name</code></li>
@@ -4272,6 +4275,9 @@ checked when the flow is compiled, and the error says what is allowed. See <a hr
 <li>Outputs: none</li>
 <li>Properties (name, type, default):<ul>
 <li><code>name</code>, string, default <code>""</code></li>
+<li><code>style</code>, string, default <code>"light"</code></li>
+<li><code>onText</code>, string, default <code>"On"</code></li>
+<li><code>offText</code>, string, default <code>"Off"</code></li>
 <li><code>staleAfter</code>, number, default <code>0</code> — seconds without a new value before it goes grey; 0 = never</li>
 </ul>
 </li>
@@ -4307,6 +4313,7 @@ checked when the flow is compiled, and the error says what is allowed. See <a hr
 <li>Outputs: none</li>
 <li>Properties (name, type, default):<ul>
 <li><code>name</code>, string, default <code>""</code></li>
+<li><code>caption</code>, string, default <code>""</code></li>
 <li><code>units</code>, string, default <code>""</code> — text shown after the number</li>
 <li><code>decimals</code>, number, default <code>1</code></li>
 <li><code>lo</code>, number, default <code>0</code> — lowest value it will show; with hi, sizes the space the number gets</li>

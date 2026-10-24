@@ -3163,11 +3163,14 @@ property panel: see <a href="#laying-out-pages">Laying out pages</a>.</p>
   takes its width, height and frame format from that display, so set them once on the display. To use touch, pick a
   <a href="../touch-panel/">touch panel</a> in its properties.</li>
 <li><strong>gui readout</strong> — shows <code>msg.payload</code> as a number with units. Set the lowest and highest value it will
-  show, and how many decimals. Its space is sized for that range.</li>
+  show, and how many decimals. Its space is sized for that range. An optional <strong>caption</strong> puts a small muted
+  line above the number ("Temperature"), which is the card-friendly way to label it.</li>
 <li><strong>gui label</strong> — shows <code>msg.payload</code> as text.</li>
-<li><strong>gui bar</strong> — a bar that fills between <em>empty at</em> and <em>full at</em>.</li>
+<li><strong>gui bar</strong> — a bar that fills between <em>empty at</em> and <em>full at</em>. Its <strong>style</strong> is <em>solid</em> (the outline) or
+  <em>segments</em>: a row of cells, lit in the accent colour and unlit in the track, with a cell count to set.</li>
 <li><strong>gui trend</strong> — a moving histogram: a row of bars, oldest on the left, newest on the right. See <a href="#trend">Trend</a>.</li>
-<li><strong>gui light</strong> — on when <code>msg.payload</code> is true, off when false.</li>
+<li><strong>gui light</strong> — on when <code>msg.payload</code> is true, off when false. Its <strong>style</strong> is <em>light</em> (the circle) or
+  <em>chip</em>: a filled pill showing a short word, with the on and off text both editable ("OK"/"Off").</li>
 <li><strong>gui button</strong> — a touch button. It has an input, which sets what it shows, and an output, which sends when it is
   tapped. See <a href="#buttons">Buttons</a>.</li>
 <li><strong>gui navigator</strong> — changes the page from the flow. Send <code>next</code>, <code>prev</code>, <code>back</code>, <code>home</code> or a page name. Sends
@@ -3202,6 +3205,8 @@ draws as many bars as fit, newest at the right edge.</p>
 <li><strong>toggle</strong> — sends the opposite of its state. It shows its <em>on</em> and <em>off</em> text.</li>
 <li><strong>navigate</strong> — changes page: <code>next</code>, <code>prev</code>, <code>back</code>, <code>home</code> or a page name. It needs no wires.</li>
 </ul>
+<p>Its <strong>style</strong> draws it as <em>box</em> (the outline, unchanged), <em>filled</em> (a solid accent button for the main action), or
+<em>switch</em> (a toggle drawn as a track and knob — it needs the toggle mode).</p>
 <p>A button sends when your finger lifts inside it. Lift outside and nothing is sent. Set <strong>send on</strong> to <em>press</em>
 to send as soon as it is touched. It is drawn inverted while held.</p>
 <p>Leave the value fields blank and a button sends <code>true</code> and <code>false</code>; for text, <code>ON</code> and <code>OFF</code>; for a number, <code>1</code> and
@@ -3306,7 +3311,7 @@ edit by hand.</p>
 <p>Tick <strong>fill</strong> on a row or column to give it the space left on the page (it sets <code>grow: 1</code>). Anything after a
 filling container keeps its natural height, so a plain row at the end of a page stays at the bottom: that is how
 a footer is made, and the page dots are just a widget you put in it. There is no separate footer setting, and a
-filling card stops above the row below it.</p>
+filling card stops above the row below it. The current page's dot is drawn as a pill, so it reads at a glance.</p>
 <p>Pages live in the flow file, under <code>"screens"</code>, keyed by the gui screen node's id. A page is a tree of
 <code>row</code> and <code>column</code> containers holding widgets (<code>"kind": "widget", "node": "&lt;id&gt;"</code>), fixed <code>text</code>,
 <code>pagedots</code> and <code>spacer</code>s.</p>

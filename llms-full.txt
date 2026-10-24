@@ -3236,11 +3236,14 @@ property panel: see [Laying out pages](#laying-out-pages).
   takes its width, height and frame format from that display, so set them once on the display. To use touch, pick a
   [touch panel](touch-panel.md) in its properties.
 - **gui readout** — shows `msg.payload` as a number with units. Set the lowest and highest value it will
-  show, and how many decimals. Its space is sized for that range.
+  show, and how many decimals. Its space is sized for that range. An optional **caption** puts a small muted
+  line above the number ("Temperature"), which is the card-friendly way to label it.
 - **gui label** — shows `msg.payload` as text.
-- **gui bar** — a bar that fills between *empty at* and *full at*.
+- **gui bar** — a bar that fills between *empty at* and *full at*. Its **style** is *solid* (the outline) or
+  *segments*: a row of cells, lit in the accent colour and unlit in the track, with a cell count to set.
 - **gui trend** — a moving histogram: a row of bars, oldest on the left, newest on the right. See [Trend](#trend).
-- **gui light** — on when `msg.payload` is true, off when false.
+- **gui light** — on when `msg.payload` is true, off when false. Its **style** is *light* (the circle) or
+  *chip*: a filled pill showing a short word, with the on and off text both editable ("OK"/"Off").
 - **gui button** — a touch button. It has an input, which sets what it shows, and an output, which sends when it is
   tapped. See [Buttons](#buttons).
 - **gui navigator** — changes the page from the flow. Send `next`, `prev`, `back`, `home` or a page name. Sends
@@ -3279,6 +3282,9 @@ A button's **mode** says what a tap does.
 - **momentary** — sends its value: `{topic: <the button's topic>, payload: <its sends value>}`. The **board label** is only the text drawn on the button (blank: the flow label); **sends** is what leaves the output.
 - **toggle** — sends the opposite of its state. It shows its *on* and *off* text.
 - **navigate** — changes page: `next`, `prev`, `back`, `home` or a page name. It needs no wires.
+
+Its **style** draws it as *box* (the outline, unchanged), *filled* (a solid accent button for the main action), or
+*switch* (a toggle drawn as a track and knob — it needs the toggle mode).
 
 A button sends when your finger lifts inside it. Lift outside and nothing is sent. Set **send on** to *press*
 to send as soon as it is touched. It is drawn inverted while held.
@@ -3413,7 +3419,7 @@ edit by hand.
 Tick **fill** on a row or column to give it the space left on the page (it sets `grow: 1`). Anything after a
 filling container keeps its natural height, so a plain row at the end of a page stays at the bottom: that is how
 a footer is made, and the page dots are just a widget you put in it. There is no separate footer setting, and a
-filling card stops above the row below it.
+filling card stops above the row below it. The current page's dot is drawn as a pill, so it reads at a glance.
 
 Pages live in the flow file, under `"screens"`, keyed by the gui screen node's id. A page is a tree of
 `row` and `column` containers holding widgets (`"kind": "widget", "node": "<id>"`), fixed `text`,
@@ -4503,6 +4509,8 @@ Type `thingstudio/gui_bar`, kind sink, palette group GUI.
 - Outputs: none
 - Properties (name, type, default):
     - `name`, string, default `""`
+    - `style`, string, default `"solid"`
+    - `segments`, number, default `10`
     - `lo`, number, default `0` — the value at which the bar is empty
     - `hi`, number, default `100` — the value at which the bar is full
     - `staleAfter`, number, default `0` — seconds without a new value before it dims; 0 = never
@@ -4516,6 +4524,7 @@ Type `thingstudio/gui_button`, kind sink, palette group GUI.
 - Properties (name, type, default):
     - `name`, string, default `""`
     - `mode`, string, default `"momentary"` — momentary, toggle or navigate
+    - `style`, string, default `"box"`
     - `valueType`, string, default `"bool"` — bool, string or number: the type of what it sends
     - `fireOn`, string, default `"release"` — release (default: the finger lifts inside the button) or press
     - `text`, string, default `""` — what is drawn on the button; empty uses `name`
@@ -4548,6 +4557,9 @@ Type `thingstudio/gui_led`, kind sink, palette group GUI.
 - Outputs: none
 - Properties (name, type, default):
     - `name`, string, default `""`
+    - `style`, string, default `"light"`
+    - `onText`, string, default `"On"`
+    - `offText`, string, default `"Off"`
     - `staleAfter`, number, default `0` — seconds without a new value before it goes grey; 0 = never
 
 ### modal
@@ -4580,6 +4592,7 @@ Type `thingstudio/gui_readout`, kind sink, palette group GUI.
 - Outputs: none
 - Properties (name, type, default):
     - `name`, string, default `""`
+    - `caption`, string, default `""`
     - `units`, string, default `""` — text shown after the number
     - `decimals`, number, default `1`
     - `lo`, number, default `0` — lowest value it will show; with hi, sizes the space the number gets
