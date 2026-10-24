@@ -118,3 +118,13 @@ four-colour tuple, and roles folded per format when no theme is given. A visible
 **Amended 2026-10-24 (Mike): the theme is on the screen.** The screen's own `theme` starting point and role
 colours are the normal path; the `gui-theme` config remains for older flows and for sharing a theme between
 screens. The device contract is unchanged (same resolved `theme={...}` dict). See `decisions/gui-layout.md`.
+
+**Widget styles built 2026-10-24 (runtime 14.0.0).** From the list above, with the defaults unchanged:
+`gui_led` `style: light | chip` (a filled pill with `onText`/`offText`, default "On"/"Off"); `gui_bar`
+`style: solid | segments` (cells lit in the accent, unlit in the track, with a cell count); `gui_button`
+`style: box | filled | switch` (a switch needs a toggle, and refuses otherwise); `gui_readout` `caption` (a
+muted line above the value); and the page dots draw the current page as a pill. Codegen only adds the new
+arguments when a style is chosen, so an unstyled flow generates exactly the old calls -- but the version is
+major because a styled flow needs the new GUI libraries. The CYD theme demo uses chip, segments and captions.
+Not done: threshold colours on the segmented bar (step 5), the header bar, the alarm banner, and the editor
+preview.

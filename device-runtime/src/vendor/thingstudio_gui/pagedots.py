@@ -21,6 +21,14 @@ def make(diameter=6, gap=4):
         cy = y + h // 2
         for i in range(count):
             cx = left + i * (diameter + gap) + r
-            fb.ellipse(cx, cy, r - 1 if r > 1 else r, r - 1 if r > 1 else r, surface.fg, i == current)
+            rr = r - 1 if r > 1 else r
+            if i == current:
+                # The active page is a pill: the full-radius circle plus a bar through it, staying inside the
+                # gap between slots (2026-10-24).
+                extra = max(1, diameter // 2)
+                fb.ellipse(cx, cy, rr, rr, surface.fg, True)
+                fb.fill_rect(cx - extra, cy - rr, 2 * extra + 1, 2 * rr + 1, surface.fg)
+            else:
+                fb.ellipse(cx, cy, rr, rr, surface.fg)
 
     return draw

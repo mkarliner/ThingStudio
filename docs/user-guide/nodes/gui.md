@@ -10,11 +10,14 @@ property panel: see [Laying out pages](#laying-out-pages).
   takes its width, height and frame format from that display, so set them once on the display. To use touch, pick a
   [touch panel](touch-panel.md) in its properties.
 - **gui readout** — shows `msg.payload` as a number with units. Set the lowest and highest value it will
-  show, and how many decimals. Its space is sized for that range.
+  show, and how many decimals. Its space is sized for that range. An optional **caption** puts a small muted
+  line above the number ("Temperature"), which is the card-friendly way to label it.
 - **gui label** — shows `msg.payload` as text.
-- **gui bar** — a bar that fills between *empty at* and *full at*.
+- **gui bar** — a bar that fills between *empty at* and *full at*. Its **style** is *solid* (the outline) or
+  *segments*: a row of cells, lit in the accent colour and unlit in the track, with a cell count to set.
 - **gui trend** — a moving histogram: a row of bars, oldest on the left, newest on the right. See [Trend](#trend).
-- **gui light** — on when `msg.payload` is true, off when false.
+- **gui light** — on when `msg.payload` is true, off when false. Its **style** is *light* (the circle) or
+  *chip*: a filled pill showing a short word, with the on and off text both editable ("OK"/"Off").
 - **gui button** — a touch button. It has an input, which sets what it shows, and an output, which sends when it is
   tapped. See [Buttons](#buttons).
 - **gui navigator** — changes the page from the flow. Send `next`, `prev`, `back`, `home` or a page name. Sends
@@ -53,6 +56,9 @@ A button's **mode** says what a tap does.
 - **momentary** — sends its value: `{topic: <the button's topic>, payload: <its sends value>}`. The **board label** is only the text drawn on the button (blank: the flow label); **sends** is what leaves the output.
 - **toggle** — sends the opposite of its state. It shows its *on* and *off* text.
 - **navigate** — changes page: `next`, `prev`, `back`, `home` or a page name. It needs no wires.
+
+Its **style** draws it as *box* (the outline, unchanged), *filled* (a solid accent button for the main action), or
+*switch* (a toggle drawn as a track and knob — it needs the toggle mode).
 
 A button sends when your finger lifts inside it. Lift outside and nothing is sent. Set **send on** to *press*
 to send as soon as it is touched. It is drawn inverted while held.
@@ -187,7 +193,7 @@ edit by hand.
 Tick **fill** on a row or column to give it the space left on the page (it sets `grow: 1`). Anything after a
 filling container keeps its natural height, so a plain row at the end of a page stays at the bottom: that is how
 a footer is made, and the page dots are just a widget you put in it. There is no separate footer setting, and a
-filling card stops above the row below it.
+filling card stops above the row below it. The current page's dot is drawn as a pill, so it reads at a glance.
 
 Pages live in the flow file, under `"screens"`, keyed by the gui screen node's id. A page is a tree of
 `row` and `column` containers holding widgets (`"kind": "widget", "node": "<id>"`), fixed `text`,

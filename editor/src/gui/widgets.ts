@@ -30,6 +30,9 @@ export interface ReadoutConfig {
   readonly lo?: number;
   readonly hi?: number;
   readonly gap?: number;
+  /** Static text above the number, in the muted colour; needs a caption font. */
+  readonly caption?: string;
+  readonly caption_font?: string;
 }
 
 export interface ButtonConfig {
@@ -54,6 +57,11 @@ export interface TrendConfig {
 
 export interface LedConfig {
   readonly diameter?: number;
+  /** "light" (the circle, default) or "chip" (a filled pill with text). */
+  readonly style?: "light" | "chip";
+  /** Chip: the widest label it can show, measured in `font`. */
+  readonly text?: string;
+  readonly font?: string;
 }
 
 export interface PageDotsConfig {
@@ -107,6 +115,12 @@ export function readoutNatural(cfg: ReadoutConfig): Size {
     width += (cfg.gap ?? 4) + textWidth(cfg.units_font, cfg.units);
     height = Math.max(height, Math.max(0, f.baseline - u.baseline) + u.height);
   }
+  if (cfg.caption) {
+    if (!cfg.caption_font) throw new Error("a readout caption needs a caption font");
+    const c = getFont(cfg.caption_font);
+    width = Math.max(width, textWidth(cfg.caption_font, cfg.caption));
+    height += c.height + 2;
+  }
   return { width, height };
 }
 
@@ -126,6 +140,10 @@ export function trendNatural(cfg: TrendConfig = {}): Size {
 
 export function ledNatural(cfg: LedConfig = {}): Size {
   const d = cfg.diameter ?? 12;
+  if (cfg.style === "chip") {
+    if (!cfg.font) throw new Error("a chip needs a font");
+    return { width: Math.max(d, textWidth(cfg.font, cfg.text ?? "") + 8), height: Math.max(d, getFont(cfg.font).height + 6) };
+  }
   return { width: d, height: d };
 }
 

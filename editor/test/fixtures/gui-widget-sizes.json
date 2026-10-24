@@ -145,6 +145,37 @@
     112,
     33
    ]
+  },
+  {
+   "widget": "led",
+   "cfg": {
+    "style": "chip",
+    "text": "Offline",
+    "font": "font_body12",
+    "diameter": 14
+   },
+   "natural": [
+    44,
+    17
+   ]
+  },
+  {
+   "widget": "readout",
+   "cfg": {
+    "font": "font_digits32",
+    "units_font": "font_body16",
+    "units": "°C",
+    "gap": 4,
+    "decimals": 1,
+    "lo": 0,
+    "hi": 100,
+    "caption": "Temperature",
+    "caption_font": "font_body16"
+   },
+   "natural": [
+    148,
+    53
+   ]
   }
  ]
 }

@@ -12,7 +12,7 @@
 // overflow, a widget placed twice, an unknown node, a font missing a character -- is collected with its
 // screen and page named, never thrown one at a time.
 
-import { getFont, missingChars } from "./font-metrics.js";
+import { getFont, missingChars, textWidth } from "./font-metrics.js";
 import { layoutPage, type Align, type Container, type Justify, type LayoutNode, type Rect } from "./layout.js";
 import { barNatural, buttonNatural, labelNatural, ledNatural, pageDotsNatural, readoutNatural, trendNatural } from "./widgets.js";
 import type { GraphNode } from "../compiler/graph.js";
@@ -290,6 +290,8 @@ export function compileScreens(
           case "readout": {
             const font = el.font ?? "font_digits32";
             const units = typeof p.units === "string" ? p.units : "";
+            const caption = typeof p.caption === "string" ? p.caption.trim() : "";
+            const captionFont = caption !== "" ? "font_body16" : undefined;
             const unitsFont = units ? (el.unitsFont ?? "font_body16") : undefined;
             const decimals = Math.max(0, Math.round(num(p.decimals, 1)));
             const lo = num(p.lo, 0);
@@ -298,10 +300,14 @@ export function compileScreens(
             const sample = `${lo.toFixed(decimals)}${hi.toFixed(decimals)}--`;
             if (!fontOk(font, sample, `widget ${label} ${where}`)) return null;
             if (unitsFont && !fontOk(unitsFont, units, `widget ${label}'s units ${where}`)) return null;
-            natural = readoutNatural({ font, units_font: unitsFont, units, decimals, lo, hi });
-            draw = `tsgui_readout.make(${font}, ${unitsFont ?? "None"}, ${pyStr(units)}, ${decimals}, ${pyNum(lo)}, ${pyNum(hi)})`;
+            if (captionFont && !fontOk(captionFont, caption, `widget ${label}'s caption ${where}`)) return null;
+            natural = readoutNatural({ font, units_font: unitsFont, units, decimals, lo, hi, caption, caption_font: captionFont });
+            draw =
+              `tsgui_readout.make(${font}, ${unitsFont ?? "None"}, ${pyStr(units)}, ${decimals}, ${pyNum(lo)}, ${pyNum(hi)}` +
+              (captionFont ? `, 4, ${pyStr(caption)}, ${captionFont})` : ")");
             imports.add(font);
             if (unitsFont) imports.add(unitsFont);
+            if (captionFont) imports.add(captionFont);
             break;
           }
           case "bar": {
@@ -309,7 +315,12 @@ export function compileScreens(
             const hi = num(p.hi, 100);
             if (hi <= lo) throw new Error(`range low ${lo} must be below high ${hi}`);
             natural = barNatural({ min_width: el.minWidth, height: el.height });
-            draw = `tsgui_bar.make(${pyNum(lo)}, ${pyNum(hi)})`;
+            if (p.style === "segments") {
+              const segments = Math.max(1, Math.round(num(p.segments, 10)));
+              draw = `tsgui_bar.make(${pyNum(lo)}, ${pyNum(hi)}, "segments", ${segments})`;
+            } else {
+              draw = `tsgui_bar.make(${pyNum(lo)}, ${pyNum(hi)})`;
+            }
             break;
           }
           case "trend": {
@@ -325,6 +336,10 @@ export function compileScreens(
           case "button": {
             const font = el.font ?? "font_body16";
             const maxChars = el.maxChars ?? num(p.maxChars, 8);
+            const style = p.style === "switch" ? "switch" : p.style === "filled" ? "filled" : "box";
+            if (style === "switch" && p.mode !== "toggle") {
+              throw new Error("a switch style needs a toggle button (set mode to toggle)");
+            }
             if (p.mode === "toggle") {
               // A toggle shows its on or off text (or "--" while unknown): room for the widest of them.
               const onText = typeof p.onText === "string" && p.onText !== "" ? p.onText : "ON";
@@ -332,7 +347,7 @@ export function compileScreens(
               if (!fontOk(font, `${onText}${offText}--`, `widget ${label} ${where}`)) return null;
               const sizes = [onText, offText, "--"].map((t) => buttonNatural({ font, text: t, max_chars: maxChars }));
               natural = sizes.reduce((a, b) => (b.width > a.width ? b : a));
-              draw = `tsgui_button.make(${font}, None, ${pyStr(onText)}, ${pyStr(offText)})`;
+              draw = `tsgui_button.make(${font}, None, ${pyStr(onText)}, ${pyStr(offText)}${style === "box" ? "" : `, ${pyStr(style)}`})`;
               imports.add(font);
               break;
             }
@@ -341,13 +356,25 @@ export function compileScreens(
             // A bound value replaces the text, so the font must have "--" and (for a bound-only button) the room.
             if (!fontOk(font, text ?? "--", `widget ${label} ${where}`)) return null;
             natural = buttonNatural({ font, text, max_chars: maxChars });
-            draw = `tsgui_button.make(${font}, ${text === undefined ? "None" : pyStr(text)})`;
+            draw = `tsgui_button.make(${font}, ${text === undefined ? "None" : pyStr(text)}${style === "box" ? "" : `, None, None, ${pyStr(style)}`})`;
             imports.add(font);
             break;
           }
           case "led": {
-            natural = ledNatural({ diameter: el.diameter });
-            draw = `tsgui_led.make(${el.diameter ?? 12})`;
+            const diameter = el.diameter ?? 12;
+            if (p.style === "chip") {
+              const font = el.font ?? "font_body12";
+              const onText = typeof p.onText === "string" && p.onText !== "" ? p.onText : "On";
+              const offText = typeof p.offText === "string" && p.offText !== "" ? p.offText : "Off";
+              if (!fontOk(font, `${onText}${offText}--`, `widget ${label} ${where}`)) return null;
+              const widest = [onText, offText, "--"].reduce((a, b) => (textWidth(font, b) > textWidth(font, a) ? b : a));
+              natural = ledNatural({ diameter, style: "chip", text: widest, font });
+              draw = `tsgui_led.make(${diameter}, "chip", ${pyStr(onText)}, ${pyStr(offText)}, ${font})`;
+              imports.add(font);
+            } else {
+              natural = ledNatural({ diameter });
+              draw = `tsgui_led.make(${diameter})`;
+            }
             break;
           }
         }

@@ -39,7 +39,7 @@ def _font(name):
 
 
 def _cfg(raw):
-    return {k: (_font(v) if k in ("font", "units_font") else v) for k, v in raw.items()}
+    return {k: (_font(v) if k in ("font", "units_font", "caption_font") else v) for k, v in raw.items()}
 
 
 def _surface(fmt, size, carousel=("a",)):
@@ -78,6 +78,7 @@ def _make(widget, raw):
     if widget == "bar":
         return bar.make()
     if widget == "led":
+        cfg.pop("text", None)  # for natural() only; make() takes the on/off labels
         return led.make(**cfg)
     if widget == "button":
         return button.make(cfg["font"], cfg.get("text"))
@@ -357,6 +358,61 @@ def test_trend_natural_size():
 
 
 
+def test_a_segmented_bar_lights_cells_in_proportion():
+    draw = bar.make(0, 100, "segments", 10)
+    rect = (0, 0, 100, 12)
+    s = _surface(framebuf.GS4_HMSB, FORMATS[0][1])
+    s.fb.fill(0)
+    draw(s, rect, 50, gui.KNOWN)
+    lit = 0
+    for i in range(10):
+        if s.fb.pixel(i * 10 + 2, 4) == s.theme["accent"]:
+            lit += 1
+    assert lit == 5, lit
+    # Unknown is the dashed outline, no cells filled in the accent.
+    s2 = _surface(framebuf.GS4_HMSB, FORMATS[0][1])
+    s2.fb.fill(0)
+    draw(s2, rect, None, gui.UNKNOWN)
+    assert s2.fb.pixel(2, 4) != s2.theme["accent"]
+
+
+def test_a_switch_puts_its_knob_on_the_on_side():
+    f = _font("font_body16")
+    draw = button.make(f, None, "ON", "OFF", "switch")
+    rect = (0, 0, 60, 24)
+
+    def knob_pixels(value, x0, x1):
+        s = _surface(framebuf.GS4_HMSB, FORMATS[0][1])
+        s.fb.fill(0)
+        draw(s, rect, value, gui.KNOWN)
+        colour = s.theme["on_accent"] if value else s.theme["fg"]
+        return sum(1 for j in range(24) for i in range(x0, x1) if s.fb.pixel(i, j) == colour)
+
+    assert knob_pixels(True, 40, 60) > knob_pixels(True, 0, 20)
+    assert knob_pixels(False, 0, 20) > knob_pixels(False, 40, 60)
+    # A switch needs a toggle: no on/off text is a compile/make error, not a drawn box.
+    try:
+        button.make(f, "GO", style="switch")
+        assert False, "a switch without a toggle must be refused"
+    except ValueError as e:
+        assert "toggle" in str(e), e
+
+
+def test_a_filled_button_paints_its_accent_background():
+    f = _font("font_body16")
+    rect = (0, 0, 80, 24)
+    pixels = {}
+    accent = None
+    for style in ("box", "filled"):
+        s = _surface(framebuf.GS4_HMSB, FORMATS[0][1])
+        s.fb.fill(0)
+        button.make(f, "OK", style=style)(s, rect, None, gui.KNOWN)
+        pixels[style] = s.fb.pixel(6, 12)
+        accent = s.theme["accent"]
+    assert pixels["filled"] == accent, (pixels, accent)
+    assert pixels["box"] != accent, pixels
+
+
 minitest.run(
     [
         test_a_toggle_shows_on_off_and_its_unknown_pending_and_failed_looks_differ_and_stay_inside,
@@ -376,5 +432,8 @@ minitest.run(
         test_trend_natural_size,
         test_trend_uses_the_theme_roles_for_bars_and_range,
         test_a_widget_inside_a_card_clears_to_the_card_colour,
+        test_a_segmented_bar_lights_cells_in_proportion,
+        test_a_switch_puts_its_knob_on_the_on_side,
+        test_a_filled_button_paints_its_accent_background,
     ]
 )

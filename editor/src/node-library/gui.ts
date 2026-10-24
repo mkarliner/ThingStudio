@@ -387,6 +387,7 @@ export const guiReadoutNode: NodeDefinition = {
   description: "Shows msg.payload. Its space is sized for the lowest to highest value.",
   properties: [
     { name: "name", label: "name", kind: "text", default: "" },
+    { name: "caption", label: "caption (above the number)", kind: "text", default: "", help: "Static text above the value, in the theme's muted colour." },
     { name: "units", label: "units", kind: "text", default: "" },
     { name: "decimals", label: "decimals", kind: "number", default: 1, min: 0, max: 6 },
     { name: "lo", label: "lowest value", kind: "number", default: 0 },
@@ -407,6 +408,17 @@ export const guiBarNode: NodeDefinition = {
   width: 90,
   properties: [
     { name: "name", label: "name", kind: "text", default: "" },
+    {
+      name: "style",
+      label: "style",
+      kind: "select",
+      default: "solid",
+      options: [
+        { value: "solid", label: "solid (outline and fill)" },
+        { value: "segments", label: "segments (cells)" },
+      ],
+    },
+    { name: "segments", label: "cells", kind: "number", default: 10, min: 1, max: 40, visibleWhen: { field: "style", equals: "segments" } },
     { name: "lo", label: "empty at", kind: "number", default: 0 },
     { name: "hi", label: "full at", kind: "number", default: 100 },
     { name: "staleAfter", label: "stale after (s, 0 = never)", kind: "number", default: 0, min: 0 },
@@ -450,6 +462,18 @@ export const guiLedNode: NodeDefinition = {
   description: "On when msg.payload is true, off when false.",
   properties: [
     { name: "name", label: "name", kind: "text", default: "" },
+    {
+      name: "style",
+      label: "style",
+      kind: "select",
+      default: "light",
+      options: [
+        { value: "light", label: "light (circle)" },
+        { value: "chip", label: "chip (text pill)" },
+      ],
+    },
+    { name: "onText", label: "chip when on", kind: "text", default: "On", visibleWhen: { field: "style", equals: "chip" } },
+    { name: "offText", label: "chip when off", kind: "text", default: "Off", visibleWhen: { field: "style", equals: "chip" } },
     { name: "staleAfter", label: "stale after (s, 0 = never)", kind: "number", default: 0, min: 0 },
   ],
 };
@@ -482,6 +506,18 @@ export const guiButtonNode: NodeDefinition = {
         { value: "toggle", label: "toggle: sends the opposite of its state" },
         { value: "navigate", label: "navigate: changes page" },
       ],
+    },
+    {
+      name: "style",
+      label: "style",
+      kind: "select",
+      default: "box",
+      options: [
+        { value: "box", label: "box (outline and text)" },
+        { value: "filled", label: "filled (solid)" },
+        { value: "switch", label: "switch (a toggle)" },
+      ],
+      help: "A switch style needs a toggle button.",
     },
     {
       name: "valueType",

@@ -116,6 +116,8 @@ Type `thingstudio/gui_bar`, kind sink, palette group GUI.
 - Outputs: none
 - Properties (name, type, default):
     - `name`, string, default `""`
+    - `style`, string, default `"solid"`
+    - `segments`, number, default `10`
     - `lo`, number, default `0` — the value at which the bar is empty
     - `hi`, number, default `100` — the value at which the bar is full
     - `staleAfter`, number, default `0` — seconds without a new value before it dims; 0 = never
@@ -129,6 +131,7 @@ Type `thingstudio/gui_button`, kind sink, palette group GUI.
 - Properties (name, type, default):
     - `name`, string, default `""`
     - `mode`, string, default `"momentary"` — momentary, toggle or navigate
+    - `style`, string, default `"box"`
     - `valueType`, string, default `"bool"` — bool, string or number: the type of what it sends
     - `fireOn`, string, default `"release"` — release (default: the finger lifts inside the button) or press
     - `text`, string, default `""` — what is drawn on the button; empty uses `name`
@@ -161,6 +164,9 @@ Type `thingstudio/gui_led`, kind sink, palette group GUI.
 - Outputs: none
 - Properties (name, type, default):
     - `name`, string, default `""`
+    - `style`, string, default `"light"`
+    - `onText`, string, default `"On"`
+    - `offText`, string, default `"Off"`
     - `staleAfter`, number, default `0` — seconds without a new value before it goes grey; 0 = never
 
 ### modal
@@ -193,6 +199,7 @@ Type `thingstudio/gui_readout`, kind sink, palette group GUI.
 - Outputs: none
 - Properties (name, type, default):
     - `name`, string, default `""`
+    - `caption`, string, default `""`
     - `units`, string, default `""` — text shown after the number
     - `decimals`, number, default `1`
     - `lo`, number, default `0` — lowest value it will show; with hi, sizes the space the number gets

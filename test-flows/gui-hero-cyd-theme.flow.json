@@ -22,11 +22,12 @@
       "type": "thingstudio/gui_readout",
       "properties": {
         "name": "Temperature",
-        "units": "\u00b0C",
+        "units": "°C",
         "decimals": 1,
         "lo": -20,
         "hi": 50,
-        "staleAfter": 15
+        "staleAfter": 15,
+        "caption": "Temperature"
       }
     },
     {
@@ -38,7 +39,8 @@
         "decimals": 0,
         "lo": 0,
         "hi": 100,
-        "staleAfter": 15
+        "staleAfter": 15,
+        "caption": "Humidity"
       }
     },
     {
@@ -50,7 +52,8 @@
         "decimals": 0,
         "lo": 900,
         "hi": 1100,
-        "staleAfter": 15
+        "staleAfter": 15,
+        "caption": "Pressure"
       }
     },
     {
@@ -60,7 +63,9 @@
         "name": "Pressure bar",
         "lo": 950,
         "hi": 1050,
-        "staleAfter": 15
+        "staleAfter": 15,
+        "style": "segments",
+        "segments": 10
       }
     },
     {
@@ -68,7 +73,10 @@
       "type": "thingstudio/gui_led",
       "properties": {
         "name": "Sensor",
-        "staleAfter": 15
+        "staleAfter": 15,
+        "style": "chip",
+        "onText": "OK",
+        "offText": "Off"
       }
     },
     {
@@ -201,80 +209,80 @@
   "layout": {
     "n01-sensor": {
       "pos": [
-        60,
-        60
-      ]
-    },
-    "n08-tick": {
-      "pos": [
-        60,
-        230
-      ]
-    },
-    "n12-screen": {
-      "pos": [
-        60,
-        400
+        80,
+        80
       ]
     },
     "n02-split": {
       "pos": [
-        320,
-        60
-      ]
-    },
-    "n09-next": {
-      "pos": [
-        320,
-        230
-      ]
-    },
-    "n13-display": {
-      "pos": [
-        320,
-        400
+        300,
+        80
       ]
     },
     "n03-temp": {
       "pos": [
-        580,
-        60
+        520,
+        80
       ]
     },
     "n04-hum": {
       "pos": [
-        580,
-        230
+        520,
+        150
       ]
     },
     "n05-press": {
       "pos": [
-        580,
-        400
+        520,
+        220
       ]
     },
     "n06-pbar": {
       "pos": [
-        580,
-        570
+        520,
+        290
       ]
     },
     "n07-alive": {
       "pos": [
-        580,
-        740
+        520,
+        360
+      ]
+    },
+    "n08-tick": {
+      "pos": [
+        80,
+        460
+      ]
+    },
+    "n09-next": {
+      "pos": [
+        300,
+        460
       ]
     },
     "n10-nav": {
       "pos": [
-        580,
-        910
+        520,
+        460
       ]
     },
     "n11-navdbg": {
       "pos": [
-        840,
-        60
+        740,
+        460
+      ]
+    },
+    "n12-screen": {
+      "pos": [
+        80,
+        560
+      ]
+    },
+    "n13-display": {
+      "pos": [
+        300,
+        560
       ]
     }
   },

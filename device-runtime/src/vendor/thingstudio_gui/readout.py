@@ -32,23 +32,34 @@ def _units_offset(font, units_font):
     return max(0, font.baseline() - units_font.baseline())
 
 
-def natural(font, units_font=None, units="", decimals=1, lo=-99, hi=999, gap=4):
+def natural(font, units_font=None, units="", decimals=1, lo=-99, hi=999, gap=4, caption="", caption_font=None):
     w = _field(font, lo, hi, decimals)
     h = font.height()
     if units:
         w += gap + _width(units_font, units)
         h = max(h, _units_offset(font, units_font) + units_font.height())
+    if caption:
+        if caption_font is None:
+            raise ValueError("a readout caption needs a caption font")
+        w = max(w, _width(caption_font, caption))
+        h += caption_font.height() + _CAPTION_GAP
     return (w, h)
 
 
-def make(font, units_font=None, units="", decimals=1, lo=-99, hi=999, gap=4):
+_CAPTION_GAP = 2
+
+
+def make(font, units_font=None, units="", decimals=1, lo=-99, hi=999, gap=4, caption="", caption_font=None):
     if units and units_font is None:
         raise ValueError("readout with units needs a units font")
+    if caption and caption_font is None:
+        raise ValueError("a readout caption needs a caption font")
     if hi < lo:
         raise ValueError("readout needs hi >= lo, got lo=%r hi=%r" % (lo, hi))
     fmt = "%%.%df" % decimals
     field = _field(font, lo, hi, decimals)
-    nat_h = natural(font, units_font, units, decimals, lo, hi, gap)[1]
+    nat_h = natural(font, units_font, units, decimals, lo, hi, gap, caption, caption_font)[1]
+    cap_h = caption_font.height() + _CAPTION_GAP if caption else 0
 
     def draw(surface, rect, value, state):
         x, y, w, h = rect
@@ -60,8 +71,11 @@ def make(font, units_font=None, units="", decimals=1, lo=-99, hi=999, gap=4):
             s = str(value)
         colour = surface.colour_for(state)
         top = y + max(0, (h - nat_h) // 2)
-        sx = x + max(0, field - _width(font, s))
         bg = surface.background_for(rect)
+        if caption:
+            surface.text(caption_font, caption, x, top, surface.dim, x + w, bg)
+            top += cap_h
+        sx = x + max(0, field - _width(font, s))
         surface.text(font, s, sx, top, colour, x + min(field, w), bg)
         if state == 2 and not surface.shades:
             # Just below the baseline, but never outside the rect (a font with no descent has no room below).

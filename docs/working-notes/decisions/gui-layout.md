@@ -336,3 +336,10 @@ the msg is open.
   `gui-theme` config stays as the older/shared path: `themeConfigId` still resolves when the screen's own fields
   are empty, so a saved flow renders unchanged. The screen's fields win when both are set. Editor-only: the
   device still receives the same resolved `theme={...}` dict, so there is no runtime bump.
+
+- 2026-10-24 (Mike): **widget styles ship as property choices, with today's look as the default.** `gui_led`
+  gains a light/chip choice, `gui_bar` solid/segments, `gui_button` box/filled/switch, `gui_readout` a caption,
+  and the page dots draw the current page as a pill. Each is a node property (a widget must draw the same on
+  every page), and the default value generates exactly the old `tsgui_*` call, so unstyled flows are unchanged.
+  Because a styled flow's generated calls need the new GUI libraries, the runtime and editor target move to
+  **14.0.0** (codegen-visible, major, per the discipline).
