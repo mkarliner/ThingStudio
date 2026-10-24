@@ -342,7 +342,7 @@
               "card": true,
               "row": 0,
               "col": 0,
-              "rowSpan": 2,
+              "rowSpan": 1,
               "colSpan": 12
             },
             {
@@ -400,20 +400,13 @@
               "card": true,
               "row": 0,
               "col": 0,
-              "rowSpan": 2,
-              "colSpan": 12
-            },
-            {
-              "card": true,
-              "row": 2,
-              "col": 0,
               "rowSpan": 13,
               "colSpan": 12
             },
             {
               "kind": "widget",
               "node": "n05-press",
-              "row": 2,
+              "row": 0,
               "col": 1,
               "rowSpan": 3,
               "colSpan": 11
@@ -421,7 +414,7 @@
             {
               "kind": "widget",
               "node": "n06-hist",
-              "row": 6,
+              "row": 4,
               "col": 0,
               "rowSpan": 2,
               "colSpan": 11
@@ -429,7 +422,7 @@
             {
               "kind": "text",
               "text": "950",
-              "row": 8,
+              "row": 6,
               "col": 1,
               "rowSpan": 1,
               "colSpan": 2
@@ -437,14 +430,14 @@
             {
               "kind": "text",
               "text": "1050",
-              "row": 8,
+              "row": 6,
               "col": 10,
               "rowSpan": 1,
               "colSpan": 2
             },
             {
               "kind": "pagedots",
-              "row": 15,
+              "row": 13,
               "col": 6,
               "rowSpan": 1,
               "colSpan": 1
