@@ -1,3 +1,22 @@
-# Build tool for `pip install --no-build-isolation -e ./backend`, so it is
-# hash-pinned like everything else rather than taken from the runner image.
+# Inputs to the backend's hash-pinned lock (backend/requirements.txt), compiled
+# together with backend/pyproject.toml.
+#
+# setuptools is here because the install does `pip install --no-build-isolation
+# -e ./backend`; without it pinned, that step fetches an unpinned build tool from
+# PyPI and the rest of the hashes buy nothing.
+
 setuptools
+
+# Generate the lock with the Python CI uses (3.12), not whatever is on your
+# machine:
+#
+#     pip-compile --allow-unsafe --generate-hashes --extra test \
+#         --output-file backend/requirements.txt \
+#         backend/pyproject.toml backend/requirements-build.in
+#
+# A 3.13 box silently omits aiohttp's `typing_extensions` (marker-gated to
+# python_version < "3.13"), and CI then fails with "In --require-hashes mode,
+# all requirements must have their versions pinned with ==" -- seen 2026-10-24.
+# uv's --python-version 3.10 does not fix it either: it resolves for that
+# version and drops the markers pip needs on the others. Regenerate inside a
+# 3.12 environment (`uv python install 3.12` gives you one).
