@@ -444,7 +444,6 @@
                   {
                     "kind": "widget",
                     "node": "n06-hist",
-                    "height": 16,
                     "alignSelf": "stretch"
                   },
                   {

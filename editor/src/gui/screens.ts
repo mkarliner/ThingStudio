@@ -329,7 +329,9 @@ export function compileScreens(
             if (hi <= lo) throw new Error(`range low ${lo} must be below high ${hi}`);
             const colWidth = Math.max(1, Math.round(num(p.colWidth, 3)));
             const columns = Math.max(1, Math.round(num(p.columns, 60)));
-            natural = trendNatural({ columns, col_width: colWidth, height: el.height ?? Math.max(8, Math.round(num(p.height, 48))) });
+            // The node's own height, not a placement height: the height property is the one the panel shows, and
+            // a stale placement height silently overrode it (a bar's leftover, found 2026-10-24).
+            natural = trendNatural({ columns, col_width: colWidth, height: Math.max(8, Math.round(num(p.height, 48))) });
             draw = `tsgui_trend.make(${pyNum(lo)}, ${pyNum(hi)}, ${colWidth})`;
             break;
           }
