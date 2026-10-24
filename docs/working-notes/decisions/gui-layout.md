@@ -343,3 +343,20 @@ the msg is open.
   every page), and the default value generates exactly the old `tsgui_*` call, so unstyled flows are unchanged.
   Because a styled flow's generated calls need the new GUI libraries, the runtime and editor target move to
   **14.0.0** (codegen-visible, major, per the discipline).
+
+- 2026-10-24 (Mike): **pixel sizes are not acceptable in the GUI: a screen specifies an H x W grid, and widget
+  sizes are in grid units.** The flex/`grow` model sizes things in pixels (fonts, gaps, `height`, `minWidth`,
+  `diameter`, histogram columns), which makes a layout panel-specific and unportable. The target is the web-
+  framework model: the screen declares a grid of rows x columns, and placement/size are cell spans, with the
+  compiler mapping cells to pixels for the wired display. This is a model change, not a unit conversion: the
+  flow file's `screens` section, `layout.ts`, `screens.ts`, the outline editor, widget natural sizes and every
+  flow that uses them are affected. A scoping pass is needed before code; the open questions are the grid's
+  definition (fixed rows/columns per screen, cell size from the display with remainders), how spans and nested
+  containers compose (cards), what happens to text and fonts (a named font still needs pixels; either a font
+  per span height or a compile check that the text fits its cells), and migration (keep pixel layouts as a
+  legacy mode, or convert). Until it is built, treat the current pixel-based layout as temporary.
+
+  Scoped the same day in `gui-grid-layout-scoping.md`: fixed `columns x rows` on the screen (a cell is a
+  percentage of the display), placement as `row`/`col`/`rowSpan`/`colSpan`, fonts auto-fitted to their span,
+  and the handful of existing flows re-authored rather than migrated. The device contract is unchanged (the
+  page table is still pixel rects), so this needs no runtime bump.
