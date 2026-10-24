@@ -8,8 +8,9 @@ environment facts needed to pick it up.
 
 ## Where things stand
 
-- `origin/protocol-state-machine` is 16 commits on top of `main` `09fdbf1` (the last two add this brief and the
-  learnings), so it fast-forwards onto `main`. Two of
+- `origin/protocol-state-machine` sits directly on `main` `09fdbf1`, so it fast-forwards onto `main`.
+  `git log --oneline origin/main..origin/protocol-state-machine` lists the work; the newest commits add this brief
+  and the learnings. Two of
   the 14 are Mike's own: "NEW: Kitchen sink" (`a0bce7d`) and "FIX: catch up" (`4f4a2c6`). They were only on his
   Mac until the push, carry his authorship, and were rebased along with the rest.
 - **Mike's Mac checkout (`~/Src/ThingStudio`) is stale.** It is still on the pre-rebase branch (`765a688`), and its
