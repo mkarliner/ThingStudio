@@ -52,6 +52,12 @@ def _board_messages(listener, mark):
     return [T._decode_f64_line(line) for line in lines if line.startswith(T.F64_PREFIX)]
 
 
+def _alerts(listener, mark):
+    with listener._lock:
+        lines = listener._history[mark:]
+    return [line for line in lines if line.startswith("PROTOCOL_ILLEGAL")]
+
+
 def run_exchange(exchange, tmpdir):
     flow = b""
     if "flowSource" in exchange:
@@ -88,6 +94,10 @@ def run_exchange(exchange, tmpdir):
             want = [_comparable(m) for m in expected]
             have = [_comparable(m) for m in got]
             assert have == want, "after step %d the board sent:\n  %r\nexpected:\n  %r" % (i, have, want)
+            alerts = _alerts(listener, mark)
+            assert len(alerts) == (1 if step.get("illegal") else 0), (
+                "after step %d the board announced %d illegal transitions, expected %d: %r"
+                % (i, len(alerts), 1 if step.get("illegal") else 0, alerts))
     finally:
         listener.close()
 

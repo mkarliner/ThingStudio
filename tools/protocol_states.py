@@ -233,7 +233,7 @@ def render_py(table):
     lines = [
         "# SPDX-License-Identifier: Apache-2.0",
         "# " + GENERATED,
-        "# The board's state machines (interfaces/protocol/STATES.md), run by machine.py. A machine is",
+        "# The board's state machines (interfaces/protocol/STATES.md), run by statemachine.py. A machine is",
         "# (initial, transitions, illegal, instances); a transition is",
         "# (from_states, event, guard, action, to, replies, reply, on_error), None where absent.",
         "",

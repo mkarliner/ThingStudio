@@ -113,8 +113,12 @@ stateDiagram-v2
     idle --> failed : start fails
     receiving --> failed : start fails<br/>writeAt fails
     failed --> receiving : piece [startsOver] / start
-    receiving --> idle : commit [complete] / release<br/>illegal commit
-    failed --> idle : illegal commit
+    receiving --> idle : commit [complete] / release<br/>abandon / discard<br/>illegal commit
+    failed --> idle : abandon / discard<br/>illegal commit
+    note right of idle
+        stays on:
+        abandon / discard
+    end note
     note right of receiving
         stays on:
         piece (startsOver) / start
@@ -135,6 +139,7 @@ stateDiagram-v2
 | | | | | *writeAt fails* | failed | ack ok false, code $error |
 | 3 | failed | `piece` | afterFailure |  | failed | ack ok false, code $failure |
 | 4 | receiving | `commit` | complete | release | idle |  |
+| 5 | any | `abandon` |  | discard | idle |  |
 
 **Illegal** (no row matches): alert, then
 - `piece`: state same, reply ack ok false, code BadPiece.
@@ -144,6 +149,7 @@ stateDiagram-v2
 
 - `piece`: a piece arrived: `offset`, `total`, `data`
 - `commit`: the commit arrived, naming the `total` (size) it expects
+- `abandon`: the board drops the transfer under way: a whole DEPLOY replaces it
 
 **Guards**
 

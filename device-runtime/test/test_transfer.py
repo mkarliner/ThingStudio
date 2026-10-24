@@ -1,9 +1,10 @@
 # SPDX-License-Identifier: Apache-2.0
 # device-runtime/test/test_transfer.py
 #
-# transfer.py: the piece-stream state machine (interfaces/protocol/SPEC.md §7.2), one test per row of the
-# spec's table, under the real MicroPython unix port. The exchange vectors (test_exchanges.py) check the same
-# rules through the listener; these pin the table itself.
+# transfer.py running the `board.stream` machine from interfaces/protocol/states.json (SPEC §7.2), and
+# statemachine.py itself, under the real MicroPython unix port: each legal move, each illegal one (which must be
+# announced, exactly once), and a table that names something this side doesn't implement. The exchange vectors
+# (test_exchanges.py) check the same rules through the listener.
 
 import os
 
@@ -11,17 +12,21 @@ import minitest
 
 minitest.add_src_to_path()
 
+import statemachine  # noqa: E402
 import transfer  # noqa: E402
 
 _PATH = "/tmp/ts_transfer_test.tmp"
+_alerts = []
+statemachine.alert = _alerts.append
 
 
-def _fresh():
+def _fresh(before_start=None):
     try:
         os.remove(_PATH)
     except OSError:
         pass
-    return transfer.Stream(_PATH)
+    del _alerts[:]
+    return transfer.Stream(_PATH, "flow", before_start)
 
 
 def _file():
@@ -29,122 +34,72 @@ def _file():
         return f.read()
 
 
+def _exists():
+    try:
+        os.stat(_PATH)
+        return True
+    except OSError:
+        return False
+
+
+# --- legal moves: no alert ---
+
 def test_offset_0_from_idle_starts_receiving():
     s = _fresh()
     assert s.put(0, 6, b"abc") is None
-    assert s.state == transfer.RECEIVING and s.stored == 3 and s.total == 6
-    assert _file() == b"abc"
+    assert s.state == "receiving" and s.stored == 3 and s.total == 6
+    assert _file() == b"abc" and _alerts == []
 
 
-def test_next_piece_appends():
+def test_next_piece_then_commit():
     s = _fresh()
     s.put(0, 6, b"abc")
     assert s.put(3, 6, b"def") is None
-    assert s.stored == 6 and s.complete(6) and _file() == b"abcdef"
+    assert s.commit(6) is None
+    assert s.state == "idle" and _file() == b"abcdef", "a commit leaves the file for its owner"
+    assert _alerts == []
 
 
-def test_resend_of_a_stored_piece_is_ok_and_changes_nothing():
-    # The rule the audit's finding 1 broke: a lost ack makes the editor resend a piece already stored.
-    s = _fresh()
-    s.put(0, 6, b"abc")
-    s.put(3, 6, b"def")
-    assert s.put(3, 6, b"def") is None
-    assert s.put(0, 6, b"abc") is None  # offset 0 resent: starts over, which also stores the same bytes
-    assert s.stored == 3 and _file() == b"abc"
-    assert s.put(3, 6, b"def") is None and s.complete(6) and _file() == b"abcdef"
-
-
-def test_resend_of_an_earlier_piece_keeps_stored():
+def test_any_piece_may_be_sent_again():
+    # Audit finding 1: a lost ack makes the editor resend a piece already stored.
     s = _fresh()
     s.put(0, 9, b"abc")
     s.put(3, 9, b"def")
-    assert s.put(3, 9, b"def") is None
-    assert s.stored == 6
-    assert s.put(6, 9, b"ghi") is None and s.complete(9) and _file() == b"abcdefghi"
+    assert s.put(3, 9, b"def") is None and s.stored == 6
+    assert s.put(6, 9, b"ghi") is None and s.commit(9) is None
+    assert _file() == b"abcdefghi" and _alerts == []
 
 
 def test_offset_0_always_starts_over():
-    # Finding 1b: after an abandoned transfer, the next deploy's first piece must be accepted.
     s = _fresh()
     s.put(0, 9, b"abc")
-    s.put(3, 9, b"def")
     assert s.put(0, 4, b"wxyz") is None
-    assert s.stored == 4 and s.total == 4 and s.complete(4) and _file() == b"wxyz"
+    assert s.stored == 4 and s.total == 4 and _file() == b"wxyz" and _alerts == []
 
 
-def test_gap_is_refused_and_state_kept():
-    s = _fresh()
-    s.put(0, 9, b"abc")
-    code, error = s.put(6, 9, b"ghi")
-    assert code == "BadPiece" and "expected 3" in error, error
-    assert s.state == transfer.RECEIVING and s.stored == 3
-    assert s.put(3, 9, b"def") is None  # the missing piece still fits in
+def test_write_failure_moves_to_failed_and_repeats_until_offset_0():
+    s = transfer.Stream("/nonexistent-dir-for-ts-test/x.tmp", "flow")
+    del _alerts[:]
+    code, _ = s.put(0, 6, b"abc")
+    assert code == "WriteFailed" and s.state == "failed"
+    assert s.put(3, 6, b"def")[0] == "WriteFailed", "a later piece gets the recorded failure"
+    assert _alerts == [], "a failed write is not a protocol violation"
 
 
-def test_different_total_is_refused():
-    s = _fresh()
-    s.put(0, 9, b"abc")
-    code, _ = s.put(3, 12, b"def")
-    assert code == "BadPiece" and s.stored == 3 and s.total == 9
+def test_before_start_failure_is_recorded():
+    def no_room(total):
+        raise transfer.Failure("NoSpace", "no space: needs %d" % (total,))
+
+    s = _fresh(no_room)
+    assert s.put(0, 6, b"abc") == ("NoSpace", "no space: needs 6")
+    assert s.state == "failed" and not _exists()
 
 
-def test_piece_past_the_end_is_refused_in_any_state():
-    s = _fresh()
-    assert s.put(0, 2, b"abc")[0] == "BadPiece"
-    assert s.state == transfer.IDLE
-    s.put(0, 4, b"ab")
-    assert s.put(2, 4, b"cde")[0] == "BadPiece"
-    assert s.stored == 2
-
-
-def test_nonzero_offset_while_idle_is_refused():
-    s = _fresh()
-    code, error = s.put(3, 6, b"def")
-    assert code == "BadPiece" and "start at 0" in error, error
-    assert s.state == transfer.IDLE
-
-
-def test_failed_repeats_its_error_until_offset_0():
+def test_abandon_removes_the_file():
     s = _fresh()
     s.put(0, 6, b"abc")
-    s.fail("NoSpace", "flash full")
-    assert s.state == transfer.FAILED
-    assert s.put(3, 6, b"def") == ("NoSpace", "flash full")
-    assert s.put(0, 6, b"abc") is None and s.state == transfer.RECEIVING
-
-
-def test_write_failure_moves_to_failed():
-    s = transfer.Stream("/nonexistent-dir-for-ts-test/x.tmp")
-    code, error = s.put(0, 3, b"abc")
-    assert code == "WriteFailed" and s.state == transfer.FAILED, (code, error)
-
-
-def test_discard_and_finish_return_to_idle():
-    s = _fresh()
-    s.put(0, 6, b"abc")
-    s.discard()
-    assert s.state == transfer.IDLE and s.stored == 0
-    try:
-        os.stat(_PATH)
-        assert False, "discard() should remove the temporary file"
-    except OSError:
-        pass
-    s.put(0, 3, b"abc")
-    s.finish()
-    assert s.state == transfer.IDLE and s.stored_offset() == 0
-
-
-def test_complete_needs_every_byte_and_the_same_total():
-    s = _fresh()
-    assert not s.complete(0)
-    s.put(0, 6, b"abc")
-    assert not s.complete(6) and not s.complete(3)
-    assert "3 of 6" in s.describe(6)
-
-
-def test_empty_file_is_one_empty_piece():
-    s = _fresh()
-    assert s.put(0, 0, b"") is None and s.complete(0)
+    s.abandon()
+    assert s.state == "idle" and not _exists() and _alerts == []
 
 
 def test_stored_offset_reports_progress_only_while_receiving():
@@ -152,26 +107,81 @@ def test_stored_offset_reports_progress_only_while_receiving():
     assert s.stored_offset() == 0
     s.put(0, 6, b"abc")
     assert s.stored_offset() == 3
-    s.fail("WriteFailed", "x")
-    assert s.stored_offset() == 0
+
+
+# --- illegal moves: announced once, answered as the table says ---
+
+def _one_alert(event):
+    assert len(_alerts) == 1 and _alerts[0].startswith("PROTOCOL_ILLEGAL board.stream(flow) ") and (" %s:" % event) in _alerts[0], _alerts
+
+
+def test_gap_is_illegal_and_keeps_the_state():
+    s = _fresh()
+    s.put(0, 9, b"abc")
+    code, _ = s.put(6, 9, b"ghi")
+    assert code == "BadPiece" and s.state == "receiving" and s.stored == 3
+    _one_alert("piece")
+    assert s.put(3, 9, b"def") is None  # the missing piece still fits in
+
+
+def test_different_total_is_illegal():
+    s = _fresh()
+    s.put(0, 9, b"abc")
+    assert s.put(3, 12, b"def")[0] == "BadPiece" and s.total == 9
+    _one_alert("piece")
+
+
+def test_piece_past_the_end_is_illegal():
+    s = _fresh()
+    assert s.put(0, 2, b"abc")[0] == "BadPiece" and s.state == "idle"
+    _one_alert("piece")
+
+
+def test_nonzero_offset_while_idle_is_illegal():
+    s = _fresh()
+    assert s.put(3, 6, b"def")[0] == "BadPiece" and s.state == "idle"
+    _one_alert("piece")
+
+
+def test_incomplete_commit_is_illegal_and_ends_the_stream():
+    s = _fresh()
+    s.put(0, 6, b"abc")
+    code, why = s.commit(6)
+    assert code == "Incomplete" and "3 of 6" in why, why
+    assert s.state == "idle" and not _exists()
+    _one_alert("commit")
+
+
+def test_commit_with_nothing_under_way_is_illegal():
+    s = _fresh()
+    assert s.commit(4)[0] == "Incomplete"
+    _one_alert("commit")
+
+
+def test_machine_refuses_a_table_it_cant_run():
+    try:
+        statemachine.Machine("board.stream", {}, {})
+        assert False, "a machine missing guards and actions must not be built"
+    except ValueError as e:
+        assert "startsOver" in str(e) and "writeAt" in str(e), e
 
 
 minitest.run(
     [
         test_offset_0_from_idle_starts_receiving,
-        test_next_piece_appends,
-        test_resend_of_a_stored_piece_is_ok_and_changes_nothing,
-        test_resend_of_an_earlier_piece_keeps_stored,
+        test_next_piece_then_commit,
+        test_any_piece_may_be_sent_again,
         test_offset_0_always_starts_over,
-        test_gap_is_refused_and_state_kept,
-        test_different_total_is_refused,
-        test_piece_past_the_end_is_refused_in_any_state,
-        test_nonzero_offset_while_idle_is_refused,
-        test_failed_repeats_its_error_until_offset_0,
-        test_write_failure_moves_to_failed,
-        test_discard_and_finish_return_to_idle,
-        test_complete_needs_every_byte_and_the_same_total,
-        test_empty_file_is_one_empty_piece,
+        test_write_failure_moves_to_failed_and_repeats_until_offset_0,
+        test_before_start_failure_is_recorded,
+        test_abandon_removes_the_file,
         test_stored_offset_reports_progress_only_while_receiving,
+        test_gap_is_illegal_and_keeps_the_state,
+        test_different_total_is_illegal,
+        test_piece_past_the_end_is_illegal,
+        test_nonzero_offset_while_idle_is_illegal,
+        test_incomplete_commit_is_illegal_and_ends_the_stream,
+        test_commit_with_nothing_under_way_is_illegal,
+        test_machine_refuses_a_table_it_cant_run,
     ]
 )

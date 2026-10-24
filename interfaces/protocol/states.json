@@ -104,7 +104,8 @@
       },
       "events": {
         "piece": "a piece arrived: `offset`, `total`, `data`",
-        "commit": "the commit arrived, naming the `total` (size) it expects"
+        "commit": "the commit arrived, naming the `total` (size) it expects",
+        "abandon": "the board drops the transfer under way: a whole DEPLOY replaces it"
       },
       "guards": {
         "startsOver": "offset is 0, and the piece fits: len(data) <= total",
@@ -124,7 +125,8 @@
         { "from": "receiving", "on": "piece", "if": "continues", "do": "writeAt", "to": "receiving", "reply": { "ack": { "ok": true } },
           "onError": { "to": "failed", "reply": { "ack": { "ok": false, "code": "$error" } } } },
         { "from": "failed", "on": "piece", "if": "afterFailure", "to": "failed", "reply": { "ack": { "ok": false, "code": "$failure" } } },
-        { "from": "receiving", "on": "commit", "if": "complete", "do": "release", "to": "idle" }
+        { "from": "receiving", "on": "commit", "if": "complete", "do": "release", "to": "idle" },
+        { "from": "*", "on": "abandon", "do": "discard", "to": "idle" }
       ],
       "illegal": {
         "piece": { "to": "same", "reply": { "ack": { "ok": false, "code": "BadPiece" } } },

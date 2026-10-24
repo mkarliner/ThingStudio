@@ -47,7 +47,7 @@ INDEX_NAME = "_deps.json"
 # on sys.path, so it would never load.
 _RESERVED = (
     "errors", "cbor", "framing", "messages", "protocol", "runtime", "wifi_provision",
-    "board_settings", "board_fs", "net_transport", "listener", "deps", "main", "boot", "_flow", "transfer",
+    "board_settings", "board_fs", "net_transport", "listener", "deps", "main", "boot", "_flow", "transfer", "statemachine", "protocol_states",
     "device_settings",
 )
 
@@ -188,13 +188,13 @@ def put_chunk(dep_name, file_name, offset, total, data):
     key = (dep_name, file_name)
     stream = _streams.get(key)
     if stream is None:
-        stream = _streams[key] = transfer.Stream(_path(file_name + ".tmp"))
-    if offset == 0:
-        _ensure_dir()
-        free = _free_bytes()
-        if free is not None and total + _SPACE_MARGIN > free:
-            stream.fail("NoSpace", "no space for %s: %s needs %d bytes, %d free" % (dep_name, file_name, total, free))
-            raise DepError(stream.code, stream.error)
+        def before_start(total, dep_name=dep_name, file_name=file_name):
+            _ensure_dir()
+            free = _free_bytes()
+            if free is not None and total + _SPACE_MARGIN > free:
+                raise transfer.Failure("NoSpace", "no space for %s: %s needs %d bytes, %d free" % (dep_name, file_name, total, free))
+
+        stream = _streams[key] = transfer.Stream(_path(file_name + ".tmp"), "library", before_start)
     problem = stream.put(offset, total, data)
     if problem is not None:
         code, message = problem
@@ -207,13 +207,6 @@ def _forget(dep_name):
     """Ends every stream of a library: after its commit, whatever the outcome."""
     for key in [k for k in _streams if k[0] == dep_name]:
         del _streams[key]
-
-
-def _size(path):
-    try:
-        return os.stat(path)[6]
-    except OSError:
-        return None
 
 
 def discard(files):
@@ -241,15 +234,20 @@ def _commit(dep_name, dep_hash, files):
     if not isinstance(dep_hash, str) or not dep_hash:
         discard(files)
         raise DepError("BadName", "%s: missing hash" % (dep_name,))
+    # Each file's stream takes the commit (board.stream, SPEC §7.2-7.3). Any that isn't complete makes the whole
+    # library incomplete; every stream ends here either way.
+    problems = []
     for file_name, size in files.items():
         stream = _streams.get((dep_name, file_name))
-        if stream is not None and stream.state == transfer.FAILED:
-            discard(files)
-            raise DepError(stream.code, stream.error)
-        have = _size(_path(file_name + ".tmp"))
-        if have != size or (stream is not None and not stream.complete(size)):
-            discard(files)
-            raise DepError("Incomplete", "%s: %s arrived incomplete (%s of %d bytes)" % (dep_name, file_name, 0 if have is None else have, size))
+        if stream is None:
+            problems.append("%s: nothing arrived (0 of %d bytes)" % (file_name, size))
+            continue
+        refused = stream.commit(size)
+        if refused is not None:
+            problems.append("%s: %s" % (file_name, refused[1]))
+    if problems:
+        discard(files)
+        raise DepError("Incomplete", "%s arrived incomplete: %s" % (dep_name, "; ".join(problems)))
 
     index = read_index()
     old = index.get(dep_name)

@@ -115,7 +115,7 @@ def test_out_of_order_piece_is_refused():
     _fresh()
     deps.put_chunk("a_lib", "a_lib.mpy", 0, 6, b"ABC")
     e = _raises("BadPiece", deps.put_chunk, "a_lib", "a_lib.mpy", 4, 6, b"EF")  # byte 3 never arrived
-    assert "at byte 4" in e.message and "expected 3" in e.message, e.message
+    assert "at byte 4" in e.message and "3 of 6" in e.message, e.message
     _raises("BadPiece", deps.put_chunk, "a_lib", "a_lib.mpy", 0, 2, b"ABC")  # longer than total
     _raises("BadPiece", deps.put_chunk, "b_lib", "b_lib.mpy", 2, 6, b"xx")  # no file started
 

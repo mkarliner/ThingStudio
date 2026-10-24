@@ -5,6 +5,7 @@
     "{\"editor\": M} is a message the editor sends; {\"board\": M} is one the board must send next.",
     "\"garbled\": true on an editor step: the line reaches the board damaged (the board runner sends a line that isn't base64).",
     "\"lost\": true on a board step: the board sends it but the editor never receives it (the editor runner doesn't deliver it).",
+    "\"illegal\": true on an editor step: the board must announce an illegal transition (SPEC §7.6) for it; every other step must announce none. On a board step: the editor must.",
     "{\"editorRaw\": hex}: a frame the board runner sends as-is (board-only exchanges).",
     "{\"editorRaw\": hex} with a frame cut short stands for a line that lost bytes but is still valid base64.",
     "Board messages are compared on every key except free-memory figures and the human-readable error/message text.",
@@ -83,7 +84,7 @@
         {"board": {"type": "DEPLOY_ERROR", "code": "MissingDependency", "message": ""}},
         {"editor": {"type": "FLOW_PUT", "offset": 0, "total": 4, "data": {"$bytes": "00010203"}}},
         {"board": {"type": "FLOW_ACK", "offset": 0, "ok": true}},
-        {"editor": {"type": "FLOW_COMMIT", "total": 8, "flowName": "x", "deployId": "d2"}},
+        {"editor": {"type": "FLOW_COMMIT", "total": 8, "flowName": "x", "deployId": "d2"}, "illegal": true},
         {"board": {"type": "DEPLOY_ERROR", "code": "Incomplete", "message": ""}},
         {"editor": {"type": "FLOW_PUT", "offset": 0, "total": 4, "data": {"$bytes": "00010203"}}},
         {"board": {"type": "FLOW_ACK", "offset": 0, "ok": true}}
@@ -105,15 +106,15 @@
       "name": "flow-piece-rules",
       "spec": "§7.2 table: gap, different total, past the end, nonzero offset while idle",
       "steps": [
-        {"editor": {"type": "FLOW_PUT", "offset": 4, "total": 8, "data": {"$bytes": "04050607"}}},
+        {"editor": {"type": "FLOW_PUT", "offset": 4, "total": 8, "data": {"$bytes": "04050607"}}, "illegal": true},
         {"board": {"type": "FLOW_ACK", "offset": 4, "ok": false, "code": "BadPiece", "error": ""}},
-        {"editor": {"type": "FLOW_PUT", "offset": 0, "total": 2, "data": {"$bytes": "00010203"}}},
+        {"editor": {"type": "FLOW_PUT", "offset": 0, "total": 2, "data": {"$bytes": "00010203"}}, "illegal": true},
         {"board": {"type": "FLOW_ACK", "offset": 0, "ok": false, "code": "BadPiece", "error": ""}},
         {"editor": {"type": "FLOW_PUT", "offset": 0, "total": 12, "data": {"$bytes": "00010203"}}},
         {"board": {"type": "FLOW_ACK", "offset": 0, "ok": true}},
-        {"editor": {"type": "FLOW_PUT", "offset": 8, "total": 12, "data": {"$bytes": "08090a0b"}}},
+        {"editor": {"type": "FLOW_PUT", "offset": 8, "total": 12, "data": {"$bytes": "08090a0b"}}, "illegal": true},
         {"board": {"type": "FLOW_ACK", "offset": 8, "ok": false, "code": "BadPiece", "error": ""}},
-        {"editor": {"type": "FLOW_PUT", "offset": 4, "total": 16, "data": {"$bytes": "04050607"}}},
+        {"editor": {"type": "FLOW_PUT", "offset": 4, "total": 16, "data": {"$bytes": "04050607"}}, "illegal": true},
         {"board": {"type": "FLOW_ACK", "offset": 4, "ok": false, "code": "BadPiece", "error": ""}},
         {"editor": {"type": "FLOW_PUT", "offset": 4, "total": 12, "data": {"$bytes": "04050607"}}},
         {"board": {"type": "FLOW_ACK", "offset": 4, "ok": true}},
@@ -157,7 +158,7 @@
       "name": "library-refused-piece-then-offset-0-starts-over",
       "spec": "§7.2; audit finding 2b",
       "steps": [
-        {"editor": {"type": "DEP_PUT", "name": "ts_ex_lib", "file": "ts_ex_lib.mpy", "offset": 3, "total": 6, "data": {"$bytes": "030405"}}},
+        {"editor": {"type": "DEP_PUT", "name": "ts_ex_lib", "file": "ts_ex_lib.mpy", "offset": 3, "total": 6, "data": {"$bytes": "030405"}}, "illegal": true},
         {"board": {"type": "DEP_ACK", "name": "ts_ex_lib", "file": "ts_ex_lib.mpy", "offset": 3, "ok": false, "code": "BadPiece", "error": ""}},
         {"editor": {"type": "DEP_PUT", "name": "ts_ex_lib", "file": "ts_ex_lib.mpy", "offset": 0, "total": 6, "data": {"$bytes": "000102"}}},
         {"board": {"type": "DEP_ACK", "name": "ts_ex_lib", "file": "ts_ex_lib.mpy", "offset": 0, "ok": true}},
@@ -173,9 +174,9 @@
       "steps": [
         {"editor": {"type": "DEP_PUT", "name": "ts_ex_lib", "file": "ts_ex_lib.mpy", "offset": 0, "total": 6, "data": {"$bytes": "000102"}}},
         {"board": {"type": "DEP_ACK", "name": "ts_ex_lib", "file": "ts_ex_lib.mpy", "offset": 0, "ok": true}},
-        {"editor": {"type": "DEP_COMMIT", "name": "ts_ex_lib", "hash": "h1", "files": {"ts_ex_lib.mpy": 6}}},
+        {"editor": {"type": "DEP_COMMIT", "name": "ts_ex_lib", "hash": "h1", "files": {"ts_ex_lib.mpy": 6}}, "illegal": true},
         {"board": {"type": "DEP_RESULT", "name": "ts_ex_lib", "ok": false, "code": "Incomplete", "error": ""}},
-        {"editor": {"type": "DEP_PUT", "name": "ts_ex_lib", "file": "ts_ex_lib.mpy", "offset": 3, "total": 6, "data": {"$bytes": "030405"}}},
+        {"editor": {"type": "DEP_PUT", "name": "ts_ex_lib", "file": "ts_ex_lib.mpy", "offset": 3, "total": 6, "data": {"$bytes": "030405"}}, "illegal": true},
         {"board": {"type": "DEP_ACK", "name": "ts_ex_lib", "file": "ts_ex_lib.mpy", "offset": 3, "ok": false, "code": "BadPiece", "error": ""}}
       ]
     },
@@ -184,6 +185,15 @@
       "spec": "§6, §7.1; audit finding 6",
       "steps": [
         {"editorRaw": "000263a0"},
+        {"editor": {"type": "FLOW_PUT", "offset": 0, "total": 4, "data": {"$bytes": "00010203"}}},
+        {"board": {"type": "FLOW_ACK", "offset": 0, "ok": true}}
+      ]
+    },
+    {
+      "name": "board-only-message-from-the-editor-is-illegal",
+      "spec": "§7.6; board.listener",
+      "steps": [
+        {"editor": {"type": "DEPLOY_ACK", "freeFlashBytes": 1, "freeRamBytes": 1}, "illegal": true},
         {"editor": {"type": "FLOW_PUT", "offset": 0, "total": 4, "data": {"$bytes": "00010203"}}},
         {"board": {"type": "FLOW_ACK", "offset": 0, "ok": true}}
       ]
