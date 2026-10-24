@@ -8,7 +8,8 @@ environment facts needed to pick it up.
 
 ## Where things stand
 
-- Branch head `c598c33` on GitHub, 14 commits on top of `main` `09fdbf1`; it fast-forwards onto `main`. Two of
+- `origin/protocol-state-machine` is 16 commits on top of `main` `09fdbf1` (the last two add this brief and the
+  learnings), so it fast-forwards onto `main`. Two of
   the 14 are Mike's own: "NEW: Kitchen sink" (`a0bce7d`) and "FIX: catch up" (`4f4a2c6`). They were only on his
   Mac until the push, carry his authorship, and were rebased along with the rest.
 - **Mike's Mac checkout (`~/Src/ThingStudio`) is stale.** It is still on the pre-rebase branch (`765a688`), and its
