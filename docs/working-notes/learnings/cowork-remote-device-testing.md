@@ -70,3 +70,16 @@ Status: detail file, split out of `learnings.md` on 2026-09-06 to keep that inde
   file's actual on-device content (a grep for a distinguishing string, a byte/line count) before
   building a verification tarball, running tests against it, or reporting a test result as trustworthy.
   `decisions/node-authoring.md`'s 2026-09-18 verification entry has the full incident in context.
+
+## 2026-10-24: `device_commit_files` and git through the bridge
+
+- **`device_commit_files` can report "written" and not overwrite an existing file.** Seen repeatedly on 2026-10-24:
+  the old content stayed (checked with `md5sum` in `device_bash`). Committing to a *new* path and then `mv` in
+  `device_bash` worked every time, as did writing new files.
+- **With delete permission granted** (`device_request_delete_permission` on the repo folder), git from
+  `device_bash` (`switch`, `commit`, `fetch` from a bundle, `merge --ff-only`) left no lock files. Without it, see
+  CLAUDE.md's git section.
+- **A `git bundle` moves commits both ways without pushing.** Bundle Mike's unpushed branch on the device, stage it
+  to the cloud, and clone from it there. Going back, bundle the new commits, commit the bundle file to the repo
+  folder, then `git fetch <bundle> <branch>` and `git merge --ff-only FETCH_HEAD`.
+

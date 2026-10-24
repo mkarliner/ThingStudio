@@ -572,3 +572,25 @@ skip without a browser: deploy from the editor, or verify the index offline --
 `node firmware/classic-esp32/gen_deps_index.mjs firmware/classic-esp32/out/stage /tmp/deps.json` must reproduce
 `out/_deps.json` (34/34 identical on the 13.0.0 image). If a CLI deploy has already run, reflash to get the frozen
 state back (a reflash is the only reset; deleting `/lib` copies by hand is not the same thing).
+
+## 2026-10-24: measuring the runtime's RAM, and what a table costs (protocol state machine work)
+
+- **Measure the three install paths separately; they disagree.** Frozen into the image, precompiled `.mpy`, and
+  `.py` source give very different numbers for the same code. Measure "held after `import listener`"
+  (`gc.mem_free()` before and after) and "smallest `-X heapsize=` that boots" (binary search), on the unix port
+  with every `THINGSTUDIO_*_PATH` pointed at `/tmp`. The unix port is 64-bit: roughly halve for an ESP32.
+- **Frozen builds need the port's own manifest included.** `make -C ports/unix FROZEN_MANIFEST=m.py` with a manifest
+  that only `freeze()`s the runtime drops `asyncio`, so `import listener` fails on `uasyncio`. Start the manifest
+  with `include("$(PORT_DIR)/variants/standard/manifest.py")`.
+- **Literal shape decides where a table lives.** A module-level literal made only of tuples, strings, numbers and
+  None is a constant: frozen, it stays in flash (the protocol table costs 160 bytes of RAM). A dict, a list, or a
+  tuple holding a dict is built in RAM at import. As `.mpy`, a dict-of-dicts table cost about 8 KB, nested tuples
+  about 11 KB, and one flat tuple of strings about 4.5 KB (64-bit).
+- **Per-module RAM attributions are order-dependent.** Loading a module with many new names can allocate a fresh
+  qstr pool chunk that gets charged to whichever module imports first. Compare totals, not one module's figure.
+- **The smallest bootable heap is fragmentation-sensitive.** Booting the listener from `.py` source needed 204 KB
+  with `import statemachine` at the top of `listener.py`, and 155 KB with it imported after the other modules and
+  a `gc.collect()`. Same code; the 200 KB memory tests in `test_listener_integration.py` caught it.
+- **Never name a runtime module `machine.py`.** `machine` is MicroPython's hardware module; the protocol's
+  interpreter is `statemachine.py` for that reason.
+
