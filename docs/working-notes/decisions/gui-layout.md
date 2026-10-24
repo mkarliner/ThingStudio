@@ -290,4 +290,6 @@ the msg is open.
   **A footer for the page dots.** `pagedots` is currently an ordinary widget dropped into the content flow
   wherever the author puts it -- in the demo at (112, 211), floating below the card and outside it. It should be
   a footer: a strip the screen reserves at the bottom of the page, with the dots in it, so the page indicator is
-  anchored, styled once, and stops competing with content for layout space. Same detail file.
+  anchored, styled once, and stops competing with content for layout space. **The footer shrinks the page rather
+  than overlaying it** (Mike, 2026-10-24): the content area is the page minus the footer, so a filling card stops
+  above the dots and "fill" and "footer" compose without the author reasoning about it. Same detail file.

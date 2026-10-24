@@ -48,9 +48,14 @@ a stray element rather than as page furniture.
 - the footer is the natural home for the header bar's siblings later (`gui-widget-styles-and-colour-scoping.md`
   already proposes a header bar with title, time and signal -- a header and a footer are one layout idea).
 
-Open questions: does the footer shrink the content area (so a filling card stops above it) or overlay the bottom
-of the page? Shrinking is the honest layout; overlaying is what a phone does. Only the first keeps "fill" and
-"footer" composable without the author thinking about it.
+Open question, **answered by Mike 2026-10-24: shrink.** The footer takes rows from the page rather than
+overlaying it -- the content area is the page minus the footer, so a filling card stops above the dots and the two
+compose without the author having to reason about it. Overlaying would have hidden the bottom of any full-page
+content behind the dots, which is the failure mode worth avoiding on a panel this small.
+
+Still to settle when it is built: the footer height (the dots' natural height plus a margin is the obvious
+starting point, and page dots are 6 px tall in the demo's layout), and whether a one-page flow shows a footer at
+all (no dots to show, so no strip -- the content should get the rows back).
 
 ## Not part of this
 

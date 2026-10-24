@@ -75,7 +75,8 @@ not here.
   seeing cards on the CYD: a layout must be able to fill the remaining space on a page, and the page dots belong
   in a footer rather than being a widget dropped at (112, 211). The demo's content stops at y=205 of 320. `grow`
   and a full-screen root already exist, so this is a default and an affordance (a `fill` control, or a last-card
-  default) plus a footer strip the screen draws the dots into. No runtime bump while nothing device-side changes.
+  default) plus a footer strip the screen draws the dots into -- the strip shrinks the page, it does not overlay
+  it. No runtime bump while nothing device-side changes.
   ([detail](outstanding-items/gui-layout-fill-and-footer.md))
 - **[LAUNCH]** **Freenove FNK0104S board support -- built 2026-10-08, hardware checks owed.** Board
   definition `freenove-s3-4in`, ST7796 in `display_spi`, full colour, landscape; install docs name the
