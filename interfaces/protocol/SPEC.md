@@ -322,8 +322,9 @@ append-only id rule safe.
 ## 7. Exchanges
 
 §5 says what each message looks like. This section says how they are used together: what answers what,
-what the board remembers between messages, and what may be sent again. `SEQUENCES.md` draws each exchange;
-`vectors/exchanges.json` tests them on both sides (§8). Added 2026-10-24 after the protocol audit
+what the board remembers between messages, and what may be sent again. **The state machines in `states.json` are
+the ground truth**: both sides run them as data, and `STATES.md` (generated from them) shows each as a diagram and a
+table. `SEQUENCES.md` draws the exchanges; `vectors/exchanges.json` tests them on both sides (§8). Added 2026-10-24 after the protocol audit
 (`docs/working-notes/reviews/2026-10-24-protocol-audit.md`): until then these rules lived only in the code,
 and the gaps between them left a board refusing every deploy.
 
@@ -359,43 +360,23 @@ out its timeout. An editor that has not yet sent `FLOW_COMMIT` ignores it (§7.4
 
 ### 7.2 A file arriving in pieces
 
-A flow (`FLOW_PUT`) and each file of a library (`DEP_PUT`, one per `name` + `file`) arrive the same way. The
-board keeps one **stream** for the flow and one per library file, and each stream is always in one of three
-states:
+A flow (`FLOW_PUT`) and each file of a library (`DEP_PUT`, one per `name` + `file`) arrive the same way: as a
+**stream** that is always **idle**, **receiving** (*stored* bytes out of *total*) or **failed** (a write
+failed). The machine is `board.stream` in **`states.json`**, which is the ground truth; `STATES.md` shows it as a
+diagram and a table. Two rules follow from it, and the editor relies on both:
 
-| State | Meaning |
-|---|---|
-| **idle** | nothing under way |
-| **receiving** (*stored*, *total*) | *stored* bytes are on flash in a temporary file, out of *total* |
-| **failed** (*code*, *error*) | writing failed (flash full, write error); the temporary file is gone |
+- **Any piece may be sent again.** Writing at an offset already stored rewrites the same bytes, so when an
+  answer is lost the editor resends the piece and gets `ok`.
+- **`offset` 0 always starts over**, whatever came before: an abandoned transfer, a refused commit, a failed
+  write.
 
-What a piece does, by state. *len* is the piece's length; a piece "fits" when *offset* + *len* ≤ the
-piece's `total`.
-
-| State | The piece | The board | New state | Answer |
-|---|---|---|---|---|
-| any | `offset` 0, fits | starts over: empties the temporary file, writes the piece | receiving (*len*, `total`) | `ok` |
-| receiving | `offset` ≤ *stored*, same `total`, fits | writes the piece at `offset` (a resend rewrites the same bytes) | receiving (max(*stored*, `offset` + *len*), *total*) | `ok` |
-| receiving | `offset` > *stored* | nothing (a piece before it is missing) | unchanged | `BadPiece` |
-| receiving | `total` differs from the stream's | nothing | unchanged | `BadPiece` |
-| any | doesn't fit | nothing | unchanged | `BadPiece` |
-| idle | `offset` > 0 | nothing | idle | `BadPiece` |
-| failed | `offset` > 0 | nothing | failed | the stored *code* and *error* |
-| any | the write fails | removes the temporary file | failed (`NoSpace` or `WriteFailed`) | that code |
-
-Two rules follow from the table, and the editor relies on both:
-
-- **Any piece may be sent again.** Writing at an offset already stored rewrites the same bytes. So when an
-  answer is lost, the editor resends the piece and gets `ok`.
-- **`offset` 0 always starts over.** Whatever happened to an earlier transfer, the next one begins cleanly.
-  This includes a transfer the editor abandoned, a refused commit, and a failed stream.
-
-A library piece is checked before any of this: a `name` or `file` that isn't a plain module name is
-`BadName`, and a first piece larger than the free flash space is `NoSpace`.
+Every other piece is illegal and answered `BadPiece`: a gap, a different `total`, a piece that runs past the end,
+a piece at `offset` > 0 when nothing is under way. A library piece is checked before this: a `name` or `file`
+that isn't a plain module name is `BadName`, and a first piece larger than the free flash space is `NoSpace`.
 
 ### 7.3 Commit
 
-A commit ends every stream it covers: afterwards they are **idle** whatever the outcome, and their
+A commit ends every stream it covers (`board.stream`'s `commit` event): afterwards they are **idle** whatever the outcome, and their
 temporary files are gone. The checks happen **before** anything under a real name changes.
 
 `FLOW_COMMIT` (answered `DEPLOY_ACK` or `DEPLOY_ERROR`), in order:
@@ -415,12 +396,14 @@ dropped from the index so the editor resends it).
 
 ### 7.4 What the editor does
 
+The machine is `editor.transfer` in `states.json`. Its waits:
+
 | Step | Waits for | Up to | Then |
 |---|---|---|---|
 | Connect | `HELLO` after `HELLO_REQUEST` | 3 s | explains what the board printed instead; stays connected |
 | Each piece | the matching `FLOW_ACK`/`DEP_ACK` | 10 s | no answer, or `Garbled`: send the same piece again, at most 2 more times; any other refusal ends the deploy |
-| `DEP_COMMIT` | `DEP_RESULT` | 30 s | |
-| `FLOW_COMMIT` | `DEPLOY_ACK`, `DEPLOY_ERROR`, or a `HELLO` it didn't ask for (the board restarted while starting the flow) | 30 s | |
+| `DEP_COMMIT` | `DEP_RESULT` | 30 s | a `Garbled` answer: send the commit again, at most 2 more times |
+| `FLOW_COMMIT` | `DEPLOY_ACK`, `DEPLOY_ERROR`, or a `HELLO` it didn't ask for (the board restarted while starting the flow) | 30 s | a `Garbled` answer: send the commit again, at most 2 more times |
 | `SET_BOARD_SETTINGS` | `BOARD_SETTINGS_RESULT` | 10 s | |
 | `RESTART` | a `HELLO` | 20 s | sends `HELLO_REQUEST` once |
 
@@ -450,6 +433,18 @@ Codes the editor acts on are part of the protocol: renaming one changes the edit
 | any other | `DEPLOY_ERROR` | the Python exception raised while starting the flow | shows it |
 
 `HELLO.authScheme` is `"none"` when no WiFi password is set, otherwise the scheme name (`"hmac-sha256-nonce"`, the `TSAUTH1` handshake).
+
+### 7.6 Illegal transitions
+
+The machines in `states.json` list every legal move. A (state, event) with no row is **illegal**, and the
+side running that machine raises an alert before doing what the machine's `illegal` rule says:
+
+- **Board:** a console line `PROTOCOL_ILLEGAL <machine> <state> <event>: <detail>`, which reaches the editor's
+  console like any printed line. Illegal pieces and commits are also answered (`BadPiece`, `Incomplete`).
+- **Editor:** a red console line, `[protocol] illegal: <event> while <state> (<detail>)`.
+
+An alert means one side broke the protocol, or the table is missing a legal case. Either way it is a bug to
+report, not a condition to work around. The exchange vectors (§8) say where alerts must, and must not, happen.
 
 ## 8. Conformance
 

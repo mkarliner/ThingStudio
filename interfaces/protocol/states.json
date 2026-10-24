@@ -1,0 +1,196 @@
+{
+  "protocolVersion": 1,
+  "about": [
+    "The wire protocol's state machines: the ground truth for SPEC.md §7. Each machine lists its states, the events",
+    "it reacts to, named guards and actions (described here, implemented on one side), and an ordered transition",
+    "table: for an event, the first transition whose `from` includes the current state and whose guard holds is",
+    "taken. A (state, event) with no such transition is ILLEGAL: the side running the machine raises an alert",
+    "(SPEC §7.6) and then does what `illegal` says for that event.",
+    "`to: \"same\"` keeps the state. `from: \"*\"` is every state. `onError` is taken instead of the transition's own",
+    "`to`/`reply` when its action fails (a flash write, say); `$error` is that failure's code.",
+    "Generated from this file, never edited by hand: STATES.md (tables and diagrams), device-runtime/src/protocol_states.py,",
+    "editor/src/protocol/states.generated.ts. Run `python3 tools/protocol_states.py`; `make test` checks they are current."
+  ],
+  "machines": {
+    "board.listener": {
+      "side": "board",
+      "about": "What the board does with each line from the editor. Every editor-to-board message has a row; any other arriving message (one only the board sends, such as DEPLOY_ACK) is illegal.",
+      "initial": "listening",
+      "states": {
+        "listening": "the listener is running"
+      },
+      "events": {
+        "HELLO_REQUEST": "that message arrived, whole and valid",
+        "DEPLOY": "that message arrived, whole and valid",
+        "FLOW_PUT": "that message arrived, whole and valid",
+        "FLOW_COMMIT": "that message arrived, whole and valid",
+        "DEP_PUT": "that message arrived, whole and valid",
+        "DEP_COMMIT": "that message arrived, whole and valid",
+        "TRIGGER": "that message arrived, whole and valid",
+        "EXEC": "that message arrived, whole and valid",
+        "RESTART": "that message arrived, whole and valid",
+        "STOP_TO_PROMPT": "that message arrived, whole and valid",
+        "SET_BOARD_SETTINGS": "that message arrived, whole and valid",
+        "STATE_READ": "that message arrived, whole and valid",
+        "STATE_WRITE": "that message arrived, whole and valid",
+        "HELLO": "that message arrived (only the board sends it)",
+        "DEPLOY_ACK": "that message arrived (only the board sends it)",
+        "DEPLOY_ERROR": "that message arrived (only the board sends it)",
+        "VALUE_STREAM": "that message arrived (only the board sends it)",
+        "NODE_ERROR": "that message arrived (only the board sends it)",
+        "NODE_STATUS": "that message arrived (only the board sends it)",
+        "BOARD_SETTINGS_RESULT": "that message arrived (only the board sends it)",
+        "DEP_RESULT": "that message arrived (only the board sends it)",
+        "DEP_ACK": "that message arrived (only the board sends it)",
+        "FLOW_ACK": "that message arrived (only the board sends it)",
+        "unreadable": "a line the board couldn't read: bad base64, not one whole frame, a body that doesn't decode, or a MemoryError reading it (SPEC §4, §7.1)",
+        "unknownType": "a whole message of a type this runtime doesn't know (a newer editor)"
+      },
+      "guards": {
+        "overUsb": "the message arrived over USB serial, not a WiFi session"
+      },
+      "actions": {
+        "sendHello": "answer HELLO",
+        "deployWhole": "a whole-flow deploy: the flow stream is discarded, then SPEC §7.3's steps 2-5",
+        "flowPiece": "hand the piece to the flow's board.stream",
+        "flowCommit": "hand the commit to the flow's board.stream, then SPEC §7.3's steps 2-5",
+        "libraryPiece": "hand the piece to that library file's board.stream (after checking the names, and the free space for a first piece)",
+        "libraryCommit": "hand the commit to each of the library's file streams, then install it",
+        "fireTrigger": "fire that inject node once (an unknown node id is logged)",
+        "runExec": "run the code in the listener, printing its result or traceback",
+        "restart": "stop the flow, then soft or hard reset",
+        "stopToPrompt": "stop the flow and the listener, leaving MicroPython's prompt",
+        "applySettings": "save the hostname/password; answer the result, then a HELLO if it worked",
+        "refuseSettings": "answer that settings can only be changed over USB",
+        "ignoreReserved": "log that the message is reserved and not implemented",
+        "answerGarbled": "answer FLOW_ACK Garbled for the flow bytes stored so far (and DEPLOY_ERROR MemoryError if that was the cause)",
+        "ignoreUnknown": "log the type and drop it"
+      },
+      "transitions": [
+        { "from": "listening", "on": "HELLO_REQUEST", "do": "sendHello", "to": "same", "replies": ["HELLO"] },
+        { "from": "listening", "on": "DEPLOY", "do": "deployWhole", "to": "same", "replies": ["DEPLOY_ACK", "DEPLOY_ERROR"] },
+        { "from": "listening", "on": "FLOW_PUT", "do": "flowPiece", "to": "same", "replies": ["FLOW_ACK"] },
+        { "from": "listening", "on": "FLOW_COMMIT", "do": "flowCommit", "to": "same", "replies": ["DEPLOY_ACK", "DEPLOY_ERROR"] },
+        { "from": "listening", "on": "DEP_PUT", "do": "libraryPiece", "to": "same", "replies": ["DEP_ACK"] },
+        { "from": "listening", "on": "DEP_COMMIT", "do": "libraryCommit", "to": "same", "replies": ["DEP_RESULT"] },
+        { "from": "listening", "on": "TRIGGER", "do": "fireTrigger", "to": "same", "replies": [] },
+        { "from": "listening", "on": "EXEC", "do": "runExec", "to": "same", "replies": [] },
+        { "from": "listening", "on": "RESTART", "do": "restart", "to": "same", "replies": [] },
+        { "from": "listening", "on": "STOP_TO_PROMPT", "do": "stopToPrompt", "to": "same", "replies": [] },
+        { "from": "listening", "on": "SET_BOARD_SETTINGS", "if": "overUsb", "do": "applySettings", "to": "same", "replies": ["BOARD_SETTINGS_RESULT", "HELLO"] },
+        { "from": "listening", "on": "SET_BOARD_SETTINGS", "do": "refuseSettings", "to": "same", "replies": ["BOARD_SETTINGS_RESULT"] },
+        { "from": "listening", "on": "STATE_READ", "do": "ignoreReserved", "to": "same", "replies": [] },
+        { "from": "listening", "on": "STATE_WRITE", "do": "ignoreReserved", "to": "same", "replies": [] },
+        { "from": "listening", "on": "unreadable", "do": "answerGarbled", "to": "same", "replies": ["FLOW_ACK", "DEPLOY_ERROR"] },
+        { "from": "listening", "on": "unknownType", "do": "ignoreUnknown", "to": "same", "replies": [] }
+      ],
+      "illegal": {
+        "*": { "to": "same" }
+      }
+    },
+
+    "board.stream": {
+      "side": "board",
+      "about": "One file arriving in pieces: the flow, or one file of a library. Any piece may be sent again (it rewrites the same bytes); a piece at offset 0 always starts over; a commit ends the stream whatever the outcome.",
+      "instances": {
+        "flow": { "piece": "FLOW_PUT", "ack": "FLOW_ACK", "commit": "FLOW_COMMIT", "commitError": "DEPLOY_ERROR", "ackEcho": ["offset"] },
+        "library": { "piece": "DEP_PUT", "ack": "DEP_ACK", "commit": "DEP_COMMIT", "commitError": "DEP_RESULT", "ackEcho": ["name", "file", "offset"] }
+      },
+      "initial": "idle",
+      "states": {
+        "idle": "nothing under way",
+        "receiving": "`stored` bytes are in the temporary file, out of `total`",
+        "failed": "writing failed; the temporary file is gone; the failure's code and text are kept"
+      },
+      "events": {
+        "piece": "a piece arrived: `offset`, `total`, `data`",
+        "commit": "the commit arrived, naming the `total` (size) it expects"
+      },
+      "guards": {
+        "startsOver": "offset is 0, and the piece fits: len(data) <= total",
+        "continues": "0 < offset <= stored, total is the stream's total, and offset + len(data) <= total",
+        "afterFailure": "offset > 0",
+        "complete": "the commit's total is the stream's total, and stored == total"
+      },
+      "actions": {
+        "start": "empty the temporary file and write the piece; stored = len(data), total = total. Fails with NoSpace or WriteFailed (and, for a library, NoSpace when the first piece's total won't fit in free flash)",
+        "writeAt": "write the piece at offset (a resend rewrites the same bytes); stored = max(stored, offset + len(data)). Fails with NoSpace or WriteFailed",
+        "release": "the owner takes the temporary file (SPEC §7.3 moves it into place); back to nothing under way",
+        "discard": "remove the temporary file"
+      },
+      "transitions": [
+        { "from": "*", "on": "piece", "if": "startsOver", "do": "start", "to": "receiving", "reply": { "ack": { "ok": true } },
+          "onError": { "to": "failed", "reply": { "ack": { "ok": false, "code": "$error" } } } },
+        { "from": "receiving", "on": "piece", "if": "continues", "do": "writeAt", "to": "receiving", "reply": { "ack": { "ok": true } },
+          "onError": { "to": "failed", "reply": { "ack": { "ok": false, "code": "$error" } } } },
+        { "from": "failed", "on": "piece", "if": "afterFailure", "to": "failed", "reply": { "ack": { "ok": false, "code": "$failure" } } },
+        { "from": "receiving", "on": "commit", "if": "complete", "do": "release", "to": "idle" }
+      ],
+      "illegal": {
+        "piece": { "to": "same", "reply": { "ack": { "ok": false, "code": "BadPiece" } } },
+        "commit": { "do": "discard", "to": "idle", "reply": { "commitError": { "code": "Incomplete" } } }
+      }
+    },
+
+    "editor.transfer": {
+      "side": "editor",
+      "about": "The editor sending a flow or a library: each piece answered before the next, then the commit, then its one answer. One instance per connection; it sits in idle between transfers and still checks what arrives.",
+      "initial": "idle",
+      "states": {
+        "idle": "no transfer under way",
+        "sending": "a piece has been sent; waiting for its answer (up to pieceTimeoutMs)",
+        "committing": "the commit has been sent; waiting for its answer (up to commitTimeoutMs)"
+      },
+      "events": {
+        "start": "the editor starts a transfer (a list of pieces and a commit)",
+        "pieceOk": "FLOW_ACK/DEP_ACK answering the piece sent last, ok",
+        "pieceRefused": "FLOW_ACK/DEP_ACK answering the piece sent last, not ok, any code but Garbled",
+        "garbled": "FLOW_ACK with code Garbled: the board couldn't read the line sent last (SPEC §7.1)",
+        "staleAck": "FLOW_ACK/DEP_ACK for a piece already answered (a late answer to a piece that was resent)",
+        "strayAck": "FLOW_ACK/DEP_ACK for no piece of this transfer or the last one",
+        "commitOk": "DEPLOY_ACK, or DEP_RESULT ok for this library, while committing",
+        "commitRefused": "DEPLOY_ERROR, or DEP_RESULT not ok for this library, while committing",
+        "earlyMemoryError": "DEPLOY_ERROR MemoryError before any commit was sent: the board couldn't read a line (SPEC §7.1)",
+        "strayResult": "DEPLOY_ACK, DEP_RESULT, or another DEPLOY_ERROR, with no commit waiting for it",
+        "restart": "a HELLO the editor didn't ask for (no HELLO_REQUEST pending): the board restarted",
+        "timeout": "the state's wait ran out"
+      },
+      "guards": {
+        "morePieces": "the piece just answered isn't the last",
+        "canRetry": "fewer than pieceRetries resends of this line so far"
+      },
+      "actions": {
+        "sendPiece": "send the first piece",
+        "sendNext": "send the next piece",
+        "sendCommit": "send the commit",
+        "resend": "send the same line again (any piece may be resent, SPEC §7.2; a Garbled commit was never read)",
+        "fail": "end the transfer at the line sent last: the board's code, or Timeout, or Garbled after the last try",
+        "finishRestarted": "end the transfer: the board restarted (its HELLO says what is running)",
+        "finishOk": "end the transfer: deployed, or installed",
+        "finishRefused": "end the transfer: refused, with the board's code",
+        "finishNoAnswer": "end the transfer: no answer to the commit",
+        "note": "log it, change nothing"
+      },
+      "transitions": [
+        { "from": "idle", "on": "start", "do": "sendPiece", "to": "sending" },
+        { "from": "sending", "on": "pieceOk", "if": "morePieces", "do": "sendNext", "to": "sending" },
+        { "from": "sending", "on": "pieceOk", "do": "sendCommit", "to": "committing" },
+        { "from": ["sending", "committing"], "on": "garbled", "if": "canRetry", "do": "resend", "to": "same" },
+        { "from": ["sending", "committing"], "on": "garbled", "do": "fail", "to": "idle" },
+        { "from": "sending", "on": "timeout", "if": "canRetry", "do": "resend", "to": "sending" },
+        { "from": "sending", "on": "timeout", "do": "fail", "to": "idle" },
+        { "from": "sending", "on": "pieceRefused", "do": "fail", "to": "idle" },
+        { "from": ["sending", "committing"], "on": "restart", "do": "finishRestarted", "to": "idle" },
+        { "from": "committing", "on": "commitOk", "do": "finishOk", "to": "idle" },
+        { "from": "committing", "on": "commitRefused", "do": "finishRefused", "to": "idle" },
+        { "from": "committing", "on": "timeout", "do": "finishNoAnswer", "to": "idle" },
+        { "from": "*", "on": "staleAck", "do": "note", "to": "same" },
+        { "from": ["idle", "sending"], "on": "earlyMemoryError", "do": "note", "to": "same" },
+        { "from": "idle", "on": "garbled", "do": "note", "to": "same" }
+      ],
+      "illegal": {
+        "*": { "to": "same" }
+      }
+    }
+  }
+}

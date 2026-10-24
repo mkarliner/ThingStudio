@@ -163,10 +163,12 @@ test-editor: editor/node_modules/.package-lock.json | check-node
 test-backend: $(VENV)/.installed
 	cd backend && ../$(VPY) -m pytest -q
 
-# Wire protocol: interfaces/protocol/COVERAGE.md is current, and every message is specified, has vectors, is
-# sent and handled, and is drawn in SEQUENCES.md. Plain Python, no venv. Regenerate with
-# `python3 tools/protocol_coverage.py`.
+# Wire protocol: states.json is consistent and what is generated from it (STATES.md, the board's and the editor's
+# machine tables) is current; COVERAGE.md is current, and every message is specified, has vectors, is sent and
+# handled, and is drawn in SEQUENCES.md. Plain Python, no venv. Regenerate with `python3 tools/protocol_states.py`
+# and `python3 tools/protocol_coverage.py`.
 check-protocol: | check-python
+	$(PYTHON) tools/protocol_states.py --check
 	$(PYTHON) tools/protocol_coverage.py --check
 
 # --- cleanup ------------------------------------------------------------------
