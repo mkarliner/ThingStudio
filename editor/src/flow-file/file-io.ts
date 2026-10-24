@@ -102,10 +102,11 @@ export async function writeFlowFile(handle: FlowFileHandle, text: string): Promi
   return { handle, lastModified: (await handle.getFile()).lastModified };
 }
 
-/** Reads a file the editor already has a handle to (Open Recent). Asks for read and write together, so a
- * Save afterwards needs no second prompt. A moved or deleted file rejects with a NotFoundError. */
+/** Reads a file the editor already has a handle to (Open Recent). Read-only: edit access is requested when a
+ * Save actually needs it, so opening a file to look at it does not show the browser's "will be able to edit" prompt.
+ * A moved or deleted file rejects with a NotFoundError. */
 export async function readFlowFile(handle: FlowFileHandle): Promise<{ text: string; ref: FlowFileRef }> {
-  await ensurePermission(handle, "readwrite");
+  await ensurePermission(handle, "read");
   const file = await handle.getFile();
   return { text: await file.text(), ref: { handle, lastModified: file.lastModified } };
 }

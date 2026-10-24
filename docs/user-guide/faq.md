@@ -95,6 +95,15 @@ chip is reset. After a flow that uses a lot of memory, such as a display, WiFi m
 The console warns you before you deploy. Use **Tools → Reset board (hard)**: a soft restart doesn't give that
 memory back. See [Restarting the board](debugging.md#restarting-the-board).
 
+## Why does opening a flow ask "Save changes to …?" even though I changed nothing?
+
+That is the browser's file-permission dialog, not the editor. A page may read a file you pick, but to *write*
+it back (Save) it needs your permission, and the browser asks with that wording: "Save changes to
+`gui-hero-cyd.flow.json`? `https://127.0.0.1:8765` will be able to edit it." Accept it to let the editor save
+back to that file. It is not about unsaved changes on the canvas, and it comes back after a page refresh
+because browsers grant file access per page session. Opening from **Open…** or **Recent** is the same file;
+nothing is written until you press Save.
+
 ## Why does Deploy say the board needs the runtime installed again?
 
 The editor and the runtime on the board talk a shared protocol. When an update changes it, a board with the older
