@@ -283,3 +283,9 @@ Build an MCP server that talks to the running backend (check, describe, board in
 deploy behind a confirmation in the editor), post-MVP; no checker-only wrapper for launch, since the shell command
 already works for the assistants that have a shell. Needs a security design (stdio transport, how it authenticates
 to the backend, prompt injection) before it is built (2026-10-23). 1 entry: `docs/working-notes/decisions/mcp-server.md`.
+
+## Editor firmware flashing
+
+Flashing a blank board (no MicroPython, or no runtime) from the editor is the next priority (Mike, 2026-10-24);
+the backend runs esptool, images are pinned per board definition with a local-file override, and first slice is
+the CYD and Freenove S3. 1 entry: `docs/working-notes/decisions/editor-firmware-flashing.md`.
