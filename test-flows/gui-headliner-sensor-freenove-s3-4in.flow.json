@@ -262,7 +262,8 @@
       "properties": {
         "name": "Time",
         "maxChars": 5,
-        "staleAfter": 0
+        "staleAfter": 0,
+        "font": "font_seg764"
       }
     },
     {
@@ -656,7 +657,7 @@
               "node": "n07-alive",
               "row": 0,
               "col": 3,
-              "rowSpan": 2,
+              "rowSpan": 1,
               "colSpan": 9
             },
             {

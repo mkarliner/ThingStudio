@@ -135,11 +135,18 @@ export function gridSize(screen: GraphNode, display: ScreenSize): { columns: num
   return { columns, rows };
 }
 
-const FONTS_BY_HEIGHT = (): string[] => fontIds().sort((a, b) => getFont(b).height - getFont(a).height);
+const byHeight = (ids: readonly string[]): string[] => [...ids].sort((a, b) => getFont(b).height - getFont(a).height);
+const BODY_FONTS = byHeight(fontIds().filter((f) => f.startsWith("font_body")));
+const DIGITS_FONTS = byHeight(fontIds().filter((f) => f.startsWith("font_digits")));
 
-/** The largest known font whose height fits `height` and whose text passes `fits`, or an error. */
-function pickFont(height: number, fits?: (font: string) => boolean): string {
-  for (const font of FONTS_BY_HEIGHT()) {
+/** The largest font of `family` whose height fits `height` and whose text passes `fits`, or an error. An
+ * explicit `chosen` font (a widget's `font` property) is used when it fits, else reported. */
+function pickFont(height: number, family: readonly string[], fits?: (font: string) => boolean, chosen?: string): string {
+  if (chosen) {
+    if (getFont(chosen).height <= height && (!fits || fits(chosen))) return chosen;
+    throw new Error(`the chosen font ${chosen} does not fit its cells`);
+  }
+  for (const font of family) {
     if (getFont(font).height <= height && (!fits || fits(font))) return font;
   }
   throw new Error(`does not fit its cells (no font fits ${height}px high)`);
@@ -257,30 +264,39 @@ export function compileScreens(
       try {
         switch (kind) {
           case "label": {
-            const font = pickFont(h, (f) => textWidth(f, "--") <= w);
+            const font = pickFont(h, BODY_FONTS, (f) => textWidth(f, "--") <= w, typeof p.font === "string" ? p.font : undefined);
             draw = `tsgui_label.make(${font}, None, ${pyStr(align)})`;
             imports.add(font);
             break;
           }
           case "readout": {
             const units = typeof p.units === "string" ? p.units : "";
+            const caption = typeof p.caption === "string" ? p.caption.trim() : "";
             const decimals = Math.max(0, Math.round(num(p.decimals, 1)));
             const lo = num(p.lo, 0);
             const hi = num(p.hi, 100);
             if (hi < lo) throw new Error(`range low ${lo} is above high ${hi}`);
             const gap = Math.max(2, Math.round(Math.min(w, h) * 0.05));
-            const digits = pickFont(h, (f) => {
+            // A caption takes the top third at most; the number and units share what is left.
+            const captionFont = caption
+              ? pickFont(Math.max(1, Math.floor(h / 3)), BODY_FONTS, (f) => textWidth(f, caption) <= w && missingChars(f, caption).length === 0)
+              : undefined;
+            const capH = captionFont ? getFont(captionFont).height + 2 : 0;
+            const digits = pickFont(h - capH, DIGITS_FONTS, (f) => {
               const field = readoutField(f, lo, hi, decimals);
               if (!units) return field <= w;
-              return FONTS_BY_HEIGHT().some((u) => getFont(u).height <= h && field + gap + textWidth(u, units) <= w);
-            });
+              return BODY_FONTS.some((u) => getFont(u).height <= h - capH && field + gap + textWidth(u, units) <= w);
+            }, typeof p.font === "string" && p.font !== "" ? p.font : undefined);
             const field = readoutField(digits, lo, hi, decimals);
             const unitsFont = units
-              ? pickFont(h, (u) => field + gap + textWidth(u, units) <= w && missingChars(u, units).length === 0)
+              ? pickFont(h - capH, BODY_FONTS, (u) => field + gap + textWidth(u, units) <= w && missingChars(u, units).length === 0)
               : undefined;
-            draw = `tsgui_readout.make(${digits}, ${unitsFont ?? "None"}, ${pyStr(units)}, ${decimals}, ${pyNum(lo)}, ${pyNum(hi)}, ${gap})`;
+            draw =
+              `tsgui_readout.make(${digits}, ${unitsFont ?? "None"}, ${pyStr(units)}, ${decimals}, ${pyNum(lo)}, ${pyNum(hi)}, ${gap}` +
+              (captionFont ? `, ${pyStr(caption)}, ${captionFont})` : ")");
             imports.add(digits);
             if (unitsFont) imports.add(unitsFont);
+            if (captionFont) imports.add(captionFont);
             break;
           }
           case "bar": {
@@ -310,13 +326,13 @@ export function compileScreens(
               const onText = typeof p.onText === "string" && p.onText !== "" ? p.onText : "ON";
               const offText = typeof p.offText === "string" && p.offText !== "" ? p.offText : "OFF";
               const widest = [onText, offText, "--"].reduce((a, b) => (textWidth("font_body16", b) > textWidth("font_body16", a) ? b : a));
-              const font = pickFont(h - 2 * pad, (f) => textWidth(f, widest) <= w - 2 * pad && missingChars(f, widest).length === 0);
+              const font = pickFont(h - 2 * pad, BODY_FONTS, (f) => textWidth(f, widest) <= w - 2 * pad && missingChars(f, widest).length === 0);
               draw = `tsgui_button.make(${font}, None, ${pyStr(onText)}, ${pyStr(offText)}${style === "box" ? "" : `, ${pyStr(style)}`})`;
               imports.add(font);
               break;
             }
             const text = [p.text, p.label].map((v) => (typeof v === "string" ? v.trim() : "")).find((v) => v !== "") || undefined;
-            const font = pickFont(h - 2 * pad, (f) => textWidth(f, text ?? "--") <= w - 2 * pad && missingChars(f, text ?? "--").length === 0);
+            const font = pickFont(h - 2 * pad, BODY_FONTS, (f) => textWidth(f, text ?? "--") <= w - 2 * pad && missingChars(f, text ?? "--").length === 0);
             draw = `tsgui_button.make(${font}, ${text === undefined ? "None" : pyStr(text)}${style === "box" ? "" : `, None, None, ${pyStr(style)}`})`;
             imports.add(font);
             break;
@@ -327,7 +343,7 @@ export function compileScreens(
               const onText = typeof p.onText === "string" && p.onText !== "" ? p.onText : "On";
               const offText = typeof p.offText === "string" && p.offText !== "" ? p.offText : "Off";
               const widest = [onText, offText, "--"].reduce((a, b) => (textWidth("font_body12", b) > textWidth("font_body12", a) ? b : a));
-              const font = pickFont(h - 6, (f) => textWidth(f, widest) <= w - 8 && missingChars(f, widest).length === 0);
+              const font = pickFont(h - 4, BODY_FONTS, (f) => textWidth(f, widest) <= w - 8 && missingChars(f, widest).length === 0);
               draw = `tsgui_led.make(${diameter}, "chip", ${pyStr(onText)}, ${pyStr(offText)}, ${font})`;
               imports.add(font);
             } else {
@@ -368,7 +384,7 @@ export function compileScreens(
           const text = e.text ?? "";
           let font: string;
           try {
-            font = pickFont(rect.height, (f) => textWidth(f, text) <= rect.width && missingChars(f, text).length === 0);
+            font = pickFont(rect.height, BODY_FONTS, (f) => textWidth(f, text) <= rect.width && missingChars(f, text).length === 0);
           } catch (err) {
             errors.push(`${where}: text "${text}" ${err instanceof Error ? err.message : String(err)}`);
             continue;

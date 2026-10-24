@@ -27,6 +27,7 @@
 import { CompileError } from "../compiler/errors.js";
 import { placedWidgets } from "../gui/screen-edit.js";
 import { pyPayloadLiteral } from "./py-literals.js";
+import { fontIds } from "../gui/font-metrics.js";
 import { resolveOrientation, turnedSize } from "./orientation-shared.js";
 import { resolveTouchPanel } from "./touch-panel-shared.js";
 import { GUI_THEME_CONFIG_TYPE, hasScreenTheme, resolveScreenTheme, resolveThemeForFormat, themeLiteral, THEME_ROLE_LABELS, THEME_ROLES, themePresetOptions } from "./gui-theme-shared.js";
@@ -373,6 +374,10 @@ export const guiLabelNode: NodeDefinition = {
   width: 100,
   properties: [
     { name: "name", label: "name", kind: "text", default: "" },
+    { name: "font", label: "font (blank = fit the cells)", kind: "select", default: "", options: [
+      { value: "", label: "auto (the largest that fits)" },
+      ...fontIds().map((f) => ({ value: f, label: f.replace(/^font_/, "") })),
+    ] },
     { name: "maxChars", label: "room for (characters)", kind: "number", default: 8, min: 1 },
     { name: "staleAfter", label: "stale after (s, 0 = never)", kind: "number", default: 0, min: 0 },
   ],
@@ -391,6 +396,10 @@ export const guiReadoutNode: NodeDefinition = {
   description: "Shows msg.payload. Its space is sized for the lowest to highest value.",
   properties: [
     { name: "name", label: "name", kind: "text", default: "" },
+    { name: "font", label: "font (blank = fit the cells)", kind: "select", default: "", options: [
+      { value: "", label: "auto (the largest that fits)" },
+      ...fontIds().map((f) => ({ value: f, label: f.replace(/^font_/, "") })),
+    ] },
     { name: "caption", label: "caption (above the number)", kind: "text", default: "", help: "Static text above the value, in the theme's muted colour." },
     { name: "units", label: "units", kind: "text", default: "" },
     { name: "decimals", label: "decimals", kind: "number", default: 1, min: 0, max: 6 },

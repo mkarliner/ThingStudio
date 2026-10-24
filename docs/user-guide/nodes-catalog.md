@@ -153,6 +153,7 @@ Type `thingstudio/gui_label`, kind sink, palette group GUI.
 - Outputs: none
 - Properties (name, type, default):
     - `name`, string, default `""`
+    - `font`, string, default `""`
     - `maxChars`, number, default `8` — room for this many characters
     - `staleAfter`, number, default `0` — seconds without a new value before it dims; 0 = never
 
@@ -199,6 +200,7 @@ Type `thingstudio/gui_readout`, kind sink, palette group GUI.
 - Outputs: none
 - Properties (name, type, default):
     - `name`, string, default `""`
+    - `font`, string, default `""`
     - `caption`, string, default `""`
     - `units`, string, default `""` — text shown after the number
     - `decimals`, number, default `1`

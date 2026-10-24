@@ -78,11 +78,9 @@ def _chip(on_text, off_text, font):
     def draw(surface, rect, value, state):
         fb = surface.fb
         x, y, w, h = rect
-        bg = surface.background_for(rect)
         if state == 0:
-            _pill(fb, x, y, w, h, surface.fg, False)
-            text, colour = UNKNOWN_TEXT, surface.fg
-            text_bg = bg
+            text, colour, fill = UNKNOWN_TEXT, surface.fg, None
+            text_bg = surface.background_for(rect)
         else:
             on = bool(value)
             text = on_text if on else off_text
@@ -92,13 +90,20 @@ def _chip(on_text, off_text, font):
             else:
                 colour = surface.colour_for(state)
                 fill = surface.theme.get("track", surface.dim)
-            _pill(fb, x, y, w, h, fill, True)
-            # The glyph cells clear to the pill's own fill, not the screen behind it (the CYD showed black
-            # boxes behind the chip's letters, 2026-10-24).
             text_bg = fill
+        # A badge, not a slab: the pill is as wide and tall as its text, centred in the cells. Filling the span
+        # made a two-row chip a 36px-tall pill on the CYD (2026-10-24).
         tw = _width(font, text)
-        tx = x + max(0, (w - tw) // 2)
-        ty = y + max(0, (h - font.height()) // 2)
-        surface.text(font, text, tx, ty, colour, x + w, text_bg)
+        pw = min(w, tw + 16)
+        ph = min(h, font.height() + 4)
+        px = x + max(0, (w - pw) // 2)
+        py = y + max(0, (h - ph) // 2)
+        if fill is None:
+            _pill(fb, px, py, pw, ph, surface.fg, False)
+        else:
+            _pill(fb, px, py, pw, ph, fill, True)
+        tx = px + max(0, (pw - tw) // 2)
+        ty = py + max(0, (ph - font.height()) // 2)
+        surface.text(font, text, tx, ty, colour, px + pw, text_bg)
 
     return draw
