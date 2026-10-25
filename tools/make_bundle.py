@@ -15,7 +15,10 @@
 # dependencies with the bundled Python itself, so aiohttp's compiled wheels match it. Dependencies are
 # wheels only (--only-binary=:all:), so a platform missing a wheel fails the build instead of compiling
 # something against the CI machine that may not run elsewhere. Versions are pinned by
-# packaging/constraints.txt, so two builds of the same tag ship the same dependencies.
+# packaging/constraints.txt, so two builds of the same tag ship the same dependencies. The whole
+# closure is downloaded into a wheelhouse first and installed offline from it; on Linux the download
+# asks for the manylinux2014 tag, which is what keeps the bundle at its 2.28 glibc floor when a package
+# (cryptography) also publishes a 2_34 wheel that a modern build host would otherwise prefer.
 #
 # macOS bundles also get python/bin/thingstudio-python (packaging/macos/: a python3 with an embedded
 # Info.plist, so macOS can ask for Local Network permission) and every Mach-O signed with the hardened
@@ -326,9 +329,24 @@ def bundle(plat: str, out_dir: Path, python_archive: Path | None = None, cache: 
         run([str(py), "-I", "-m", "pip", "wheel", "--quiet", "--no-deps", "--no-cache-dir", "-w", wheel_dir,
              f"esptool=={esptool}"])
         built = [str(w) for w in sorted(Path(wheel_dir).glob("*.whl"))]
+        # Bring the whole dependency closure into the same wheelhouse, then install from it offline.
+        # On Linux that is also how the glibc floor is kept: asking for the manylinux2014 tag picks the
+        # 2_17 wheel, where a plain install on a modern build host would take cryptography's 2_34 one
+        # and quietly raise the floor (check_glibc_floor catches it either way, but only after the
+        # fact). macOS and Windows have no such tag choice, so they resolve natively.
+        py_short = ".".join(PYTHON_VERSION.split(".")[:2])
+        download = [str(py), "-I", "-m", "pip", "download", "--quiet", "--no-cache-dir",
+                    "--only-binary=:all:", "-c", str(PACKAGING / "constraints.txt"),
+                    "-d", wheel_dir]
+        if plat.startswith("linux"):
+            tag = {"linux-x86_64": "manylinux2014_x86_64", "linux-aarch64": "manylinux2014_aarch64"}[plat]
+            download += ["--platform", tag, "--python-version", py_short, "--implementation", "cp",
+                         "--abi", f"cp{py_short.replace('.', '')}", "--abi", "abi3", "--abi", "none"]
+        run(download + built)
         run([str(py), "-I", "-m", "pip", "install", "--quiet", "--no-cache-dir", "--only-binary=:all:",
-             "-c", str(PACKAGING / "constraints.txt"),
-             "--no-warn-script-location", "--root-user-action=ignore", *built])
+             "--no-index", "--find-links", wheel_dir, "-c", str(PACKAGING / "constraints.txt"),
+             "--no-warn-script-location", "--root-user-action=ignore",
+             f"thingstudio-backend=={version}", f"esptool=={esptool}"])
     shutil.rmtree(REPO / "backend" / "build", ignore_errors=True)  # setuptools' in-tree leftovers
     glibc = ""
     if plat.startswith("linux"):
