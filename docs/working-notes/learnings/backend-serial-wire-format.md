@@ -43,6 +43,14 @@ Status: detail file, started 2026-09-07 (editor-backend-wiring session). See `le
   in code review. Treat `""`/`"n/a"` as no description and always carry the device path in a port label; a fake
   `Port` in a test with a real name never exercises the placeholder.
 
+- **`/Volumes` is one level deep; `/media` is two — a "drill down one level" heuristic is only ever right on
+  Linux.** 2026-10-25, same hardware session: `_volume_targets()` handled every non-Windows system the same way,
+  preferring the level below each root "when it has entries" (right for `/media/<user>/<drive>`). On macOS the
+  children of `/Volumes` are the volumes themselves, and the boot volume is one of them — so a volume that
+  contained directories had its own contents listed instead, and the Pico's `RPI-RP2` never appeared: the dialog
+  showed an `ls` of `/`. Mike: "I've no way of navigation to /Volumes/RP2." A listing rule that encodes one
+  platform's directory shape has to be branched per platform, not generalised into a heuristic.
+
 - **pyserial's `read(n)` waits for n bytes or the timeout — it doesn't return early with what's there.**
   2026-09-23. Asking for a large buffer "to be efficient" turns every short reply into a full timeout wait:
   0.5s per raw-REPL exec (a ~6-minute silent runtime install) and up to 0.5s extra latency on every relayed

@@ -2558,6 +2558,13 @@ function fwSelectedBoard(): FirmwareBoardInfo | undefined {
   return id ? fwBoards.find((board) => board.id === id) : undefined;
 }
 
+/** The target the user chose: a typed path wins, because that is the only way to reach a port or drive the list
+ * did not find (a volume mounted somewhere unusual, COM10, a path on another disk). Picking from the list clears
+ * the typed path, so the two never disagree about which was meant last. */
+function fwTarget(): string {
+  return el<HTMLInputElement>("fwTargetPath").value.trim() || el<HTMLSelectElement>("fwTargets").value;
+}
+
 function renderFwFileNote(): void {
   const board = fwSelectedBoard();
   const note = el("fwFileNote");
@@ -2591,6 +2598,7 @@ async function refreshFirmwareTargets(): Promise<void> {
   const note = el("fwTargetsNote");
   const error = el("fwError");
   const word = transport === "serial" ? "port" : "drive";
+  el<HTMLInputElement>("fwTargetPath").placeholder = transport === "serial" ? "/dev/ttyUSB0" : "/Volumes/RPI-RP2";
   error.textContent = "";
   note.textContent = "";
   select.innerHTML = "";
@@ -2617,6 +2625,7 @@ async function refreshFirmwareTargets(): Promise<void> {
 el("btnInstallFirmware").addEventListener("click", () => {
   fwFile = null;
   el<HTMLInputElement>("fwFile").value = "";
+  el<HTMLInputElement>("fwTargetPath").value = "";
   el("fwError").textContent = "";
   el("fwProgress").textContent = "";
   el("fwBoards").innerHTML = "";
@@ -2645,6 +2654,9 @@ for (const radio of Array.from(document.querySelectorAll<HTMLInputElement>('inpu
 }
 
 el("fwRefreshTargets").addEventListener("click", () => void refreshFirmwareTargets());
+el("fwTargets").addEventListener("change", () => {
+  el<HTMLInputElement>("fwTargetPath").value = "";
+});
 el("fwBoards").addEventListener("change", renderFwFileNote);
 el<HTMLInputElement>("fwFile").addEventListener("change", (event) => {
   const input = event.target as HTMLInputElement;
@@ -2668,7 +2680,7 @@ async function runFirmwareFlash(): Promise<void> {
   if (fwFlashing) return;
   const choice: FirmwareChoice = {
     transport: fwTransport(),
-    target: el<HTMLSelectElement>("fwTargets").value,
+    target: fwTarget(),
     boardId: el<HTMLSelectElement>("fwBoards").value,
     file: fwFile,
   };

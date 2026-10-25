@@ -141,29 +141,42 @@ def _volume_roots() -> list[Path]:
     return [Path("/media"), Path("/run/media")]
 
 
+def _visible_dirs(root: Path) -> list[Path]:
+    """Directories directly under `root`, hidden ones left out. An unreadable root is not an error here: the
+    listing is best effort and the dialog offers a typed path as well."""
+    try:
+        return [child for child in root.iterdir() if child.is_dir() and not child.name.startswith(".")]
+    except OSError:
+        return []
+
+
 def _volume_targets() -> list[dict]:
-    """Mounted volumes, best effort: the user can always type a path instead. On Linux /media and /run/media
-    hold one directory per user, so a level below the root is preferred when it has entries; on Windows the
-    drive letters other than the one holding home are the candidates."""
+    """Mounted volumes, best effort: the user can also type a path.
+
+    Each system names volumes differently, and only Linux puts a per-user directory between the mount root and
+    the drive: macOS lists the volumes themselves one level under /Volumes (the boot volume shows there too, and
+    is not a target), Windows names each one by drive letter, and Linux mounts at /media/<user>/<label> or
+    /run/media/<user>/<label>, so the level below the root is what the user picks. Applying Linux's extra level
+    on macOS lists the boot disk's own folders -- an ls of / -- instead of the mounted drives (2026-10-25)."""
     found: list[Path] = []
     if os.name == "nt":
         home = Path.home().drive.upper()
         found = [Path(f"{letter}:\\") for letter in "DEFGHIJKLMNOPQRSTUVWXYZ" if f"{letter}:" != home]
         found = [path for path in found if path.is_dir()]
+    elif sys.platform == "darwin":
+        boot = Path("/")
+        for root in _volume_roots():
+            for child in _visible_dirs(root):
+                try:
+                    if child.resolve() == boot:
+                        continue
+                except OSError:
+                    pass
+                found.append(child)
     else:
         for root in _volume_roots():
-            if not root.is_dir():
-                continue
-            try:
-                children = [child for child in root.iterdir() if child.is_dir()]
-            except OSError:
-                continue
-            for child in children:
-                try:
-                    grandchildren = [item for item in child.iterdir() if item.is_dir()]
-                except OSError:
-                    grandchildren = []
-                found.extend(grandchildren or [child])
+            for child in _visible_dirs(root):
+                found.extend(_visible_dirs(child) or [child])
     seen: set[str] = set()
     targets = []
     for path in sorted(found, key=lambda p: str(p)):

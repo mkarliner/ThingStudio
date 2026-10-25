@@ -11,6 +11,7 @@ from __future__ import annotations
 import hashlib
 import json
 import stat
+import sys
 import time
 from pathlib import Path
 
@@ -143,6 +144,26 @@ def test_targets_lists_mounted_volumes(monkeypatch, tmp_path):
         {"kind": "volume", "value": str(root / "RPI-RP2"), "label": "RPI-RP2"},
         {"kind": "volume", "value": str(root / "other"), "label": "other"},
     ]
+
+
+def test_on_linux_the_user_directory_between_the_root_and_the_drive_is_skipped(monkeypatch, tmp_path):
+    root = tmp_path / "media"
+    user = root / "mike"
+    (user / "RPI-RP2").mkdir(parents=True)
+    monkeypatch.setattr(firmware_flash, "_volume_roots", lambda: [root])
+    assert list_targets("volume") == [{"kind": "volume", "value": str(user / "RPI-RP2"), "label": "RPI-RP2"}]
+
+
+def test_on_macos_the_volumes_are_the_children_of_volumes_and_never_drilled_into(monkeypatch, tmp_path):
+    # The regression this pins (2026-10-25): Linux's extra level applied to /Volumes listed the boot disk's own
+    # folders -- an ls of / -- because a mounted volume contains directories of its own.
+    monkeypatch.setattr(sys, "platform", "darwin")
+    root = tmp_path / "Volumes"
+    pico = root / "RPI-RP2"
+    (pico / "subdir").mkdir(parents=True)
+    (root / "Macintosh HD").symlink_to("/")
+    monkeypatch.setattr(firmware_flash, "_volume_roots", lambda: [root])
+    assert list_targets("volume") == [{"kind": "volume", "value": str(pico), "label": "RPI-RP2"}]
 
 
 def test_an_unknown_transport_is_refused_by_name():

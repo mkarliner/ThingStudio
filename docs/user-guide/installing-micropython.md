@@ -32,7 +32,8 @@ RP2350).
 2. Choose **Tools → Install firmware…**.
 3. Pick **Serial port** or **Mounted drive**, then the port or drive from the list. USB ports come first, shown as
    the path and the adapter's name (for example `/dev/ttyUSB0 -- CH340`). If the board isn't there, put it in
-   download mode (step 1) and click ⟳; the line under the list says how many it found.
+   download mode (step 1) and click ⟳; the line under the list says how many it found. If it still isn't listed,
+   type the path in the box under the list (on macOS a mounted Pico is `/Volumes/RPI-RP2`).
 4. Pick the board if the list has it. Otherwise choose **Choose a file…** and pick the `.bin` or `.uf2` you
    downloaded above.
 5. Click **Flash**. The dialog shows the step it is on and how far it has got; a failure says what to fix.

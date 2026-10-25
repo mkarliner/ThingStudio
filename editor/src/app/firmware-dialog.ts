@@ -36,8 +36,8 @@ export function choiceProblem(choice: FirmwareChoice, boards: readonly FirmwareB
   const board = choice.boardId ? boards.find((item) => item.id === choice.boardId) : undefined;
   if (!choice.target) {
     return choice.transport === "serial"
-      ? "Pick a serial port. If the board isn't listed, put it in download mode (hold BOOT, tap RESET) and refresh."
-      : "Pick a mounted drive. If it isn't listed, hold BOOTSEL while plugging the board in and refresh.";
+      ? "Pick a serial port, or type its path. If the board isn't listed, put it in download mode (hold BOOT, tap RESET) and refresh."
+      : "Pick a mounted drive, or type its path. If it isn't listed, hold BOOTSEL while plugging the board in and refresh.";
   }
   if (!board && !choice.file) {
     return "Pick a board with a known image, or choose an image file from micropython.org/download.";

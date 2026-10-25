@@ -28,6 +28,14 @@ Corollaries, all decided 2026-10-25:
   backend lists the concrete targets for that choice. No probing of ports nobody selected, no guessing a board
   from a volume label. Auto-detect is a named later step, not an assumption — and it will not change the API,
   because a target already carries its kind.
+- **The list is per system, and a typed path backs it up (2026-10-25, second pass).** Each system mounts volumes
+  its own way: macOS lists them one level under `/Volumes`, Windows names them by drive letter, and only Linux
+  puts a per-user directory in between (`/media/<user>/<label>`). Applying Linux's extra level on macOS listed the
+  boot disk's own folders — an `ls` of `/` — and the Pico's drive never appeared; the backend now decides depth by
+  platform, and a port or volume always shows its path. The list stays best effort, so the dialog takes a typed
+  path as well: a browser cannot open a host filesystem picker, and a path box is the smallest honest answer for a
+  volume mounted somewhere unusual. A typed path is a target like any other — same transport choice, same
+  refusals — not a second code path, and it is not auto-detection in disguise.
 - **Tools live in the core backend; boards are data.** A third party adds a board by naming a tool, not by
   supplying an `argv` — running package-provided commands is exactly what the project's postures rule out.
   Adding a tool is a core change and an interface change, deliberately.
