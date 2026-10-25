@@ -11,6 +11,7 @@
 #   _assets/device-runtime/runtime_manifest.py
 #   _assets/device-runtime/runtime_build_sha.txt   git SHA of the last commit touching device-runtime/src
 #   _assets/definitions/{boards,processors}/*.json <- editor/src/definitions
+#   _assets/firmware/builds.json         <- firmware/builds.json (the flash catalogue)
 #
 # Run with `make assets` (which builds the editor and docs first), or directly after building them.
 # Stdlib only, so CI can run it with any Python 3.10+.
@@ -144,6 +145,11 @@ def build(repo: Path, out: Path, allow_stale: bool = False, allow_no_sha: bool =
         (tmp / "definitions" / kind).mkdir(parents=True)
         for f in sorted((defs / kind).glob("*.json")):
             shutil.copy2(f, tmp / "definitions" / kind / f.name)
+    builds = repo / "firmware" / "builds.json"
+    if not builds.is_file():
+        raise BuildError(f"no firmware catalogue at {builds}")
+    (tmp / "firmware").mkdir(parents=True)
+    shutil.copy2(builds, tmp / "firmware" / "builds.json")
     if out.exists():
         shutil.rmtree(out)
     tmp.rename(out)
@@ -156,6 +162,7 @@ def build(repo: Path, out: Path, allow_stale: bool = False, allow_no_sha: bool =
         f"docs         {count(out / 'docs')} files",
         f"runtime      {count(out / 'device-runtime' / 'src')} files, build {sha[:12] if sha else 'unstamped'}",
         f"definitions  {count(out / 'definitions')} files",
+        f"catalogue    {(out / 'firmware' / 'builds.json').stat().st_size} bytes",
     ]
 
 

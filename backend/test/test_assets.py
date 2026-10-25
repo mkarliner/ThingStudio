@@ -64,7 +64,7 @@ def test_no_repo_root_at_all_means_packaged(monkeypatch) -> None:
 def test_missing_assets_names_every_missing_part(tmp_path) -> None:
     missing = missing_assets(packaged_asset_dirs(tmp_path))
     assert [m.split(" (")[0] for m in missing] == [
-        "editor", "docs", "device runtime", "board definitions", "processor definitions",
+        "editor", "docs", "device runtime", "board definitions", "processor definitions", "firmware catalogue",
     ]
 
 
@@ -101,6 +101,7 @@ def _fake_repo(root: Path) -> Path:
         write("device-runtime/src/__pycache__/runtime.cpython-311.pyc"),
         write("editor/src/definitions/boards/pico.json", "{}"),
         write("editor/src/definitions/processors/rp2040.json", "{}"),
+        write("firmware/builds.json", '{"schema": 1, "builds": []}'),
         write(
             "device-runtime/runtime_manifest.py",
             'CORE_FILES = ["runtime.py"]\nLISTENER_FILE = "listener.py"\nMAIN_FILE = "main.py"\nBOOT_SCRIPT = b"import listener\\nlistener.main()\\n"\nDEPENDENCIES = [{"name": "thing", "files": [("lib/thing.py", "thing.py")], "requires": []}]\n',

@@ -1,6 +1,7 @@
 {
   "name": "ESP32-C3",
   "match": ["ESP32C3"],
+  "flash": { "tool": "esptool", "chip": "esp32c3", "address": 0 },
   "nativeArch": "rv32imc",
   "capabilities": ["wifi", "ble", "espnow"],
   "adc2": [5],

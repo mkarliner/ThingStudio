@@ -92,7 +92,11 @@
         }
       }
     },
-    "notes": { "type": "string", "description": "Anything worth knowing, shown on the Pins page." }
+    "notes": { "type": "string", "description": "Anything worth knowing, shown on the Pins page." },
+    "flash": {
+      "$ref": "#/$defs/flash",
+      "description": "How a board on this chip is written from blank: the tool, esptool's chip id, and where an image starts. Omit when the editor cannot flash it (no dfu yet)."
+    }
   },
   "$defs": {
     "pinId": {
@@ -116,6 +120,17 @@
       "description": "Pin or range (as a key, e.g. \"6-11\", or a name) -> a non-empty reason.",
       "propertyNames": { "anyOf": [{ "pattern": "^\\s*\\d+\\s*(-\\s*\\d+\\s*)?$" }, { "pattern": "^[A-Za-z][A-Za-z0-9_-]*$" }] },
       "additionalProperties": { "type": "string", "minLength": 1 }
+    },
+    "flash": {
+      "type": "object",
+      "description": "How a board on this chip is written from blank. esptool writes the ESP32 family over a serial port; uf2 copies to a mounted drive (RP2040/RP2350, nRF52).",
+      "additionalProperties": false,
+      "required": ["tool"],
+      "properties": {
+        "tool": { "enum": ["esptool", "uf2"], "description": "The flashing tool." },
+        "chip": { "type": "string", "minLength": 1, "description": "esptool's chip id (esp32, esp32s2, esp32s3, esp32c3, ...). Omit to let esptool identify the chip. Not allowed for uf2." },
+        "address": { "type": "integer", "minimum": 0, "description": "Where the image goes, in bytes: 4096 (0x1000) for ESP32 and ESP32-S2, 0 for the rest. Not allowed for uf2." }
+      }
     }
   }
 }

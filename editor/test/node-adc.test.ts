@@ -39,6 +39,7 @@ function target(): Target {
     spi: null,
     i2c: null,
     notes: "",
+    flash: null,
   };
   return {
     processor, board: null, label: "ESP32", gpio, inputOnly: new Set(), noPull: new Set(),

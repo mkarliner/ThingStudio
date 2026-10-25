@@ -1,6 +1,7 @@
 {
   "name": "ESP32-S3",
   "match": ["ESP32S3"],
+  "flash": { "tool": "esptool", "chip": "esp32s3", "address": 0 },
   "nativeArch": "xtensawin",
   "capabilities": ["wifi", "ble", "espnow"],
   "adc2": [11, 12, 13, 14, 15, 16, 17, 18, 19, 20],

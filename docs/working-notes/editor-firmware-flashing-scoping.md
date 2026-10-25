@@ -1,8 +1,9 @@
 # Editor firmware flashing: scoping
 
-Status: scoped 2026-10-24; **revised 2026-10-25** after Mike's point that this is not an ESP32 feature — it is
-for every board that can run MicroPython. Phases 1–2 are built against the earlier shape and are being
-refactored to match this note; nothing is committed yet. Phase 3 (the editor dialog) has not started.
+Status: scoped 2026-10-24; revised 2026-10-25 (all boards, not just ESP32); **superseded 2026-10-25** for how a
+build is named and written by `decisions/firmware-catalogue.md` — the chip family owns the tool/chip/address, a
+build is a catalogue variant with a pinned hash, and a board only points at one. This note still holds for the two
+"blank" states, the refusal style, and the runtime-install split.
 
 ## The two "blank" states
 

@@ -31,6 +31,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 from aiohttp import web
 
@@ -38,7 +39,10 @@ from .firmware_flash import (
     MAX_UPLOAD_BYTES,
     FirmwareError,
     FirmwareJobs,
-    image_cached,
+    catalogue,
+    families,
+    family_for_image_name,
+    inspect_image,
     list_targets,
     save_upload,
 )
@@ -264,28 +268,15 @@ def make_admin_routes(store: PersistedStore) -> list[web.RouteDef]:
             }
         )
 
-    # -- firmware flashing (a blank board; docs/working-notes/editor-firmware-flashing-scoping.md) --
+    # -- firmware flashing (a blank board; decisions/firmware-catalogue.md) --
     jobs = FirmwareJobs(store)
 
-    async def list_firmware(request: web.Request) -> web.Response:
-        boards = []
-        for item in store.list_definitions("boards"):
-            if not item.valid or not isinstance(item.data, dict):
-                continue
-            fw = item.data.get("firmware")
-            if not isinstance(fw, dict):
-                continue
-            boards.append(
-                {
-                    "id": item.name,
-                    "label": item.data.get("name") or item.name,
-                    "tool": fw.get("tool"),
-                    "transport": fw.get("transport"),
-                    "runtime": fw.get("runtime") or "none",
-                    "cached": image_cached(store, fw),
-                }
-            )
-        return web.json_response({"boards": boards})
+    async def firmware_catalogue(request: web.Request) -> web.Response:
+        """The families this install can flash and the builds of each, with whether a version is cached."""
+        try:
+            return web.json_response(catalogue(store))
+        except FirmwareError as exc:
+            return web.json_response({"error": exc.message, "step": exc.step}, status=503)
 
     async def firmware_targets(request: web.Request) -> web.Response:
         transport = request.query.get("transport", "")
@@ -298,7 +289,10 @@ def make_admin_routes(store: PersistedStore) -> list[web.RouteDef]:
         name = request.query.get("name") or "image.bin"
         chunks: list[bytes] = []
         size = 0
-        async for chunk in request.content.iter_chunked(1 << 16):
+        while True:
+            chunk = await request.content.readany()
+            if not chunk:
+                break
             size += len(chunk)
             if size > MAX_UPLOAD_BYTES:
                 return web.json_response(
@@ -310,6 +304,8 @@ def make_admin_routes(store: PersistedStore) -> list[web.RouteDef]:
             saved = save_upload(store, name, b"".join(chunks))
         except FirmwareError as exc:
             return web.json_response({"error": exc.message, "step": exc.step}, status=400)
+        # The image's own header says which chip it is for; the dialog uses that as the family rather than asking.
+        saved["family"] = family_for_image_name(inspect_image(Path(saved["path"])), families(store))
         return web.json_response(saved)
 
     async def flash_firmware(request: web.Request) -> web.Response:
@@ -319,13 +315,8 @@ def make_admin_routes(store: PersistedStore) -> list[web.RouteDef]:
             return web.json_response({"error": "NODE_ERROR: request body was not valid JSON"}, status=400)
         if not isinstance(body, dict):
             return web.json_response({"error": "NODE_ERROR: request body must be an object"}, status=400)
-        board = body.get("board") if isinstance(body.get("board"), str) else None
-        image = body.get("imagePath") if isinstance(body.get("imagePath"), str) else None
-        offset = body.get("offset")
-        if not board and not image:
-            return web.json_response({"error": "NODE_ERROR: give a board or an imagePath"}, status=400)
         try:
-            job = jobs.start(body.get("target"), board, image, offset)
+            job = jobs.start(body)
         except FirmwareError as exc:
             return web.json_response({"error": exc.message, "step": exc.step}, status=409)
         return web.json_response({"id": job.id})
@@ -337,7 +328,7 @@ def make_admin_routes(store: PersistedStore) -> list[web.RouteDef]:
             return web.json_response({"error": exc.message}, status=404)
 
     return [
-        web.get("/api/firmware/boards", list_firmware),
+        web.get("/api/firmware/catalogue", firmware_catalogue),
         web.post("/api/firmware/image", upload_firmware_image),
         web.get("/api/firmware/targets", firmware_targets),
         web.post("/api/firmware/flash", flash_firmware),

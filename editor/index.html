@@ -191,6 +191,7 @@
   dialog .dialog-row { display: flex; gap: 8px; align-items: flex-end; }
   dialog .dialog-row select { flex: 1 1 auto; }
   dialog .dialog-note { font-size: 11px; color: var(--dim); margin: 0 0 8px; min-height: 1em; }
+  dialog .dialog-log { font-size: 11px; max-height: 10em; overflow: auto; background: var(--bg); border: 1px solid var(--border); padding: 4px 6px; margin: 0 0 8px; white-space: pre-wrap; }
 </style>
 </head>
 <body>
@@ -394,8 +395,9 @@
   </form>
 </dialog>
 
-<!-- Install firmware (2026-10-25, docs/working-notes/editor-firmware-flashing-scoping.md): any board that can
-     run MicroPython, so the user says how it is connected and the backend lists the targets. -->
+<!-- Install firmware (decisions/firmware-catalogue.md, 2026-10-25): the chip family says which tool, chip and
+     address; a build is a catalogue variant with a pinned hash; a local file works instead, and its family is
+     read from the file. -->
 <dialog id="firmwareDialog">
   <form method="dialog">
     <h2>Install firmware</h2>
@@ -414,16 +416,32 @@
     </div>
     <label>or type the path <input id="fwTargetPath" type="text" placeholder="/dev/ttyUSB0" /></label>
     <p id="fwTargetsNote" class="dialog-note"></p>
-    <label>Board <select id="fwBoards"></select></label>
+    <div class="dialog-row">
+      <label>Chip family <select id="fwFamily"></select></label>
+      <label>Build <select id="fwBuild"></select></label>
+    </div>
+    <label>Version <select id="fwVersion"></select></label>
     <label>Image file <input id="fwFile" type="file" accept=".bin,.uf2,.gz" /></label>
-    <label id="fwOffsetRow">Address <select id="fwOffset">
-        <option value="4096">0x1000 - ESP32, ESP32-S2</option>
-        <option value="0">0 - ESP32-S3, C3, C6, ESP8266</option>
-      </select>
-      <span class="hint">only for a file with no board: MicroPython's download page says which</span></label>
     <p id="fwFileNote" class="dialog-note"></p>
+    <label class="check"><input id="fwErase" type="checkbox" checked />
+      Erase all flash first <span class="hint">recommended: clears an old partition table</span></label>
+    <details id="fwAdvanced">
+      <summary>Install options</summary>
+      <div class="dialog-row">
+        <label>Address <input id="fwAddress" type="text" placeholder="family default" size="10" /></label>
+        <label>Speed <select id="fwBaud">
+            <option value="">460800 (default)</option>
+            <option value="230400">230400</option>
+            <option value="115200">115200</option>
+            <option value="38400">38400 (if a flash fails)</option>
+          </select></label>
+      </div>
+      <label class="check"><input id="fwNoStub" type="checkbox" />
+        Disable the stub loader <span class="hint">some boards need this</span></label>
+    </details>
     <p>MicroPython images for other boards: <a href="https://micropython.org/download/" target="_blank" rel="noopener">micropython.org/download</a>.</p>
     <p id="fwProgress" class="dialog-note"></p>
+    <pre id="fwLog" class="dialog-log" hidden></pre>
     <p id="fwError" class="dialog-error"></p>
     <div class="dialog-buttons">
       <button value="cancel" formnovalidate>Cancel</button>

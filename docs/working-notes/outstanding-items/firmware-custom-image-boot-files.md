@@ -1,6 +1,8 @@
 # A frozen image needs a boot script, and the runtime install should provide it
 
-Status: open, found 2026-10-25 while writing the user docs for **Tools → Install firmware…**; direction settled the
+Status: **built 2026-10-25** (runtime install split into boot script + core + frozen inventory; commit `c7aff3d`).
+What remains is publishing the rebuilt image and naming it in the catalogue -- see the backlog bullet in
+`outstanding-items.md`. Found while writing the user docs for **Tools → Install firmware…**; direction settled the
 same day (Mike: choose the clean shape, no compatibility hedge while there is no user base).
 
 ## The problem

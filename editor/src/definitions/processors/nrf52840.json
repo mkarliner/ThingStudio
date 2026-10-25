@@ -1,6 +1,7 @@
 {
   "name": "nRF52840",
   "match": ["NRF52840"],
+  "flash": { "tool": "uf2" },
   "nativeArch": "armv7emsp",
   "nativeArchConfirmed": false,
   "gpio": ["0-47"],

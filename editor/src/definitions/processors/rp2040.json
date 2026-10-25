@@ -1,6 +1,7 @@
 {
   "name": "RP2040",
   "match": ["RP2040"],
+  "flash": { "tool": "uf2" },
   "nativeArch": "armv6m",
   "capabilities": ["pio"],
   "gpio": ["0-29"],

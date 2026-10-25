@@ -76,10 +76,17 @@ ThingStudioMarketing repo, not here.
 
 ## Boards / definitions
 
-- **[P2]** **A frozen image needs a boot script; the runtime install should write it -- found 2026-10-25.** The
-  classic-ESP32 image has no `/main.py` and no inventory, so the CYD's recipe is withdrawn until install-runtime
-  is split into boot script (always) + core (only when `import listener` fails) + inventory (frozen into the
-  image). No board-descriptor change; the CYD block returns after the image is rebuilt.
+- **[BACKLOG]** **Manufacturer-supplied catalogue repositories (apt-style) -- Mike's idea, 2026-10-25.** A
+  URL that adds board definitions, builds and versions beside the built-in catalogue, so a vendor does not need a
+  Thingstudio release. The loader already takes a list of sources. The design cost is trust: a source's builds are
+  bytes written to the user's flash, so they need a hash inside the source and an explicit acceptance.
+  ([detail](outstanding-items/firmware-catalogue-repositories.md))
+- **[P2]** **Publish the rebuilt classic-ESP32 image and add it to the catalogue -- found 2026-10-25.** The
+  runtime-install split landed (boot script always, core only when `import listener` fails, inventory frozen into
+  the image), so an image flashed alone can boot. What remains: rebuild the image with that runtime, run it on the
+  CYD, and add it to `firmware/builds.json` as a `supplier: "thingstudio"` build of family `esp32`; the CYD's
+  board file then points at it by name. Until then the CYD takes stock ESP32 MicroPython and needs Install runtime
+  afterwards, like any other board.
   ([detail](outstanding-items/firmware-custom-image-boot-files.md))
 - **[P2]** **ESP32-C6 (and H2, P4...) detected as a classic ESP32 -- new bug, 2026-09-30.** Found by a test
   for the Pins… page. `target.ts`'s processor match is a substring test on the normalised MCU name and

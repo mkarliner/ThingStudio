@@ -1,0 +1,133 @@
+{
+  "schema": 1,
+  "builds": [
+    {
+      "id": "esp32-generic",
+      "supplier": "micropython",
+      "family": "esp32",
+      "label": "ESP32 / WROOM (generic)",
+      "infoUrl": "https://micropython.org/download/ESP32_GENERIC/",
+      "runtime": "install",
+      "versions": [
+        {
+          "version": "1.29.0",
+          "date": "2026-08-24",
+          "url": "https://micropython.org/resources/firmware/ESP32_GENERIC-20260824-v1.29.0.bin",
+          "sha256": "e67ad6015a0a504c1fec9aa9bbf589d0432ed28e62546f4f8dd8a147f8bd95f6"
+        }
+      ]
+    },
+    {
+      "id": "esp32-s2-generic",
+      "supplier": "micropython",
+      "family": "esp32-s2",
+      "label": "ESP32-S2 (generic, no PSRAM)",
+      "infoUrl": "https://micropython.org/download/ESP32_GENERIC_S2/",
+      "runtime": "install",
+      "versions": [
+        {
+          "version": "1.29.0",
+          "date": "2026-08-24",
+          "url": "https://micropython.org/resources/firmware/ESP32_GENERIC_S2-20260824-v1.29.0.bin",
+          "sha256": "c7e30ea6978437432cbb6233886a8037db766e84d6ae844acb6ed20d00cf5873"
+        }
+      ]
+    },
+    {
+      "id": "esp32-s3-spiram-oct",
+      "supplier": "micropython",
+      "family": "esp32-s3",
+      "label": "ESP32-S3 with 8 MB octal PSRAM (SPIRAM_OCT)",
+      "infoUrl": "https://micropython.org/download/ESP32_GENERIC_S3/",
+      "runtime": "install",
+      "versions": [
+        {
+          "version": "1.29.0",
+          "date": "2026-08-24",
+          "url": "https://micropython.org/resources/firmware/ESP32_GENERIC_S3-SPIRAM_OCT-20260824-v1.29.0.bin",
+          "sha256": "ab24eadfe3ef0e6ee38834d730e648def7cd82f3fa51ee0bbc59c29a6e1bd176"
+        }
+      ]
+    },
+    {
+      "id": "esp32-c3-generic",
+      "supplier": "micropython",
+      "family": "esp32-c3",
+      "label": "ESP32-C3 (generic)",
+      "infoUrl": "https://micropython.org/download/ESP32_GENERIC_C3/",
+      "runtime": "install",
+      "versions": [
+        {
+          "version": "1.29.0",
+          "date": "2026-08-24",
+          "url": "https://micropython.org/resources/firmware/ESP32_GENERIC_C3-20260824-v1.29.0.bin",
+          "sha256": "bf72ed9eb88ad3a8f49d02c3d371f9ea34c90a8a303aeb9e324d8efd4a2a655a"
+        }
+      ]
+    },
+    {
+      "id": "rpi-pico",
+      "supplier": "micropython",
+      "family": "rp2040",
+      "label": "Raspberry Pi Pico",
+      "infoUrl": "https://micropython.org/download/RPI_PICO/",
+      "runtime": "install",
+      "versions": [
+        {
+          "version": "1.29.0",
+          "date": "2026-08-24",
+          "url": "https://micropython.org/resources/firmware/RPI_PICO-20260824-v1.29.0.uf2",
+          "sha256": "e1160e602e277d85920adb5fe741435edccba9ba6ecadc85fdab75252eeff4e9"
+        }
+      ]
+    },
+    {
+      "id": "rpi-pico-w",
+      "supplier": "micropython",
+      "family": "rp2040",
+      "label": "Raspberry Pi Pico W",
+      "infoUrl": "https://micropython.org/download/RPI_PICO_W/",
+      "runtime": "install",
+      "versions": [
+        {
+          "version": "1.29.0",
+          "date": "2026-08-24",
+          "url": "https://micropython.org/resources/firmware/RPI_PICO_W-20260824-v1.29.0.uf2",
+          "sha256": "f918c0a082c6daf53e27998b7f990ba5f065db2e298b21a34024532a20786794"
+        }
+      ]
+    },
+    {
+      "id": "rpi-pico2",
+      "supplier": "micropython",
+      "family": "rp2350",
+      "label": "Raspberry Pi Pico 2",
+      "infoUrl": "https://micropython.org/download/RPI_PICO2/",
+      "runtime": "install",
+      "versions": [
+        {
+          "version": "1.29.0",
+          "date": "2026-08-24",
+          "url": "https://micropython.org/resources/firmware/RPI_PICO2-20260824-v1.29.0.uf2",
+          "sha256": "6bfc5d110f293870f60150468dfeec8aec5323b57415a0b9a86e6c334e876e93"
+        }
+      ]
+    },
+    {
+      "id": "seeed-xiao-nrf52840",
+      "supplier": "micropython",
+      "family": "nrf52840",
+      "label": "Seeed XIAO nRF52840",
+      "infoUrl": "https://micropython.org/download/SEEED_XIAO_NRF52/",
+      "runtime": "install",
+      "versions": [
+        {
+          "version": "1.29.0",
+          "date": "2026-08-24",
+          "url": "https://micropython.org/resources/firmware/SEEED_XIAO_NRF52-20260824-v1.29.0.uf2",
+          "sha256": "cfbc1b18c08fbde8682421dd84719d4cf0785e25554cb41f939071b78dfd6b78"
+        }
+      ]
+    }
+  ]
+}

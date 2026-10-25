@@ -467,62 +467,54 @@ describe("named pins (processors whose pins aren't numbered, e.g. the STM32 pybo
   });
 });
 
-describe("firmware recipes (flashing a blank board)", () => {
-  it("the Freenove carries a pinned recipe", () => {
-    const s3 = defs.boards.get("freenove-s3-4in")!;
-    expect(s3.firmware).toMatchObject({ tool: "esptool", transport: "serial", runtime: "install" });
-    if (s3.firmware?.tool !== "esptool") throw new Error("expected an esptool recipe");
-    expect(s3.firmware.flash.chip).toBe("esp32s3");
-    expect(s3.firmware.image.sha256).toMatch(/^[0-9a-f]{64}$/);
-    expect(s3.firmware.image.url).toMatch(/^https:\/\//);
-    // The CYD's image is flashed but the board also needs /main.py and /lib/_deps.json written after it, which
-    // the flow cannot do yet -- so it carries no recipe and the editor offers it a file instead
+describe("how a chip family is flashed (decisions/firmware-catalogue.md)", () => {
+  it("the family owns the tool, the chip id and the address", () => {
+    expect(defs.processors.get("esp32")!.flash).toEqual({ tool: "esptool", chip: "esp32", address: 4096 });
+    expect(defs.processors.get("esp32-s2")!.flash).toEqual({ tool: "esptool", chip: "esp32s2", address: 4096 });
+    expect(defs.processors.get("esp32-s3")!.flash).toEqual({ tool: "esptool", chip: "esp32s3", address: 0 });
+    expect(defs.processors.get("esp32-c3")!.flash).toEqual({ tool: "esptool", chip: "esp32c3", address: 0 });
+    expect(defs.processors.get("rp2040")!.flash).toEqual({ tool: "uf2", chip: null, address: 0 });
+    // No dfu tool yet, so the pyboard is not flashable from the editor.
+    expect(defs.processors.get("stm32f405")!.flash).toBeNull();
+  });
+
+  it("a board points at a catalogue build and never names an image", () => {
+    expect(defs.boards.get("wemos-d1-r32")!.variant).toBe("esp32-generic");
+    expect(defs.boards.get("pico")!.variant).toBe("rpi-pico");
+    expect(defs.boards.get("pyboard-v10")!.variant).toBeNull();
+    // The CYD takes stock ESP32 MicroPython; its own frozen image returns through the catalogue when published
     // (outstanding-items/firmware-custom-image-boot-files.md).
-    expect(defs.boards.get("cyd")!.firmware).toBeNull();
+    expect(defs.boards.get("cyd")!.variant).toBe("esp32-generic");
   });
 
-  it("every board with a recipe pairs its tool with the transport it uses", () => {
-    const withRecipe = [...defs.boards.values()]
-      .filter((board) => board.firmware)
-      .map((board) => board.id)
-      .sort();
-    expect(withRecipe).toEqual([
-      "freenove-s3-4in", "lolin-s2-mini", "luatos-esp32c3-core", "pico", "pico-2", "pico-w", "wemos-d1-r32", "xiao-nrf52840",
-    ]);
+  it("every board's variant names a build the catalogue has, of that board's family", async () => {
+    const { readFileSync } = await import("node:fs");
+    const { join } = await import("node:path");
+    const catalogue = JSON.parse(
+      readFileSync(join(__dirname, "..", "..", "firmware", "builds.json"), "utf8"),
+    ) as { builds: { id: string; family: string; versions: { url: string; sha256: string }[] }[] };
+    const byId = new Map(catalogue.builds.map((build) => [build.id, build]));
     for (const board of defs.boards.values()) {
-      if (!board.firmware) continue;
-      expect(board.firmware.transport).toBe(board.firmware.tool === "uf2" ? "volume" : "serial");
-      expect(board.firmware.image.sha256).toMatch(/^[0-9a-f]{64}$/);
+      if (!board.variant) continue;
+      const build = byId.get(board.variant);
+      expect(build, `${board.id} names build ${board.variant}`).toBeTruthy();
+      expect(build!.family).toBe(board.processor);
+      for (const version of build!.versions) {
+        expect(version.sha256).toMatch(/^[0-9a-f]{64}$/);
+        expect(version.url).toMatch(/^https:\/\//);
+      }
     }
-    // MicroPython's own layout: the classic ESP32 and S2 write at 0x1000, S3/C3 at 0.
-    const d1 = defs.boards.get("wemos-d1-r32")!.firmware;
-    if (d1?.tool !== "esptool") throw new Error("expected an esptool recipe");
-    expect(d1.flash.offset).toBe(4096);
   });
 
-  it("refuses a bad sha256, an unknown runtime, an unknown tool or a mismatched transport", () => {
-    const base = { name: "X", processor: "esp32", match: [], pins: {} };
-    const image = { url: "https://example.invalid/x.bin", sha256: "a".repeat(64) };
-    const recipe = (over: Record<string, unknown>) => ({
-      tool: "esptool", transport: "serial", image, ...over,
-    });
-    const set = (firmware: unknown) =>
-      buildDefinitionSet(BUILTIN_DEFINITION_FILES, [user("board", "b", { ...base, firmware })]);
-    expect(set(recipe({ image: { ...image, sha256: "nope" } })).problems.some((p) => /sha256/.test(p.message))).toBe(true);
-    expect(set(recipe({ runtime: "maybe" })).problems.some((p) => /firmware.runtime/.test(p.message))).toBe(true);
-    expect(set(recipe({ tool: "telepathy" })).problems.some((p) => /firmware\.tool/.test(p.message))).toBe(true);
-    expect(set(recipe({ transport: "volume" })).problems.some((p) => /firmware\.transport/.test(p.message))).toBe(true);
-    expect(set(recipe({ flash: { chip: "esp32", volume: "/Volumes/RPI-RP2" } })).problems.some((p) => /unknown key "volume"/.test(p.message))).toBe(true);
-    expect(set({ tool: "uf2", transport: "volume", image, flash: { chip: "esp32" } }).problems.some((p) => /unknown key "chip"/.test(p.message))).toBe(true);
-  });
-
-  it("a UF2 recipe takes no flash options and defaults to none", () => {
-    const firmware = { tool: "uf2", transport: "volume", image: { url: "https://example.invalid/x.uf2", sha256: "b".repeat(64) } };
-    const set = buildDefinitionSet(BUILTIN_DEFINITION_FILES, [
-      user("board", "pico", { name: "P", processor: "rp2040", match: [], pins: {}, firmware }),
-    ]);
-    expect(set.problems).toEqual([]);
-    const parsed = set.boards.get("pico")!;
-    expect(parsed.firmware).toEqual({ tool: "uf2", transport: "volume", image: firmware.image, runtime: "none", flash: {} });
+  it("refuses a bad flash block or an unknown tool", () => {
+    const set = (flash: unknown) =>
+      buildDefinitionSet(BUILTIN_DEFINITION_FILES, [
+        user("processor", "odd", { name: "Odd", match: ["ODD"], nativeArch: "xtensawin", gpio: ["0-4"], flash }),
+      ]);
+    expect(set({ tool: "telepathy" }).problems.some((p) => /flash\.tool/.test(p.message))).toBe(true);
+    expect(set({ tool: "uf2", chip: "esp32" }).problems.some((p) => /takes no "chip"/.test(p.message))).toBe(true);
+    expect(set({ tool: "esptool", address: -1 }).problems.some((p) => /flash\.address/.test(p.message))).toBe(true);
+    expect(set({ tool: "esptool", chip: "esp32", address: 4096 }).problems).toEqual([]);
+    expect(set(undefined).processors.get("odd")!.flash).toBeNull();
   });
 });

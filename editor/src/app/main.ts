@@ -182,7 +182,7 @@ import {
   type FlowFileConfig,
   type CanvasNodeSnapshot,
 } from "../flow-file/flow-file.js";
-import { DEFAULT_BACKEND_WS_URL, backendHttpBaseUrl, initialBackendWsUrl, slugifyFlowName, getCredential, putCredential, listDefinitions, listCustomNodePackages, readCustomNode, type CredentialType, listFirmwareBoards, listFirmwareTargets, uploadFirmwareImage, startFirmwareFlash, getFirmwareJob, type FirmwareBoardInfo } from "../flow-file/admin-api-client.js";
+import { DEFAULT_BACKEND_WS_URL, backendHttpBaseUrl, initialBackendWsUrl, slugifyFlowName, getCredential, putCredential, listDefinitions, listCustomNodePackages, readCustomNode, type CredentialType, listFirmwareCatalogue, listFirmwareTargets, uploadFirmwareImage, startFirmwareFlash, getFirmwareJob, type FirmwareBuild, type FirmwareCatalogue, type FirmwareFamily, type FirmwareJobState, type FirmwareVersion } from "../flow-file/admin-api-client.js";
 import { choiceProblem, doneLine, flashBoard, jobLine, type FirmwareChoice, type FirmwareFile } from "./firmware-dialog.js";
 // slugifyFlowName is reused here purely for a nicer suggested filename in
 // the save dialog below -- its own header's reasoning for why a display
@@ -2535,81 +2535,137 @@ async function precompileRuntime(): Promise<Record<string, string> | undefined> 
 }
 
 // -- Install firmware… -------------------------------------------------------------------------------
-// docs/working-notes/editor-firmware-flashing-scoping.md, revised 2026-10-25: any board that can run
-// MicroPython, so the user says how it is connected and the backend does the rest. A board definition only
-// pre-fills the image; a chosen file works with no board at all (the "any board MicroPython publishes for"
-// path). The backend lists targets and runs the tool; this file owns the dialog.
+// decisions/firmware-catalogue.md (2026-10-25): the shape is Thonny's -- the chip family owns the knowledge
+// (tool, chip id, address), a build is a variant inside a family, a board only points at one. The backend
+// lists the catalogue and targets and runs the tool; this file owns the dialog.
 
-let fwBoards: FirmwareBoardInfo[] = [];
+let fwCatalogue: FirmwareCatalogue | null = null;
 let fwFile: FirmwareFile | null = null;
+let fwUploaded: { name: string; path: string; family: string | null } | null = null;
 let fwFlashing = false;
+let fwLogLines = 0;
 
 function fwTransport(): "serial" | "volume" {
   const checked = document.querySelector<HTMLInputElement>('input[name="fwTransport"]:checked');
   return checked?.value === "volume" ? "volume" : "serial";
 }
 
-function fwSelectedBoard(): FirmwareBoardInfo | undefined {
-  const id = el<HTMLSelectElement>("fwBoards").value;
-  return id ? fwBoards.find((board) => board.id === id) : undefined;
+/** The transport a family's tool writes over: esptool a serial port, uf2 a mounted drive. */
+function familyTransport(family: FirmwareFamily): "serial" | "volume" {
+  return family.tool === "uf2" ? "volume" : "serial";
+}
+
+function fwFamilyId(): string {
+  return el<HTMLSelectElement>("fwFamily").value;
+}
+
+function fwSelectedBuild(): FirmwareBuild | undefined {
+  const id = el<HTMLSelectElement>("fwBuild").value;
+  return fwCatalogue?.builds.find((build) => build.id === id);
+}
+
+function fwSelectedVersion(): FirmwareVersion | undefined {
+  const id = el<HTMLSelectElement>("fwVersion").value;
+  return fwSelectedBuild()?.versions.find((version) => version.version === id);
 }
 
 /** The target the user chose: a typed path wins, because that is the only way to reach a port or drive the list
- * did not find (a volume mounted somewhere unusual, COM10, a path on another disk). Picking from the list clears
- * the typed path, so the two never disagree about which was meant last. */
+ * did not find. Picking from the list clears the typed path, so the two never disagree about which was meant. */
 function fwTarget(): string {
   return el<HTMLInputElement>("fwTargetPath").value.trim() || el<HTMLSelectElement>("fwTargets").value;
 }
 
-/** The address a file with no board is written at, or null when a board's own recipe sets it (or the transport is
- * a mounted drive). The field is hidden in both of those cases, so what is shown is what is sent. */
-function fwOffset(): number | null {
-  return el<HTMLSelectElement>("fwOffset").disabled ? null : Number(el<HTMLSelectElement>("fwOffset").value);
+/** An address typed as 0x1000 or 4096, or null for "the family's own". A malformed one is refused rather than
+ * silently ignored: the whole point of the field is that the address matters. */
+function fwAddress(): number | null {
+  const text = el<HTMLInputElement>("fwAddress").value.trim();
+  if (!text) return null;
+  const value = /^0x[0-9a-f]+$/i.test(text) ? Number.parseInt(text.slice(2), 16) : Number(text);
+  if (!Number.isInteger(value) || value < 0) throw new Error(`"${text}" is not an address — use 0x1000 or 4096`);
+  return value;
 }
 
-function renderFwOffset(): void {
-  const row = el("fwOffsetRow");
-  const shown = fwTransport() === "serial" && !fwSelectedBoard();
-  row.hidden = !shown;
-  el<HTMLSelectElement>("fwOffset").disabled = !shown;
+function familyLabel(id: string): string {
+  return fwCatalogue?.families.find((family) => family.id === id)?.label ?? id;
+}
+
+function renderFwFamilies(): void {
+  const select = el<HTMLSelectElement>("fwFamily");
+  const previous = select.value;
+  select.innerHTML = "";
+  const families = (fwCatalogue?.families ?? []).filter((family) => familyTransport(family) === fwTransport());
+  for (const family of families) select.add(new Option(family.label, family.id));
+  if (previous && families.some((family) => family.id === previous)) select.value = previous;
+  renderFwBuilds();
+}
+
+function renderFwBuilds(): void {
+  const select = el<HTMLSelectElement>("fwBuild");
+  const previous = select.value;
+  select.innerHTML = "";
+  const family = fwFamilyId();
+  const builds = (fwCatalogue?.builds ?? []).filter((build) => build.family === family);
+  if (!builds.length) select.add(new Option("(no build for this chip — choose a file)", ""));
+  // Our own images last, labelled by supplier: they change what happens after the flash.
+  const ordered = [...builds].sort((a, b) => Number(a.supplier === "thingstudio") - Number(b.supplier === "thingstudio"));
+  for (const build of ordered) {
+    const suffix = build.supplier === "thingstudio" ? " (Thingstudio image)" : "";
+    select.add(new Option(`${build.label}${suffix}`, build.id));
+  }
+  if (previous && builds.some((build) => build.id === previous)) select.value = previous;
+  renderFwVersions();
+}
+
+function renderFwVersions(): void {
+  const select = el<HTMLSelectElement>("fwVersion");
+  const previous = select.value;
+  select.innerHTML = "";
+  const build = fwSelectedBuild();
+  for (const version of build?.versions ?? []) {
+    const when = version.date ? ` (${version.date})` : "";
+    const cached = version.cached ? " — downloaded" : "";
+    select.add(new Option(`${version.version}${when}${cached}`, version.version));
+  }
+  if (previous && build?.versions.some((version) => version.version === previous)) select.value = previous;
+  renderFwFileNote();
 }
 
 function renderFwFileNote(): void {
-  const board = fwSelectedBoard();
   const note = el("fwFileNote");
-  if (fwFile) {
-    note.textContent = `${fwFile.name} will be used${board ? `, checked against ${board.label}'s pinned hash` : ""}.`;
-  } else if (board) {
-    note.textContent = board.cached
-      ? `${board.label}'s image is already downloaded.`
-      : `${board.label}'s image will be downloaded (${board.tool}).`;
+  const build = fwSelectedBuild();
+  if (fwUploaded) {
+    note.textContent = fwUploaded.family
+      ? `${fwUploaded.name} will be used: esptool reads it as ${familyLabel(fwUploaded.family)}.`
+      : `${fwUploaded.name} will be used, at the address under Install options.`;
+  } else if (build) {
+    const version = fwSelectedVersion();
+    note.textContent = version?.cached
+      ? `${build.label} ${version.version} is already downloaded.`
+      : `${build.label} ${version?.version ?? ""} will be downloaded and checked.`;
   } else {
-    note.textContent = "No board chosen: pick the file MicroPython publishes for your chip.";
+    note.textContent = "No build chosen: pick the file MicroPython publishes for your chip.";
   }
 }
 
-function renderFwBoards(): void {
-  const select = el<HTMLSelectElement>("fwBoards");
-  const transport = fwTransport();
-  const previous = select.value;
-  const matching = fwBoards.filter((item) => item.transport === transport);
-  select.innerHTML = "";
-  // A board only appears when this build has a recipe for it, so an empty-looking list is normal for a chip we
-  // have no recipe for (the CYD, until its image is rebuilt) -- say so instead of showing one bare option.
-  select.add(
-    new Option(
-      matching.length
-        ? "(choose an image file)"
-        : `(no board has a ${transport === "serial" ? "serial-port" : "mounted-drive"} recipe — choose a file)`,
-      "",
-    ),
-  );
-  for (const board of matching) {
-    select.add(new Option(board.label, board.id));
-  }
-  if (previous && matching.some((item) => item.id === previous)) select.value = previous;
-  renderFwFileNote();
-  renderFwOffset();
+/** The family's own address is the placeholder, so the user can see what will happen without typing anything. */
+function renderFwAdvanced(): void {
+  const family = fwCatalogue?.families.find((item) => item.id === fwFamilyId());
+  const address = el<HTMLInputElement>("fwAddress");
+  address.placeholder = family ? `0x${family.address.toString(16)}` : "family default";
+  el("fwAdvanced").hidden = fwTransport() !== "serial";
+}
+
+/** Preselect the build the connected (or manually chosen) board names, so a board we know is one click. */
+function fwPreselectFromBoard(): void {
+  const variant = activeTarget.value?.board?.variant;
+  const build = variant ? fwCatalogue?.builds.find((item) => item.id === variant) : undefined;
+  if (!build) return;
+  const family = fwCatalogue?.families.find((item) => item.id === build.family);
+  if (!family || familyTransport(family) !== fwTransport()) return;
+  el<HTMLSelectElement>("fwFamily").value = family.id;
+  renderFwBuilds();
+  el<HTMLSelectElement>("fwBuild").value = build.id;
+  renderFwVersions();
 }
 
 async function refreshFirmwareTargets(): Promise<void> {
@@ -2624,7 +2680,10 @@ async function refreshFirmwareTargets(): Promise<void> {
   select.innerHTML = "";
   try {
     const targets = await listFirmwareTargets(currentBackendWsUrl(), transport);
-    for (const target of targets) select.add(new Option(target.label, target.value));
+    for (const target of targets) {
+      const label = target.model ? `${target.label} -- ${target.model}` : target.label;
+      select.add(new Option(label, target.value));
+    }
     if (targets.length) {
       // A ⟳ that finds the same list changes nothing visible, so say what it found: otherwise a refresh looks
       // like a dead button (2026-10-25).
@@ -2644,31 +2703,40 @@ async function refreshFirmwareTargets(): Promise<void> {
 
 el("btnInstallFirmware").addEventListener("click", () => {
   fwFile = null;
+  fwUploaded = null;
+  fwLogLines = 0;
   el<HTMLInputElement>("fwFile").value = "";
   el<HTMLInputElement>("fwTargetPath").value = "";
+  el<HTMLInputElement>("fwAddress").value = "";
+  el<HTMLSelectElement>("fwBaud").value = "";
+  el<HTMLInputElement>("fwNoStub").checked = false;
+  el<HTMLInputElement>("fwErase").checked = true;
+  el("fwLog").hidden = true;
+  el("fwLog").textContent = "";
   el("fwError").textContent = "";
   el("fwProgress").textContent = "";
-  el("fwBoards").innerHTML = "";
   el("fwTargets").innerHTML = "";
   const dialog = el<HTMLDialogElement>("firmwareDialog");
   dialog.returnValue = "";
   dialog.showModal();
-  renderFwBoards();
   void (async () => {
     try {
-      fwBoards = await listFirmwareBoards(currentBackendWsUrl());
+      fwCatalogue = await listFirmwareCatalogue(currentBackendWsUrl());
     } catch (err) {
-      fwBoards = [];
+      fwCatalogue = null;
       el("fwError").textContent = err instanceof Error ? err.message : String(err);
     }
-    renderFwBoards();
+    renderFwFamilies();
+    fwPreselectFromBoard();
+    renderFwAdvanced();
     await refreshFirmwareTargets();
   })();
 });
 
 for (const radio of Array.from(document.querySelectorAll<HTMLInputElement>('input[name="fwTransport"]'))) {
   radio.addEventListener("change", () => {
-    renderFwBoards();
+    renderFwFamilies();
+    renderFwAdvanced();
     void refreshFirmwareTargets();
   });
 }
@@ -2677,15 +2745,49 @@ el("fwRefreshTargets").addEventListener("click", () => void refreshFirmwareTarge
 el("fwTargets").addEventListener("change", () => {
   el<HTMLInputElement>("fwTargetPath").value = "";
 });
-el("fwBoards").addEventListener("change", () => {
-  renderFwFileNote();
-  renderFwOffset();
+el("fwFamily").addEventListener("change", () => {
+  renderFwBuilds();
+  renderFwAdvanced();
 });
+el("fwBuild").addEventListener("change", () => {
+  // Picking a catalogue build drops a file the user had chosen: one answer to "what goes on the board".
+  fwFile = null;
+  fwUploaded = null;
+  el<HTMLInputElement>("fwFile").value = "";
+  renderFwVersions();
+  renderFwFileNote();
+});
+el("fwVersion").addEventListener("change", renderFwFileNote);
+
+// A file is uploaded as soon as it is picked, because the image's own header says which chip it is for -- the
+// family comes from the file, not from the user guessing.
 el<HTMLInputElement>("fwFile").addEventListener("change", (event) => {
   const input = event.target as HTMLInputElement;
   const picked = input.files?.[0];
-  fwFile = picked ? { name: picked.name, body: picked } : null;
-  renderFwFileNote();
+  fwFile = null;
+  fwUploaded = null;
+  if (!picked) {
+    renderFwFileNote();
+    return;
+  }
+  void (async () => {
+    el("fwProgress").textContent = `uploading ${picked.name}`;
+    try {
+      const saved = await uploadFirmwareImage(currentBackendWsUrl(), picked.name, picked);
+      fwUploaded = { name: saved.name, path: saved.path, family: saved.family };
+      if (saved.family) {
+        const family = fwCatalogue?.families.find((item) => item.id === saved.family);
+        if (family && familyTransport(family) === fwTransport()) el<HTMLSelectElement>("fwFamily").value = family.id;
+      }
+      renderFwBuilds();
+      renderFwVersions();
+      el("fwProgress").textContent = "";
+      renderFwFileNote();
+    } catch (err) {
+      el("fwProgress").textContent = "";
+      el("fwError").textContent = err instanceof Error ? err.message : String(err);
+    }
+  })();
 });
 
 // A flash in flight keeps the dialog open: closing it would leave the job running with nothing saying so.
@@ -2699,17 +2801,43 @@ el("fwFlash").addEventListener("click", (event) => {
   void runFirmwareFlash();
 });
 
+function appendFwLog(job: FirmwareJobState): void {
+  const log = el("fwLog");
+  const lines = job.log ?? [];
+  if (lines.length <= fwLogLines) return;
+  log.hidden = false;
+  log.textContent += lines.slice(fwLogLines).join("\n") + "\n";
+  fwLogLines = lines.length;
+  log.scrollTop = log.scrollHeight;
+}
+
 async function runFirmwareFlash(): Promise<void> {
   if (fwFlashing) return;
+  let address: number | null = null;
+  try {
+    address = fwAddress();
+  } catch (err) {
+    el("fwError").textContent = err instanceof Error ? err.message : String(err);
+    return;
+  }
+  const baudText = el<HTMLSelectElement>("fwBaud").value;
+  // One answer to "what goes on the board": a file the user picked, or the catalogue build. The backend refuses
+  // both, so the choice never carries both.
+  const hasFile = Boolean(fwFile || fwUploaded);
   const choice: FirmwareChoice = {
     transport: fwTransport(),
     target: fwTarget(),
-    boardId: el<HTMLSelectElement>("fwBoards").value,
+    family: fwFamilyId(),
+    build: hasFile ? "" : el<HTMLSelectElement>("fwBuild").value,
+    version: hasFile ? "" : el<HTMLSelectElement>("fwVersion").value,
     file: fwFile,
-    offset: fwOffset(),
+    imagePath: fwUploaded?.path,
+    address,
+    baud: baudText ? Number(baudText) : null,
+    noStub: el<HTMLInputElement>("fwNoStub").checked,
+    erase: el<HTMLInputElement>("fwErase").checked,
   };
-  const board = fwSelectedBoard();
-  const problem = choiceProblem(choice, fwBoards);
+  const problem = choiceProblem(choice, fwCatalogue?.families ?? [], fwCatalogue?.builds ?? []);
   if (problem) {
     el("fwError").textContent = problem;
     return;
@@ -2722,16 +2850,17 @@ async function runFirmwareFlash(): Promise<void> {
   try {
     await flashBoard(choice, {
       uploadImage: (name, body) => uploadFirmwareImage(wsUrl, name, body),
-      startFlash: (target, boardId, imagePath, offset) => startFirmwareFlash(wsUrl, target, boardId, imagePath, offset ?? undefined),
+      startFlash: (request) => startFirmwareFlash(wsUrl, request),
       getJob: (id) => getFirmwareJob(wsUrl, id),
       onStatus: (line) => {
         el("fwProgress").textContent = line;
       },
       onProgress: (job) => {
         el("fwProgress").textContent = jobLine(job);
+        appendFwLog(job);
       },
     });
-    const summary = doneLine(board);
+    const summary = doneLine(fwSelectedBuild());
     el("fwProgress").textContent = summary;
     logLine(`[firmware] ${summary}`, "ok");
   } catch (err) {

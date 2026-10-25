@@ -1,6 +1,7 @@
 {
   "name": "LuatOS ESP32C3-CORE",
   "processor": "esp32-c3",
+  "variant": "esp32-c3-generic",
   "wifi": true,
   "match": [],
   "pins": { "LED_D4": 12, "LED_D5": 13, "BOOT": 9 },
@@ -17,15 +18,5 @@
     "17": "GND", "18": "3V3", "19": 2, "20": 3, "21": 10, "22": 6, "23": 7, "24": 11,
     "25": "GND", "26": "3V3", "27": 5, "28": 4, "29": 8, "30": 9, "31": "5V", "32": "GND"
   },
-  "notes": "Reports itself as a generic ESP32-C3, so pick it by hand in the Board menu. Two LEDs, D4 on GPIO 12 and D5 on GPIO 13, both on when high. The BOOT button is GPIO 9, low when pressed. The flash runs in DIO mode, so GPIO 12 and 13 aren't flash pins on this board. The classic version has a CH343 USB-serial chip on GPIO 20 and 21. The newer version uses native USB on GPIO 18 and 19. Boards sold without external flash can't use GPIO 11-13. Pins are from the LuatOS wiki.",
-  "firmware": {
-    "tool": "esptool",
-    "transport": "serial",
-    "image": {
-      "url": "https://micropython.org/resources/firmware/ESP32_GENERIC_C3-20260824-v1.29.0.bin",
-      "sha256": "bf72ed9eb88ad3a8f49d02c3d371f9ea34c90a8a303aeb9e324d8efd4a2a655a"
-    },
-    "runtime": "install",
-    "flash": { "chip": "esp32c3", "baud": 460800, "offset": 0 }
-  }
+  "notes": "Reports itself as a generic ESP32-C3, so pick it by hand in the Board menu. Two LEDs, D4 on GPIO 12 and D5 on GPIO 13, both on when high. The BOOT button is GPIO 9, low when pressed. The flash runs in DIO mode, so GPIO 12 and 13 aren't flash pins on this board. The classic version has a CH343 USB-serial chip on GPIO 20 and 21. The newer version uses native USB on GPIO 18 and 19. Boards sold without external flash can't use GPIO 11-13. Pins are from the LuatOS wiki."
 }

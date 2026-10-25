@@ -45,9 +45,10 @@
       "enum": ["top", "bottom"],
       "description": "Which end the USB connector is at, pin 1 at the top left. Needs header."
     },
-    "firmware": {
-      "$ref": "#/$defs/firmware",
-      "description": "How to flash this board from blank, for the editor's Install firmware action. Omit if unknown."
+    "variant": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The catalogue build this board normally takes (firmware/builds.json, e.g. esp32-generic). A shortcut for the firmware dialog; a board never names an image."
     }
   },
   "$defs": {
@@ -72,55 +73,6 @@
       "description": "Pin or range (as a key, e.g. \"6-11\", or a name) -> a non-empty reason.",
       "propertyNames": { "anyOf": [{ "pattern": "^\\s*\\d+\\s*(-\\s*\\d+\\s*)?$" }, { "pattern": "^[A-Za-z][A-Za-z0-9_-]*$" }] },
       "additionalProperties": { "type": "string", "minLength": 1 }
-    },
-    "firmware": {
-      "type": "object",
-      "description": "A flash recipe: the tool, the transport it uses, a pinned image, and the tool's own options. 'esptool' (ESP32 over serial) and 'uf2' (a mounted drive) today; 'dfu' later.",
-      "additionalProperties": false,
-      "required": ["tool", "transport", "image"],
-      "properties": {
-        "tool": { "enum": ["esptool", "uf2"], "description": "The flashing tool. It implies the image format: .bin for esptool, .uf2 for uf2." },
-        "transport": { "enum": ["serial", "volume"], "description": "How the board appears: a serial port in its bootloader, or a mounted drive. Must match the tool; the editor's dialog starts from it, and the user can pick another target of the same kind." },
-        "image": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["url", "sha256"],
-          "properties": {
-            "url": { "type": "string", "minLength": 1, "description": "Where to download the image (http, https or file)." },
-            "sha256": { "type": "string", "pattern": "^[0-9a-fA-F]{64}$", "description": "The image's sha256; a mismatch refuses the flash." }
-          }
-        },
-        "runtime": { "enum": ["none", "install"], "description": "'install' when the image has no Thingstudio runtime, so the editor installs it after flashing. Default 'none'." },
-        "flash": { "type": "object", "description": "The tool's own options; unknown keys are refused. esptool: chip, baud, offset. uf2: none." }
-      },
-      "allOf": [
-        {
-          "if": { "properties": { "tool": { "const": "esptool" } } },
-          "then": {
-            "properties": {
-              "transport": { "const": "serial" },
-              "flash": {
-                "type": "object",
-                "additionalProperties": false,
-                "properties": {
-                  "chip": { "type": "string", "minLength": 1, "description": "esptool's chip id, e.g. esp32 or esp32s3. Omit to let esptool identify the chip." },
-                  "baud": { "type": "integer", "minimum": 1, "description": "Flash baud rate. Default 460800." },
-                  "offset": { "type": "integer", "minimum": 0, "description": "Flash offset in bytes. Default 0." }
-                }
-              }
-            }
-          }
-        },
-        {
-          "if": { "properties": { "tool": { "const": "uf2" } } },
-          "then": {
-            "properties": {
-              "transport": { "const": "volume" },
-              "flash": { "type": "object", "additionalProperties": false, "properties": {} }
-            }
-          }
-        }
-      ]
     }
   }
 }

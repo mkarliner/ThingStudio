@@ -68,39 +68,20 @@ export interface ProcessorDef {
   readonly spi: { readonly maxHz?: number; readonly otherPinsMaxHz?: number; readonly buses: ReadonlyMap<number, SpiBusDef> } | null;
   readonly i2c: { readonly buses: ReadonlyMap<number, I2cBusDef> } | null;
   readonly notes: string;
+  /** How a board on this chip is flashed, or null when the editor cannot flash it (no `dfu` yet). */
+  readonly flash: ProcessorFlashDef | null;
 }
 
-/** How to flash this board from blank (editor-firmware-flashing-scoping.md, revised 2026-10-25). Data, so a
- * third party's board can carry it; tool-shaped, so a new tool does not add a top-level key to every board.
- * `transport` is what the user picks in the dialog ("serial" port or "volume" mounted drive); `flash` is the
- * tool's own vocabulary. `runtime: "install"` means the image has no Thingstudio runtime, so the editor runs
- * the normal install after flashing. */
-export interface FirmwareImageDef {
-  readonly url: string;
-  readonly sha256: string;
+/** How this chip family is flashed from blank (decisions/firmware-catalogue.md, 2026-10-25). The family owns the
+ * knowledge: which tool writes it, esptool's chip id, and where an image starts (0x1000 for ESP32/S2, 0 for the
+ * rest). A board names a build; it never names an image. */
+export interface ProcessorFlashDef {
+  readonly tool: "esptool" | "uf2";
+  /** esptool's chip id ("esp32", "esp32s3", ...). null for a tool that needs none. */
+  readonly chip: string | null;
+  /** Where the image is written, in bytes. Only meaningful for esptool. */
+  readonly address: number;
 }
-
-export type FirmwareRuntime = "none" | "install";
-
-export interface EsptoolFirmwareDef {
-  readonly tool: "esptool";
-  readonly transport: "serial";
-  readonly image: FirmwareImageDef;
-  readonly runtime: FirmwareRuntime;
-  /** `chip: null` means esptool identifies the chip itself (`--chip auto`). */
-  readonly flash: { readonly chip: string | null; readonly baud: number; readonly offset: number };
-}
-
-export interface Uf2FirmwareDef {
-  readonly tool: "uf2";
-  readonly transport: "volume";
-  readonly image: FirmwareImageDef;
-  readonly runtime: FirmwareRuntime;
-  /** A UF2 board takes no options: the volume is the target the user picked. */
-  readonly flash: Readonly<Record<string, never>>;
-}
-
-export type BoardFirmwareDef = EsptoolFirmwareDef | Uf2FirmwareDef;
 
 export interface BoardDef {
   readonly id: string;
@@ -136,8 +117,9 @@ export interface BoardDef {
   readonly headerOrder: "around" | "down";
   /** Which end of the header drawing the USB connector is at: "top" is the pin 1 end. Needs `header`. */
   readonly usb: "top" | "bottom" | null;
-  /** The flash-from-blank recipe, or null when this board has none. */
-  readonly firmware: BoardFirmwareDef | null;
+  /** The catalogue build this board normally takes (`firmware/builds.json`), or null when the catalogue has
+   * nothing for it. A shortcut for the dialog: the user can still pick any build of the board's family. */
+  readonly variant: string | null;
 }
 
 export type DefinitionKind = "processor" | "board";
@@ -298,8 +280,8 @@ function parsePinValue(v: unknown, where: string): PinId {
 // Schemas in interfaces/board-descriptor/ list the same keys -- the schema is
 // a contract for people writing ~/.thingstudio/{processors,boards}/*.json, so
 // it must not drift from this parser.
-export const PROCESSOR_KEYS = ["name", "match", "nativeArch", "nativeArchConfirmed", "capabilities", "gpio", "inputOnly", "noPull", "adc2", "reserved", "avoid", "spi", "i2c", "notes"];
-export const BOARD_KEYS = ["name", "processor", "match", "pins", "gpio", "reserved", "avoid", "notes", "wifi", "capabilities", "header", "free", "headerOrder", "usb", "firmware"];
+export const PROCESSOR_KEYS = ["name", "match", "nativeArch", "nativeArchConfirmed", "capabilities", "gpio", "inputOnly", "noPull", "adc2", "reserved", "avoid", "spi", "i2c", "notes", "flash"];
+export const BOARD_KEYS = ["name", "processor", "match", "pins", "gpio", "reserved", "avoid", "notes", "wifi", "capabilities", "header", "free", "headerOrder", "usb", "variant"];
 
 function parseSpi(v: unknown, gpio: ReadonlySet<PinId>): ProcessorDef["spi"] {
   if (!isObject(v)) throw new DefinitionError(`"spi": must be an object`);
@@ -407,45 +389,28 @@ export function parseProcessor(id: string, data: unknown): ProcessorDef {
     spi: data.spi === undefined ? null : parseSpi(data.spi, gpio),
     i2c: data.i2c === undefined ? null : parseI2c(data.i2c, gpio),
     notes: data.notes === undefined ? "" : str(data.notes, `"notes"`),
+    flash: data.flash === undefined ? null : parseFlash(data.flash),
   };
 }
 
-const FIRMWARE_TOOLS = ["esptool", "uf2"] as const;
+const FLASH_TOOLS = ["esptool", "uf2"] as const;
 
-function parseFirmwareImage(v: unknown): FirmwareImageDef {
-  if (!isObject(v)) throw new DefinitionError(`"firmware.image": must be an object`);
-  checkKeys(v, ["url", "sha256"], `"firmware.image"`);
-  const url = str(v.url, `"firmware.image.url"`);
-  const sha256 = str(v.sha256, `"firmware.image.sha256"`).toLowerCase();
-  if (!/^[0-9a-f]{64}$/.test(sha256)) throw new DefinitionError(`"firmware.image.sha256": must be 64 hex characters`);
-  return { url, sha256 };
-}
-
-function parseFirmware(v: unknown): BoardFirmwareDef {
-  if (!isObject(v)) throw new DefinitionError(`"firmware": must be an object`);
-  checkKeys(v, ["tool", "transport", "image", "runtime", "flash"], `"firmware"`);
-  const tool = oneOf(v.tool, FIRMWARE_TOOLS, `"firmware.tool"`);
-  const transport = oneOf(v.transport, ["serial", "volume"] as const, `"firmware.transport"`);
-  const expected = tool === "esptool" ? "serial" : "volume";
-  if (transport !== expected) {
-    throw new DefinitionError(`"firmware.transport": "${tool}" flashes over "${expected}", not "${transport}"`);
-  }
-  const image = parseFirmwareImage(v.image);
-  const runtime = v.runtime === undefined ? "none" : oneOf(v.runtime, ["none", "install"] as const, `"firmware.runtime"`);
-  const flashObj = v.flash === undefined ? {} : v.flash;
-  if (!isObject(flashObj)) throw new DefinitionError(`"firmware.flash": must be an object`);
-  if (tool === "esptool") {
-    checkKeys(flashObj, ["chip", "baud", "offset"], `"firmware.flash"`);
-    const chip = flashObj.chip === undefined ? null : str(flashObj.chip, `"firmware.flash.chip"`);
-    const baud = flashObj.baud === undefined ? 460800 : positiveInt(flashObj.baud, `"firmware.flash.baud"`);
-    const offset = flashObj.offset === undefined ? 0 : flashObj.offset;
-    if (typeof offset !== "number" || !Number.isInteger(offset) || offset < 0) {
-      throw new DefinitionError(`"firmware.flash.offset": must be a whole number of bytes (0 for the start of flash)`);
+function parseFlash(v: unknown): ProcessorFlashDef {
+  if (!isObject(v)) throw new DefinitionError(`"flash": must be an object like {"tool": "esptool", "chip": "esp32", "address": 4096}`);
+  checkKeys(v, ["tool", "chip", "address"], `"flash"`);
+  const tool = oneOf(v.tool, FLASH_TOOLS, `"flash.tool"`);
+  if (tool === "uf2") {
+    if (v.chip !== undefined || v.address !== undefined) {
+      throw new DefinitionError(`"flash": "uf2" takes no "chip" or "address" — the address is inside the .uf2`);
     }
-    return { tool, transport: "serial", image, runtime, flash: { chip, baud, offset } };
+    return { tool, chip: null, address: 0 };
   }
-  checkKeys(flashObj, [], `"firmware.flash"`);
-  return { tool, transport: "volume", image, runtime, flash: {} };
+  const chip = v.chip === undefined ? null : str(v.chip, `"flash.chip"`);
+  const address = v.address === undefined ? 0 : v.address;
+  if (typeof address !== "number" || !Number.isInteger(address) || address < 0) {
+    throw new DefinitionError(`"flash.address": must be a whole number of bytes (0 for the start of flash)`);
+  }
+  return { tool, chip, address };
 }
 
 export function parseBoard(id: string, data: unknown, processors: ReadonlyMap<string, ProcessorDef>): BoardDef {
@@ -506,7 +471,7 @@ export function parseBoard(id: string, data: unknown, processors: ReadonlyMap<st
     header: data.header === undefined ? new Map() : parseHeader(data.header, available),
     headerOrder,
     usb,
-    firmware: data.firmware === undefined ? null : parseFirmware(data.firmware),
+    variant: data.variant === undefined ? null : str(data.variant, `"variant"`),
   };
 }
 

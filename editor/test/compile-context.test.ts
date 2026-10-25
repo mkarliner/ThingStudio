@@ -42,6 +42,7 @@ const target: Target = {
     spi: null,
     i2c: null,
     notes: "",
+  flash: null,
   },
   board: null,
   label: "ESP32",

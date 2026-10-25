@@ -297,3 +297,12 @@ to the backend, prompt injection) before it is built (2026-10-23). 1 entry: `doc
 Flashing a blank board (no MicroPython, or no runtime) from the editor is the next priority (Mike, 2026-10-24);
 the backend runs esptool, images are pinned per board definition with a local-file override, and first slice is
 the CYD and Freenove S3. 1 entry: `docs/working-notes/decisions/editor-firmware-flashing.md`.
+
+## Firmware catalogue
+
+Flashing follows Thonny's shape: the chip family owns the knowledge (tool, esptool chip, start address — in the
+processor descriptor), a build is a variant inside a family with versions, a board only points at one
+(`variant`), and the catalogue is a hash-pinned file in the repo rather than a server fetch; erase-all by default,
+and a local file's family read from the image with `esptool image_info` rather than asked. Kept open for a future
+manufacturer-supplied repository (apt-style), which is why the loader takes a list of sources (2026-10-25).
+1 entry: `docs/working-notes/decisions/firmware-catalogue.md`.

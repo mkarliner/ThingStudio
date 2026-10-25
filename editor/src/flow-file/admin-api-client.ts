@@ -338,23 +338,51 @@ export async function listDefinitions(wsUrl: string): Promise<UserDefinitionFile
 }
 
 // -- firmware flashing ------------------------------------------------------
-// docs/working-notes/editor-firmware-flashing-scoping.md. The backend owns the tools and the files; the editor
-// only picks a target, uploads an image when the user chose one, and polls a job.
+// decisions/firmware-catalogue.md. The backend owns the tools, the catalogue and the files; the editor picks a
+// target and a build (or a file), uploads the file when there is one, and polls a job.
 
-export interface FirmwareBoardInfo {
+export interface FirmwareFamily {
   id: string;
   label: string;
   tool: "esptool" | "uf2";
-  transport: "serial" | "volume";
-  runtime: "none" | "install";
-  /** The pinned image is already downloaded, so the flash needs no network. */
+  /** esptool's chip id, or null when the tool needs none. */
+  chip: string | null;
+  /** Where an image starts, in bytes (0x1000 for ESP32/S2). */
+  address: number;
+}
+
+export interface FirmwareVersion {
+  version: string;
+  date: string;
+  url: string;
+  sha256: string;
+  /** Already downloaded, so flashing it needs no network. */
   cached: boolean;
+}
+
+export interface FirmwareBuild {
+  id: string;
+  family: string;
+  supplier: string;
+  label: string;
+  infoUrl: string;
+  /** "install" means the image carries no Thingstudio runtime, so Install runtime is the next step. */
+  runtime: "none" | "install";
+  tool: "esptool" | "uf2";
+  versions: FirmwareVersion[];
+}
+
+export interface FirmwareCatalogue {
+  families: FirmwareFamily[];
+  builds: FirmwareBuild[];
 }
 
 export interface FirmwareTarget {
   kind: "serial" | "volume";
   value: string;
   label: string;
+  /** A UF2 bootloader's own board id (INFO_UF2.TXT), used only to preselect a build. */
+  model?: string | null;
 }
 
 export interface FirmwareJobState {
@@ -364,9 +392,13 @@ export interface FirmwareJobState {
   progress: number;
   error: string;
   step: string;
-  board: string;
+  family: string;
+  build: string;
+  version: string;
   tool: string;
   target: string;
+  /** Every line the tool printed, capped by the backend at 200. */
+  log: string[];
 }
 
 export interface FirmwareImageUpload {
@@ -374,12 +406,27 @@ export interface FirmwareImageUpload {
   sha256: string;
   size: number;
   name: string;
+  /** The family esptool read out of the image, or null when it could not tell. */
+  family: string | null;
 }
 
-export async function listFirmwareBoards(wsUrl: string): Promise<FirmwareBoardInfo[]> {
-  const res = await request(wsUrl, "/api/firmware/boards");
-  if (!res.ok) throw new AdminApiError(`list firmware boards failed: ${await parseErrorBody(res)}`);
-  return ((await res.json()) as { boards: FirmwareBoardInfo[] }).boards;
+/** One flash request: a target plus either a catalogue build and version, or an uploaded file. */
+export interface FirmwareFlashRequest {
+  target: { kind: "serial" | "volume"; value: string };
+  family?: string;
+  build?: string;
+  version?: string;
+  imagePath?: string;
+  address?: number;
+  baud?: number;
+  noStub?: boolean;
+  erase?: boolean;
+}
+
+export async function listFirmwareCatalogue(wsUrl: string): Promise<FirmwareCatalogue> {
+  const res = await request(wsUrl, "/api/firmware/catalogue");
+  if (!res.ok) throw new AdminApiError(`read the firmware catalogue failed: ${await parseErrorBody(res)}`);
+  return (await res.json()) as FirmwareCatalogue;
 }
 
 export async function listFirmwareTargets(wsUrl: string, transport: "serial" | "volume"): Promise<FirmwareTarget[]> {
@@ -400,20 +447,10 @@ export async function uploadFirmwareImage(wsUrl: string, name: string, body: Blo
   return (await res.json()) as FirmwareImageUpload;
 }
 
-export async function startFirmwareFlash(
-  wsUrl: string,
-  target: { kind: "serial" | "volume"; value: string },
-  boardId?: string,
-  imagePath?: string,
-  offset?: number,
-): Promise<string> {
-  const body: Record<string, unknown> = { target };
-  if (boardId) body.board = boardId;
-  if (imagePath) body.imagePath = imagePath;
-  if (!boardId && offset !== undefined) body.offset = offset;
+export async function startFirmwareFlash(wsUrl: string, flash: FirmwareFlashRequest): Promise<string> {
   const res = await request(wsUrl, "/api/firmware/flash", {
     method: "POST",
-    body: JSON.stringify(body),
+    body: JSON.stringify(flash),
     headers: { "Content-Type": "application/json" },
   });
   if (!res.ok) throw new AdminApiError(`start flash failed: ${await parseErrorBody(res)}`);

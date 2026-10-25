@@ -10,9 +10,11 @@ grid editor and the launch backlog. Detail and phasing: `../editor-firmware-flas
   npm dependency; direct-WebSerial mode does not offer the action.
 - **Two blank states, one flow**: no MicroPython (ESP32 ROM bootloader), or MicroPython with no runtime
   (nothing answers `HELLO`). Detect the chip, flash an image, install the runtime when the image has none.
-- **Images are pinned data with a local-file escape hatch.** A board definition carries a `firmware` block
-  (tool, chip, baud, URL, sha256, offset, whether the runtime is included); the backend caches downloads in
-  `~/.thingstudio/firmware/`, verifies the sha256 and refuses a mismatch. A local file overrides the URL.
+- **Images are pinned data with a local-file escape hatch.** *(Superseded 2026-10-25 by
+  `firmware-catalogue.md`: images live in the catalogue, `firmware/builds.json`, keyed by chip family; a board
+  only names a build. The pin, the cache in `~/.thingstudio/firmware/`, the sha256 check and the local file all
+  stay.)* The first cut put a `firmware` block on each board definition (tool, chip, baud, URL, sha256, offset,
+  whether the runtime is included).
 - **First slice: classic ESP32 (CYD) and ESP32-S3 (Freenove).** The CYD uses Thingstudio's own image (runtime
   included); the S3 uses stock MicroPython, then the runtime install as the same flow's second step.
 - **The fault rules apply**: one deterministic path, one reset per step, no retry or repair chain, each failure

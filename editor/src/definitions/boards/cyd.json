@@ -1,6 +1,7 @@
 {
   "name": "CYD (ESP32-2432S028, ST7789)",
   "processor": "esp32",
+  "variant": "esp32-generic",
   "wifi": true,
   "match": [],
   "pins": {

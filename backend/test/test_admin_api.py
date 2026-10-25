@@ -16,6 +16,7 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
+from thingstudio_backend import firmware_flash
 from thingstudio_backend.admin_api import make_admin_routes
 from thingstudio_backend.persisted_store import PersistedStore
 
@@ -477,37 +478,65 @@ async def test_list_definitions_returns_parsed_files_and_flags_bad_ones(tmp_path
 # -- firmware flashing ------------------------------------------------------
 
 
-def _firmware_board(base, name: str = "cyd") -> None:
-    (base / "boards").mkdir(parents=True, exist_ok=True)
-    (base / "boards" / f"{name}.json").write_text(
-        json.dumps(
-            {
-                "name": "CYD",
-                "processor": "esp32",
-                "match": [],
-                "pins": {},
-                "firmware": {
-                    "tool": "esptool",
-                    "transport": "serial",
-                    "image": {"url": "https://example.invalid/x.bin", "sha256": "a" * 64},
-                    "runtime": "none",
-                    "flash": {"chip": "esp32"},
-                },
-            }
-        )
+def _flashable_processor(base, name: str = "esp32") -> None:
+    (base / "processors").mkdir(parents=True, exist_ok=True)
+    (base / "processors" / f"{name}.json").write_text(
+        json.dumps({"name": "ESP32", "match": ["ESP32"], "gpio": ["0-10"], "flash": {"tool": "esptool", "chip": "esp32", "address": 4096}})
     )
 
 
+def _catalogue_file(tmp_path) -> Path:
+    path = tmp_path / "builds.json"
+    path.write_text(
+        json.dumps(
+            {
+                "schema": 1,
+                "builds": [
+                    {
+                        "id": "esp32-generic",
+                        "family": "esp32",
+                        "supplier": "micropython",
+                        "label": "ESP32 / WROOM (generic)",
+                        "runtime": "install",
+                        "versions": [
+                            {
+                                "version": "1.29.0",
+                                "date": "2026-08-24",
+                                "url": "https://example.invalid/x.bin",
+                                "sha256": "a" * 64,
+                            }
+                        ],
+                    }
+                ],
+            }
+        )
+    )
+    return path
+
+
 @pytest.mark.asyncio
-async def test_firmware_boards_lists_the_recipes_and_whether_the_image_is_cached(tmp_path) -> None:
+async def test_firmware_catalogue_lists_the_families_and_their_builds(tmp_path, monkeypatch) -> None:
     base = tmp_path / ".thingstudio"
-    _firmware_board(base)
-    (base / "boards" / "plain.json").write_text(json.dumps({"name": "Plain", "processor": "esp32", "match": [], "pins": {}}))
+    _flashable_processor(base)
+    monkeypatch.setattr(firmware_flash, "catalogue_sources", lambda: [_catalogue_file(tmp_path)])
     async with _client(tmp_path) as client:
-        body = await (await client.get("/api/firmware/boards")).json()
-    assert body == {
-        "boards": [{"id": "cyd", "label": "CYD", "tool": "esptool", "transport": "serial", "runtime": "none", "cached": False}]
+        body = await (await client.get("/api/firmware/catalogue")).json()
+    assert [f["id"] for f in body["families"]] == ["esp32"]
+    assert body["families"][0]["tool"] == "esptool" and body["families"][0]["address"] == 4096
+    assert body["builds"][0]["id"] == "esp32-generic"
+    assert body["builds"][0]["versions"][0] == {
+        "version": "1.29.0", "date": "2026-08-24", "url": "https://example.invalid/x.bin",
+        "sha256": "a" * 64, "cached": False,
     }
+
+
+@pytest.mark.asyncio
+async def test_a_broken_catalogue_is_reported_as_unavailable(tmp_path, monkeypatch) -> None:
+    monkeypatch.setattr(firmware_flash, "catalogue_sources", lambda: [tmp_path / "missing.json"])
+    async with _client(tmp_path) as client:
+        resp = await client.get("/api/firmware/catalogue")
+        body = await resp.json()
+    assert resp.status == 503 and body["step"] == "catalogue"
 
 
 @pytest.mark.asyncio
@@ -524,18 +553,26 @@ async def test_firmware_targets_refuses_an_unknown_transport(tmp_path) -> None:
 
 
 @pytest.mark.asyncio
-async def test_firmware_flash_requires_a_target_and_names_an_unknown_board(tmp_path) -> None:
+async def test_firmware_flash_requires_a_target_and_names_an_unknown_build(tmp_path, monkeypatch) -> None:
+    _flashable_processor(tmp_path / ".thingstudio")
+    monkeypatch.setattr(firmware_flash, "catalogue_sources", lambda: [_catalogue_file(tmp_path)])
     async with _client(tmp_path) as client:
-        no_target = await client.post("/api/firmware/flash", json={"board": "cyd"})
+        no_target = await client.post("/api/firmware/flash", json={"family": "esp32", "build": "esp32-generic", "version": "1.29.0"})
         assert no_target.status == 409
         unknown = await client.post(
-            "/api/firmware/flash", json={"target": {"kind": "serial", "value": "/dev/null"}, "board": "nonesuch"}
+            "/api/firmware/flash",
+            json={
+                "target": {"kind": "serial", "value": "/dev/null"},
+                "family": "esp32",
+                "build": "nonesuch",
+                "version": "1.29.0",
+            },
         )
         assert unknown.status == 409
         body = await unknown.json()
         missing_job = await client.get("/api/firmware/jobs/nope")
         assert missing_job.status == 404
-    assert "nonesuch" in body["error"]
+    assert "nonesuch" in body["error"] and body["step"] == "catalogue"
 
 
 @pytest.mark.asyncio
@@ -550,6 +587,8 @@ async def test_firmware_image_upload_returns_a_path_the_flash_can_use(tmp_path) 
         saved = await upload.json()
         assert saved["name"] == "my_board.uf2"
         assert saved["size"] == len(b"fake uf2 bytes")
+        # A .uf2 carries no chip header, so the family stays for the user to pick.
+        assert saved["family"] is None
         empty = await client.post("/api/firmware/image?name=x.bin", data=b"")
         assert empty.status == 400
         assert "empty" in (await empty.json())["error"]

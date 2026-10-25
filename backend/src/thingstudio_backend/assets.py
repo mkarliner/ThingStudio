@@ -7,7 +7,7 @@
 # Two layouts, decided once for all four, never mixed:
 #
 # - Dev checkout: this file sits at <repo>/backend/src/thingstudio_backend/, so the repo paths are used
-#   (editor/dist, site/, device-runtime/src, editor/src/definitions). Detected by the repo's own
+#   (editor/dist, site/, device-runtime/src, editor/src/definitions, firmware/builds.json). Detected by the repo's own
 #   backend/pyproject.toml and device-runtime/ being where they should be.
 # - Packaged install (MVP item 7): tools/build_assets.py copied everything into _assets/ next to this
 #   file, and the package ships it as package data.
@@ -50,6 +50,7 @@ class AssetDirs:
     docs: Path
     runtime_src: Path  # runtime_manifest.py is expected in its parent
     definitions: Path
+    builds: Path  # the firmware catalogue (firmware/builds.json)
 
 
 def dev_asset_dirs(repo_root: Path) -> AssetDirs:
@@ -59,6 +60,7 @@ def dev_asset_dirs(repo_root: Path) -> AssetDirs:
         docs=repo_root / "site",
         runtime_src=repo_root / "device-runtime" / "src",
         definitions=repo_root / "editor" / "src" / "definitions",
+        builds=repo_root / "firmware" / "builds.json",
     )
 
 
@@ -69,6 +71,7 @@ def packaged_asset_dirs(assets_dir: Path = PACKAGED_ASSETS_DIR) -> AssetDirs:
         docs=assets_dir / "docs",
         runtime_src=assets_dir / "device-runtime" / "src",
         definitions=assets_dir / "definitions",
+        builds=assets_dir / "firmware" / "builds.json",
     )
 
 
@@ -88,5 +91,6 @@ def missing_assets(dirs: AssetDirs) -> list[str]:
         (dirs.runtime_src.parent / "runtime_manifest.py", "device runtime"),
         (dirs.definitions / "boards", "board definitions"),
         (dirs.definitions / "processors", "processor definitions"),
+        (dirs.builds, "firmware catalogue"),
     ]
     return [f"{what} ({path})" for path, what in checks if not path.exists()]

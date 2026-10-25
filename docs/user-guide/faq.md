@@ -166,6 +166,6 @@ to A3 (CS) and GPIO 32 to A4 (RST), then set those pins in the display node.
 
 ## Do I need a terminal to install MicroPython?
 
-No, for boards Thingstudio can flash: an ESP32 over a serial port, and a board whose bootloader mounts as a drive
-(RP2040 and RP2350). Put the board in its bootloader and use **Tools → Install firmware…**. Other chips have
-their own installation routes; see [Install MicroPython](installing-micropython.md).
+No, for boards Thingstudio can flash: the ESP32 family over a serial port, and a board whose bootloader mounts as a
+drive (RP2040, RP2350, nRF52). Put the board in its bootloader and use **Tools → Install firmware…**. Other chips
+have their own installation routes; see [Install MicroPython](installing-micropython.md).
