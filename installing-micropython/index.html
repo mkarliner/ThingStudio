@@ -767,17 +767,6 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#get-the-firmware" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Get the firmware
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#install-from-thingstudio" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -789,6 +778,29 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#doing-it-yourself" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Doing it yourself
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Doing it yourself">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#get-the-firmware" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Get the firmware
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#rp2040-and-rp2350-drag-and-drop" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -798,8 +810,8 @@
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
+        
+          <li class="md-nav__item">
   <a href="#esp32-family-esptool" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -809,8 +821,8 @@
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
+        
+          <li class="md-nav__item">
   <a href="#without-a-terminal-thonny" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -820,8 +832,8 @@
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
+        
+          <li class="md-nav__item">
   <a href="#other-microcontrollers" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -829,6 +841,11 @@
       
     </span>
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -2979,17 +2996,6 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#get-the-firmware" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Get the firmware
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#install-from-thingstudio" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3001,6 +3007,29 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#doing-it-yourself" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Doing it yourself
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Doing it yourself">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#get-the-firmware" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Get the firmware
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#rp2040-and-rp2350-drag-and-drop" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3010,8 +3039,8 @@
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
+        
+          <li class="md-nav__item">
   <a href="#esp32-family-esptool" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3021,8 +3050,8 @@
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
+        
+          <li class="md-nav__item">
   <a href="#without-a-terminal-thonny" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3032,8 +3061,8 @@
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
+        
+          <li class="md-nav__item">
   <a href="#other-microcontrollers" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3041,6 +3070,11 @@
       
     </span>
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -3080,7 +3114,38 @@
 per board.</p>
 <p>A new board usually doesn't have MicroPython. If yours already has it, or you're not sure, go to
 <a href="../connecting/">step 4</a>. If MicroPython is missing, the console says so when you connect, and links back here.</p>
-<h2 id="get-the-firmware">Get the firmware</h2>
+<p>Thingstudio can install it for you, on the chips it can write. Doing it by hand is at the bottom of this page.</p>
+<h2 id="install-from-thingstudio">Install from Thingstudio</h2>
+<p>Thingstudio writes the firmware itself: over a serial port for the ESP32 family, and onto a mounted drive for
+RP2040, RP2350 and nRF52 boards.</p>
+<ol>
+<li>Put the board in its bootloader. Hold <strong>BOOT</strong> and tap <strong>RESET</strong> on an ESP32, or hold <strong>BOOTSEL</strong> while you
+   plug in a Pico.</li>
+<li>Choose <strong>Tools → Install firmware…</strong>.</li>
+<li>Pick <strong>Serial port</strong> or <strong>Mounted drive</strong>, then the port or drive from the list. USB ports come first, shown as
+   the path and the adapter's name (for example <code>/dev/ttyUSB0 -- CH340</code>). If the board isn't there, put it in
+   download mode (step 1) and click ⟳; the line under the list says how many it found. If it still isn't listed,
+   type the path in the box (on macOS a mounted Pico is <code>/Volumes/RPI-RP2</code>).</li>
+<li>Pick the <strong>chip family</strong>, then the <strong>build</strong> and <strong>version</strong>. Only the families the editor can write are listed,
+   and only builds whose hash is pinned, so what you flash is what was tested. A board that names its own build is
+   preselected. The build matters for the heap as much as for compatibility: an ESP32 with extra PSRAM wants the
+   <strong>PSRAM (WROVER)</strong> build, a single-core SOLO the <strong>single-core</strong> one. For a classic ESP32 there is also
+   <strong>Thingstudio image</strong>, which carries the runtime and the flow libraries frozen — flash it, then <strong>Install
+   runtime</strong> writes only the boot script.</li>
+<li>Click <strong>Flash</strong>. <strong>Erase all flash first</strong> is ticked: it clears an old partition table, which is the usual
+   reason a first install "succeeds" and then doesn't boot. The dialog shows each line the tool prints; a failure
+   says what to fix.</li>
+</ol>
+<p>The list covers every build Thingstudio pins, so <strong>Or use your own image file</strong> is only for the rest: a build for a
+board we don't list, or an image you downloaded yourself. Pick the <code>.bin</code> or <code>.uf2</code>; the chip family you choose
+decides the address, and the file's own header usually decides the family.</p>
+<p>Flashing erases the flow and all settings on the board. Afterwards, <a href="../connecting/">connect</a> it
+and <a href="../installing-runtime/">install the runtime</a>.</p>
+<p>The rest of this page is the same job without the editor, for a chip it can't write or a build it doesn't pin.</p>
+<h2 id="doing-it-yourself">Doing it yourself</h2>
+<p>You don't need any of this for a chip Thingstudio can write with a pinned build — that is the section above. It is
+here for the rest.</p>
+<h3 id="get-the-firmware">Get the firmware</h3>
 <p>Download the firmware for your board from <a href="https://micropython.org/download/">micropython.org/download</a>. Pick your
 exact board if it's listed, or the generic build for your chip:</p>
 <table>
@@ -3125,35 +3190,7 @@ exact board if it's listed, or the generic build for your chip:</p>
 </tbody>
 </table>
 <p>For any other chip, see <a href="#other-microcontrollers">Other microcontrollers</a>.</p>
-<h2 id="install-from-thingstudio">Install from Thingstudio</h2>
-<p>Thingstudio writes the firmware itself: over a serial port for the ESP32 family, and onto a mounted drive for
-RP2040, RP2350 and nRF52 boards.</p>
-<ol>
-<li>Put the board in its bootloader. Hold <strong>BOOT</strong> and tap <strong>RESET</strong> on an ESP32, or hold <strong>BOOTSEL</strong> while you
-   plug in a Pico.</li>
-<li>Choose <strong>Tools → Install firmware…</strong>.</li>
-<li>Pick <strong>Serial port</strong> or <strong>Mounted drive</strong>, then the port or drive from the list. USB ports come first, shown as
-   the path and the adapter's name (for example <code>/dev/ttyUSB0 -- CH340</code>). If the board isn't there, put it in
-   download mode (step 1) and click ⟳; the line under the list says how many it found. If it still isn't listed,
-   type the path in the box (on macOS a mounted Pico is <code>/Volumes/RPI-RP2</code>).</li>
-<li>Pick the <strong>chip family</strong>, then the <strong>build</strong> and <strong>version</strong>. Only the families the editor can write are listed,
-   and only builds whose hash is pinned, so what you flash is what was tested. A board that names its own build is
-   preselected. The build matters for the heap as much as for compatibility: an ESP32 with extra PSRAM wants the
-   <strong>PSRAM (WROVER)</strong> build, a single-core SOLO the <strong>single-core</strong> one. For a classic ESP32 there is also
-   <strong>Thingstudio image</strong>, which carries the runtime and the flow libraries frozen — flash it, then <strong>Install
-   runtime</strong> writes only the boot script.</li>
-<li>Click <strong>Flash</strong>. <strong>Erase all flash first</strong> is ticked: it clears an old partition table, which is the usual
-   reason a first install "succeeds" and then doesn't boot. The dialog shows each line the tool prints; a failure
-   says what to fix.</li>
-</ol>
-<p>The list covers every build Thingstudio pins, so <strong>Or use your own image file</strong> is only for the rest: the build for
-your board isn't listed, or you want an image you downloaded yourself. Pick the <code>.bin</code> or <code>.uf2</code>, and the address comes from the chip family: <code>0x1000</code> for an ESP32 or ESP32-S2,
-<code>0</code> for an ESP32-S3, C3, C6 or ESP8266. A mounted drive needs no address, and the file's own header usually tells
-the editor which chip it is for.</p>
-<p>Flashing erases the flow and all settings on the board. Afterwards, <a href="../connecting/">connect</a> it
-and <a href="../installing-runtime/">install the runtime</a>.</p>
-<p>The rest of this page is the same job without the editor.</p>
-<h2 id="rp2040-and-rp2350-drag-and-drop">RP2040 and RP2350: drag and drop</h2>
+<h3 id="rp2040-and-rp2350-drag-and-drop">RP2040 and RP2350: drag and drop</h3>
 <p>Copy the firmware onto the board as a file:</p>
 <ol>
 <li>Hold the <strong>BOOTSEL</strong> button while you plug the board into USB.</li>
@@ -3161,7 +3198,7 @@ and <a href="../installing-runtime/">install the runtime</a>.</p>
 <li>Copy the <code>.uf2</code> file onto it.</li>
 </ol>
 <p>The board restarts into MicroPython by itself.</p>
-<h2 id="esp32-family-esptool">ESP32 family: esptool</h2>
+<h3 id="esp32-family-esptool">ESP32 family: esptool</h3>
 <p>If Thingstudio is connected to the board, click <strong>Disconnect</strong> first. Only one program can use the board's port at
 a time. If another program has it open, esptool reports <code>Resource busy</code> or <code>could not open port</code>.</p>
 <p>Install <code>esptool</code> once:</p>
@@ -3197,11 +3234,11 @@ it found.</p>
 fails partway, leave out <code>--baud 460800</code>.</p>
 <p>Press <strong>RESET</strong> when it finishes. A board that uses the chip's own USB (most ESP32-S2 and S3 boards) may show up on
 a different port afterwards.</p>
-<h2 id="without-a-terminal-thonny">Without a terminal: Thonny</h2>
+<h3 id="without-a-terminal-thonny">Without a terminal: Thonny</h3>
 <p><a href="https://thonny.org">Thonny</a> installs MicroPython on the board through a GUI. Open
 <strong>Tools → Options → Interpreter</strong> and use <strong>Install or update MicroPython</strong>.</p>
 <p>When it's done, close Thonny. Like esptool, it needs the board's port to itself.</p>
-<h2 id="other-microcontrollers">Other microcontrollers</h2>
+<h3 id="other-microcontrollers">Other microcontrollers</h3>
 <p>Other chips, such as STM32, nRF or SAMD, each have their own way of installing MicroPython. See your board's page
 on <a href="https://micropython.org/download/">micropython.org/download</a> and the
 <a href="https://docs.micropython.org/en/latest/">MicroPython documentation</a>.</p>
