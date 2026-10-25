@@ -5161,8 +5161,9 @@ The raw error stays in the message, in brackets. Include it if you report a prob
 **Erase all flash first** is on by default: a board that had a different layout (a previous MicroPython, or a
 vendor image) needs it, or the new image can be written and still not boot.
 
-A flash that finishes but leaves the board silent usually means the image is stock MicroPython: connect it, then
-**Tools → Install runtime…**.
+A flash that finishes but leaves the board silent usually means it is waiting for **Tools → Install runtime…**: a
+stock MicroPython build has no runtime at all, and a Thingstudio image carries one but not the boot script that
+starts it.
 
 ## Deploy is grayed out
 

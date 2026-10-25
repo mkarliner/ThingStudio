@@ -3511,8 +3511,9 @@ what the board sent instead, and what to do:</p>
 </table>
 <p><strong>Erase all flash first</strong> is on by default: a board that had a different layout (a previous MicroPython, or a
 vendor image) needs it, or the new image can be written and still not boot.</p>
-<p>A flash that finishes but leaves the board silent usually means the image is stock MicroPython: connect it, then
-<strong>Tools → Install runtime…</strong>.</p>
+<p>A flash that finishes but leaves the board silent usually means it is waiting for <strong>Tools → Install runtime…</strong>: a
+stock MicroPython build has no runtime at all, and a Thingstudio image carries one but not the boot script that
+starts it.</p>
 <h2 id="deploy-is-grayed-out">Deploy is grayed out</h2>
 <p><strong>Compile → Deploy</strong> is grayed out when:</p>
 <ul>
