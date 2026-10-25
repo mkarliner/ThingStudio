@@ -693,8 +693,9 @@ RP2350).
 1. Put the board in its bootloader. Hold **BOOT** and tap **RESET** on an ESP32, or hold **BOOTSEL** while you
    plug in a Pico.
 2. Choose **Tools → Install firmware…**.
-3. Pick **Serial port** or **Mounted drive**, then the port or drive from the list. If the board isn't there,
-   click ⟳.
+3. Pick **Serial port** or **Mounted drive**, then the port or drive from the list. USB ports come first, shown as
+   the path and the adapter's name (for example `/dev/ttyUSB0 -- CH340`). If the board isn't there, put it in
+   download mode (step 1) and click ⟳; the line under the list says how many it found.
 4. Pick the board if the list has it. Otherwise choose **Choose a file…** and pick the `.bin` or `.uf2` you
    downloaded above.
 5. Click **Flash**. The dialog shows the step it is on and how far it has got; a failure says what to fix.
@@ -5131,6 +5132,7 @@ The raw error stays in the message, in brackets. Include it if you report a prob
 | --- | --- |
 | (no serial ports found), or the board's port is missing | Put the board in download mode — hold **BOOT**, tap **RESET**, release **BOOT** — then click ⟳. |
 | (no mounted drives found) | Hold **BOOTSEL** while plugging the board in, then click ⟳. |
+| A port named `/dev/ttyS0`, `/dev/ttyS1`… | Those are the computer's own serial ports, not the board. USB ports are listed above them, labelled with their path and the adapter's name (`/dev/ttyUSB0 -- CH340`). |
 | … is not a .uf2 | A mounted drive takes the `.uf2` build, not a `.bin`. Download the right one from [micropython.org/download](https://micropython.org/download/). |
 | … is not the image this board expects | The file isn't the image that board's entry pins. Pick the board's own image, or choose a different board entry. |
 | esptool is not installed on this machine | The backend's Python has no `esptool`: `pip install esptool`, then restart Thingstudio. |
