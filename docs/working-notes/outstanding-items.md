@@ -226,6 +226,22 @@ ThingStudioMarketing repo, not here.
 - **Device-runtime exchange vectors aren't in CI -- new item, 2026-10-24.** Same gap as the rest of the device suite
   (`outstanding-items/enforce-interface-conformance-in-ci.md`). `device-runtime/test/test_exchanges.py` needs
   the MicroPython unix port and `mpy-cross`.
+- **[P3]** **Version history lives in two long code comments -- new item, 2026-10-25** (raised by the protocol
+  merge session). `_RUNTIME_VERSION` in `listener.py` is a 4,888-character line and `EDITOR_TARGET_VERSION` in
+  `main.ts` 2,537, hand-mirrored. Move the history to a `CHANGELOG` and leave the numbers plus a pointer, then
+  decide whether a drift test is still worth having.
+  ([detail](outstanding-items/protocol-state-machine-followups.md))
+- **[P3]** **`deps._RESERVED` and `runtime_manifest.CORE_FILES` are hand-kept and never compared -- new item,
+  2026-10-25.** A new core file added to one and not the other shows up as a library push deleting a file the
+  board needs. A test that the two agree, or derive one from the other.
+  ([detail](outstanding-items/protocol-state-machine-followups.md))
+- **[P4]** **`main.ts` (3,333 lines) and `listener.py` (1,295) -- the next `editor.*` machines, new item,
+  2026-10-25.** Board settings, restart, exec and connect still use ad-hoc `waitForMessage` waits; the transfer
+  path's treatment is the model. Not scoped.
+  ([detail](outstanding-items/protocol-state-machine-followups.md))
+- **[P4]** **A library `Stream` survives an abandoned transfer until the board restarts -- new item, 2026-10-25.**
+  Bounded, so it is a leak rather than growth. Any fix is a named state or documented behaviour, not a silent
+  sweep. ([detail](outstanding-items/protocol-state-machine-followups.md))
 
 ## UI / editor
 
