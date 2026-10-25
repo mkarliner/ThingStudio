@@ -186,6 +186,15 @@ def check_glibc_floor(site_packages: Path) -> str:
     return f"{worst[0]}.{worst[1]}" if worst != (0, 0) else "any"
 
 
+def _constraint_version(name: str) -> str:
+    """The version packaging/constraints.txt pins for `name`. One pin, read by the bundle build too."""
+    for line in (PACKAGING / "constraints.txt").read_text().splitlines():
+        entry = line.split("#", 1)[0].strip()
+        if entry.startswith(name + "=="):
+            return entry.split("==", 1)[1]
+    raise BundleError(f"packaging/constraints.txt has no pin for {name}")
+
+
 def run(cmd: list[str], **kw) -> None:
     print("+ " + " ".join(str(c) for c in cmd), flush=True)
     result = subprocess.run(cmd, **kw)
@@ -307,9 +316,19 @@ def bundle(plat: str, out_dir: Path, python_archive: Path | None = None, cache: 
         wheels = list(Path(wheel_dir).glob("thingstudio_backend-*.whl"))
         if len(wheels) != 1:
             raise BundleError(f"expected one backend wheel, got {[w.name for w in wheels]}")
+        # esptool ships no wheel (source distribution only, every version), so building it is the one
+        # place a pinned sdist is compiled here: its wheel is pure Python, and its own dependencies are
+        # in constraints.txt with hashes in backend/requirements.txt. Without it the packaged backend
+        # cannot flash a board (firmware_flash.py runs the executable). GPL-2.0-or-later: the release
+        # must carry esptool's source offer -- docs/third-party-licenses.md, "Bundled in the release
+        # archives".
+        esptool = _constraint_version("esptool")
+        run([str(py), "-I", "-m", "pip", "wheel", "--quiet", "--no-deps", "--no-cache-dir", "-w", wheel_dir,
+             f"esptool=={esptool}"])
+        built = [str(w) for w in sorted(Path(wheel_dir).glob("*.whl"))]
         run([str(py), "-I", "-m", "pip", "install", "--quiet", "--no-cache-dir", "--only-binary=:all:",
              "-c", str(PACKAGING / "constraints.txt"),
-             "--no-warn-script-location", "--root-user-action=ignore", str(wheels[0])])
+             "--no-warn-script-location", "--root-user-action=ignore", *built])
     shutil.rmtree(REPO / "backend" / "build", ignore_errors=True)  # setuptools' in-tree leftovers
     glibc = ""
     if plat.startswith("linux"):

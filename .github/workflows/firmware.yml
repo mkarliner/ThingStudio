@@ -6,8 +6,9 @@ name: Firmware
 #
 # Manual only, on purpose: this produces a release artifact for one board family, not something every
 # push needs. "Run workflow" builds the image and keeps it as a run artifact. Pushing a tag builds it
-# and attaches the image, its SHA-256, /lib/_deps.json and the boot script (main.py) to the DRAFT
-# release, the same look-before-publishing step release.yml uses.
+# and attaches the image, its SHA-256 and the boot script (main.py) to the DRAFT release, the same
+# look-before-publishing step release.yml uses. The library inventory is frozen into the image itself
+# (deps_frozen.py, 2026-10-25), so it is no longer an asset.
 #
 # The image is built from the ESP-IDF docker image and MicroPython at a pinned tag, so it is a
 # rebuildable artifact from a known commit -- what the integrity story for these downloads rests on.
@@ -88,7 +89,7 @@ jobs:
             firmware/classic-esp32/out/thingstudio-classic-esp32-*.bin
             firmware/classic-esp32/out/thingstudio-classic-esp32-*.bin.sha256
             firmware/classic-esp32/out/SHA256SUMS
-            firmware/classic-esp32/out/_deps.json
+            firmware/classic-esp32/out/main.py
           if-no-files-found: error
           retention-days: 14
 
@@ -104,5 +105,4 @@ jobs:
           gh release upload "$tag" firmware/classic-esp32/out/thingstudio-classic-esp32-*.bin \
             firmware/classic-esp32/out/thingstudio-classic-esp32-*.bin.sha256 \
             firmware/classic-esp32/out/SHA256SUMS \
-            firmware/classic-esp32/out/_deps.json \
-            firmware/classic-esp32/main.py --clobber
+            firmware/classic-esp32/out/main.py --clobber

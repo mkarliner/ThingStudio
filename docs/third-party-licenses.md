@@ -1,7 +1,9 @@
 # Third-party software in use
 
-Status: living document, last updated 2026-10-25 (this update: `esptool` 4.12.0 added to the Backend table for
-firmware flashing, with the release-archive question it raises noted in that section). Prior update,
+Status: living document, last updated 2026-10-25 (this update: the release archives now carry `esptool` and its
+dependency tree, so the packaged app can flash a board -- versions read from the bundle built here, with the
+GPL-2 source-offer step named). Prior update, 2026-10-25: `esptool` 4.12.0 added to the Backend table for
+firmware flashing, with the release-archive question it raises noted in that section. Prior update,
 2026-10-24: the `editor/` npm tree moved to clear six
 advisories -- `vite` 8.3.5, `vitest` 4.1.12, `vue` 3.5.44, and transitives (`cborg` 6.1.5, `@types/node` 26.6.5,
 `@vitejs/plugin-vue` 6.0.10) -- all versions read from the installed metadata, licenses unchanged. Prior update,
@@ -255,6 +257,18 @@ own metadata in a bundle built 2026-09-26 (linux-x86_64), not from memory. Chang
 | typing_extensions | 4.16.0 | PSF-2.0 | multidict/aiosignal dependency. |
 | yarl | 1.25.1 | Apache-2.0 | aiohttp dependency (compiled wheel). |
 | pip | 26.2.1 | MIT | Comes with python-build-standalone; not used at run time. |
+| esptool | 4.12.0 | **GPL-2.0-or-later** | Flashing a blank board (Backend table above). Bundled so **Tools → Install firmware…** works in a packaged app; `esptool.py` sits in the bundle's `python/bin` and `firmware_flash.py` falls back to `python -m esptool`, since the launcher does not put that directory on PATH. esptool publishes no wheel: `make_bundle.py` builds its pure-Python wheel from the pinned sdist. GPL-2 means each release must carry esptool's source or a written offer alongside the archives — a step in the release process whenever a bundle carries it. |
+| cryptography | 43.0.3 | Apache-2.0 OR BSD-3-Clause | esptool dependency. Pinned below the newest release on purpose: 44+ ships only manylinux_2_28/2_34 wheels, and the 2_34 one is what pip picks on a modern build host, which breaks the 2.28 glibc floor (`check_glibc_floor`). 43.0.3 has a manylinux2014 (2_17) wheel. |
+| cffi | 2.1.1 | MIT | cryptography dependency (compiled wheel). |
+| bitstring | 5.0.0 | MIT | esptool dependency. |
+| tibs | 2.0.2 | MIT | bitstring dependency. |
+| ecdsa | 0.19.2 | MIT | esptool dependency. |
+| reedsolo | 1.7.0 | MIT | esptool dependency. |
+| intelhex | 2.3.0 | BSD-3-Clause | esptool dependency. |
+| argcomplete | 3.7.2 | Apache-2.0 | esptool dependency. |
+| PyYAML | 6.0.3 | MIT | esptool dependency (compiled wheel). |
+| pycparser | 3.12 | BSD-3-Clause | cffi dependency. |
+| six | 1.17.0 | MIT | esptool dependency. |
 
 ## Documentation build tooling (pip)
 

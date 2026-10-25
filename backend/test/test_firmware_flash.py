@@ -83,6 +83,22 @@ def settled(job) -> None:
     raise AssertionError("job did not finish")
 
 
+def test_esptool_falls_back_to_this_pythons_module(monkeypatch):
+    """A packaged Thingstudio installs esptool into its own Python but never puts that scripts directory
+    on PATH, so the console-script names are both absent there."""
+    monkeypatch.delenv("THINGSTUDIO_ESPTOOL", raising=False)
+    monkeypatch.setattr(firmware_flash.shutil, "which", lambda name: None)
+    assert firmware_flash.esptool_command() == [firmware_flash.sys.executable, "-m", "esptool"]
+
+
+def test_esptool_prefers_a_script_on_path_and_the_override(monkeypatch):
+    monkeypatch.delenv("THINGSTUDIO_ESPTOOL", raising=False)
+    monkeypatch.setattr(firmware_flash.shutil, "which", lambda name: f"/usr/local/bin/{name}" if name == "esptool" else None)
+    assert firmware_flash.esptool_command() == ["/usr/local/bin/esptool"]
+    monkeypatch.setenv("THINGSTUDIO_ESPTOOL", "/tmp/fake-esptool")
+    assert firmware_flash.esptool_command() == ["/tmp/fake-esptool"]
+
+
 def test_every_tool_names_a_known_transport():
     assert set(TOOLS) == {"esptool", "uf2"}
     for tool in TOOLS.values():

@@ -13,3 +13,19 @@ propcache==0.5.4
 pyserial==3.5
 typing_extensions==4.16.0
 yarl==1.25.1
+# Flashing a blank board from the editor (2026-10-25): firmware_flash.py runs esptool, so the packaged
+# backend carries it. esptool publishes no wheel -- make_bundle.py builds its pure-Python wheel from the
+# pinned sdist, and these are the versions that resolve around it (the same ones backend/requirements.txt
+# pins with hashes). GPL-2.0-or-later: see docs/third-party-licenses.md, "Bundled in the release archives".
+esptool==4.12.0
+tibs==2.0.2
+bitstring==5.0.0
+ecdsa==0.19.2
+reedsolo==1.7.0
+intelhex==2.3.0
+argcomplete==3.7.2
+cryptography==43.0.3
+cffi==2.1.1
+pycparser==3.12
+PyYAML==6.0.3
+six==1.17.0

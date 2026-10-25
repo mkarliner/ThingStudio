@@ -85,16 +85,18 @@ class Job:
         }
 
 
-def esptool_path() -> str:
-    """The esptool entry point: overridable for tests, then the two names pip installs."""
+def esptool_command() -> list[str]:
+    """How to run esptool, as an argv prefix. Overridable for tests, then the two console-script names
+    pip installs, then this Python's own module -- a packaged Thingstudio has esptool installed but its
+    scripts directory is not on PATH (the launcher runs the bundled Python directly)."""
     override = os.environ.get("THINGSTUDIO_ESPTOOL")
     if override:
-        return override
+        return [override]
     for name in ("esptool.py", "esptool"):
         found = shutil.which(name)
         if found:
-            return found
-    raise FirmwareError("flash", "esptool is not installed on this machine (pip install esptool)")
+            return [found]
+    return [sys.executable, "-m", "esptool"]
 
 
 # -- targets: enumeration only, never identification ------------------------------------------------
@@ -286,7 +288,7 @@ class Esptool(Tool):
         baud = int(options.get("baud") or _FLASH_BAUD)
         offset = int(options.get("offset") or 0)
         cmd = [
-            esptool_path(),
+            *esptool_command(),
             "--chip", chip,
             "--port", target,
             "--baud", str(baud),
