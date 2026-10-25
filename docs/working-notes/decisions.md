@@ -246,7 +246,9 @@ Public repo + GitHub Releases, relocatable python-build-standalone folder per pl
 `thingstudio`, launchd/systemd recipes; mDNS/remote backend deferred to posture-2 (2026-09-26); packaged
 assets built, dev checkout wins over `_assets/`; bundles on native runners, draft releases;
 `install.sh` as a release asset; macOS signed + notarized with an Info.plist-carrying
-executable; Windows `irm | iex` one-liner, per-user, no admin; winget/scoop post-MVP (2026-09-30). 14 entries:
+executable; Windows `irm | iex` one-liner, per-user, no admin; winget/scoop post-MVP (2026-09-30); the bundles
+ship esptool so the packaged app can flash a board, with each release attaching esptool's source and every
+bundle carrying its license (2026-10-25, Mike: "accept"). 15 entries:
 `docs/working-notes/decisions/packaging.md`.
 
 ## Flow dependencies

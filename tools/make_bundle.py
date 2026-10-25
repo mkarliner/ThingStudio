@@ -354,6 +354,23 @@ def bundle(plat: str, out_dir: Path, python_archive: Path | None = None, cache: 
         (root / launcher).chmod(mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
     shutil.copy2(PACKAGING / "README.txt", root / "README.txt")
     shutil.copy2(REPO / "LICENSE", root / "LICENSE")
+    # esptool is GPL-2.0-or-later and is redistributed here, so its license travels with the bundle; the
+    # release also carries its source (esptool publishes no wheel, so the sdist is the complete source).
+    # docs/third-party-licenses.md, "Bundled in the release archives".
+    licenses = root / "licenses"
+    licenses.mkdir(exist_ok=True)
+    site = next((root / "python" / "lib").glob("python3.*/site-packages"), None) or (
+        root / "python" / "Lib" / "site-packages"
+    )
+    found = None
+    for dist in site.glob("esptool-*.dist-info"):
+        for candidate in (dist / "licenses" / "LICENSE", dist / "LICENSE"):
+            if candidate.is_file():
+                found = candidate
+                break
+    if found is None:
+        raise BundleError(f"esptool's license not found under {site} -- the GPL notice must ship with the bundle")
+    shutil.copy2(found, licenses / "esptool-LICENSE")
     (root / "BUILD.txt").write_text(
         f"thingstudio {version}\nplatform {plat}\ncommit {git_commit()}\n"
         f"python {PYTHON_VERSION} (python-build-standalone {PBS_RELEASE}, {TARGETS[plat]})\n" + glibc + signed

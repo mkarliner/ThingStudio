@@ -39,3 +39,12 @@
   API. Briefing, "PowerShell one-liner as built".
 - **2026-09-30 — winget and scoop manifests move to post-MVP (Mike).** The PowerShell one-liner already gives
   Windows a one-step install and upgrade; the manifests would only point at the same zip. Homebrew stays in MVP.
+- **2026-10-25 — the bundles ship esptool, and each release carries its source (Mike: "accept").**
+  **Tools → Install firmware…** is part of the packaged app, so the backend's esptool dependency has to be
+  inside the bundle; without it the action refuses on every packaged install. esptool is GPL-2.0-or-later and
+  publishes no wheel, so `tools/make_bundle.py` builds its pure-Python wheel from the pinned sdist, copies
+  `licenses/esptool-LICENSE` into every bundle (and fails the build if the license is missing), and
+  `release.yml` attaches `esptool-<version>.tar.gz` — hash-checked against `backend/requirements.txt` — to the
+  draft release. That satisfies GPL-2's source requirement mechanically rather than by remembering.
+  cryptography is pinned to 43.0.3 in `packaging/constraints.txt` so the bundle keeps its 2.28 glibc floor.
+  `docs/third-party-licenses.md`, "Bundled in the release archives".

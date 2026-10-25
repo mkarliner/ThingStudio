@@ -242,10 +242,51 @@ jobs:
         run: |
           cp packaging/install.sh packaging/install.ps1 dist/
           cd dist && sha256sum thingstudio-* install.sh install.ps1 > SHA256SUMS && cat SHA256SUMS
+      # GPL-2 obligation: every bundle carries esptool, so the release carries its complete source as
+      # well, checked against the hash in backend/requirements.txt. Fetched from PyPI rather than with
+      # pip, so nothing builds third-party metadata on the release runner.
+      # docs/third-party-licenses.md.
+      - name: esptool source (GPL-2)
+        run: |
+          version=$(sed -n 's/^esptool==\([^ ]*\).*/\1/p' packaging/constraints.txt)
+          echo "ESPTOOL_VERSION=$version" >> "$GITHUB_ENV"
+          expected=$(python3 - "$version" <<'PY'
+          import re, sys
+          version = sys.argv[1]
+          lines = open("backend/requirements.txt").read().splitlines()
+          hashes = []
+          inside = False
+          for line in lines:
+              if line.startswith("esptool==" + version):
+                  inside = True
+                  hashes += re.findall(r"--hash=sha256:([0-9a-f]{64})", line)
+                  continue
+              if inside:
+                  found = re.findall(r"--hash=sha256:([0-9a-f]{64})", line)
+                  if found:
+                      hashes += found
+                      continue
+                  break
+          print(" ".join(hashes))
+          PY
+          )
+          url=$(python3 - "$version" <<'PY'
+          import json, sys, urllib.request
+          data = json.load(urllib.request.urlopen(f"https://pypi.org/pypi/esptool/{sys.argv[1]}/json"))
+          print(next(f["url"] for f in data["urls"] if f["packagetype"] == "sdist"))
+          PY
+          )
+          curl -sfL -o "dist/esptool-$version.tar.gz" "$url"
+          got=$(sha256sum "dist/esptool-$version.tar.gz" | cut -d' ' -f1)
+          echo "$expected" | tr ' ' '\n' | grep -qx "$got" || {
+            echo "::error::esptool sdist $got is not the hash backend/requirements.txt pins"; exit 1; }
+          echo "esptool $version source: $got"
       - name: Create draft release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create "$GITHUB_REF_NAME" dist/* \
             --repo "$GITHUB_REPOSITORY" --draft --title "Thingstudio $GITHUB_REF_NAME" --generate-notes \
-            --notes "Install and getting started: https://docs.thingstudio.net/getting-started/"
+            --notes "Install and getting started: https://docs.thingstudio.net/getting-started/
+
+          This release includes esptool (GPL-2.0-or-later) for installing firmware on a board. Its complete source is attached as esptool-$ESPTOOL_VERSION.tar.gz; esptool's license is in each bundle under licenses/esptool-LICENSE."
