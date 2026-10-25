@@ -84,9 +84,10 @@ ThingStudioMarketing repo, not here.
 - **[P2]** **Publish the rebuilt classic-ESP32 image and add it to the catalogue -- found 2026-10-25.** The
   runtime-install split landed (boot script always, core only when `import listener` fails, inventory frozen into
   the image), so an image flashed alone can boot. What remains: rebuild the image with that runtime, run it on the
-  CYD, and add it to `firmware/builds.json` as a `supplier: "thingstudio"` build of family `esp32`; the CYD's
-  board file then points at it by name. Until then the CYD takes stock ESP32 MicroPython and needs Install runtime
-  afterwards, like any other board.
+  CYD, then `firmware/classic-esp32/record-tested.sh` it and add it with `tools/firmware_catalogue.py` (the CYD's
+  board file already names the build, so the version changes, not the board). Until then the catalogue offers the
+  14.0.1 image, which has no frozen library inventory. The build itself needs ESP-IDF and the Xtensa toolchain, so
+  it runs on a development machine -- `firmware.yml` has never completed a build.
   ([detail](outstanding-items/firmware-custom-image-boot-files.md))
 - **[P2]** **ESP32-C6 (and H2, P4...) detected as a classic ESP32 -- new bug, 2026-09-30.** Found by a test
   for the Pins… page. `target.ts`'s processor match is a substring test on the normalised MCU name and

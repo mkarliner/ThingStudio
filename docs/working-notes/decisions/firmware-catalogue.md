@@ -42,6 +42,10 @@ the esp32 family's address is 0x1000, so the build's address has to win over the
 A build also carries an optional `note`, shown under the list, for the thing the label cannot say in one line —
 "this image predates the frozen library inventory, so Deploy still pushes the libraries a flow uses".
 
+Our own entry is written by `tools/firmware_catalogue.py`, not by hand: it reads the version and the sha256 off the
+built image, checks the URL's file name against it, and refuses anything not in `tested.json`. Four fields that
+describe one file are four chances to disagree.
+
 **A build we ship under our own name must be in `firmware/classic-esp32/tested.json`.** That record is keyed by
 sha256, so `editor/test/firmware-assets.test.ts` asserts every `supplier: "thingstudio"` version's hash is a key in
 it: an untested image cannot become a one-click option by editing the catalogue alone.

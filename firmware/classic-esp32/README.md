@@ -76,6 +76,18 @@ image can go out (`docs/working-notes/decisions/classic-esp32-firmware.md`).
    firmware/classic-esp32/publish.sh v<version> --publish  # ... and publish
    ```
 
+4. Offer it in the editor, now that the release asset exists:
+
+   ```sh
+   python3 tools/firmware_catalogue.py --image out/thingstudio-classic-esp32-<version>-<sha>.bin \
+       --url https://github.com/mkarliner/ThingStudio/releases/download/v<version>/<image name>
+   ```
+
+   That adds the version to `firmware/builds.json` under the Thingstudio build, with the hash read off the file and
+   the URL's name checked against the image's. It refuses an image whose hash is not in `tested.json`, so step 2 is
+   not optional. Commit the catalogue with the record and the docs line; `python3 tools/firmware_catalogue.py
+   --check` (and the editor's own tests) then hold the three files together.
+
 `publish.sh` refuses an image that is not in `tested.json`, one built from a commit the tag does not contain, one
 whose `.sha256` disagrees, a release that is not a draft, and any upload that does not read back with the same hash.
 It also writes the image's name, hash, tested board and date into the release notes. Needs `gh`, logged in.
