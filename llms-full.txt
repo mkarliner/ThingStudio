@@ -697,11 +697,13 @@ RP2350).
    the path and the adapter's name (for example `/dev/ttyUSB0 -- CH340`). If the board isn't there, put it in
    download mode (step 1) and click ⟳; the line under the list says how many it found. If it still isn't listed,
    type the path in the box under the list (on macOS a mounted Pico is `/Volumes/RPI-RP2`).
-4. Pick the board if the list has it. Otherwise choose **Choose a file…** and pick the `.bin` or `.uf2` you
-   downloaded above.
+4. Pick the board if the list has it. Only boards with a recipe are listed — the CYD is not one of them yet, and no
+   board is until its image is published. Otherwise pick the `.bin` or `.uf2` you downloaded above, and set
+   **Address** to the one MicroPython's download page gives for your chip: `0x1000` for an ESP32 or ESP32-S2, `0`
+   for an ESP32-S3, C3, C6 or ESP8266. A mounted drive needs no address.
 5. Click **Flash**. The dialog shows the step it is on and how far it has got; a failure says what to fix.
 
-Flashing erases the flows, settings and WiFi credentials on the board. Afterwards, [connect](connecting.md) it
+Flashing erases the flow and all settings on the board. Afterwards, [connect](connecting.md) it
 and [install the runtime](installing-runtime.md).
 
 The rest of this page is the same job without the editor.
@@ -1377,12 +1379,12 @@ Thingstudio starts, it puts two examples here. Deleted examples don't come back.
 
 ## Boards and processors
 
-At every start, Thingstudio copies any built-in definition that's missing from `boards/` and `processors/`. It never
-overwrites a file that's already there.
+At every start, Thingstudio writes the built-in definitions into `boards/` and `processors/`, replacing files of the
+same name. An upgrade's changes therefore arrive on the next start.
 
-- To change a built-in, edit its file.
-- To get the original back, delete the file and restart Thingstudio.
-- After an upgrade, an existing copy still wins over a changed built-in, until you delete it.
+- To keep your own version of a built-in, save it under a different name (for example `my-cyd.json`). It is then a
+  board or processor of its own, and is never overwritten.
+- Editing a built-in file in place works until the next start, when the built-in replaces it.
 
 See [Boards and processors](boards.md).
 
@@ -1596,10 +1598,12 @@ The definition files list every pin to avoid, with the reason.
 
 ## Your definition files
 
-Definition files live in `~/.thingstudio/boards/` and `~/.thingstudio/processors/`. When Thingstudio starts, it copies in any built-in file that's missing, so you can read and edit them there.
+Definition files live in `~/.thingstudio/boards/` and `~/.thingstudio/processors/`. When Thingstudio starts, it writes
+every built-in file there, replacing a file of the same name, so an upgrade's changes arrive on the next start.
 
-To change a built-in board, edit its file. To get the original back, delete the file and restart Thingstudio. A newer
-version of Thingstudio doesn't update a file you already have, so delete a file to pick up its new built-in version.
+To keep your own version of a built-in board, save it under a different name (for example `my-cyd.json`) and give it its
+own name in the file. It is then a board of its own in the Board menu, and is never overwritten. Editing a built-in
+file in place lasts until the next start.
 
 Thingstudio reads these files when the editor starts, when you connect, and when you deploy. If a file has a mistake, it isn't loaded and the built-in is used instead. The console says what's wrong, and the Board menu lists the file under **Invalid files**.
 
@@ -1734,7 +1738,7 @@ You need these:
 
 ## Install
 
-Flashing erases the board: its saved flows, board settings and WiFi credentials are gone afterwards.
+Flashing erases the board: its saved flow and all settings are gone afterwards.
 
 1. Download the three files from the [releases page](https://github.com/mkarliner/ThingStudio/releases/latest): the image, its `.sha256` and `main.py`. Put them
    in one folder and go there. Check the image against its checksum:
@@ -5136,6 +5140,7 @@ The raw error stays in the message, in brackets. Include it if you report a prob
 | A port named `/dev/ttyS0`, `/dev/ttyS1`… | Those are the computer's own serial ports, not the board. USB ports are listed above them, labelled with their path and the adapter's name (`/dev/ttyUSB0 -- CH340`). |
 | … is not a .uf2 | A mounted drive takes the `.uf2` build, not a `.bin`. Download the right one from [micropython.org/download](https://micropython.org/download/). |
 | … is not the image this board expects | The file isn't the image that board's entry pins. Pick the board's own image, or choose a different board entry. |
+| The board doesn't start after flashing a file with no board | The **Address** was wrong for the chip: `0x1000` for an ESP32 or ESP32-S2, `0` for an ESP32-S3, C3, C6 or ESP8266. Flash again with the right one; the board is recoverable. |
 | esptool is not installed on this machine | The backend's Python has no `esptool`: `pip install esptool`, then restart Thingstudio. |
 | esptool exited N at … on PORT | The write stopped. Check the cable, put the board in download mode again, and retry. A board with a separate USB-serial chip may need the slower write: clear its `baud` in the board file, or use the terminal route in [Install MicroPython](installing-micropython.md). |
 | the flash did not finish within … | The tool stopped answering. Unplug and replug the board, then flash again. |

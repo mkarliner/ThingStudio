@@ -3116,12 +3116,12 @@ and load presets from a node's property panel (see <a href="../working-in-the-ed
 Thingstudio starts, it puts two examples here. Deleted examples don't come back. See
 <a href="../custom-nodes/">Custom nodes</a>.</p>
 <h2 id="boards-and-processors">Boards and processors</h2>
-<p>At every start, Thingstudio copies any built-in definition that's missing from <code>boards/</code> and <code>processors/</code>. It never
-overwrites a file that's already there.</p>
+<p>At every start, Thingstudio writes the built-in definitions into <code>boards/</code> and <code>processors/</code>, replacing files of the
+same name. An upgrade's changes therefore arrive on the next start.</p>
 <ul>
-<li>To change a built-in, edit its file.</li>
-<li>To get the original back, delete the file and restart Thingstudio.</li>
-<li>After an upgrade, an existing copy still wins over a changed built-in, until you delete it.</li>
+<li>To keep your own version of a built-in, save it under a different name (for example <code>my-cyd.json</code>). It is then a
+  board or processor of its own, and is never overwritten.</li>
+<li>Editing a built-in file in place works until the next start, when the built-in replaces it.</li>
 </ul>
 <p>See <a href="../boards/">Boards and processors</a>.</p>
 <h2 id="using-a-different-folder">Using a different folder</h2>

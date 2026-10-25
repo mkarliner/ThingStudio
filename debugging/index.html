@@ -3484,6 +3484,10 @@ what the board sent instead, and what to do:</p>
 <td>The file isn't the image that board's entry pins. Pick the board's own image, or choose a different board entry.</td>
 </tr>
 <tr>
+<td>The board doesn't start after flashing a file with no board</td>
+<td>The <strong>Address</strong> was wrong for the chip: <code>0x1000</code> for an ESP32 or ESP32-S2, <code>0</code> for an ESP32-S3, C3, C6 or ESP8266. Flash again with the right one; the board is recoverable.</td>
+</tr>
+<tr>
 <td>esptool is not installed on this machine</td>
 <td>The backend's Python has no <code>esptool</code>: <code>pip install esptool</code>, then restart Thingstudio.</td>
 </tr>
