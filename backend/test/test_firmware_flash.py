@@ -25,6 +25,7 @@ from thingstudio_backend.firmware_flash import (
     board_definition,
     image_path,
     list_targets,
+    save_upload,
 )
 from thingstudio_backend.persisted_store import PersistedStore
 
@@ -285,3 +286,27 @@ def test_a_second_flash_while_one_runs_is_refused(store, tmp_path):
         jobs.start({"kind": "serial", "value": "/dev/fake"}, "cyd")
     assert "already running" in exc.value.message
     settled(first)
+
+
+def test_an_uploaded_file_is_kept_under_its_hash_with_a_safe_name(store):
+    saved = save_upload(store, "../../evil name.uf2", b"uf2 bytes")
+    assert saved["name"] == "evil_name.uf2"
+    assert saved["sha256"] == hashlib.sha256(b"uf2 bytes").hexdigest()
+    assert saved["size"] == 9
+    path = Path(saved["path"])
+    assert path.parent == store.base_dir / "firmware" / "uploads"
+    assert path.name.startswith(saved["sha256"][:16])
+    assert path.read_bytes() == b"uf2 bytes"
+    # The same bytes twice share the hash prefix, so a repeat pick is recognisable in the directory.
+    again = save_upload(store, "again.uf2", b"uf2 bytes")
+    assert Path(again["path"]).name.startswith(saved["sha256"][:16])
+
+
+def test_an_empty_or_oversized_upload_is_refused(store, monkeypatch):
+    with pytest.raises(FirmwareError) as exc:
+        save_upload(store, "empty.bin", b"")
+    assert "empty" in exc.value.message
+    monkeypatch.setattr(firmware_flash, "MAX_UPLOAD_BYTES", 8)
+    with pytest.raises(FirmwareError) as exc:
+        save_upload(store, "big.bin", b"x" * 9)
+    assert "limit is 8" in exc.value.message

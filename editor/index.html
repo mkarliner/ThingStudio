@@ -181,6 +181,16 @@
   dialog .dialog-board { font-weight: 600; }
   dialog a { color: var(--accent); }
   dialog .dialog-buttons { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+  /* Install firmware (2026-10-25): a form with radios, two selects, a file and a progress line. */
+  dialog fieldset { border: 1px solid var(--border); border-radius: 6px; padding: 8px; margin: 0 0 10px; }
+  dialog fieldset legend { font-size: 12px; color: var(--dim); padding: 0 4px; }
+  dialog .hint { color: var(--dim); font-size: 11px; }
+  dialog select, dialog input[type="file"] { width: 100%; box-sizing: border-box; margin-top: 3px; background: var(--bg);
+    color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; font: inherit; }
+  dialog input[type="file"] { padding: 4px; font-size: 12px; }
+  dialog .dialog-row { display: flex; gap: 8px; align-items: flex-end; }
+  dialog .dialog-row select { flex: 1 1 auto; }
+  dialog .dialog-note { font-size: 11px; color: var(--dim); margin: 0 0 8px; min-height: 1em; }
 </style>
 </head>
 <body>
@@ -251,6 +261,7 @@
         <div class="menu-list menu-right" role="menu" hidden>
           <button id="btnCheckStatus" role="menuitem" disabled hidden title="Ask the board to identify itself again -- no reset, no redeploy">Check status</button>
           <button id="btnBoardSettings" role="menuitem" disabled hidden title="The board's network name and WiFi password. Change these over USB.">Board settings…</button>
+          <button id="btnInstallFirmware" role="menuitem" title="Flash MicroPython or a Thingstudio image onto a board in its bootloader. Erases the flow, settings and WiFi password.">Install firmware…</button>
           <button id="btnInstallRuntime" role="menuitem" title="Install the Thingstudio runtime on the board in the selected port. The board needs MicroPython first. Resets the board; reconnect afterwards.">Install runtime…</button>
           <button id="btnRemoveFlow" role="menuitem" title="Delete the saved flow from the board in the selected port, even one that crashes it or won't let go. Keeps retrying while you press reset.">Remove flow…</button>
           <button id="btnClearSettings" role="menuitem" disabled title="Delete stored application values from the board. Values are kept per flow and survive reboots; clearing is permanent.">Clear device settings…</button>
@@ -379,6 +390,37 @@
     <div class="dialog-buttons">
       <button value="cancel" formnovalidate>Cancel</button>
       <button value="ok" class="primary">Connect</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Install firmware (2026-10-25, docs/working-notes/editor-firmware-flashing-scoping.md): any board that can
+     run MicroPython, so the user says how it is connected and the backend lists the targets. -->
+<dialog id="firmwareDialog">
+  <form method="dialog">
+    <h2>Install firmware</h2>
+    <p>For a board with no MicroPython yet, or one you want to start over on.
+      <strong>Flashing erases the flow, settings and WiFi password on the board.</strong></p>
+    <fieldset>
+      <legend>How is the board connected?</legend>
+      <label class="check"><input type="radio" name="fwTransport" value="serial" checked />
+        Serial port <span class="hint">ESP32 in download mode: hold BOOT, tap RESET</span></label>
+      <label class="check"><input type="radio" name="fwTransport" value="volume" />
+        Mounted drive <span class="hint">RP2040/RP2350/nRF52 in BOOTSEL: hold it while plugging in</span></label>
+    </fieldset>
+    <div class="dialog-row">
+      <label>Port or drive <select id="fwTargets"></select></label>
+      <button id="fwRefreshTargets" type="button" title="Look again for ports or drives">⟳</button>
+    </div>
+    <label>Board <select id="fwBoards"></select></label>
+    <label>Image file <input id="fwFile" type="file" accept=".bin,.uf2,.gz" /></label>
+    <p id="fwFileNote" class="dialog-note"></p>
+    <p>MicroPython images for other boards: <a href="https://micropython.org/download/" target="_blank" rel="noopener">micropython.org/download</a>.</p>
+    <p id="fwProgress" class="dialog-note"></p>
+    <p id="fwError" class="dialog-error"></p>
+    <div class="dialog-buttons">
+      <button value="cancel" formnovalidate>Cancel</button>
+      <button id="fwFlash" class="primary">Flash</button>
     </div>
   </form>
 </dialog>

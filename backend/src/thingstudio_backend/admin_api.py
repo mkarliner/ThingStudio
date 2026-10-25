@@ -34,7 +34,14 @@ import json
 
 from aiohttp import web
 
-from .firmware_flash import FirmwareError, FirmwareJobs, image_cached, list_targets
+from .firmware_flash import (
+    MAX_UPLOAD_BYTES,
+    FirmwareError,
+    FirmwareJobs,
+    image_cached,
+    list_targets,
+    save_upload,
+)
 from .persisted_store import (
     DefinitionFile,
     PersistedStore,
@@ -287,6 +294,24 @@ def make_admin_routes(store: PersistedStore) -> list[web.RouteDef]:
         except FirmwareError as exc:
             return web.json_response({"error": exc.message, "step": exc.step}, status=400)
 
+    async def upload_firmware_image(request: web.Request) -> web.Response:
+        name = request.query.get("name") or "image.bin"
+        chunks: list[bytes] = []
+        size = 0
+        async for chunk in request.content.iter_chunked(1 << 16):
+            size += len(chunk)
+            if size > MAX_UPLOAD_BYTES:
+                return web.json_response(
+                    {"error": f"NODE_ERROR: image is over the {MAX_UPLOAD_BYTES // (1024 * 1024)} MB limit"},
+                    status=413,
+                )
+            chunks.append(chunk)
+        try:
+            saved = save_upload(store, name, b"".join(chunks))
+        except FirmwareError as exc:
+            return web.json_response({"error": exc.message, "step": exc.step}, status=400)
+        return web.json_response(saved)
+
     async def flash_firmware(request: web.Request) -> web.Response:
         try:
             body = await request.json()
@@ -312,6 +337,7 @@ def make_admin_routes(store: PersistedStore) -> list[web.RouteDef]:
 
     return [
         web.get("/api/firmware/boards", list_firmware),
+        web.post("/api/firmware/image", upload_firmware_image),
         web.get("/api/firmware/targets", firmware_targets),
         web.post("/api/firmware/flash", flash_firmware),
         web.get("/api/firmware/jobs/{id}", firmware_job),

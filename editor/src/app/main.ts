@@ -182,7 +182,8 @@ import {
   type FlowFileConfig,
   type CanvasNodeSnapshot,
 } from "../flow-file/flow-file.js";
-import { DEFAULT_BACKEND_WS_URL, backendHttpBaseUrl, initialBackendWsUrl, slugifyFlowName, getCredential, putCredential, listDefinitions, listCustomNodePackages, readCustomNode, type CredentialType } from "../flow-file/admin-api-client.js";
+import { DEFAULT_BACKEND_WS_URL, backendHttpBaseUrl, initialBackendWsUrl, slugifyFlowName, getCredential, putCredential, listDefinitions, listCustomNodePackages, readCustomNode, type CredentialType, listFirmwareBoards, listFirmwareTargets, uploadFirmwareImage, startFirmwareFlash, getFirmwareJob, type FirmwareBoardInfo } from "../flow-file/admin-api-client.js";
+import { choiceProblem, doneLine, flashBoard, jobLine, type FirmwareChoice, type FirmwareFile } from "./firmware-dialog.js";
 // slugifyFlowName is reused here purely for a nicer suggested filename in
 // the save dialog below -- its own header's reasoning for why a display
 // name isn't a valid storage key applies just as well to a suggested
@@ -1970,6 +1971,7 @@ function updateConnModeUi(): void {
   el("backendPortSelect").hidden = !backend;
   el("btnRefreshPorts").hidden = !backend;
   el("btnInstallRuntime").hidden = !backend;
+  el("btnInstallFirmware").hidden = !backend;
 }
 el("connModeSelect").addEventListener("change", updateConnModeUi);
 updateConnModeUi();
@@ -2533,6 +2535,165 @@ async function precompileRuntime(): Promise<Record<string, string> | undefined> 
       "err",
     );
     return undefined;
+  }
+}
+
+// -- Install firmware… -------------------------------------------------------------------------------
+// docs/working-notes/editor-firmware-flashing-scoping.md, revised 2026-10-25: any board that can run
+// MicroPython, so the user says how it is connected and the backend does the rest. A board definition only
+// pre-fills the image; a chosen file works with no board at all (the "any board MicroPython publishes for"
+// path). The backend lists targets and runs the tool; this file owns the dialog.
+
+let fwBoards: FirmwareBoardInfo[] = [];
+let fwFile: FirmwareFile | null = null;
+let fwFlashing = false;
+
+function fwTransport(): "serial" | "volume" {
+  const checked = document.querySelector<HTMLInputElement>('input[name="fwTransport"]:checked');
+  return checked?.value === "volume" ? "volume" : "serial";
+}
+
+function fwSelectedBoard(): FirmwareBoardInfo | undefined {
+  const id = el<HTMLSelectElement>("fwBoards").value;
+  return id ? fwBoards.find((board) => board.id === id) : undefined;
+}
+
+function renderFwFileNote(): void {
+  const board = fwSelectedBoard();
+  const note = el("fwFileNote");
+  if (fwFile) {
+    note.textContent = `${fwFile.name} will be used${board ? `, checked against ${board.label}'s pinned hash` : ""}.`;
+  } else if (board) {
+    note.textContent = board.cached
+      ? `${board.label}'s image is already downloaded.`
+      : `${board.label}'s image will be downloaded (${board.tool}).`;
+  } else {
+    note.textContent = "No board chosen: pick the file MicroPython publishes for your chip.";
+  }
+}
+
+function renderFwBoards(): void {
+  const select = el<HTMLSelectElement>("fwBoards");
+  const transport = fwTransport();
+  const previous = select.value;
+  select.innerHTML = "";
+  select.add(new Option("(choose an image file)", ""));
+  for (const board of fwBoards.filter((item) => item.transport === transport)) {
+    select.add(new Option(board.label, board.id));
+  }
+  if (previous && fwBoards.some((item) => item.id === previous && item.transport === transport)) select.value = previous;
+  renderFwFileNote();
+}
+
+async function refreshFirmwareTargets(): Promise<void> {
+  const transport = fwTransport();
+  const select = el<HTMLSelectElement>("fwTargets");
+  const error = el("fwError");
+  error.textContent = "";
+  select.innerHTML = "";
+  try {
+    const targets = await listFirmwareTargets(currentBackendWsUrl(), transport);
+    for (const target of targets) select.add(new Option(target.label, target.value));
+    if (!targets.length) {
+      select.add(new Option(transport === "serial" ? "(no serial ports found)" : "(no mounted drives found)", ""));
+    }
+  } catch (err) {
+    select.add(new Option("(could not list targets)", ""));
+    error.textContent = err instanceof Error ? err.message : String(err);
+  }
+}
+
+el("btnInstallFirmware").addEventListener("click", () => {
+  fwFile = null;
+  el<HTMLInputElement>("fwFile").value = "";
+  el("fwError").textContent = "";
+  el("fwProgress").textContent = "";
+  el("fwBoards").innerHTML = "";
+  el("fwTargets").innerHTML = "";
+  const dialog = el<HTMLDialogElement>("firmwareDialog");
+  dialog.returnValue = "";
+  dialog.showModal();
+  renderFwBoards();
+  void (async () => {
+    try {
+      fwBoards = await listFirmwareBoards(currentBackendWsUrl());
+    } catch (err) {
+      fwBoards = [];
+      el("fwError").textContent = err instanceof Error ? err.message : String(err);
+    }
+    renderFwBoards();
+    await refreshFirmwareTargets();
+  })();
+});
+
+for (const radio of Array.from(document.querySelectorAll<HTMLInputElement>('input[name="fwTransport"]'))) {
+  radio.addEventListener("change", () => {
+    renderFwBoards();
+    void refreshFirmwareTargets();
+  });
+}
+
+el("fwRefreshTargets").addEventListener("click", () => void refreshFirmwareTargets());
+el("fwBoards").addEventListener("change", renderFwFileNote);
+el<HTMLInputElement>("fwFile").addEventListener("change", (event) => {
+  const input = event.target as HTMLInputElement;
+  const picked = input.files?.[0];
+  fwFile = picked ? { name: picked.name, body: picked } : null;
+  renderFwFileNote();
+});
+
+// A flash in flight keeps the dialog open: closing it would leave the job running with nothing saying so.
+el<HTMLDialogElement>("firmwareDialog").addEventListener("cancel", (event) => {
+  if (fwFlashing) event.preventDefault();
+});
+
+el("fwFlash").addEventListener("click", (event) => {
+  // Flash before the dialog closes, so a refusal is shown in it rather than lost.
+  event.preventDefault();
+  void runFirmwareFlash();
+});
+
+async function runFirmwareFlash(): Promise<void> {
+  if (fwFlashing) return;
+  const choice: FirmwareChoice = {
+    transport: fwTransport(),
+    target: el<HTMLSelectElement>("fwTargets").value,
+    boardId: el<HTMLSelectElement>("fwBoards").value,
+    file: fwFile,
+  };
+  const board = fwSelectedBoard();
+  const problem = choiceProblem(choice, fwBoards);
+  if (problem) {
+    el("fwError").textContent = problem;
+    return;
+  }
+  const wsUrl = currentBackendWsUrl();
+  fwFlashing = true;
+  el<HTMLButtonElement>("fwFlash").disabled = true;
+  el("fwError").textContent = "";
+  el("fwProgress").textContent = "";
+  try {
+    await flashBoard(choice, {
+      uploadImage: (name, body) => uploadFirmwareImage(wsUrl, name, body),
+      startFlash: (target, boardId, imagePath) => startFirmwareFlash(wsUrl, target, boardId, imagePath),
+      getJob: (id) => getFirmwareJob(wsUrl, id),
+      onStatus: (line) => {
+        el("fwProgress").textContent = line;
+      },
+      onProgress: (job) => {
+        el("fwProgress").textContent = jobLine(job);
+      },
+    });
+    const summary = doneLine(board);
+    el("fwProgress").textContent = summary;
+    logLine(`[firmware] ${summary}`, "ok");
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    el("fwError").textContent = message;
+    logLine(`[firmware] ${message}`, "err");
+  } finally {
+    fwFlashing = false;
+    el<HTMLButtonElement>("fwFlash").disabled = false;
   }
 }
 

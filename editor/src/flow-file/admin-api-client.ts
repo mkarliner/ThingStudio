@@ -338,3 +338,90 @@ export async function listDefinitions(wsUrl: string): Promise<UserDefinitionFile
   if (!res.ok) throw new AdminApiError(`load processor/board definitions failed: ${await parseErrorBody(res)}`);
   return (await res.json()) as UserDefinitionFiles;
 }
+
+// -- firmware flashing ------------------------------------------------------
+// docs/working-notes/editor-firmware-flashing-scoping.md. The backend owns the tools and the files; the editor
+// only picks a target, uploads an image when the user chose one, and polls a job.
+
+export interface FirmwareBoardInfo {
+  id: string;
+  label: string;
+  tool: "esptool" | "uf2";
+  transport: "serial" | "volume";
+  runtime: "none" | "install";
+  /** The pinned image is already downloaded, so the flash needs no network. */
+  cached: boolean;
+}
+
+export interface FirmwareTarget {
+  kind: "serial" | "volume";
+  value: string;
+  label: string;
+}
+
+export interface FirmwareJobState {
+  id: string;
+  state: "running" | "done" | "failed";
+  line: string;
+  progress: number;
+  error: string;
+  step: string;
+  board: string;
+  tool: string;
+  target: string;
+}
+
+export interface FirmwareImageUpload {
+  path: string;
+  sha256: string;
+  size: number;
+  name: string;
+}
+
+export async function listFirmwareBoards(wsUrl: string): Promise<FirmwareBoardInfo[]> {
+  const res = await request(wsUrl, "/api/firmware/boards");
+  if (!res.ok) throw new AdminApiError(`list firmware boards failed: ${await parseErrorBody(res)}`);
+  return ((await res.json()) as { boards: FirmwareBoardInfo[] }).boards;
+}
+
+export async function listFirmwareTargets(wsUrl: string, transport: "serial" | "volume"): Promise<FirmwareTarget[]> {
+  const res = await request(wsUrl, `/api/firmware/targets?transport=${encodeURIComponent(transport)}`);
+  if (!res.ok) throw new AdminApiError(`list ${transport} targets failed: ${await parseErrorBody(res)}`);
+  return ((await res.json()) as { targets: FirmwareTarget[] }).targets;
+}
+
+/** The browser cannot hand the backend a local path, so the bytes go over HTTP and the backend keeps them
+ * under `~/.thingstudio/firmware/uploads/`. The returned `path` is what a flash job names. */
+export async function uploadFirmwareImage(wsUrl: string, name: string, body: Blob): Promise<FirmwareImageUpload> {
+  const res = await request(wsUrl, `/api/firmware/image?name=${encodeURIComponent(name)}`, {
+    method: "POST",
+    body,
+    headers: { "Content-Type": "application/octet-stream" },
+  });
+  if (!res.ok) throw new AdminApiError(`upload ${name} failed: ${await parseErrorBody(res)}`);
+  return (await res.json()) as FirmwareImageUpload;
+}
+
+export async function startFirmwareFlash(
+  wsUrl: string,
+  target: { kind: "serial" | "volume"; value: string },
+  boardId?: string,
+  imagePath?: string,
+): Promise<string> {
+  const body: Record<string, unknown> = { target };
+  if (boardId) body.board = boardId;
+  if (imagePath) body.imagePath = imagePath;
+  const res = await request(wsUrl, "/api/firmware/flash", {
+    method: "POST",
+    body: JSON.stringify(body),
+    headers: { "Content-Type": "application/json" },
+  });
+  if (!res.ok) throw new AdminApiError(`start flash failed: ${await parseErrorBody(res)}`);
+  return ((await res.json()) as { id: string }).id;
+}
+
+export async function getFirmwareJob(wsUrl: string, id: string): Promise<FirmwareJobState> {
+  const res = await request(wsUrl, `/api/firmware/jobs/${encodeURIComponent(id)}`);
+  if (!res.ok) throw new AdminApiError(`read flash job ${id} failed: ${await parseErrorBody(res)}`);
+  return (await res.json()) as FirmwareJobState;
+}

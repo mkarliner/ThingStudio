@@ -10,6 +10,7 @@
 # and error mapping).
 
 import json
+from pathlib import Path
 
 import pytest
 from aiohttp import web
@@ -536,3 +537,21 @@ async def test_firmware_flash_requires_a_target_and_names_an_unknown_board(tmp_p
         missing_job = await client.get("/api/firmware/jobs/nope")
         assert missing_job.status == 404
     assert "nonesuch" in body["error"]
+
+
+@pytest.mark.asyncio
+async def test_firmware_image_upload_returns_a_path_the_flash_can_use(tmp_path) -> None:
+    async with _client(tmp_path) as client:
+        upload = await client.post(
+            "/api/firmware/image?name=my%20board.uf2",
+            data=b"fake uf2 bytes",
+            headers={"Content-Type": "application/octet-stream"},
+        )
+        assert upload.status == 200
+        saved = await upload.json()
+        assert saved["name"] == "my_board.uf2"
+        assert saved["size"] == len(b"fake uf2 bytes")
+        empty = await client.post("/api/firmware/image?name=x.bin", data=b"")
+        assert empty.status == 400
+        assert "empty" in (await empty.json())["error"]
+    assert Path(saved["path"]).read_bytes() == b"fake uf2 bytes"

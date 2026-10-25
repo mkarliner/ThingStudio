@@ -21,6 +21,7 @@ from __future__ import annotations
 import hashlib
 import logging
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -43,6 +44,9 @@ _DOWNLOAD_TIMEOUT_S = 30
 _FLASH_BAUD = 460800
 _MAX_LINE = 400
 _COPY_BLOCK = 1 << 20
+# A MicroPython ESP32 image is ~2 MB and a UF2 ~1 MB; 32 MB leaves room for vendor images without making the
+# backend a general file store. The editor uploads what the user chose, so the limit is stated in the refusal.
+MAX_UPLOAD_BYTES = 32 * 1024 * 1024
 
 
 class FirmwareError(Exception):
@@ -222,6 +226,27 @@ def image_cached(store: PersistedStore, firmware: dict) -> bool:
         return False
     tool = str(firmware.get("tool") or "")
     return (store.base_dir / "firmware" / f"{expected}{_expected_suffix(tool)}").is_file()
+
+
+def save_upload(store: PersistedStore, name: str, data: bytes) -> dict:
+    """Keep a file the user chose in the editor, so a later flash job can name it by path. The browser cannot
+    hand the backend a local path, so the bytes come over HTTP; the name is only a label, and the hash is how
+    the same file is recognised twice."""
+    if not data:
+        raise FirmwareError("download", "the uploaded image is empty")
+    if len(data) > MAX_UPLOAD_BYTES:
+        raise FirmwareError(
+            "download",
+            f"the image is {len(data)} bytes; the limit is {MAX_UPLOAD_BYTES} (a MicroPython or Thingstudio "
+            "image is a few MB — check you picked the right file)",
+        )
+    safe = re.sub(r"[^A-Za-z0-9._-]", "_", Path(name).name) or "image.bin"
+    digest = hashlib.sha256(data).hexdigest()
+    uploads = store.base_dir / "firmware" / "uploads"
+    uploads.mkdir(parents=True, exist_ok=True)
+    path = uploads / f"{digest[:16]}-{safe}"
+    path.write_bytes(data)
+    return {"path": str(path), "sha256": digest, "size": len(data), "name": safe}
 
 
 # -- tools: the core's registry, one entry per way of writing a board's flash -----------------------
