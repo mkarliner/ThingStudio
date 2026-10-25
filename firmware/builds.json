@@ -202,8 +202,14 @@
       "label": "Thingstudio image (runtime and flow libraries frozen)",
       "infoUrl": "https://github.com/mkarliner/ThingStudio/blob/main/docs/user-guide/custom-firmware.md",
       "runtime": "install",
-      "note": "The runtime is frozen into this image, so Install runtime only writes the boot script. This build predates the frozen library inventory, so Deploy still pushes the libraries a flow uses.",
+      "note": "The runtime is frozen into this image, so Install runtime only writes the boot script. 14.1.0 and later also freeze the library list, so Deploy sends nothing; earlier versions still push every library a flow uses.",
       "versions": [
+        {
+          "version": "14.1.0",
+          "date": "2026-10-25",
+          "url": "https://github.com/mkarliner/ThingStudio/releases/download/v0.10.0/thingstudio-classic-esp32-14.1.0-a236ba0.bin",
+          "sha256": "51116835b99ca1636ef4ce65e6b8b36197be7163c1f753d603eb95f170759990"
+        },
         {
           "version": "14.0.1",
           "date": "2026-10-24",
