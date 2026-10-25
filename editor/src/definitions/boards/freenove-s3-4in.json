@@ -14,5 +14,15 @@
     "TOUCH_INT": 17,
     "TOUCH_RST": 18
   },
-  "notes": "Reports itself as a generic ESP32-S3, so pick it by hand in the Board menu. 320x480 ST7796 over SPI, no reset pin, backlight on high, colours inverted. Touch is an FT6336U on I2C. Pins are from Freenove's own TFT_eSPI setup and touch example; check your own unit. Use SPI bus 1 for the display's fast pins. Display rotation 1 is portrait; rotation 4 is landscape with the USB socket on the right (rotation 7 puts it on the left)."
+  "notes": "Reports itself as a generic ESP32-S3, so pick it by hand in the Board menu. 320x480 ST7796 over SPI, no reset pin, backlight on high, colours inverted. Touch is an FT6336U on I2C. Pins are from Freenove's own TFT_eSPI setup and touch example; check your own unit. Use SPI bus 1 for the display's fast pins. Display rotation 1 is portrait; rotation 4 is landscape with the USB socket on the right (rotation 7 puts it on the left).",
+  "firmware": {
+    "tool": "esptool",
+    "transport": "serial",
+    "image": {
+      "url": "https://micropython.org/resources/firmware/ESP32_GENERIC_S3-SPIRAM_OCT-20260824-v1.29.0.bin",
+      "sha256": "ab24eadfe3ef0e6ee38834d730e648def7cd82f3fa51ee0bbc59c29a6e1bd176"
+    },
+    "runtime": "install",
+    "flash": { "chip": "esp32s3", "baud": 460800, "offset": 0 }
+  }
 }

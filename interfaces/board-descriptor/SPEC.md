@@ -80,6 +80,59 @@ A board names a `processor` and may narrow its pin set.
 | `header` | {physical pin: pin or label} | no | What each physical pin carries, for the Pins page. A value that's a pin on this board (a GPIO number, or a string naming a pin) is that pin; any other string is a label (`"GND"`). A pin must exist on the board and appear at most once. |
 | `headerOrder` | `"around"` \| `"down"` | no | Numbering of a 1..N dual-row header. Default `"around"`. Needs `header`. |
 | `usb` | `"top"` \| `"bottom"` | no | Which end the USB connector is at (pin 1 top left). Needs `header`. |
+| `firmware` | object | no | How to flash this board from blank. Omit if unknown; the editor then asks the user for a file and points at the MicroPython downloads page. |
+
+### `firmware`
+
+A flash recipe, used by the editor's **Install firmware** action (backend). It is data so a third-party board
+can carry one, and it is tool-shaped: the tool's own options live inside `flash`, so a new tool does not add a
+top-level key here. Two tools today — `"esptool"` (ESP32 family: Xtensa and RISC-V) and `"uf2"` (a board whose
+bootloader mounts as a drive: RP2040/RP2350, nRF52). `"dfu"` (STM32) is planned and is a core change, not a
+schema change.
+
+A board definition is a **shortcut, not a requirement**: a board with no `firmware` block, or any board at all
+when the user picks **Choose a file…**, flashes through the same backend job.
+
+| Key | Type | Required | Meaning |
+|---|---|---|---|
+| `tool` | `"esptool"` \| `"uf2"` | yes | The flashing tool. It implies the image format: `.bin` for `esptool`, `.uf2` for `uf2`. |
+| `transport` | `"serial"` \| `"volume"` | yes | How the board appears: a serial port in its bootloader, or a mounted drive. Must match the tool (`esptool`→`serial`, `uf2`→`volume`). The editor's dialog starts from it; the user can still choose another target of the same kind. |
+| `image.url` | string | yes | Where to fetch the image (`http`, `https` or `file`). |
+| `image.sha256` | 64 hex | yes | The image's hash. A mismatch is refused before anything is written. |
+| `runtime` | `"none"` \| `"install"` | no | `"install"` when the image contains no Thingstudio runtime, so the editor runs the normal install after flashing. Default `"none"`. |
+| `flash` | object | no | The tool's own options. An unknown key is refused by name. |
+
+`flash` for `"esptool"`:
+
+| Key | Type | Required | Meaning |
+|---|---|---|---|
+| `chip` | string | no | esptool's chip id: `"esp32"`, `"esp32s3"`, `"esp32c3"`, ... . Omit to let esptool identify the chip (`--chip auto`). |
+| `baud` | integer | no | Flash baud rate. Default 460800. A board that needs slower flashing says so here. |
+| `offset` | integer | no | Flash offset in bytes. Default 0. |
+
+`flash` for `"uf2"` is `{}`: the volume is the target the user picked, and the address is inside the `.uf2`.
+
+Worked examples — an ESP32 board with its own image, and a UF2 board with stock MicroPython:
+
+```json
+"firmware": {
+  "tool": "esptool",
+  "transport": "serial",
+  "image": { "url": "https://example.invalid/thingstudio-cyd.bin", "sha256": "5acd…" },
+  "runtime": "none",
+  "flash": { "chip": "esp32", "baud": 460800, "offset": 0 }
+}
+```
+
+```json
+"firmware": {
+  "tool": "uf2",
+  "transport": "volume",
+  "image": { "url": "https://micropython.org/resources/firmware/RPI_PICO2-20260824-v1.29.0.uf2", "sha256": "ab24…" },
+  "runtime": "install",
+  "flash": {}
+}
+```
 
 ## 4. How a board and processor are resolved
 

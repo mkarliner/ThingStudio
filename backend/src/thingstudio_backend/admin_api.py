@@ -34,6 +34,7 @@ import json
 
 from aiohttp import web
 
+from .firmware_flash import FirmwareError, FirmwareJobs, image_cached, list_targets
 from .persisted_store import (
     DefinitionFile,
     PersistedStore,
@@ -256,7 +257,64 @@ def make_admin_routes(store: PersistedStore) -> list[web.RouteDef]:
             }
         )
 
+    # -- firmware flashing (a blank board; docs/working-notes/editor-firmware-flashing-scoping.md) --
+    jobs = FirmwareJobs(store)
+
+    async def list_firmware(request: web.Request) -> web.Response:
+        boards = []
+        for item in store.list_definitions("boards"):
+            if not item.valid or not isinstance(item.data, dict):
+                continue
+            fw = item.data.get("firmware")
+            if not isinstance(fw, dict):
+                continue
+            boards.append(
+                {
+                    "id": item.name,
+                    "label": item.data.get("name") or item.name,
+                    "tool": fw.get("tool"),
+                    "transport": fw.get("transport"),
+                    "runtime": fw.get("runtime") or "none",
+                    "cached": image_cached(store, fw),
+                }
+            )
+        return web.json_response({"boards": boards})
+
+    async def firmware_targets(request: web.Request) -> web.Response:
+        transport = request.query.get("transport", "")
+        try:
+            return web.json_response({"transport": transport, "targets": list_targets(transport)})
+        except FirmwareError as exc:
+            return web.json_response({"error": exc.message, "step": exc.step}, status=400)
+
+    async def flash_firmware(request: web.Request) -> web.Response:
+        try:
+            body = await request.json()
+        except json.JSONDecodeError:
+            return web.json_response({"error": "NODE_ERROR: request body was not valid JSON"}, status=400)
+        if not isinstance(body, dict):
+            return web.json_response({"error": "NODE_ERROR: request body must be an object"}, status=400)
+        board = body.get("board") if isinstance(body.get("board"), str) else None
+        image = body.get("imagePath") if isinstance(body.get("imagePath"), str) else None
+        if not board and not image:
+            return web.json_response({"error": "NODE_ERROR: give a board or an imagePath"}, status=400)
+        try:
+            job = jobs.start(body.get("target"), board, image)
+        except FirmwareError as exc:
+            return web.json_response({"error": exc.message, "step": exc.step}, status=409)
+        return web.json_response({"id": job.id})
+
+    async def firmware_job(request: web.Request) -> web.Response:
+        try:
+            return web.json_response(jobs.status(request.match_info["id"]).public())
+        except FirmwareError as exc:
+            return web.json_response({"error": exc.message}, status=404)
+
     return [
+        web.get("/api/firmware/boards", list_firmware),
+        web.get("/api/firmware/targets", firmware_targets),
+        web.post("/api/firmware/flash", flash_firmware),
+        web.get("/api/firmware/jobs/{id}", firmware_job),
         web.get("/api/flows", list_flows),
         web.get("/api/flows/{name}", get_flow),
         web.put("/api/flows/{name}", put_flow),

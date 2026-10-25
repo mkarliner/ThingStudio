@@ -472,3 +472,67 @@ async def test_list_definitions_returns_parsed_files_and_flags_bad_ones(tmp_path
     assert boards["broken"]["data"] is None
     assert boards["bad name"]["valid"] is False
     assert "file name" in boards["bad name"]["error"]
+
+
+# -- firmware flashing ------------------------------------------------------
+
+
+def _firmware_board(base, name: str = "cyd") -> None:
+    (base / "boards").mkdir(parents=True, exist_ok=True)
+    (base / "boards" / f"{name}.json").write_text(
+        json.dumps(
+            {
+                "name": "CYD",
+                "processor": "esp32",
+                "match": [],
+                "pins": {},
+                "firmware": {
+                    "tool": "esptool",
+                    "transport": "serial",
+                    "image": {"url": "https://example.invalid/x.bin", "sha256": "a" * 64},
+                    "runtime": "none",
+                    "flash": {"chip": "esp32"},
+                },
+            }
+        )
+    )
+
+
+@pytest.mark.asyncio
+async def test_firmware_boards_lists_the_recipes_and_whether_the_image_is_cached(tmp_path) -> None:
+    base = tmp_path / ".thingstudio"
+    _firmware_board(base)
+    (base / "boards" / "plain.json").write_text(json.dumps({"name": "Plain", "processor": "esp32", "match": [], "pins": {}}))
+    async with _client(tmp_path) as client:
+        body = await (await client.get("/api/firmware/boards")).json()
+    assert body == {
+        "boards": [{"id": "cyd", "label": "CYD", "tool": "esptool", "transport": "serial", "runtime": "none", "cached": False}]
+    }
+
+
+@pytest.mark.asyncio
+async def test_firmware_targets_refuses_an_unknown_transport(tmp_path) -> None:
+    async with _client(tmp_path) as client:
+        ok = await client.get("/api/firmware/targets?transport=volume")
+        assert ok.status == 200
+        assert (await ok.json())["transport"] == "volume"
+        bad = await client.get("/api/firmware/targets?transport=telepathy")
+        assert bad.status == 400
+        body = await bad.json()
+    assert body["step"] == "target"
+    assert "telepathy" in body["error"]
+
+
+@pytest.mark.asyncio
+async def test_firmware_flash_requires_a_target_and_names_an_unknown_board(tmp_path) -> None:
+    async with _client(tmp_path) as client:
+        no_target = await client.post("/api/firmware/flash", json={"board": "cyd"})
+        assert no_target.status == 409
+        unknown = await client.post(
+            "/api/firmware/flash", json={"target": {"kind": "serial", "value": "/dev/null"}, "board": "nonesuch"}
+        )
+        assert unknown.status == 409
+        body = await unknown.json()
+        missing_job = await client.get("/api/firmware/jobs/nope")
+        assert missing_job.status == 404
+    assert "nonesuch" in body["error"]

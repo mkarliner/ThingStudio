@@ -26,5 +26,15 @@
     "SPEAKER": 26,
     "BOOT": 0
   },
-  "notes": "Reports itself as a generic ESP32, so pick it by hand in the Board menu. Display pins are tested on real units; touch, SD, LED, LDR and speaker pins are from community pinouts. The RGB LED is active low. Units vary: check your own board."
+  "notes": "Reports itself as a generic ESP32, so pick it by hand in the Board menu. Display pins are tested on real units; touch, SD, LED, LDR and speaker pins are from community pinouts. The RGB LED is active low. Units vary: check your own board.",
+  "firmware": {
+    "tool": "esptool",
+    "transport": "serial",
+    "image": {
+      "url": "https://github.com/mkarliner/ThingStudio/releases/download/v0.7.2/thingstudio-classic-esp32-14.0.1-7e7c73b.bin",
+      "sha256": "5acd9580170b172551f91310605465379d644689670b1f33d89e4e3724f7afc4"
+    },
+    "runtime": "none",
+    "flash": { "chip": "esp32", "baud": 460800, "offset": 0 }
+  }
 }

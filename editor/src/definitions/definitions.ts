@@ -70,6 +70,38 @@ export interface ProcessorDef {
   readonly notes: string;
 }
 
+/** How to flash this board from blank (editor-firmware-flashing-scoping.md, revised 2026-10-25). Data, so a
+ * third party's board can carry it; tool-shaped, so a new tool does not add a top-level key to every board.
+ * `transport` is what the user picks in the dialog ("serial" port or "volume" mounted drive); `flash` is the
+ * tool's own vocabulary. `runtime: "install"` means the image has no Thingstudio runtime, so the editor runs
+ * the normal install after flashing. */
+export interface FirmwareImageDef {
+  readonly url: string;
+  readonly sha256: string;
+}
+
+export type FirmwareRuntime = "none" | "install";
+
+export interface EsptoolFirmwareDef {
+  readonly tool: "esptool";
+  readonly transport: "serial";
+  readonly image: FirmwareImageDef;
+  readonly runtime: FirmwareRuntime;
+  /** `chip: null` means esptool identifies the chip itself (`--chip auto`). */
+  readonly flash: { readonly chip: string | null; readonly baud: number; readonly offset: number };
+}
+
+export interface Uf2FirmwareDef {
+  readonly tool: "uf2";
+  readonly transport: "volume";
+  readonly image: FirmwareImageDef;
+  readonly runtime: FirmwareRuntime;
+  /** A UF2 board takes no options: the volume is the target the user picked. */
+  readonly flash: Readonly<Record<string, never>>;
+}
+
+export type BoardFirmwareDef = EsptoolFirmwareDef | Uf2FirmwareDef;
+
 export interface BoardDef {
   readonly id: string;
   readonly name: string;
@@ -104,6 +136,8 @@ export interface BoardDef {
   readonly headerOrder: "around" | "down";
   /** Which end of the header drawing the USB connector is at: "top" is the pin 1 end. Needs `header`. */
   readonly usb: "top" | "bottom" | null;
+  /** The flash-from-blank recipe, or null when this board has none. */
+  readonly firmware: BoardFirmwareDef | null;
 }
 
 export type DefinitionKind = "processor" | "board";
@@ -269,7 +303,7 @@ function parsePinValue(v: unknown, where: string): PinId {
 // a contract for people writing ~/.thingstudio/{processors,boards}/*.json, so
 // it must not drift from this parser.
 export const PROCESSOR_KEYS = ["name", "match", "nativeArch", "nativeArchConfirmed", "capabilities", "gpio", "inputOnly", "noPull", "adc2", "reserved", "avoid", "spi", "i2c", "notes"];
-export const BOARD_KEYS = ["name", "processor", "match", "pins", "gpio", "reserved", "avoid", "notes", "wifi", "capabilities", "header", "free", "headerOrder", "usb"];
+export const BOARD_KEYS = ["name", "processor", "match", "pins", "gpio", "reserved", "avoid", "notes", "wifi", "capabilities", "header", "free", "headerOrder", "usb", "firmware"];
 
 function parseSpi(v: unknown, gpio: ReadonlySet<PinId>): ProcessorDef["spi"] {
   if (!isObject(v)) throw new DefinitionError(`"spi": must be an object`);
@@ -380,6 +414,44 @@ export function parseProcessor(id: string, data: unknown): ProcessorDef {
   };
 }
 
+const FIRMWARE_TOOLS = ["esptool", "uf2"] as const;
+
+function parseFirmwareImage(v: unknown): FirmwareImageDef {
+  if (!isObject(v)) throw new DefinitionError(`"firmware.image": must be an object`);
+  checkKeys(v, ["url", "sha256"], `"firmware.image"`);
+  const url = str(v.url, `"firmware.image.url"`);
+  const sha256 = str(v.sha256, `"firmware.image.sha256"`).toLowerCase();
+  if (!/^[0-9a-f]{64}$/.test(sha256)) throw new DefinitionError(`"firmware.image.sha256": must be 64 hex characters`);
+  return { url, sha256 };
+}
+
+function parseFirmware(v: unknown): BoardFirmwareDef {
+  if (!isObject(v)) throw new DefinitionError(`"firmware": must be an object`);
+  checkKeys(v, ["tool", "transport", "image", "runtime", "flash"], `"firmware"`);
+  const tool = oneOf(v.tool, FIRMWARE_TOOLS, `"firmware.tool"`);
+  const transport = oneOf(v.transport, ["serial", "volume"] as const, `"firmware.transport"`);
+  const expected = tool === "esptool" ? "serial" : "volume";
+  if (transport !== expected) {
+    throw new DefinitionError(`"firmware.transport": "${tool}" flashes over "${expected}", not "${transport}"`);
+  }
+  const image = parseFirmwareImage(v.image);
+  const runtime = v.runtime === undefined ? "none" : oneOf(v.runtime, ["none", "install"] as const, `"firmware.runtime"`);
+  const flashObj = v.flash === undefined ? {} : v.flash;
+  if (!isObject(flashObj)) throw new DefinitionError(`"firmware.flash": must be an object`);
+  if (tool === "esptool") {
+    checkKeys(flashObj, ["chip", "baud", "offset"], `"firmware.flash"`);
+    const chip = flashObj.chip === undefined ? null : str(flashObj.chip, `"firmware.flash.chip"`);
+    const baud = flashObj.baud === undefined ? 460800 : positiveInt(flashObj.baud, `"firmware.flash.baud"`);
+    const offset = flashObj.offset === undefined ? 0 : flashObj.offset;
+    if (typeof offset !== "number" || !Number.isInteger(offset) || offset < 0) {
+      throw new DefinitionError(`"firmware.flash.offset": must be a whole number of bytes (0 for the start of flash)`);
+    }
+    return { tool, transport: "serial", image, runtime, flash: { chip, baud, offset } };
+  }
+  checkKeys(flashObj, [], `"firmware.flash"`);
+  return { tool, transport: "volume", image, runtime, flash: {} };
+}
+
 export function parseBoard(id: string, data: unknown, processors: ReadonlyMap<string, ProcessorDef>): BoardDef {
   if (!ID_RE.test(id)) throw new DefinitionError(`file name "${id}" must be lowercase letters, digits, "-" or "_"`);
   if (!isObject(data)) throw new DefinitionError(`must be a JSON object`);
@@ -438,6 +510,7 @@ export function parseBoard(id: string, data: unknown, processors: ReadonlyMap<st
     header: data.header === undefined ? new Map() : parseHeader(data.header, available),
     headerOrder,
     usb,
+    firmware: data.firmware === undefined ? null : parseFirmware(data.firmware),
   };
 }
 

@@ -7,6 +7,8 @@ license = { text = "Apache-2.0" }
 dependencies = [
     "aiohttp>=3.9,<4",
     "pyserial>=3.5,<4",
+    # Flashing a blank board from the editor (backend firmware jobs). The executable is invoked, not imported.
+    "esptool>=4.8,<5",
 ]
 
 [project.optional-dependencies]

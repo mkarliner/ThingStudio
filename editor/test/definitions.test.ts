@@ -467,3 +467,42 @@ describe("named pins (processors whose pins aren't numbered, e.g. the STM32 pybo
     expect(() => gpioOutNode.codegenSink!(node("thingstudio/gpio_out", { pin: "A13" }), ctxFor(t))).not.toThrow();
   });
 });
+
+describe("firmware recipes (flashing a blank board)", () => {
+  it("the CYD and the Freenove carry a pinned recipe", () => {
+    const cyd = defs.boards.get("cyd")!;
+    expect(cyd.firmware).toMatchObject({ tool: "esptool", transport: "serial", runtime: "none" });
+    if (cyd.firmware?.tool !== "esptool") throw new Error("expected an esptool recipe");
+    expect(cyd.firmware.flash.chip).toBe("esp32");
+    expect(cyd.firmware.image.sha256).toMatch(/^[0-9a-f]{64}$/);
+    expect(cyd.firmware.image.url).toMatch(/^https:\/\//);
+    const s3 = defs.boards.get("freenove-s3-4in")!;
+    expect(s3.firmware).toMatchObject({ tool: "esptool", transport: "serial", runtime: "install" });
+  });
+
+  it("refuses a bad sha256, an unknown runtime, an unknown tool or a mismatched transport", () => {
+    const base = { name: "X", processor: "esp32", match: [], pins: {} };
+    const image = { url: "https://example.invalid/x.bin", sha256: "a".repeat(64) };
+    const recipe = (over: Record<string, unknown>) => ({
+      tool: "esptool", transport: "serial", image, ...over,
+    });
+    const set = (firmware: unknown) =>
+      buildDefinitionSet(BUILTIN_DEFINITION_FILES, [user("board", "b", { ...base, firmware })]);
+    expect(set(recipe({ image: { ...image, sha256: "nope" } })).problems.some((p) => /sha256/.test(p.message))).toBe(true);
+    expect(set(recipe({ runtime: "maybe" })).problems.some((p) => /firmware.runtime/.test(p.message))).toBe(true);
+    expect(set(recipe({ tool: "telepathy" })).problems.some((p) => /firmware\.tool/.test(p.message))).toBe(true);
+    expect(set(recipe({ transport: "volume" })).problems.some((p) => /firmware\.transport/.test(p.message))).toBe(true);
+    expect(set(recipe({ flash: { chip: "esp32", volume: "/Volumes/RPI-RP2" } })).problems.some((p) => /unknown key "volume"/.test(p.message))).toBe(true);
+    expect(set({ tool: "uf2", transport: "volume", image, flash: { chip: "esp32" } }).problems.some((p) => /unknown key "chip"/.test(p.message))).toBe(true);
+  });
+
+  it("a UF2 recipe takes no flash options and defaults to none", () => {
+    const firmware = { tool: "uf2", transport: "volume", image: { url: "https://example.invalid/x.uf2", sha256: "b".repeat(64) } };
+    const set = buildDefinitionSet(BUILTIN_DEFINITION_FILES, [
+      user("board", "pico", { name: "P", processor: "rp2040", match: [], pins: {}, firmware }),
+    ]);
+    expect(set.problems).toEqual([]);
+    const parsed = set.boards.get("pico")!;
+    expect(parsed.firmware).toEqual({ tool: "uf2", transport: "volume", image: firmware.image, runtime: "none", flash: {} });
+  });
+});

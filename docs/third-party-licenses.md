@@ -1,8 +1,10 @@
 # Third-party software in use
 
-Status: living document, last updated 2026-10-24 (this update: the `editor/` npm tree moved to clear six
+Status: living document, last updated 2026-10-25 (this update: `esptool` 4.12.0 added to the Backend table for
+firmware flashing, with the release-archive question it raises noted in that section). Prior update,
+2026-10-24: the `editor/` npm tree moved to clear six
 advisories -- `vite` 8.3.5, `vitest` 4.1.12, `vue` 3.5.44, and transitives (`cborg` 6.1.5, `@types/node` 26.6.5,
-`@vitejs/plugin-vue` 6.0.10) -- all versions read from the installed metadata, licenses unchanged). Prior update,
+`@vitejs/plugin-vue` 6.0.10) -- all versions read from the installed metadata, licenses unchanged. Prior update,
 2026-10-09: micropython-nano-gui acknowledged, under "Vendored in `device-runtime/`". Prior update, 2026-09-17: `st7789py_mpy`/`ssd1306`
 vendored into `device-runtime/src/vendor/` for the new `display_spi`/`display_i2c` node
 types, added under the existing "Vendored in `device-runtime/`" section below. Prior
@@ -223,6 +225,7 @@ inside that range would have installed silently. AGENTS.md, "Third-party code: p
 | pytest | 9.1.1 | MIT | Test runner, `backend/test/`. Dev/test-only (`[project.optional-dependencies].test`), not a runtime dependency of the shipped backend. |
 | setuptools | 84.2.1 | MIT | Build tool for the editable install, pinned in the same lock so `pip install --no-build-isolation` never fetches an unpinned copy from PyPI. Reads oddly as a dependency; it is there for the same reason the other hashes are. |
 | pytest-asyncio | 1.4.0 | Apache-2.0 | `asyncio`-aware test support for `backend/test/test_ws_relay.py`/`test_middleware.py`'s `async def test_*` cases. Dev/test-only, same as pytest above. |
+| esptool | 4.12.0 | **GPL-2.0-or-later** | Flashing a blank ESP32 board (`backend/src/thingstudio_backend/firmware_flash.py`, added 2026-10-25): run as a subprocess with a fixed argv, never imported or linked, so the backend stays Apache-2.0 and does not become a derived work. Its own transitive dependencies come in through the same hash-pinned lock (`bitstring`, `cryptography`, `ecdsa`, `reedsolo`, `PyYAML`, `intelhex`, `argcomplete`). **Redistribution is the open question**: release archives bundle the backend's whole dependency tree, so shipping esptool would put GPL-2 code in every archive and need its source offer alongside; `packaging/constraints.txt` does not pin it yet. Decide before the first release that includes flashing. |
 
 Verified this session in a scratch venv outside the live-mounted repo (`/tmp`, not under `backend/`), same
 discipline as the editor's npm-install workaround (`CLAUDE.md`) -- the actual `pip install` populating a real
