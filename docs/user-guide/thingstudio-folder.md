@@ -45,12 +45,12 @@ Thingstudio starts, it puts two examples here. Deleted examples don't come back.
 
 ## Boards and processors
 
-At every start, Thingstudio copies any built-in definition that's missing from `boards/` and `processors/`. It never
-overwrites a file that's already there.
+At every start, Thingstudio writes the built-in definitions into `boards/` and `processors/`, replacing files of the
+same name. An upgrade's changes therefore arrive on the next start.
 
-- To change a built-in, edit its file.
-- To get the original back, delete the file and restart Thingstudio.
-- After an upgrade, an existing copy still wins over a changed built-in, until you delete it.
+- To keep your own version of a built-in, save it under a different name (for example `my-cyd.json`). It is then a
+  board or processor of its own, and is never overwritten.
+- Editing a built-in file in place works until the next start, when the built-in replaces it.
 
 See [Boards and processors](boards.md).
 

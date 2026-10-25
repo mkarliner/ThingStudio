@@ -111,6 +111,18 @@ Status: detail file for `decisions.md`'s "Processor and board definitions" index
   that already equals the built-in. `/api/definitions` adds `untouchedCopy`. An untouched copy that differs from
   the current built-in goes in `DefinitionSet.staleCopies`, not `overrides`, and the console says to delete it.
   It's still used, as before. Copies made before this and since changed can't be told apart, so they get no line.
+- **2026-10-25 — Revoked: the built-ins are rewritten on every start (Mike).** "I'm revoking the decision about not
+  overwriting existing files. This is too confusing for newbies (and me). We will update files. If a user wants to
+  modify they can copy and save to a different filename." The immediate cause: the flash recipes added to eight
+  board definitions reached nobody who already had `~/.thingstudio/boards/` copies, so the firmware dialog showed
+  an empty board list on a machine that had used Thingstudio before. Telling an untouched old copy from an edit
+  (the 2026-10-12 record) needed a hash file, an `untouchedCopy` field, a `staleCopies` state and a console line
+  to explain — more machinery than the feature is worth, and still invisible to the person hitting it. Now
+  `builtin_reference.copy_builtins` writes every built-in each start, replacing a different file of the same name
+  and logging "replacing <kind>/<file>"; the copy record, `DefinitionFile.untouched_copy`,
+  `/api/definitions.untouchedCopy` and `DefinitionSet.staleCopies` are gone. A user's own definition is a file
+  under another name, with its own id, and is never written. Docs (`thingstudio-folder.md`, `boards.md`) say so.
+  This also retires `outstanding-items.md`'s "seeded copies hide later updates".
 - **2026-10-12 — Header numbering and USB end (Mike, from the LuatOS board's pinout picture).** The LuatOS
   ESP32C3-CORE numbers its right row top to bottom (17 opposite 1), not back up like the Pico, so the Pins… page
   drew it wrong. New optional board keys, both needing `header`: `headerOrder` ("around", the default, or "down")

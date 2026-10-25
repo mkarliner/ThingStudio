@@ -47,7 +47,7 @@ You need these:
 
 ## Install
 
-Flashing erases the board: its saved flows, board settings and WiFi credentials are gone afterwards.
+Flashing erases the board: its saved flow and all settings are gone afterwards.
 
 1. Download the three files from the [releases page](https://github.com/mkarliner/ThingStudio/releases/latest): the image, its `.sha256` and `main.py`. Put them
    in one folder and go there. Check the image against its checksum:

@@ -97,10 +97,12 @@ The definition files list every pin to avoid, with the reason.
 
 ## Your definition files
 
-Definition files live in `~/.thingstudio/boards/` and `~/.thingstudio/processors/`. When Thingstudio starts, it copies in any built-in file that's missing, so you can read and edit them there.
+Definition files live in `~/.thingstudio/boards/` and `~/.thingstudio/processors/`. When Thingstudio starts, it writes
+every built-in file there, replacing a file of the same name, so an upgrade's changes arrive on the next start.
 
-To change a built-in board, edit its file. To get the original back, delete the file and restart Thingstudio. A newer
-version of Thingstudio doesn't update a file you already have, so delete a file to pick up its new built-in version.
+To keep your own version of a built-in board, save it under a different name (for example `my-cyd.json`) and give it its
+own name in the file. It is then a board of its own in the Board menu, and is never overwritten. Editing a built-in
+file in place lasts until the next start.
 
 Thingstudio reads these files when the editor starts, when you connect, and when you deploy. If a file has a mistake, it isn't loaded and the built-in is used instead. The console says what's wrong, and the Board menu lists the file under **Invalid files**.
 

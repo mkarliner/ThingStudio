@@ -24,6 +24,9 @@ export interface FirmwareChoice {
   readonly boardId: string;
   /** A file the user chose; it overrides the board's image but still uses the board's tool and hash. */
   readonly file: FirmwareFile | null;
+  /** Where a file with no board is written, in bytes; null when a board's recipe sets it. ESP32 and S2 take the
+   * image at 0x1000, S3/C3/C6 and the ESP8266 at 0 -- the wrong one leaves a board that does not boot. */
+  readonly offset: number | null;
 }
 
 const TRANSPORT_WORDS: Record<FirmwareChoice["transport"], string> = {
@@ -42,6 +45,9 @@ export function choiceProblem(choice: FirmwareChoice, boards: readonly FirmwareB
   if (!board && !choice.file) {
     return "Pick a board with a known image, or choose an image file from micropython.org/download.";
   }
+  if (!board && choice.transport === "serial" && choice.offset === null) {
+    return "Pick the address the image goes at: 0x1000 for an ESP32 or ESP32-S2, 0 for an ESP32-S3, C3, C6 or ESP8266.";
+  }
   if (board && board.transport !== choice.transport) {
     return `${board.label} flashes over a ${TRANSPORT_WORDS[board.transport]}, not a ${TRANSPORT_WORDS[choice.transport]}.`;
   }
@@ -57,6 +63,7 @@ export interface FlashDeps {
     target: { kind: "serial" | "volume"; value: string },
     boardId: string | undefined,
     imagePath: string | undefined,
+    offset: number | null,
   ): Promise<string>;
   getJob(id: string): Promise<FirmwareJobState>;
   /** A line for the dialog while a step has no job state yet (e.g. the upload). */
@@ -80,6 +87,7 @@ export async function flashBoard(choice: FirmwareChoice, deps: FlashDeps): Promi
     { kind: choice.transport, value: choice.target },
     choice.boardId || undefined,
     imagePath,
+    choice.offset,
   );
   const sleep = deps.sleep ?? ((ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms)));
   const pollMs = deps.pollMs ?? 250;

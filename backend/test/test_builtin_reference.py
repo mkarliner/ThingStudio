@@ -4,46 +4,14 @@
 import json
 import logging
 
-from thingstudio_backend.persisted_store import PersistedStore
 from thingstudio_backend.builtin_reference import (
     EXAMPLE_NODES_DIR,
+    copy_builtins,
     copy_example_custom_nodes,
-    copy_missing_builtins,
     default_definitions_dir,
     seed_builtin_definitions,
     seed_example_custom_nodes,
 )
-
-
-def test_copies_the_real_built_ins_into_the_user_folders(tmp_path) -> None:
-    copied = copy_missing_builtins(tmp_path)
-    src = default_definitions_dir()
-    boards = sorted(p.name for p in (src / "boards").glob("*.json"))
-    processors = sorted(p.name for p in (src / "processors").glob("*.json"))
-    assert boards and processors, "no built-ins found -- wrong source path?"
-    assert sorted(p.name for p in (tmp_path / "boards").glob("*.json")) == boards
-    assert sorted(p.name for p in (tmp_path / "processors").glob("*.json")) == processors
-    assert len(copied) == len(boards) + len(processors)
-    assert json.loads((tmp_path / "boards" / "pico.json").read_text())["processor"] == "rp2040"
-
-
-def test_never_touches_an_existing_file_and_restores_a_deleted_one(tmp_path) -> None:
-    src = tmp_path / "src"
-    for kind in ("boards", "processors"):
-        (src / kind).mkdir(parents=True)
-    (src / "boards" / "a.json").write_text('{"v": 2}')
-    (src / "boards" / "b.json").write_text('{"b": 1}')
-    data = tmp_path / "data"
-    (data / "boards").mkdir(parents=True)
-    (data / "boards" / "a.json").write_text('{"mine": true}')
-
-    assert copy_missing_builtins(data, src) == ["boards/b.json"]
-    assert (data / "boards" / "a.json").read_text() == '{"mine": true}'
-
-    (data / "boards" / "b.json").unlink()
-    assert copy_missing_builtins(data, src) == ["boards/b.json"]
-    assert (data / "boards" / "b.json").read_text() == '{"b": 1}'
-    assert copy_missing_builtins(data, src) == []
 
 
 def _source(tmp_path, board_a: str):
@@ -54,42 +22,68 @@ def _source(tmp_path, board_a: str):
     return src
 
 
-def _untouched(data) -> dict[str, bool]:
-    return {f.name: f.untouched_copy for f in PersistedStore(data).list_definitions("boards")}
+def test_copies_the_real_built_ins_into_the_user_folders(tmp_path) -> None:
+    written = copy_builtins(tmp_path)
+    src = default_definitions_dir()
+    boards = sorted(p.name for p in (src / "boards").glob("*.json"))
+    processors = sorted(p.name for p in (src / "processors").glob("*.json"))
+    assert boards and processors, "no built-ins found -- wrong source path?"
+    assert sorted(p.name for p in (tmp_path / "boards").glob("*.json")) == boards
+    assert sorted(p.name for p in (tmp_path / "processors").glob("*.json")) == processors
+    assert len(written) == len(boards) + len(processors)
+    assert json.loads((tmp_path / "boards" / "pico.json").read_text())["processor"] == "rp2040"
+    # Nothing differs on a second start, so nothing is rewritten.
+    assert copy_builtins(tmp_path) == []
 
 
-def test_a_copy_stays_untouched_until_edited_and_the_record_is_not_listed(tmp_path) -> None:
+def test_replaces_an_existing_file_and_restores_a_deleted_one(tmp_path) -> None:
+    # Mike, 2026-10-25, revoking "an existing file is never touched": a seeded copy hid every later change to a
+    # built-in -- the flash recipes reached nobody who already had the folder. A user who wants their own version
+    # saves it under another name, which is not a built-in and is never written.
+    src = tmp_path / "src"
+    for kind in ("boards", "processors"):
+        (src / kind).mkdir(parents=True)
+    (src / "boards" / "a.json").write_text('{"v": 2}')
+    (src / "boards" / "b.json").write_text('{"b": 1}')
+    data = tmp_path / "data"
+    (data / "boards").mkdir(parents=True)
+    (data / "boards" / "a.json").write_text('{"mine": true}')
+    (data / "boards" / "mine.json").write_text('{"v": 99}')
+
+    assert copy_builtins(data, src) == ["boards/a.json", "boards/b.json"]
+    assert (data / "boards" / "a.json").read_text() == '{"v": 2}'
+    assert (data / "boards" / "mine.json").read_text() == '{"v": 99}'
+
+    (data / "boards" / "b.json").unlink()
+    assert copy_builtins(data, src) == ["boards/b.json"]
+    assert (data / "boards" / "b.json").read_text() == '{"b": 1}'
+    assert copy_builtins(data, src) == []
+
+
+def test_a_changed_file_is_replaced_and_the_start_says_so(tmp_path, caplog) -> None:
     src = _source(tmp_path, '{"v": 1}')
     data = tmp_path / "data"
-    copy_missing_builtins(data, src)
-    assert _untouched(data) == {"a": True}
-    # The built-in changes later: the user's copy is still the untouched old one.
+    copy_builtins(data, src)
     (src / "boards" / "a.json").write_text('{"v": 2}')
-    assert copy_missing_builtins(data, src) == []
-    assert _untouched(data) == {"a": True}
-    (data / "boards" / "a.json").write_text('{"v": 1, "mine": true}')
-    assert _untouched(data) == {"a": False}
+    with caplog.at_level(logging.INFO):
+        seed_builtin_definitions(data, src)
+    assert (data / "boards" / "a.json").read_text() == '{"v": 2}'
+    assert "replacing boards/a.json" in caplog.text and "wrote built-in definitions" in caplog.text
 
 
-def test_an_existing_file_equal_to_the_built_in_is_recorded_but_an_edited_one_is_not(tmp_path) -> None:
+def test_the_old_copy_record_is_removed(tmp_path) -> None:
     src = _source(tmp_path, '{"v": 1}')
     data = tmp_path / "data"
     (data / "boards").mkdir(parents=True)
-    (data / "boards" / "a.json").write_text('{"v": 1}')
-    copy_missing_builtins(data, src)
-    assert _untouched(data) == {"a": True}
-
-    other = tmp_path / "other"
-    (other / "boards").mkdir(parents=True)
-    (other / "boards" / "a.json").write_text('{"v": 0}')
-    copy_missing_builtins(other, src)
-    assert _untouched(other) == {"a": False}
+    (data / "boards" / ".builtin-copies").write_text('{"a.json": "abc"}')
+    copy_builtins(data, src)
+    assert not (data / "boards" / ".builtin-copies").exists()
 
 
 def test_seed_logs_and_carries_on_when_the_source_is_missing(tmp_path, caplog) -> None:
     with caplog.at_level(logging.WARNING):
         seed_builtin_definitions(tmp_path / "data", tmp_path / "nowhere")
-    assert "could not copy built-in board/processor definitions" in caplog.text
+    assert "could not write built-in board/processor definitions" in caplog.text
     assert not (tmp_path / "data").exists()
 
 

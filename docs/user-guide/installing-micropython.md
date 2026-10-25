@@ -34,11 +34,13 @@ RP2350).
    the path and the adapter's name (for example `/dev/ttyUSB0 -- CH340`). If the board isn't there, put it in
    download mode (step 1) and click ⟳; the line under the list says how many it found. If it still isn't listed,
    type the path in the box under the list (on macOS a mounted Pico is `/Volumes/RPI-RP2`).
-4. Pick the board if the list has it. Otherwise choose **Choose a file…** and pick the `.bin` or `.uf2` you
-   downloaded above.
+4. Pick the board if the list has it. Only boards with a recipe are listed — the CYD is not one of them yet, and no
+   board is until its image is published. Otherwise pick the `.bin` or `.uf2` you downloaded above, and set
+   **Address** to the one MicroPython's download page gives for your chip: `0x1000` for an ESP32 or ESP32-S2, `0`
+   for an ESP32-S3, C3, C6 or ESP8266. A mounted drive needs no address.
 5. Click **Flash**. The dialog shows the step it is on and how far it has got; a failure says what to fix.
 
-Flashing erases the flows, settings and WiFi credentials on the board. Afterwards, [connect](connecting.md) it
+Flashing erases the flow and all settings on the board. Afterwards, [connect](connecting.md) it
 and [install the runtime](installing-runtime.md).
 
 The rest of this page is the same job without the editor.

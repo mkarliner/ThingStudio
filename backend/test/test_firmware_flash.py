@@ -309,15 +309,41 @@ def test_a_transport_that_does_not_match_the_tool_is_refused(store, tmp_path):
     assert "writes over serial" in exc.value.message
 
 
-def test_the_generic_path_needs_only_a_target_and_a_file(store, tmp_path, fake_tool):
+def test_the_generic_path_needs_only_a_target_a_file_and_the_address(store, tmp_path, fake_tool):
     image = tmp_path / "any.bin"
     image.write_bytes(b"bytes")
-    job = FirmwareJobs(store).start({"kind": "serial", "value": "/dev/fake"}, None, str(image))
+    job = FirmwareJobs(store).start({"kind": "serial", "value": "/dev/fake"}, None, str(image), 0x1000)
     settled(job)
     assert job.state == "done", job.error
     assert job.board == "local" and job.tool == "esptool"
     calls = [json.loads(line) for line in fake_tool.read_text().splitlines()]
     assert calls[0][:4] == ["--chip", "auto", "--port", "/dev/fake"]
+    assert calls[0][-3:] == ["write-flash", "0x1000", str(image)]
+
+
+def test_a_file_with_no_board_takes_no_address_at_zero_and_refuses_a_bad_one(store, tmp_path, fake_tool):
+    # 0 is a real address (S3/C3/ESP8266), so it must be accepted; negative and non-numbers are refused by name.
+    image = tmp_path / "s3.bin"
+    image.write_bytes(b"bytes")
+    settled(FirmwareJobs(store).start({"kind": "serial", "value": "/dev/fake"}, None, str(image), 0))
+    calls = [json.loads(line) for line in fake_tool.read_text().splitlines()]
+    assert calls[0][-3:] == ["write-flash", "0x0", str(image)]
+    # No address at all is refused, not defaulted to 0.
+    with pytest.raises(FirmwareError) as exc:
+        FirmwareJobs(store).start({"kind": "serial", "value": "/dev/fake"}, None, str(image))
+    assert "0x1000 for an ESP32" in exc.value.message
+    for bad in (-1, "0x1000", True):
+        with pytest.raises(FirmwareError) as exc:
+            FirmwareJobs(store).start({"kind": "serial", "value": "/dev/fake"}, None, str(image), bad)
+        assert exc.value.step == "target" and "offset" in exc.value.message
+
+
+def test_a_uf2_file_takes_no_address(store, tmp_path):
+    image = tmp_path / "board.uf2"
+    image.write_bytes(b"uf2")
+    with pytest.raises(FirmwareError) as exc:
+        FirmwareJobs(store).start({"kind": "volume", "value": str(tmp_path)}, None, str(image), 0x1000)
+    assert "no address" in exc.value.message
 
 
 def test_a_target_and_a_file_are_both_required(store):

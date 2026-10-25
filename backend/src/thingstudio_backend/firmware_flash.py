@@ -406,7 +406,13 @@ class FirmwareJobs:
         self._jobs: dict[str, Job] = {}
         self._lock = threading.Lock()
 
-    def start(self, target: dict, board_id: str | None = None, image_path_override: str | None = None) -> Job:
+    def start(
+        self,
+        target: dict,
+        board_id: str | None = None,
+        image_path_override: str | None = None,
+        offset: int | None = None,
+    ) -> Job:
         if not isinstance(target, dict):
             raise FirmwareError("target", "target must be an object like {\"kind\": \"serial\", \"value\": \"…\"}")
         kind = target.get("kind")
@@ -428,6 +434,22 @@ class FirmwareJobs:
                 )
             tool = TOOLS["esptool"] if kind == "serial" else TOOLS["uf2"]
             firmware = {"id": "local", "tool": tool.name, "transport": tool.transport}
+            # A file with no board has no recipe to say where it goes, and the address differs by chip: ESP32 and
+            # S2 take it at 0x1000, S3/C3/C6 and the ESP8266 at 0. Writing at the wrong one reports success and
+            # leaves a board that doesn't boot, so the address is required rather than defaulted, and the editor
+            # asks for it.
+            if tool.name == "esptool":
+                if offset is None:
+                    raise FirmwareError(
+                        "target",
+                        "give the address the image goes at: 0x1000 for an ESP32 or ESP32-S2, 0 for an ESP32-S3, "
+                        "C3, C6 or ESP8266",
+                    )
+                if not isinstance(offset, int) or isinstance(offset, bool) or offset < 0:
+                    raise FirmwareError("target", f"offset must be a whole number of bytes, not {offset!r}")
+                firmware = {**firmware, "flash": {"offset": offset}}
+            elif offset is not None:
+                raise FirmwareError("target", "uf2 copies the file to the mounted drive; it takes no address")
         if tool.transport != kind:
             raise FirmwareError(
                 "target",

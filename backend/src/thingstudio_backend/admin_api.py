@@ -65,7 +65,7 @@ def _preset_info_json(info: PresetInfo) -> dict:
 
 
 def _definition_json(info: DefinitionFile) -> dict:
-    return {"name": info.name, "valid": info.valid, "error": info.error, "data": info.data, "untouchedCopy": info.untouched_copy}
+    return {"name": info.name, "valid": info.valid, "error": info.error, "data": info.data}
 
 
 def make_admin_routes(store: PersistedStore) -> list[web.RouteDef]:
@@ -321,10 +321,11 @@ def make_admin_routes(store: PersistedStore) -> list[web.RouteDef]:
             return web.json_response({"error": "NODE_ERROR: request body must be an object"}, status=400)
         board = body.get("board") if isinstance(body.get("board"), str) else None
         image = body.get("imagePath") if isinstance(body.get("imagePath"), str) else None
+        offset = body.get("offset")
         if not board and not image:
             return web.json_response({"error": "NODE_ERROR: give a board or an imagePath"}, status=400)
         try:
-            job = jobs.start(body.get("target"), board, image)
+            job = jobs.start(body.get("target"), board, image, offset)
         except FirmwareError as exc:
             return web.json_response({"error": exc.message, "step": exc.step}, status=409)
         return web.json_response({"id": job.id})

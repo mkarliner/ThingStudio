@@ -1885,10 +1885,6 @@ async function loadUserDefinitions(): Promise<void> {
   definitions = buildDefinitionSet(BUILTIN_DEFINITION_FILES, userDefinitionFiles(listing));
   const lines = [
     ...definitions.overrides.map((o) => ({ text: `[definitions] ${o.source} replaces the built-in ${o.kind} "${o.id}"`, cls: "" as const })),
-    ...definitions.staleCopies.map((o) => ({
-      text: `[definitions] ${o.source} is an old copy of the built-in ${o.kind} "${o.id}" and is used instead of it. Delete the file to use the current one.`,
-      cls: "err" as const,
-    })),
     ...definitions.problems.map((p) => ({ text: `[definitions] ${p.source} is not loaded: ${p.message}`, cls: "err" as const })),
   ];
   const report = JSON.stringify(lines);
@@ -2565,6 +2561,19 @@ function fwTarget(): string {
   return el<HTMLInputElement>("fwTargetPath").value.trim() || el<HTMLSelectElement>("fwTargets").value;
 }
 
+/** The address a file with no board is written at, or null when a board's own recipe sets it (or the transport is
+ * a mounted drive). The field is hidden in both of those cases, so what is shown is what is sent. */
+function fwOffset(): number | null {
+  return el<HTMLSelectElement>("fwOffset").disabled ? null : Number(el<HTMLSelectElement>("fwOffset").value);
+}
+
+function renderFwOffset(): void {
+  const row = el("fwOffsetRow");
+  const shown = fwTransport() === "serial" && !fwSelectedBoard();
+  row.hidden = !shown;
+  el<HTMLSelectElement>("fwOffset").disabled = !shown;
+}
+
 function renderFwFileNote(): void {
   const board = fwSelectedBoard();
   const note = el("fwFileNote");
@@ -2583,13 +2592,24 @@ function renderFwBoards(): void {
   const select = el<HTMLSelectElement>("fwBoards");
   const transport = fwTransport();
   const previous = select.value;
+  const matching = fwBoards.filter((item) => item.transport === transport);
   select.innerHTML = "";
-  select.add(new Option("(choose an image file)", ""));
-  for (const board of fwBoards.filter((item) => item.transport === transport)) {
+  // A board only appears when this build has a recipe for it, so an empty-looking list is normal for a chip we
+  // have no recipe for (the CYD, until its image is rebuilt) -- say so instead of showing one bare option.
+  select.add(
+    new Option(
+      matching.length
+        ? "(choose an image file)"
+        : `(no board has a ${transport === "serial" ? "serial-port" : "mounted-drive"} recipe — choose a file)`,
+      "",
+    ),
+  );
+  for (const board of matching) {
     select.add(new Option(board.label, board.id));
   }
-  if (previous && fwBoards.some((item) => item.id === previous && item.transport === transport)) select.value = previous;
+  if (previous && matching.some((item) => item.id === previous)) select.value = previous;
   renderFwFileNote();
+  renderFwOffset();
 }
 
 async function refreshFirmwareTargets(): Promise<void> {
@@ -2657,7 +2677,10 @@ el("fwRefreshTargets").addEventListener("click", () => void refreshFirmwareTarge
 el("fwTargets").addEventListener("change", () => {
   el<HTMLInputElement>("fwTargetPath").value = "";
 });
-el("fwBoards").addEventListener("change", renderFwFileNote);
+el("fwBoards").addEventListener("change", () => {
+  renderFwFileNote();
+  renderFwOffset();
+});
 el<HTMLInputElement>("fwFile").addEventListener("change", (event) => {
   const input = event.target as HTMLInputElement;
   const picked = input.files?.[0];
@@ -2683,6 +2706,7 @@ async function runFirmwareFlash(): Promise<void> {
     target: fwTarget(),
     boardId: el<HTMLSelectElement>("fwBoards").value,
     file: fwFile,
+    offset: fwOffset(),
   };
   const board = fwSelectedBoard();
   const problem = choiceProblem(choice, fwBoards);
@@ -2698,7 +2722,7 @@ async function runFirmwareFlash(): Promise<void> {
   try {
     await flashBoard(choice, {
       uploadImage: (name, body) => uploadFirmwareImage(wsUrl, name, body),
-      startFlash: (target, boardId, imagePath) => startFirmwareFlash(wsUrl, target, boardId, imagePath),
+      startFlash: (target, boardId, imagePath, offset) => startFirmwareFlash(wsUrl, target, boardId, imagePath, offset ?? undefined),
       getJob: (id) => getFirmwareJob(wsUrl, id),
       onStatus: (line) => {
         el("fwProgress").textContent = line;

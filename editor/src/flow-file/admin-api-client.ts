@@ -324,8 +324,6 @@ export interface DefinitionFileInfo {
   valid: boolean;
   error: string | null;
   data: unknown;
-  /** Still exactly the built-in the backend copied (older backends leave it out). */
-  untouchedCopy?: boolean;
 }
 
 export interface UserDefinitionFiles {
@@ -407,10 +405,12 @@ export async function startFirmwareFlash(
   target: { kind: "serial" | "volume"; value: string },
   boardId?: string,
   imagePath?: string,
+  offset?: number,
 ): Promise<string> {
   const body: Record<string, unknown> = { target };
   if (boardId) body.board = boardId;
   if (imagePath) body.imagePath = imagePath;
+  if (!boardId && offset !== undefined) body.offset = offset;
   const res = await request(wsUrl, "/api/firmware/flash", {
     method: "POST",
     body: JSON.stringify(body),

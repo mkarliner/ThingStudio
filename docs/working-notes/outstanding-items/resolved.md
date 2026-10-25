@@ -145,6 +145,11 @@ working list the same day, per Mike's call.
 
 ## Editor and backend
 
+- **Seeded copies of built-in definitions no longer hide later updates** -- settled 2026-10-25 by revoking the rule
+  rather than refining it: the built-ins are rewritten on every backend start, and a user's own definition is a
+  file under another name (`decisions/chip-board-definitions.md`, 2026-10-25). The 2026-10-12 hash record and the
+  `staleCopies` console line went with it.
+
 - **Device settings store (persistent key/value for application values)** -- landed and hardware-verified
   2026-10-17: `get`/`set`/`delete`/`keys`, namespaced by `flowName`, atomic `_settings.json`, a clear action
   over `EXEC`, and `test-flows/device_cli.py` for headless hardware sessions.

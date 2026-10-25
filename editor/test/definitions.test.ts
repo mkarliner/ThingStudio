@@ -167,15 +167,14 @@ describe("definition file validation", () => {
     expect(set.problems).toEqual([]);
   });
 
-  it("reports an unedited copy of an older built-in as stale, not as an override", () => {
-    const old = { name: "Raspberry Pi Pico", processor: "rp2040", match: ["Raspberry Pi Pico"], pins: {} };
-    const set = buildDefinitionSet(BUILTIN_DEFINITION_FILES, [{ ...user("board", "pico", old), untouchedCopy: true }]);
-    expect(set.staleCopies).toEqual([{ kind: "board", id: "pico", source: "~/.thingstudio/boards/pico.json" }]);
+  it("uses a user's own definition under another name beside the built-ins", () => {
+    // The backend rewrites the built-ins on every start (builtin_reference.py, 2026-10-25), so a definition a
+    // user wants to keep lives under a name of its own -- and is another board, never an override.
+    const custom = user("board", "my-pico", { name: "My Pico", processor: "rp2040", match: ["Raspberry Pi Pico"], pins: { LED: 25 } });
+    const set = buildDefinitionSet(BUILTIN_DEFINITION_FILES, [custom]);
     expect(set.overrides).toEqual([]);
-    expect(set.boards.get("pico")!.pins.size).toBe(0);
-    const pico = BUILTIN_DEFINITION_FILES.find((f) => f.kind === "board" && f.id === "pico")!;
-    const current = buildDefinitionSet(BUILTIN_DEFINITION_FILES, [{ ...user("board", "pico", JSON.parse(JSON.stringify(pico.data))), untouchedCopy: true }]);
-    expect(current.staleCopies).toEqual([]);
+    expect(set.boards.get("my-pico")!.name).toBe("My Pico");
+    expect(set.boards.get("pico")!.name).toBe("Raspberry Pi Pico");
   });
 
   it("keeps the built-in and reports the problem when a replacing user file is invalid", () => {

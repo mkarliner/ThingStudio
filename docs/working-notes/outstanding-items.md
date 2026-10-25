@@ -91,10 +91,6 @@ ThingStudioMarketing repo, not here.
   shows physical pins from a board's `header` (Pico family done). The S2 Mini's maker prints labels but no pin
   numbers, so it needs a position scheme agreed first; the CYD's P1/P3/CN1 connectors vary between units. Only
   add either from a source checked against a real board: a wrong header is worse than none.
-- **[P3]** **Seeded copies of built-in definitions hide later updates -- noted 2026-09-30.** The backend copies
-  built-in board/processor files into `~/.thingstudio` once, and a user copy always wins
-  (`builtin_reference.py`'s documented cost). A fix: remember what was copied (a hash) and refresh a copy the
-  user never edited.
 - **[P5]** **RP2350 (Pico 2 / Pico 2 W) bring-up -- in progress, wiring deferred.** Follow-up to the RP2040
   bring-up. Plain Pico 2 (non-W) confirmed 2026-09-06: MicroPython flash, runtime deploy, boot-to-HELLO. The
   functional interrupt-flow pass and the memcheck RAM comparison against RP2040's ~209 KB free are deferred

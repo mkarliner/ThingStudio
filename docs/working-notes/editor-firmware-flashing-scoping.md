@@ -36,6 +36,12 @@ Corollaries, all decided 2026-10-25:
   path as well: a browser cannot open a host filesystem picker, and a path box is the smallest honest answer for a
   volume mounted somewhere unusual. A typed path is a target like any other — same transport choice, same
   refusals — not a second code path, and it is not auto-detection in disguise.
+- **A file with no board carries an address (2026-10-25).** The board block's `flash.offset` is what says where an
+  ESP32 image goes, so a file flashed with no board had none: it went to 0, which is right for an S3/C3/C6/ESP8266
+  and wrong for an ESP32/S2 (0x1000) — a board that flashes "successfully" and then doesn't boot. The dialog asks,
+  with the two choices worded as the chip families, and sends `offset` with the job; the backend refuses a bad or
+  missing one by name, and refuses an offset for `uf2`, which copies to a drive and takes none. Reading the chip
+  off esptool and picking the offset for the user is a later step, on the same footing as auto-detect.
 - **Tools live in the core backend; boards are data.** A third party adds a board by naming a tool, not by
   supplying an `argv` — running package-provided commands is exactly what the project's postures rule out.
   Adding a tool is a core change and an interface change, deliberately.
@@ -132,7 +138,8 @@ Tools → **Install firmware…**:
 2. Pick the concrete target from the list the backend returns; a typed path is always allowed for a volume.
 3. Pick the image: the detected board's pinned image, or **Choose a file…** with a link to
    <https://micropython.org/download/>. Show the version and where it came from (cached/local).
-4. **Warn that flashing erases flows, settings and WiFi credentials**, once, before anything is written.
+4. **Warn that flashing erases the flow and all settings** (the WiFi credentials included — they are settings),
+   once, before anything is written.
 5. Flash, with one progress line (percentage and the current step). One reset per step; a board that
    re-enumerates (CH340) is reported, not quietly re-opened in a retry chain.
 6. If the image has no runtime, run the existing install, then connect.

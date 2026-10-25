@@ -207,31 +207,13 @@ class DefinitionFile:
     valid: bool
     error: str | None = None
     data: object = None
-    # True when the file is still exactly what the backend copied from the built-ins
-    # (builtin_reference.py), so the editor can tell an old untouched copy from a user's edit.
-    untouched_copy: bool = False
 
 
 _DEFINITION_KINDS = ("processors", "boards")
 
-# Per-kind record of the built-ins the backend copied: {"pico.json": "<sha256 of the bytes copied>"}.
-# No .json suffix, so list_definitions() never lists it as a definition.
-BUILTIN_COPIES_FILE = ".builtin-copies"
-
 
 def sha256_bytes(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
-
-
-def read_builtin_copies(kind_dir: Path) -> dict[str, str]:
-    """The copy record in kind_dir, or {} when it's missing or unreadable (it only drives a hint)."""
-    try:
-        data = json.loads((kind_dir / BUILTIN_COPIES_FILE).read_text(encoding="utf-8"))
-    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
-        return {}
-    if not isinstance(data, dict):
-        return {}
-    return {k: v for k, v in data.items() if isinstance(k, str) and isinstance(v, str)}
 
 
 def _validate_credential_type(credential_type: str) -> str:
@@ -542,7 +524,6 @@ class PersistedStore:
         if not d.is_dir():
             return []
         out: list[DefinitionFile] = []
-        copies = read_builtin_copies(d)
         for path in sorted(d.glob("*.json"), key=lambda p: p.stem):
             if not _NAME_RE.match(path.stem):
                 out.append(
@@ -564,6 +545,5 @@ class PersistedStore:
             except json.JSONDecodeError as exc:
                 out.append(DefinitionFile(name=path.stem, valid=False, error=f"not valid JSON: {exc}"))
                 continue
-            untouched = copies.get(path.name) == sha256_bytes(raw)
-            out.append(DefinitionFile(name=path.stem, valid=True, data=data, untouched_copy=untouched))
+            out.append(DefinitionFile(name=path.stem, valid=True, data=data))
         return out

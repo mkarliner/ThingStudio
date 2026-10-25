@@ -400,7 +400,7 @@
   <form method="dialog">
     <h2>Install firmware</h2>
     <p>For a board with no MicroPython yet, or one you want to start over on.
-      <strong>Flashing erases the flow, settings and WiFi password on the board.</strong></p>
+      <strong>Flashing erases the flow and all settings on the board.</strong></p>
     <fieldset>
       <legend>How is the board connected?</legend>
       <label class="check"><input type="radio" name="fwTransport" value="serial" checked />
@@ -416,6 +416,11 @@
     <p id="fwTargetsNote" class="dialog-note"></p>
     <label>Board <select id="fwBoards"></select></label>
     <label>Image file <input id="fwFile" type="file" accept=".bin,.uf2,.gz" /></label>
+    <label id="fwOffsetRow">Address <select id="fwOffset">
+        <option value="4096">0x1000 - ESP32, ESP32-S2</option>
+        <option value="0">0 - ESP32-S3, C3, C6, ESP8266</option>
+      </select>
+      <span class="hint">only for a file with no board: MicroPython's download page says which</span></label>
     <p id="fwFileNote" class="dialog-note"></p>
     <p>MicroPython images for other boards: <a href="https://micropython.org/download/" target="_blank" rel="noopener">micropython.org/download</a>.</p>
     <p id="fwProgress" class="dialog-note"></p>

@@ -37,7 +37,7 @@ const PICO: FirmwareBoardInfo = {
 const BOARDS = [CYD, PICO];
 
 function choice(over: Partial<FirmwareChoice> = {}): FirmwareChoice {
-  return { transport: "serial", target: "/dev/ttyUSB0", boardId: "", file: null, ...over };
+  return { transport: "serial", target: "/dev/ttyUSB0", boardId: "", file: null, offset: null, ...over };
 }
 
 function file(name: string): { name: string; body: Blob } {
@@ -65,8 +65,20 @@ describe("choiceProblem", () => {
     expect(choiceProblem(choice({ transport: "volume", target: "/Volumes/RPI-RP2", boardId: "pico" }), BOARDS)).toBeNull();
   });
 
-  it("accepts a file with no board at all (the generic path)", () => {
-    expect(choiceProblem(choice({ file: file("any.bin") }), BOARDS)).toBeNull();
+  it("accepts a file with no board at all (the generic path), once an address is picked", () => {
+    expect(choiceProblem(choice({ file: file("any.bin"), offset: 0x1000 }), BOARDS)).toBeNull();
+    expect(choiceProblem(choice({ file: file("any.bin"), offset: 0 }), BOARDS)).toBeNull();
+  });
+
+  it("asks where a file with no board goes, because the address differs by chip", () => {
+    // 0x1000 for ESP32/S2, 0 for S3/C3/C6/ESP8266 -- at the wrong one the board does not boot.
+    expect(choiceProblem(choice({ file: file("any.bin") }), BOARDS)).toMatch(/0x1000 for an ESP32/);
+    expect(choiceProblem(choice({ file: file("s3.bin") }), BOARDS)).toMatch(/0 for an ESP32-S3/);
+  });
+
+  it("does not ask for an address when the board's own recipe has one", () => {
+    expect(choiceProblem(choice({ boardId: "cyd" }), BOARDS)).toBeNull();
+    expect(choiceProblem(choice({ transport: "volume", target: "/Volumes/RPI-RP2", boardId: "pico" }), BOARDS)).toBeNull();
   });
 
   it("asks for a target before anything else, in the words of the chosen transport", () => {
@@ -103,8 +115,8 @@ describe("flashBoard", () => {
         calls.push(`upload:${name}`);
         return { path: `/cache/${name}` };
       },
-      startFlash: async (target, boardId, imagePath) => {
-        calls.push(`start:${target.kind}:${target.value}:${boardId ?? "-"}:${imagePath ?? "-"}`);
+      startFlash: async (target, boardId, imagePath, offset) => {
+        calls.push(`start:${target.kind}:${target.value}:${boardId ?? "-"}:${imagePath ?? "-"}:${offset ?? "-"}`);
         return "j1";
       },
       getJob: async () => {
@@ -124,16 +136,16 @@ describe("flashBoard", () => {
 
   it("uploads a chosen file before it starts the flash", async () => {
     const { deps: d, calls, progress } = deps([job({ state: "done", progress: 100 })]);
-    const finished = await flashBoard(choice({ file: file("mine.bin") }), d);
+    const finished = await flashBoard(choice({ file: file("mine.bin"), offset: 0x1000 }), d);
     expect(finished.state).toBe("done");
-    expect(calls).toEqual(["upload:mine.bin", "start:serial:/dev/ttyUSB0:-:/cache/mine.bin", "poll"]);
+    expect(calls).toEqual(["upload:mine.bin", "start:serial:/dev/ttyUSB0:-:/cache/mine.bin:4096", "poll"]);
     expect(progress.map((state) => state.state)).toEqual(["done"]);
   });
 
   it("starts straight away when the board's own image is used", async () => {
     const { deps: d, calls } = deps([job({ state: "done" })]);
     await flashBoard(choice({ boardId: "cyd" }), d);
-    expect(calls).toEqual(["start:serial:/dev/ttyUSB0:cyd:-", "poll"]);
+    expect(calls).toEqual(["start:serial:/dev/ttyUSB0:cyd:-:-", "poll"]);
   });
 
   it("keeps polling while the job runs, then returns it", async () => {

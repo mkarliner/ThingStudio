@@ -1,23 +1,17 @@
 # SPDX-License-Identifier: Apache-2.0
 # backend/src/thingstudio_backend/builtin_reference.py
 #
-# Copies the built-in processor and board definitions into
+# Writes the built-in processor and board definitions into
 # ~/.thingstudio/processors/ and ~/.thingstudio/boards/ on backend start, so
 # a user can see and change them without a copy of the repo (Mike,
 # 2026-09-24).
 #
-# Only MISSING files are copied; an existing file is never touched (Mike's
-# call, 2026-09-24). So a user edits a built-in in place, and gets the
-# original back by deleting the file and restarting the backend. The known
-# cost: when a later version changes a built-in, a user's existing copy
-# (edited or not) still wins in the editor until they delete it. The editor
-# only reports a user file as replacing a built-in when its content actually
-# differs (definitions.ts), so untouched copies stay quiet.
-#
-# Each kind folder also gets a record of what was copied (BUILTIN_COPIES_FILE, a hash per file, 2026-10-12).
-# A copy whose hash still matches is untouched; when it no longer equals the current built-in, it's an old
-# copy, and the editor says so instead of quietly using it over the new built-in. A file already there that
-# equals the current built-in is recorded too, so copies made before the record existed are covered.
+# Every built-in is written on every start, replacing whatever file is there (Mike, 2026-10-25). Before that an
+# existing copy was never touched, which meant a later release's change to a built-in reached nobody who already
+# had the file -- and the board flash recipes, added to eight definitions, reached nobody at all -- while the
+# "is this copy still unedited?" bookkeeping needed a hash record and an explanation to be understood. A user who
+# wants a different definition saves their copy under another name; that file has its own id, is not a built-in,
+# and is never written to.
 #
 # Runs at backend start rather than "install time" because Thingstudio has
 # no install step of its own yet (pip install -e + a build). A failure here
@@ -29,16 +23,18 @@
 
 from __future__ import annotations
 
-import json
 import logging
 from pathlib import Path
 
 from .assets import asset_dirs
-from .persisted_store import BUILTIN_COPIES_FILE, read_builtin_copies, sha256_bytes
 
 log = logging.getLogger(__name__)
 
 KINDS = ("processors", "boards")
+
+# Written by builds before 2026-10-25, when a copy's hash was recorded so an untouched old copy could be told from
+# an edit. Nothing reads it now; a start removes it so it doesn't linger in the folder.
+_LEGACY_COPIES_FILE = ".builtin-copies"
 
 
 def default_definitions_dir() -> Path:
@@ -46,43 +42,39 @@ def default_definitions_dir() -> Path:
     return asset_dirs().definitions
 
 
-def copy_missing_builtins(data_dir: Path, source_dir: Path | None = None) -> list[str]:
-    """Copies each built-in definition into <data_dir>/<kind>/ unless a file
-    with that name is already there. Returns the "<kind>/<file>" paths copied.
-    Raises OSError on failure; the caller decides whether that's fatal."""
+def copy_builtins(data_dir: Path, source_dir: Path | None = None) -> list[str]:
+    """Writes each built-in definition into <data_dir>/<kind>/, replacing a different file of the same name.
+    Returns the "<kind>/<file>" paths that changed on disk. Raises OSError on failure; the caller decides
+    whether that's fatal."""
     source_dir = source_dir or default_definitions_dir()
     if not all((source_dir / kind).is_dir() for kind in KINDS):
         raise OSError(f"built-in definitions not found at {source_dir}")
-    copied: list[str] = []
+    written: list[str] = []
     for kind in KINDS:
         out = data_dir / kind
         out.mkdir(parents=True, exist_ok=True)
-        record = read_builtin_copies(out)
-        before = dict(record)
+        (out / _LEGACY_COPIES_FILE).unlink(missing_ok=True)
         for src in sorted((source_dir / kind).glob("*.json")):
             dest = out / src.name
             content = src.read_bytes()
             if dest.exists():
-                if src.name not in record and dest.read_bytes() == content:
-                    record[src.name] = sha256_bytes(content)
-                continue
+                if dest.read_bytes() == content:
+                    continue
+                log.info("replacing %s/%s with the built-in", kind, src.name)
             dest.write_bytes(content)
-            record[src.name] = sha256_bytes(content)
-            copied.append(f"{kind}/{src.name}")
-        if record != before:
-            (out / BUILTIN_COPIES_FILE).write_text(json.dumps(record, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    return copied
+            written.append(f"{kind}/{src.name}")
+    return written
 
 
 def seed_builtin_definitions(data_dir: Path, source_dir: Path | None = None) -> None:
-    """copy_missing_builtins, logging instead of raising."""
+    """copy_builtins, logging instead of raising."""
     try:
-        copied = copy_missing_builtins(data_dir, source_dir)
+        written = copy_builtins(data_dir, source_dir)
     except OSError as exc:
-        log.warning("could not copy built-in board/processor definitions into %s: %s", data_dir, exc)
+        log.warning("could not write built-in board/processor definitions into %s: %s", data_dir, exc)
         return
-    if copied:
-        log.info("copied built-in definitions into %s: %s", data_dir, ", ".join(copied))
+    if written:
+        log.info("wrote built-in definitions into %s: %s", data_dir, ", ".join(written))
 
 
 # -- example custom nodes ------------------------------------------------------

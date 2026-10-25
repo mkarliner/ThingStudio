@@ -104,6 +104,7 @@ The raw error stays in the message, in brackets. Include it if you report a prob
 | A port named `/dev/ttyS0`, `/dev/ttyS1`… | Those are the computer's own serial ports, not the board. USB ports are listed above them, labelled with their path and the adapter's name (`/dev/ttyUSB0 -- CH340`). |
 | … is not a .uf2 | A mounted drive takes the `.uf2` build, not a `.bin`. Download the right one from [micropython.org/download](https://micropython.org/download/). |
 | … is not the image this board expects | The file isn't the image that board's entry pins. Pick the board's own image, or choose a different board entry. |
+| The board doesn't start after flashing a file with no board | The **Address** was wrong for the chip: `0x1000` for an ESP32 or ESP32-S2, `0` for an ESP32-S3, C3, C6 or ESP8266. Flash again with the right one; the board is recoverable. |
 | esptool is not installed on this machine | The backend's Python has no `esptool`: `pip install esptool`, then restart Thingstudio. |
 | esptool exited N at … on PORT | The write stopped. Check the cable, put the board in download mode again, and retry. A board with a separate USB-serial chip may need the slower write: clear its `baud` in the board file, or use the terminal route in [Install MicroPython](installing-micropython.md). |
 | the flash did not finish within … | The tool stopped answering. Unplug and replug the board, then flash again. |
