@@ -32,6 +32,12 @@ try:
     import board_fs
 except ImportError:
     board_fs = None
+try:
+    # Generated into a custom image by its build (firmware/classic-esp32/build.sh): the libraries the
+    # image froze, in the same shape as the index Deploy writes. Absent on a stock board.
+    import deps_frozen
+except ImportError:
+    deps_frozen = None
 import statemachine
 
 LIB_DIR = board_fs.under_root("lib") if board_fs is not None else "/lib"
@@ -48,7 +54,7 @@ INDEX_NAME = "_deps.json"
 _RESERVED = (
     "errors", "cbor", "framing", "messages", "protocol", "runtime", "wifi_provision",
     "board_settings", "board_fs", "net_transport", "listener", "deps", "main", "boot", "_flow", "statemachine", "protocol_states",
-    "device_settings",
+    "device_settings", "deps_frozen",
 )
 
 _SPACE_MARGIN = 4096  # filesystem block overhead and the index rewrite; better to refuse early
@@ -120,20 +126,28 @@ def _ensure_dir():
         pass  # already there (the ordinary case); a real failure shows up on the first write
 
 
-def read_index():
-    """{name: {"hash": str, "files": [str]}}. A missing or unreadable index means "nothing
-    installed": the editor then resends what the flow needs, which repairs it."""
-    try:
-        with open(_path(INDEX_NAME)) as f:
-            data = json.load(f)
-    except (OSError, ValueError):
-        return {}
+def _entries(data):
     if not isinstance(data, dict):
         return {}
     out = {}
     for name, entry in data.items():
         if isinstance(entry, dict) and isinstance(entry.get("hash"), str) and isinstance(entry.get("files"), list):
             out[name] = {"hash": entry["hash"], "files": [f for f in entry["files"] if isinstance(f, str)]}
+    return out
+
+
+def read_index():
+    """{name: {"hash": str, "files": [str]}}. A custom image freezes its inventory into flash
+    (deps_frozen.INVENTORY); the file Deploy writes is merged over it, so a pushed newer copy is what
+    the board reports. No file and no frozen inventory means "nothing installed": the editor then
+    resends what the flow needs, which repairs it."""
+    out = _entries(getattr(deps_frozen, "INVENTORY", {})) if deps_frozen is not None else {}
+    try:
+        with open(_path(INDEX_NAME)) as f:
+            data = json.load(f)
+    except (OSError, ValueError):
+        data = None
+    out.update(_entries(data))
     return out
 
 

@@ -124,14 +124,18 @@ class RuntimeInstaller:
         return out
 
     def build_file_list(self) -> list[tuple[str, bytes]]:
-        """The runtime itself: CORE_FILES, the listener as main.py, and the build marker. Vendored
-        libraries are no longer part of an install (flow dependencies, 2026-10-07): Deploy installs
-        the ones a flow imports."""
+        """The runtime itself: CORE_FILES, the boot script, and the build marker. Vendored libraries
+        are no longer part of an install (flow dependencies, 2026-10-07): Deploy installs the ones a
+        flow imports. The boot script is the same file a frozen image gets -- it imports `listener`,
+        which is either pushed beside it or already in flash (2026-10-25)."""
         manifest = self._load_manifest()
         files: list[tuple[str, bytes]] = []
         for name in manifest.CORE_FILES:
             files.append((name, self._read(name)))
-        files.append(("main.py", self._read(manifest.LISTENER_FILE)))
+        # The listener is pushed under its own name now: /main.py imports it, and on a stock board it
+        # has to be there (2026-10-25). A frozen image skips this whole list -- see install().
+        files.append((manifest.LISTENER_FILE, self._read(manifest.LISTENER_FILE)))
+        files.append((manifest.MAIN_FILE, manifest.BOOT_SCRIPT))
         sha = runtime_build_sha(self.runtime_src_dir)
         if sha:
             files.append((RUNTIME_BUILD_FILE, sha.encode()))
@@ -146,7 +150,7 @@ class RuntimeInstaller:
         out: list[tuple[str, str]] = []
         for dest, data in self.build_file_list():
             if dest == "main.py":
-                dest = "listener.py"
+                continue  # a constant (manifest.BOOT_SCRIPT), nothing to compile
             if dest.endswith(".py"):
                 out.append((dest, data.decode("utf-8")))
         return out
@@ -156,20 +160,14 @@ class RuntimeInstaller:
         """Swaps each .py for its precompiled .mpy where `compiled` has one (2026-09-25: loading .mpy
         skips on-board compilation, whose heap growth left an ESP32-C3's WiFi too little memory to
         authenticate). Returns the files to push and the stale names to delete first -- MicroPython
-        imports x.py before x.mpy, so the other format's copy must go. main.py stays a .py (it's what
-        boots): with listener compiled, it becomes a two-line stub. A .py with no compiled twin is
-        pushed as source, and its stale .mpy removed."""
+        imports x.py before x.mpy, so the other format's copy must go. main.py is the boot script and
+        always stays a .py. A .py with no compiled twin is pushed as source, and its stale .mpy
+        removed."""
         out: list[tuple[str, bytes]] = []
         remove: list[str] = []
         for dest, data in files:
             if dest == "main.py":
-                if "listener.mpy" in compiled:
-                    out.append(("listener.mpy", compiled["listener.mpy"]))
-                    out.append(("main.py", b"import listener\nlistener.main()\n"))
-                else:
-                    out.append((dest, data))
-                    remove.append("listener.mpy")
-                remove.append("listener.py")
+                out.append((dest, data))
                 continue
             if dest.endswith(".py"):
                 mpy = dest[:-3] + ".mpy"
@@ -190,9 +188,19 @@ class RuntimeInstaller:
         on_progress: "raw_repl.ProgressCallback | None" = None,
         compiled: dict[str, bytes] | None = None,
     ) -> None:
-        """Pushes the full manifest onto `port`'s board and hard-resets it. Raises
-        raw_repl.RawReplError (from whichever step failed) on any problem -- see
-        raw_repl.install_runtime()'s own docstring on why there's no partial-success case."""
+        """Install the runtime: the boot script always, the core files only when the board is not a
+        custom image (2026-10-25). A custom image freezes the runtime into flash, and pushing the core
+        over it would shadow the frozen copies with filesystem ones -- the memory saving the image
+        exists for, gone. A stock board, blank or already carrying an older runtime, gets the full
+        install, which is also how an upgrade lands. Raises raw_repl.RawReplError from whichever step
+        failed; there is no partial-success case (raw_repl.install_runtime()'s own docstring)."""
+        if raw_repl.is_frozen_image(port, timeouts):
+            logger.info("custom image (runtime frozen into flash): writing main.py only")
+            manifest = self._load_manifest()
+            raw_repl.install_runtime(
+                port, [(manifest.MAIN_FILE, manifest.BOOT_SCRIPT)], timeouts, on_progress
+            )
+            return
         files, remove = self.with_compiled(self.build_file_list(), compiled or {})
         for name in self.legacy_root_files():
             if name not in remove:

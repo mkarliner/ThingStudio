@@ -323,3 +323,42 @@ minitest.run(
         test_remove_unused_keeps_frozen_entries,
     ]
 )
+
+
+class _Frozen:
+    """Stands in for deps_frozen.py, which a custom image freezes into flash (2026-10-25)."""
+
+    INVENTORY = {
+        "mqtt_as": {"hash": "frozen", "files": []},
+        "st7796py": {"hash": "frozen2", "files": []},
+    }
+
+
+def test_the_frozen_inventory_is_used_when_no_file_names_it():
+    """A custom image has no /lib/_deps.json: its inventory is frozen. Without this the editor would push
+    every library into /lib over the frozen copies, losing the image's whole point (2026-10-25)."""
+    _fresh()
+    saved = deps.deps_frozen
+    try:
+        deps.deps_frozen = _Frozen
+        assert deps.inventory() == {"mqtt_as": "frozen", "st7796py": "frozen2"}
+        assert deps.missing({"mqtt_as": "frozen"}) == []
+    finally:
+        deps.deps_frozen = saved
+
+
+def test_a_file_entry_wins_over_the_frozen_one():
+    """Deploy can push a newer copy; the file it writes must be what the board reports, or the push would
+    be invisible and repeated."""
+    _fresh()
+    deps._ensure_dir()
+    deps._write_index({"mqtt_as": {"hash": "pushed", "files": ["mqtt_as.mpy"]}})
+    saved = deps.deps_frozen
+    try:
+        deps.deps_frozen = _Frozen
+        assert deps.inventory() == {"mqtt_as": "pushed", "st7796py": "frozen2"}
+        assert deps.missing({"mqtt_as": "pushed"}) == []
+        assert deps.missing({"mqtt_as": "frozen"}) != []
+    finally:
+        deps.deps_frozen = saved
+        _fresh()

@@ -47,7 +47,7 @@ _RUNTIME_SRC = os.path.join(_REPO_ROOT, "device-runtime", "src")
 # already shows that risk: wifi_provision.py and st7789py.py/ssd1306.py were each added here by
 # hand, at different times, with no automatic check the other consumer picked them up too).
 sys.path.insert(0, os.path.join(_REPO_ROOT, "device-runtime"))
-from runtime_manifest import CORE_FILES, LEGACY_ROOT_FILES, LISTENER_FILE  # noqa: E402 -- needs sys.path set first
+from runtime_manifest import BOOT_SCRIPT, CORE_FILES, LEGACY_ROOT_FILES, LISTENER_FILE  # noqa: E402 -- needs sys.path set first
 
 # Vendored libraries are no longer pushed here (flow dependencies, 2026-10-07,
 # docs/working-notes/flow-dependencies-scoping.md): the editor's Deploy installs the ones a flow
@@ -113,7 +113,17 @@ def main():
         mpremote(args.port, "cp", local, ":%s" % name)
 
     listener_local = os.path.join(_RUNTIME_SRC, LISTENER_FILE)
-    mpremote(args.port, "cp", listener_local, ":main.py")
+    mpremote(args.port, "cp", listener_local, ":%s" % LISTENER_FILE)
+
+    # The boot script imports the listener, so it is the same file whether the listener came from this
+    # push or is frozen into a custom image (2026-10-25).
+    with tempfile.NamedTemporaryFile("wb", suffix=".py", delete=False) as f:
+        f.write(BOOT_SCRIPT)
+        boot_path = f.name
+    try:
+        mpremote(args.port, "cp", boot_path, ":main.py")
+    finally:
+        os.unlink(boot_path)
 
     build_sha = _runtime_build_sha()
     if build_sha:

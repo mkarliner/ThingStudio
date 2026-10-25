@@ -13,8 +13,8 @@
 #
 # Refuses when: gh is missing or not logged in; the tag is not a draft release; the newest image's
 # hash is not in tested.json (record-tested.sh); the image's build commit is not an ancestor of the
-# tag; the .sha256 beside it disagrees; _deps.json or main.py is missing; an upload does not read
-# back with the same hash.
+# tag; the .sha256 beside it disagrees; main.py is missing; an upload does not read back with the
+# same hash.
 #
 # Needs: gh (brew install gh / apt install gh), authenticated by `gh auth login` or by GH_TOKEN,
 # python3, git, the repository's own history. A fine-grained token needs only Contents: write on this
@@ -114,25 +114,25 @@ git -C "$REPO" merge-base --is-ancestor "$STAMP" "$TAG" \
     || die "$NAME was built from $STAMP, which is not an ancestor of $TAG -- rebuild at the tag"
 note "build $STAMP is an ancestor of $TAG"
 
-# Intact: the checksum file beside the image, and the two files that live on the filesystem.
+# Intact: the checksum file beside the image, and the boot script that lives on the filesystem
+# (the library inventory is frozen into the image since 2026-10-25, so it is no longer an asset).
 [ -f "$IMG.sha256" ] || die "no $NAME.sha256 -- build.sh writes it beside the image"
 [ "$(cut -d' ' -f1 < "$IMG.sha256")" = "$HASH" ] \
     || die "$NAME.sha256 disagrees with the image -- rebuild, do not publish"
-[ -f "$OUT/_deps.json" ] || die "no $OUT/_deps.json -- build.sh writes it"
-[ -f "$HERE/main.py" ] || die "no $HERE/main.py (the board's boot script)"
+[ -f "$OUT/main.py" ] || die "no $OUT/main.py (the board's boot script) -- build.sh writes it"
 
 # --- upload, then read it back ----------------------------------------------------------------
-note "uploading 4 files to the $TAG draft"
-gh release upload "$TAG" "$IMG" "$IMG.sha256" "$OUT/_deps.json" "$HERE/main.py" --clobber
+note "uploading 3 files to the $TAG draft"
+gh release upload "$TAG" "$IMG" "$IMG.sha256" "$OUT/main.py" --clobber
 
 VERIFY_DIR="$(mktemp -d)"
 trap 'rm -rf "$VERIFY_DIR"' EXIT
 note "reading the assets back from GitHub"
-for asset in "$NAME" "$NAME.sha256" "_deps.json" "main.py"; do
+for asset in "$NAME" "$NAME.sha256" "main.py"; do
     gh release download "$TAG" --pattern "$asset" --dir "$VERIFY_DIR" --clobber >/dev/null \
         || die "could not download $asset back for verification"
 done
-for pair in "$IMG:$NAME" "$OUT/_deps.json:_deps.json" "$HERE/main.py:main.py"; do
+for pair in "$IMG:$NAME" "$OUT/main.py:main.py"; do
     local_file="${pair%:*}"
     asset="${pair##*:}"
     want="$(sha_cmd "$local_file" | cut -d' ' -f1)"
@@ -150,7 +150,7 @@ print(
     "\n## Custom firmware for classic ESP32\n\n"
     "- Image: `%s`\n- sha256: `%s`\n- Tested on: %s (%s) -- %s\n"
     "- Install and what it changes: https://docs.thingstudio.net/custom-firmware/\n"
-    "- The `.sha256`, `_deps.json` and `main.py` assets belong with the image; all four are needed.\n"
+    "- The `.sha256` and `main.py` assets belong with the image; all three are needed.\n"
     % (entry["image"], digest, entry.get("board"), entry.get("date"), entry.get("tested"))
 )
 PY

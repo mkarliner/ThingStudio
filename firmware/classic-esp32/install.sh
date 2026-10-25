@@ -2,9 +2,9 @@
 # SPDX-License-Identifier: Apache-2.0
 # firmware/classic-esp32/install.sh
 #
-# Flashes a built image and writes the two files that live on the filesystem rather than in the
-# image: /main.py (the boot script, which imports the frozen listener) and /lib/_deps.json (the
-# library inventory, so Deploy doesn't push copies over the frozen ones).
+# Flashes a built image and writes the one file that lives on the filesystem rather than in the
+# image: /main.py (the boot script, which imports the frozen listener). The library inventory is
+# frozen into the image as deps_frozen.py (2026-10-25), so nothing else is written.
 #
 # Flashing erases the board: flows, WiFi credentials and board settings are gone afterwards. That is
 # the same as any firmware flash and is stated in the docs page.
@@ -36,7 +36,7 @@ if [ -z "$IMG" ]; then
     [ -n "$IMG" ] || die "no image given and none in $HERE/out -- run build.sh first"
 fi
 [ -f "$IMG" ] || die "no such image: $IMG"
-[ -f "$HERE/out/_deps.json" ] || die "missing $HERE/out/_deps.json -- build.sh writes it next to the image"
+[ -f "$HERE/out/main.py" ] || die "missing $HERE/out/main.py -- build.sh writes it next to the image"
 # `esptool.py` is the name pip gives the 3.x/4.x console script, and what macOS and most
 # developer machines have; esptool 5 installs `esptool` instead with no `esptool.py` alias. Use
 # whichever exists rather than making the user care which version they installed.
@@ -96,14 +96,11 @@ FS_SIZE=0xF0000
 
 echo "install: waiting for the board to restart and settle"
 wait_port || die "port $PORT did not come back after flashing -- unplug and replug the board"
-reset_board || die "could not restart the board over $PORT -- unplug and replug it, then write /main.py and /lib/_deps.json by hand (README, Install)"
+reset_board || die "could not restart the board over $PORT -- unplug and replug it, then write /main.py by hand (README, Install)"
 sleep 2
 
-echo "install: writing boot script and library inventory"
+echo "install: writing the boot script"
 wait_port || die "port $PORT did not come back after reset -- unplug and replug the board"
-mpremote connect "$PORT" fs mkdir :/lib >/dev/null 2>&1 || true
-# One destination per command: mpremote's cp takes "src... :dest", not src/dest pairs.
-mpremote connect "$PORT" fs cp "$HERE/main.py" :/main.py
-mpremote connect "$PORT" fs cp "$HERE/out/_deps.json" :/lib/_deps.json
+mpremote connect "$PORT" fs cp "$HERE/out/main.py" :/main.py
 
 echo "install: done -- reset the board if it is still sitting in the REPL; it boots into the listener"

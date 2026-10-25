@@ -18,6 +18,9 @@ from thingstudio_backend import raw_repl
 from thingstudio_backend.runtime_installer import RuntimeInstaller
 
 
+BOOT = b"import listener\nlistener.main()\n"
+
+
 def _write_fake_device_runtime(root: Path) -> Path:
     """Builds a minimal device-runtime/{runtime_manifest.py, src/...} tree under `root`,
     mirroring the real one's shape closely enough to exercise RuntimeInstaller for real."""
@@ -34,6 +37,8 @@ def _write_fake_device_runtime(root: Path) -> Path:
     (device_runtime / "runtime_manifest.py").write_text(
         "CORE_FILES = ['errors.py', 'runtime.py']\n"
         "LISTENER_FILE = 'listener.py'\n"
+        "MAIN_FILE = 'main.py'\n"
+        "BOOT_SCRIPT = b'import listener\\nlistener.main()\\n'\n"
         "DEPENDENCIES = [{'name': 'somelib', 'files': [('somelib/somelib.py', 'somelib.py')], 'requires': []}]\n"
         "LEGACY_ROOT_FILES = ['oldlib.py']\n"
     )
@@ -47,11 +52,13 @@ def test_build_file_list_is_the_runtime_only_no_libraries(tmp_path: Path) -> Non
 
     files = installer.build_file_list()
 
-    assert [name for name, _ in files] == ["errors.py", "runtime.py", "main.py"]
+    assert [name for name, _ in files] == ["errors.py", "runtime.py", "listener.py", "main.py"]
     by_name = dict(files)
     assert by_name["errors.py"] == b"# errors"
-    # LISTENER_FILE's contents land under the "main.py" dest name, not its own source filename.
-    assert by_name["main.py"] == b"# listener"
+    # The listener goes under its own name now, and main.py is the boot script that imports it
+    # (2026-10-25: the same file a frozen image gets).
+    assert by_name["listener.py"] == b"# listener"
+    assert by_name["main.py"] == b"import listener\nlistener.main()\n"
 
 
 def test_legacy_root_files_cover_both_formats(tmp_path: Path) -> None:
@@ -82,14 +89,34 @@ def test_install_drives_raw_repl_install_runtime_with_the_built_file_list(tmp_pa
         captured["remove"] = remove
 
     monkeypatch.setattr(raw_repl, "install_runtime", fake_install_runtime)
+    monkeypatch.setattr(raw_repl, "is_frozen_image", lambda *a, **k: False)  # a blank stock board
 
     sentinel_port = object()
     installer.install(sentinel_port)  # type: ignore[arg-type] -- a real serial.Serial in production
 
     assert captured["port"] is sentinel_port
-    assert [name for name, _ in captured["files"]] == ["errors.py", "runtime.py", "main.py"]
+    assert [name for name, _ in captured["files"]] == ["errors.py", "runtime.py", "listener.py", "main.py"]
     # Old root copies of vendored libraries are deleted: they would shadow /lib.
     assert "oldlib.py" in captured["remove"] and "oldlib.mpy" in captured["remove"]  # type: ignore[operator]
+
+
+def test_a_custom_image_gets_only_the_boot_script(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """A custom image freezes the runtime: pushing the core over it would shadow the frozen modules with
+    filesystem copies and lose the memory saving (2026-10-25). The image is recognised by its frozen
+    inventory module, and the install then writes just main.py."""
+    installer = RuntimeInstaller(runtime_src_dir=_write_fake_device_runtime(tmp_path))
+    captured: dict[str, object] = {}
+
+    def fake_install_runtime(port: object, files: list[tuple[str, bytes]], timeouts: object, on_progress: object = None, remove: object = None) -> None:
+        captured["files"] = files
+        captured["remove"] = remove
+
+    monkeypatch.setattr(raw_repl, "install_runtime", fake_install_runtime)
+    monkeypatch.setattr(raw_repl, "is_frozen_image", lambda *a, **k: True)
+
+    installer.install(object(), compiled={"errors.mpy": b"M1"})  # type: ignore[arg-type]
+    assert captured["files"] == [("main.py", BOOT)]
+    assert captured["remove"] is None
 
 
 def test_runtime_installer_reads_the_real_manifest_without_pushing_anything() -> None:
@@ -152,14 +179,14 @@ def test_source_files_lists_every_py_with_listener_under_its_own_name(tmp_path: 
     ]
 
 
-def test_with_compiled_swaps_in_mpy_stubs_main_and_removes_stale_py() -> None:
-    files = [("errors.py", b"e"), ("main.py", b"l"), ("somelib.py", b"s"), ("_runtime_build.txt", b"abc")]
+def test_with_compiled_swaps_in_mpy_and_keeps_the_boot_script_a_py() -> None:
+    files = [("errors.py", b"e"), ("listener.py", b"l"), ("main.py", BOOT), ("somelib.py", b"s"), ("_runtime_build.txt", b"abc")]
     compiled = {"errors.mpy": b"M1", "listener.mpy": b"M2"}
     out, remove = RuntimeInstaller.with_compiled(files, compiled)
     assert out == [
         ("errors.mpy", b"M1"),
         ("listener.mpy", b"M2"),
-        ("main.py", b"import listener\nlistener.main()\n"),
+        ("main.py", BOOT),
         ("somelib.py", b"s"),  # nothing compiled for it: pushed as source
         ("_runtime_build.txt", b"abc"),
     ]
@@ -167,10 +194,10 @@ def test_with_compiled_swaps_in_mpy_stubs_main_and_removes_stale_py() -> None:
 
 
 def test_with_nothing_compiled_it_is_a_source_install_that_clears_old_mpy() -> None:
-    files = [("errors.py", b"e"), ("main.py", b"l")]
+    files = [("errors.py", b"e"), ("listener.py", b"l"), ("main.py", BOOT)]
     out, remove = RuntimeInstaller.with_compiled(files, {})
     assert out == files
-    assert remove == ["errors.mpy", "listener.mpy", "listener.py"]
+    assert remove == ["errors.mpy", "listener.mpy"]
 
 
 def test_install_passes_compiled_files_and_removals_through(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -182,6 +209,7 @@ def test_install_passes_compiled_files_and_removals_through(tmp_path: Path, monk
         captured["remove"] = remove
 
     monkeypatch.setattr(raw_repl, "install_runtime", fake_install_runtime)
+    monkeypatch.setattr(raw_repl, "is_frozen_image", lambda *a, **k: False)
     installer.install(object(), compiled={"runtime.mpy": b"M"})  # type: ignore[arg-type]
     assert "runtime.mpy" in captured["files"] and "runtime.py" not in captured["files"]
     assert "runtime.py" in captured["remove"]  # type: ignore[operator]

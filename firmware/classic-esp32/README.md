@@ -32,7 +32,8 @@ make -C ~/micropython/ports/esp32 submodules
 MICROPY_DIR=~/micropython firmware/classic-esp32/build.sh
 ```
 
-Output in `out/`: one merged image, its `.sha256`, and `_deps.json`.
+Output in `out/`: one merged image, its `.sha256`, `main.py` (the boot script written to the board) and
+`_deps.json` (the inventory, frozen into the image as `deps_frozen.py`).
 
 ## Install
 
@@ -45,10 +46,11 @@ Needs `esptool` (3.x installs it as `esptool.py`, 5.x as `esptool`; the script u
 `mpremote` (`pip install esptool mpremote`). `mpremote` pulls in `pyserial` for itself; the script
 does not need it in the system Python.
 
-That flashes the image at offset 0 and writes two files that stay on the filesystem:
-`/main.py` (a three-line boot script importing the frozen listener) and `/lib/_deps.json` (the
-library inventory, so Deploy skips what is already frozen). Flashing erases flows, settings and WiFi
-credentials.
+That flashes the image at offset 0 and writes one file that stays on the filesystem: `/main.py`, the
+three-line boot script that imports the frozen listener. The library inventory is frozen into the
+image (`deps_frozen.py`), so Deploy skips the frozen libraries without a file on the board; a
+`/lib/_deps.json` that Deploy later writes still wins over it. Flashing erases flows, settings and
+WiFi credentials.
 
 If you prefer to see the commands, they are `esptool.py write_flash 0x0 <image>` and two
 `mpremote fs cp` lines -- read `install.sh`, it is short.

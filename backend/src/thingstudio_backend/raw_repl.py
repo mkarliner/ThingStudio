@@ -226,6 +226,29 @@ def _write(port: _SerialPort, data: bytes, step: str) -> None:
             raise RawReplError(step, f"the board stopped accepting data ({type(exc).__name__}: {exc})") from exc
 
 
+# The probe is_frozen_image() sends: one command, two outcomes printed as a word, no traceback.
+_PROBE_FROZEN = (
+    b"try:\n"
+    b" import deps_frozen\n"
+    b" print('frozen')\n"
+    b"except ImportError:\n"
+    b" print('stock')\n"
+)
+
+
+def is_frozen_image(port: _SerialPort, timeouts: RawReplTimeouts = RawReplTimeouts()) -> bool:
+    """True when this board runs a custom image, recognised by the frozen inventory module that only
+    such an image carries (`deps_frozen`, written by firmware/classic-esp32/build.sh).
+
+    Decides which half of an install is needed (2026-10-25): a custom image freezes the runtime into
+    flash, so pushing the core files would shadow them with filesystem copies -- the memory saving the
+    image exists for, gone. A stock board, blank or already carrying the runtime, gets the full
+    install, which is also how an upgrade lands. Enters raw REPL; install_runtime() may follow."""
+    enter_raw_repl(port, timeouts)
+    out = exec_raw(port, _PROBE_FROZEN, "checking for a custom image")
+    return out.strip() == b"frozen"
+
+
 def enter_raw_repl(port: _SerialPort, timeouts: RawReplTimeouts = RawReplTimeouts()) -> None:
     """Interrupts whatever's running and switches the board into raw REPL. Safe to call on a
     board already in raw REPL (Ctrl-A is a no-op there) or already sitting at a bare '>>> '

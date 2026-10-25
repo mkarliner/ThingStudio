@@ -38,9 +38,14 @@ nobody has to run, and no board has been deployed to protect.
 
 ## Order of work
 
-- Backend: `RuntimeInstaller` gains the probe and the three steps; tests with a fake port for both branches.
-- Device runtime: `deps.py` reads the frozen inventory when the file is absent (interface: `deps` surface, so
-  `interfaces/runtime-api/` conformance and the manifest move together).
-- Firmware build: stage the inventory module; rebuild the CYD image; publish a new image asset with its hash.
-- Board data: re-add the CYD's recipe pinned to the rebuilt image, and the hardware pass — blank CYD, one flash,
-  **Install runtime…**, and the board sends `HELLO` with the runtime version.
+- **Done, 2026-10-25.** Backend: `raw_repl.is_frozen_image()` (one command, `import deps_frozen`) and
+  `RuntimeInstaller.install()` writing the boot script always, the core files only on a stock board. Device
+  runtime: `deps.read_index()` merges `deps_frozen.INVENTORY` under `/lib/_deps.json`, file first. Manifest:
+  `MAIN_FILE`/`BOOT_SCRIPT`, and a stock install now pushes `listener.py` under its own name beside `main.py`.
+  Build: `build.sh` writes `deps_frozen.py` into the frozen stage and `out/main.py` from the manifest;
+  `install.sh`, `publish.sh` and the firmware README drop `/lib/_deps.json` (three release assets now). Runtime
+  bumped to 14.1.0 with the editor target.
+- **Left:** rebuild and publish the image, re-add the CYD's recipe pinned to that asset, then the hardware pass
+  (blank CYD, one flash, **Install runtime…**, `HELLO` with the runtime version). `docs/user-guide/
+  custom-firmware.md` still describes the four-asset install of the currently released image; update it with the
+  release that carries the rebuilt image.

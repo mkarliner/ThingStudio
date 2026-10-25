@@ -28,6 +28,13 @@ CORE_FILES: list[str] = ["errors.py", "cbor.py", "framing.py", "messages.py", "p
 # Installed as main.py so the board boots straight into it.
 LISTENER_FILE: str = "listener.py"
 
+# The boot script, written to /main.py by every install and by the custom-image install. One file for
+# every kind of board: a stock board has listener.py pushed beside it, a frozen image has the listener
+# in flash, and `import listener` finds either. A frozen module cannot be /main.py -- MicroPython runs
+# that file from the filesystem -- so this is the one piece of boot code that stays a file.
+MAIN_FILE: str = "main.py"
+BOOT_SCRIPT: bytes = b"import listener\nlistener.main()\n"
+
 # Flow dependencies (2026-10-07, docs/working-notes/flow-dependencies-scoping.md). Replaces
 # VENDOR_FILES: vendored libraries are no longer pushed to every board at runtime install. Deploy
 # installs the ones a flow imports into the board's /lib (device-runtime/src/deps.py), and removes
