@@ -227,7 +227,7 @@ inside that range would have installed silently. AGENTS.md, "Third-party code: p
 | pytest | 9.1.1 | MIT | Test runner, `backend/test/`. Dev/test-only (`[project.optional-dependencies].test`), not a runtime dependency of the shipped backend. |
 | setuptools | 84.2.1 | MIT | Build tool for the editable install, pinned in the same lock so `pip install --no-build-isolation` never fetches an unpinned copy from PyPI. Reads oddly as a dependency; it is there for the same reason the other hashes are. |
 | pytest-asyncio | 1.4.0 | Apache-2.0 | `asyncio`-aware test support for `backend/test/test_ws_relay.py`/`test_middleware.py`'s `async def test_*` cases. Dev/test-only, same as pytest above. |
-| esptool | 4.12.0 | **GPL-2.0-or-later** | Flashing a blank ESP32 board (`backend/src/thingstudio_backend/firmware_flash.py`, added 2026-10-25): run as a subprocess with a fixed argv, never imported or linked, so the backend stays Apache-2.0 and does not become a derived work. Its own transitive dependencies come in through the same hash-pinned lock (`bitstring`, `cryptography`, `ecdsa`, `reedsolo`, `PyYAML`, `intelhex`, `argcomplete`). **Redistribution is the open question**: release archives bundle the backend's whole dependency tree, so shipping esptool would put GPL-2 code in every archive and need its source offer alongside; `packaging/constraints.txt` does not pin it yet. Decide before the first release that includes flashing. |
+| esptool | 5.6.0 | **GPL-2.0-or-later** | Flashing a blank board (`backend/src/thingstudio_backend/firmware_flash.py`, 2026-10-25): run as a subprocess with a fixed argv, never imported or linked, so the backend stays Apache-2.0 and does not become a derived work. 5.x rather than 4.x because 4.x depends on `ecdsa`, whose HIGH advisory has no fixed version; 5.x drops `ecdsa`, `bitstring`, `tibs` and `argcomplete` and adds `esp-pylib`, `rich`, `rich-click`, `click`, `websockets`, `markdown-it-py`, `mdurl`, `pygments`. Redistribution: accepted, source and license shipped with each release (row below). |
 
 Verified this session in a scratch venv outside the live-mounted repo (`/tmp`, not under `backend/`), same
 discipline as the editor's npm-install workaround (`CLAUDE.md`) -- the actual `pip install` populating a real
@@ -257,18 +257,21 @@ own metadata in a bundle built 2026-09-26 (linux-x86_64), not from memory. Chang
 | typing_extensions | 4.16.0 | PSF-2.0 | multidict/aiosignal dependency. |
 | yarl | 1.25.1 | Apache-2.0 | aiohttp dependency (compiled wheel). |
 | pip | 26.2.1 | MIT | Comes with python-build-standalone; not used at run time. |
-| esptool | 4.12.0 | **GPL-2.0-or-later** | Flashing a blank board (Backend table above). Bundled so **Tools → Install firmware…** works in a packaged app; `esptool.py` sits in the bundle's `python/bin` and `firmware_flash.py` falls back to `python -m esptool`, since the launcher does not put that directory on PATH. esptool publishes no wheel: `make_bundle.py` builds its pure-Python wheel from the pinned sdist. **Accepted 2026-10-25 (Mike).** Each release attaches `esptool-<version>.tar.gz` (its complete source, hash-checked against `backend/requirements.txt` by `release.yml`), and every bundle carries `licenses/esptool-LICENSE`; `make_bundle.py` fails if that license is not there. |
+| esptool | 5.6.0 | **GPL-2.0-or-later** | Flashing a blank board (Backend table above). Bundled so **Tools → Install firmware…** works in a packaged app; `esptool.py` sits in the bundle's `python/bin` and `firmware_flash.py` falls back to `python -m esptool`, since the launcher does not put that directory on PATH. esptool publishes no wheel: `make_bundle.py` builds its pure-Python wheel from the pinned sdist. **Accepted 2026-10-25 (Mike).** Each release attaches `esptool-<version>.tar.gz` (its complete source, hash-checked against `backend/requirements.txt` by `release.yml`), and every bundle carries `licenses/esptool-LICENSE`; `make_bundle.py` fails if that license is not there. |
 | cryptography | 50.0.2 | Apache-2.0 OR BSD-3-Clause | esptool dependency, same version as the backend lock. It publishes manylinux 2_17, 2_28 and 2_34 wheels; `make_bundle.py` downloads the closure for the `manylinux2014` tag, so the 2_17 wheel is installed and the bundle keeps its 2.28 glibc floor (the plain install path picked the 2_34 wheel on a modern build host, see `check_glibc_floor`). |
 | cffi | 2.1.1 | MIT | cryptography dependency (compiled wheel). |
-| bitstring | 5.0.0 | MIT | esptool dependency. |
-| tibs | 2.0.2 | MIT | bitstring dependency. |
-| ecdsa | 0.19.2 | MIT | esptool dependency. |
+| esp-pylib | 1.2.0 | MIT | esptool dependency (CLI, IDE and serial extras). |
+| rich | 15.0.0 | MIT | esptool dependency. |
+| rich-click | 1.9.9 | MIT | esptool dependency. |
+| click | 8.5.0 | BSD-3-Clause | esptool dependency. |
+| websockets | 17.3 | BSD-3-Clause | esp-pylib `ide` extra. |
+| markdown-it-py | 4.2.0 | MIT | rich dependency. |
+| mdurl | 0.1.2 | MIT | markdown-it-py dependency. |
+| pygments | 2.21.0 | BSD-2-Clause | rich dependency. |
 | reedsolo | 1.7.0 | MIT | esptool dependency. |
 | intelhex | 2.3.0 | BSD-3-Clause | esptool dependency. |
-| argcomplete | 3.7.2 | Apache-2.0 | esptool dependency. |
 | PyYAML | 6.0.3 | MIT | esptool dependency (compiled wheel). |
 | pycparser | 3.12 | BSD-3-Clause | cffi dependency. |
-| six | 1.17.0 | MIT | esptool dependency. |
 
 ## Documentation build tooling (pip)
 

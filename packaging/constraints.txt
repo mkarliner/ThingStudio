@@ -17,15 +17,19 @@ yarl==1.25.1
 # backend carries it. esptool publishes no wheel -- make_bundle.py builds its pure-Python wheel from the
 # pinned sdist, and these are the versions that resolve around it (the same ones backend/requirements.txt
 # pins with hashes). GPL-2.0-or-later: see docs/third-party-licenses.md, "Bundled in the release archives".
-esptool==4.12.0
-tibs==2.0.2
-bitstring==5.0.0
-ecdsa==0.19.2
-reedsolo==1.7.0
-intelhex==2.3.0
-argcomplete==3.7.2
+# esptool 5.x rather than 4.x: 4.x pulls in ecdsa, which has a HIGH advisory with no fixed version.
+esptool==5.6.0
+esp-pylib==1.2.0
+rich==15.0.0
+rich-click==1.9.9
+click==8.5.0
+markdown-it-py==4.2.0
+mdurl==0.1.2
+pygments==2.21.0
+websockets==17.3
 cryptography==50.0.2
 cffi==2.1.1
 pycparser==3.12
 PyYAML==6.0.3
-six==1.17.0
+reedsolo==1.7.0
+intelhex==2.3.0

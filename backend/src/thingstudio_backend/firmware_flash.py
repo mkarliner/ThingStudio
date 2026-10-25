@@ -44,6 +44,8 @@ _DOWNLOAD_TIMEOUT_S = 30
 _FLASH_BAUD = 460800
 _MAX_LINE = 400
 _COPY_BLOCK = 1 << 20
+# esptool prints progress as "Writing at 0x... (50 %)" in 4.x and as a bar in 5.x; both carry the number.
+_PERCENT = re.compile(r"(\d+)\s*%")
 # A MicroPython ESP32 image is ~2 MB and a UF2 ~1 MB; 32 MB leaves room for vendor images without making the
 # backend a general file store. The editor uploads what the user chose, so the limit is stated in the refusal.
 MAX_UPLOAD_BYTES = 32 * 1024 * 1024
@@ -292,9 +294,9 @@ class Esptool(Tool):
             "--chip", chip,
             "--port", target,
             "--baud", str(baud),
-            "--before", "default_reset",
-            "--after", "no_reset",
-            "write_flash", hex(offset), str(image),
+            "--before", "default-reset",
+            "--after", "no-reset",
+            "write-flash", hex(offset), str(image),
         ]
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1)
         assert proc.stdout is not None
@@ -303,11 +305,9 @@ class Esptool(Tool):
             if not line:
                 continue
             job.line = line
-            if "%" in line:
-                try:
-                    job.progress = int(line.rsplit("(", 1)[1].split("%", 1)[0].strip())
-                except (IndexError, ValueError):
-                    pass
+            percent = _PERCENT.search(line)
+            if percent:
+                job.progress = min(99, int(percent.group(1)))
         code = proc.wait()
         if code != 0:
             raise FirmwareError("flash", f"esptool exited {code} at {job.line or 'the start'} on {target}")

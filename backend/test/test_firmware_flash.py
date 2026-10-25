@@ -194,8 +194,8 @@ def test_an_esptool_flash_runs_a_fixed_command_and_reports_progress(store, tmp_p
     calls = [json.loads(line) for line in fake_tool.read_text().splitlines()]
     assert calls[0] == [
         "--chip", "esp32", "--port", "/dev/fake", "--baud", "460800",
-        "--before", "default_reset", "--after", "no_reset",
-        "write_flash", "0x0", str(store.base_dir / "firmware" / f"{firmware['image']['sha256']}.bin"),
+        "--before", "default-reset", "--after", "no-reset",
+        "write-flash", "0x0", str(store.base_dir / "firmware" / f"{firmware['image']['sha256']}.bin"),
     ]
 
 
