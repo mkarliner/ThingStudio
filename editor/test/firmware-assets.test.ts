@@ -1,12 +1,15 @@
 // SPDX-License-Identifier: Apache-2.0
 // editor/test/firmware-assets.test.ts
 //
-// The firmware page tells people to download a specific file. If the page names an image that was
-// never tested or never attached, the reader gets a 404 -- and nothing else in the build notices.
-// This is the check that notices: any thingstudio-classic-esp32-*.bin the user guide mentions must be
-// an image recorded in firmware/classic-esp32/tested.json, which is also the list publish.sh will
-// attach from. Publishing a new image means updating that page line, and this test is what says so
-// (2026-10-23).
+// If the user guide names a specific image, that file has to be one that was tested and attached,
+// or the reader gets a 404 and nothing else in the build notices. So any
+// thingstudio-classic-esp32-*.bin the guide mentions must be recorded in
+// firmware/classic-esp32/tested.json, which is the list publish.sh attaches from (2026-10-23).
+//
+// Since 2026-10-25 the page names no image at all: it tells the reader to use whatever they
+// downloaded (`IMAGE=$(ls thingstudio-classic-esp32-*.bin)`), because the page has to be right for a
+// tag whose image has not been run on a board yet. The vacuity guard below checks that instruction
+// instead, and the asset list is three files since the library inventory moved into the image.
 
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
@@ -53,8 +56,12 @@ describe("the firmware page names a tested image", () => {
         (mentioned[match[0]] ??= []).push(file);
       }
     }
-    // Vacuity guard: a page that names no image at all would otherwise pass this check.
-    expect(Object.keys(mentioned).length, "custom-firmware.md should name the image to download").toBeGreaterThan(0);
+    // Vacuity guard, in its post-2026-10-25 form: the page must say how to name the downloaded file,
+    // so a page that quietly stopped telling the reader what to do still fails here.
+    const page = readFileSync(join(GUIDE, "custom-firmware.md"), "utf8");
+    expect(page, "custom-firmware.md should say how to name the image it downloaded").toMatch(
+      /IMAGE=\$?\(ls thingstudio-classic-esp32-\*\.bin\)/,
+    );
     const unknown = Object.entries(mentioned).filter(([name]) => !testedImages.has(name));
     expect(
       unknown.map(([name, files]) => `${name} (in ${[...new Set(files)].join(", ")})`),
@@ -62,8 +69,10 @@ describe("the firmware page names a tested image", () => {
     ).toEqual([]);
   });
 
-  it("tells the reader about all four files the release carries", () => {
+  it("tells the reader about the three files the release carries", () => {
     const page = readFileSync(join(GUIDE, "custom-firmware.md"), "utf8");
-    for (const file of [".sha256", "_deps.json", "main.py"]) expect(page).toContain(file);
+    for (const file of [".sha256", "main.py"]) expect(page).toContain(file);
+    // The inventory is frozen into the image now, so it is not a download and not a file to copy.
+    expect(page).not.toContain("_deps.json");
   });
 });
