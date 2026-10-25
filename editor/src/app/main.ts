@@ -2820,6 +2820,7 @@ function fwButtonsForNewChoice(): void {
   if (el("fwClose").textContent !== "Close") return;
   el("fwClose").textContent = "Cancel";
   el<HTMLButtonElement>("fwFlash").hidden = false;
+  el("fwProgress").className = "dialog-note";
   el("fwProgress").textContent = "";
 }
 
@@ -2868,6 +2869,7 @@ async function runFirmwareFlash(): Promise<void> {
   fwFlashing = true;
   el<HTMLButtonElement>("fwFlash").disabled = true;
   el("fwError").textContent = "";
+  el("fwProgress").className = "dialog-note";
   el("fwProgress").textContent = "";
   try {
     await flashBoard(choice, {
@@ -2875,14 +2877,19 @@ async function runFirmwareFlash(): Promise<void> {
       startFlash: (request) => startFirmwareFlash(wsUrl, request),
       getJob: (id) => getFirmwareJob(wsUrl, id),
       onStatus: (line) => {
+        el("fwProgress").className = "dialog-note";
         el("fwProgress").textContent = line;
       },
       onProgress: (job) => {
+        el("fwProgress").className = "dialog-note";
         el("fwProgress").textContent = jobLine(job);
         appendFwLog(job);
       },
     });
     const summary = doneLine(fwSelectedBuild());
+    // Green and bold: "Flashed." in the same dim grey as the progress percentages read as one more status line
+    // and got missed (Mike, 2026-10-25).
+    el("fwProgress").className = "dialog-ok";
     el("fwProgress").textContent = summary;
     // Nothing left to flash: one button, and it says what it does (2026-10-25, Mike: "Cancel ... still says
     // Flash" is confusing once the job is done).

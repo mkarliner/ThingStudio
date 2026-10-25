@@ -136,10 +136,15 @@ export function jobLine(job: FirmwareJobState): string {
   return `${job.progress}% — ${job.line || where}`;
 }
 
-/** What to tell the user after a successful flash: whether a runtime install is the next step. */
+/** What to tell the user after a successful flash. The flash writing the image is not the board being ready: a
+ * stock MicroPython build has no runtime at all, and a Thingstudio image carries one but still has no boot script,
+ * so both need Install runtime -- and saying which is which stops the wrong message being the confident one. */
 export function doneLine(build: FirmwareBuild | undefined): string {
+  if (build?.runtime === "install" && build.supplier === "thingstudio") {
+    return "Flashed. The runtime is already in this image; run Tools → Install runtime… to write its boot script, then Connect.";
+  }
   if (build?.runtime === "install") {
-    return "Flashed. This image has no Thingstudio runtime: choose Tools → Install runtime… next.";
+    return "Flashed. It has no Thingstudio runtime yet: choose Tools → Install runtime… next, then Connect.";
   }
   return "Flashed. Click Connect to start using the board.";
 }

@@ -191,6 +191,7 @@
   dialog .dialog-row { display: flex; gap: 8px; align-items: flex-end; }
   dialog .dialog-row select { flex: 1 1 auto; }
   dialog .dialog-note { font-size: 11px; color: var(--dim); margin: 0 0 8px; min-height: 1em; }
+  dialog .dialog-ok { color: var(--good); font-size: 13px; font-weight: 600; margin: 0 0 8px; min-height: 1em; }
   dialog .dialog-log { font-size: 11px; max-height: 10em; overflow: auto; background: var(--bg); border: 1px solid var(--border); padding: 4px 6px; margin: 0 0 8px; white-space: pre-wrap; }
 </style>
 </head>
@@ -402,7 +403,9 @@
   <form method="dialog">
     <h2>Install firmware</h2>
     <p>For a board with no MicroPython yet, or one you want to start over on.
-      <strong>Flashing erases the flow and all settings on the board.</strong></p>
+      <strong>Flashing erases the flow and all settings on the board.</strong>
+      Afterwards choose <strong>Tools → Install runtime…</strong> to make it run Thingstudio: a stock MicroPython
+      build needs the whole runtime, a Thingstudio image only its boot script.</p>
     <fieldset>
       <legend>How is the board connected?</legend>
       <label class="check"><input type="radio" name="fwTransport" value="serial" checked />

@@ -228,4 +228,12 @@ describe("the dialog's lines", () => {
     expect(doneLine({ ...BUILDS[0]!, runtime: "none" })).toMatch(/Click Connect/);
     expect(doneLine(undefined)).toMatch(/Click Connect/);
   });
+
+  it("says which runtime install the image needs: the whole thing, or just the boot script", () => {
+    // A stock build has no runtime at all; a Thingstudio image carries it frozen but no /main.py.
+    expect(doneLine(BUILDS[0]!)).toMatch(/no Thingstudio runtime/);
+    const custom = BUILDS.find((build) => build.supplier === "thingstudio")!;
+    expect(doneLine(custom)).toMatch(/runtime is already in this image/);
+    expect(doneLine(custom)).toMatch(/boot script/);
+  });
 });
