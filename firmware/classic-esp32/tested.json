@@ -17,6 +17,12 @@
     "date": "2026-10-24",
     "tested": "install clean, booted 14.0.0 with all 34 libraries frozen (147 KB free); the theme demo deployed with the new widget styles -- led chip, segmented bar, readout captions, pill page dot -- and ran with no errors; widget drawing and natural sizes covered off-device on the unix port"
   },
+  "51116835b99ca1636ef4ce65e6b8b36197be7163c1f753d603eb95f170759990": {
+    "image": "thingstudio-classic-esp32-14.1.0-a236ba0.bin",
+    "board": "CYD (ESP32-2432S028)",
+    "date": "2026-10-25",
+    "tested": "install clean from the merged image (install.sh, /main.py written by hand); booted 14.1.0 with all 34 libraries in HELLO.dependencies and an empty /lib; gui-hero-cyd-theme (14 nodes, 11,615 bytes of bytecode) deployed with dependencies={} -- nothing pushed, every module from the frozen image -- and drew the theme demo on the panel: readouts, trend and navigator pages. Free RAM 62,736 and largest IDF block 14,336 with the flow running, against 41,520 / 10,752 on 14.0.1"
+  },
   "5acd9580170b172551f91310605465379d644689670b1f33d89e4e3724f7afc4": {
     "image": "thingstudio-classic-esp32-14.0.1-7e7c73b.bin",
     "board": "CYD (ESP32-2432S028)",
