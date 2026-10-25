@@ -685,6 +685,25 @@ exact board if it's listed, or the generic build for your chip:
 
 For any other chip, see [Other microcontrollers](#other-microcontrollers).
 
+## Install from Thingstudio
+
+Thingstudio can write the firmware itself on ESP32 boards and on boards that mount as a drive (RP2040 and
+RP2350).
+
+1. Put the board in its bootloader. Hold **BOOT** and tap **RESET** on an ESP32, or hold **BOOTSEL** while you
+   plug in a Pico.
+2. Choose **Tools → Install firmware…**.
+3. Pick **Serial port** or **Mounted drive**, then the port or drive from the list. If the board isn't there,
+   click ⟳.
+4. Pick the board if the list has it. Otherwise choose **Choose a file…** and pick the `.bin` or `.uf2` you
+   downloaded above.
+5. Click **Flash**. The dialog shows the step it is on and how far it has got; a failure says what to fix.
+
+Flashing erases the flows, settings and WiFi credentials on the board. Afterwards, [connect](connecting.md) it
+and [install the runtime](installing-runtime.md).
+
+The rest of this page is the same job without the editor.
+
 ## RP2040 and RP2350: drag and drop
 
 Copy the firmware onto the board as a file:
@@ -1401,6 +1420,11 @@ been deployed and run on that hardware. Pin details for boards and processors ar
 | Seeed XIAO nRF52840 (Sense) | nRF52840 | Untested |
 | Wemos D1 R32 | ESP32 | Yes, with an RM68090 parallel TFT shield (rewired, custom node) |
 
+MicroPython can be written onto any board in this list from the editor, with **Tools → Install firmware…**: a
+serial port for the ESP32 family, a mounted drive for RP2040, RP2350 and nRF52 boards, or **Choose a file…** for
+an image you downloaded. The Pyboard is the exception: it installs over DFU, which the editor doesn't offer; see
+[Install MicroPython](installing-micropython.md).
+
 ## Processors without a board definition
 
 Any board with one of these processors can be used by picking the processor from the **Board** menu, for example
@@ -1704,17 +1728,17 @@ You need these:
   C3 or C6, and not for RP2040 or RP2350 boards.
 - A USB cable that carries data.
 - `esptool` and `mpremote` on the computer: `pip install esptool mpremote`.
-- Four downloads from the project's [releases page](https://github.com/mkarliner/ThingStudio/releases/latest): the image, its `.sha256` file, `_deps.json` and `main.py`.
+- Three downloads from the project's [releases page](https://github.com/mkarliner/ThingStudio/releases/latest): the image, its `.sha256` file, and `main.py`.
 
 ## Install
 
 Flashing erases the board: its saved flows, board settings and WiFi credentials are gone afterwards.
 
-1. Download the four files from the [releases page](https://github.com/mkarliner/ThingStudio/releases/latest): the image, its `.sha256`, `_deps.json` and `main.py`. Put them
+1. Download the three files from the [releases page](https://github.com/mkarliner/ThingStudio/releases/latest): the image, its `.sha256` and `main.py`. Put them
    in one folder and go there. Check the image against its checksum:
 
    ```sh
-   IMAGE=thingstudio-classic-esp32-14.0.1-7e7c73b.bin
+   IMAGE=$(ls thingstudio-classic-esp32-*.bin)   # the image you downloaded
    shasum -a 256 -c "$IMAGE.sha256"      # sha256sum -c on Linux
    ```
 
@@ -1726,21 +1750,20 @@ Flashing erases the board: its saved flows, board settings and WiFi credentials 
 
    On macOS the port looks like `/dev/cu.usbserial-14420`. On Windows it is `COM3` or similar.
 
-3. Write the files that live on the filesystem, not in the image:
+3. Write the boot script, the one file that lives on the filesystem rather than in the image:
 
    ```sh
    mpremote connect /dev/ttyUSB0 fs cp main.py :/main.py
-   mpremote connect /dev/ttyUSB0 fs mkdir :/lib
-   mpremote connect /dev/ttyUSB0 fs cp _deps.json :/lib/_deps.json
    ```
 
-   `main.py` is the boot script: it starts the runtime that is frozen into the firmware. A board with the image and
-   no `main.py` starts at the Python prompt instead.
-
-   `_deps.json` is the list of libraries the board has, so Deploy skips them. Without it Deploy sends its own copies,
-   which works but uses the memory the image was meant to save.
+   `main.py` starts the runtime that is frozen into the firmware. A board with the image and no `main.py` starts at
+   the Python prompt instead. The image carries the list of libraries it froze, so Deploy skips them without a file
+   on the board.
 
 4. Reset the board. It starts the listener and prints `LISTENER_READY`.
+
+From the editor, **Tools → Install firmware…** flashes the image and **Tools → Install runtime…** writes the boot
+script, so the terminal steps above are only needed when you want them.
 
 The repository also has `firmware/classic-esp32/install.sh`, which runs these steps in one command. Read it before
 running it: it erases the filesystem partition, and its port name comes from `PORT`.
@@ -1749,7 +1772,7 @@ running it: it erases the filesystem partition, and its port name comes from `PO
 
 Connect in the editor as usual. Two things confirm the image is running:
 
-- the console's version line reports runtime 12.1.0 or later
+- the console's version line reports the runtime version the image was built with (14.1.0 for the current image)
 - `[libraries] … already on the board: …` names every library the flow imports
 
 Then deploy the flow. A GUI flow that failed with `MemoryError` on stock MicroPython should run.
@@ -5100,6 +5123,23 @@ If the port itself won't open, the console says why:
 
 The raw error stays in the message, in brackets. Include it if you report a problem.
 
+## Install firmware… fails or lists nothing
+
+**Tools → Install firmware…** writes MicroPython onto a board in its bootloader. Each refusal names the step:
+
+| What the dialog says | What to do |
+| --- | --- |
+| (no serial ports found), or the board's port is missing | Put the board in download mode — hold **BOOT**, tap **RESET**, release **BOOT** — then click ⟳. |
+| (no mounted drives found) | Hold **BOOTSEL** while plugging the board in, then click ⟳. |
+| … is not a .uf2 | A mounted drive takes the `.uf2` build, not a `.bin`. Download the right one from [micropython.org/download](https://micropython.org/download/). |
+| … is not the image this board expects | The file isn't the image that board's entry pins. Pick the board's own image, or choose a different board entry. |
+| esptool is not installed on this machine | The backend's Python has no `esptool`: `pip install esptool`, then restart Thingstudio. |
+| esptool exited N at … on PORT | The write stopped. Check the cable, put the board in download mode again, and retry. A board with a separate USB-serial chip may need the slower write: clear its `baud` in the board file, or use the terminal route in [Install MicroPython](installing-micropython.md). |
+| the flash did not finish within … | The tool stopped answering. Unplug and replug the board, then flash again. |
+
+A flash that finishes but leaves the board silent usually means the image is stock MicroPython: connect it, then
+**Tools → Install runtime…**.
+
 ## Deploy is grayed out
 
 **Compile → Deploy** is grayed out when:
@@ -5438,3 +5478,9 @@ the defaults. The old values are still on the board: rename the flow back to use
 The D1 R32 puts the shield's A2, A3 and A4 on GPIO 35, 34 and 36, which are input only on an ESP32. A parallel
 TFT shield drives its RS, CS and RST lines from those pins, so it can't start. Wire GPIO 15 to A2 (RS), GPIO 33
 to A3 (CS) and GPIO 32 to A4 (RST), then set those pins in the display node.
+
+## Do I need a terminal to install MicroPython?
+
+No, for boards Thingstudio can flash: an ESP32 over a serial port, and a board whose bootloader mounts as a drive
+(RP2040 and RP2350). Put the board in its bootloader and use **Tools → Install firmware…**. Other chips have
+their own installation routes; see [Install MicroPython](installing-micropython.md).

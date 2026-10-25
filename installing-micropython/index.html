@@ -778,6 +778,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#install-from-thingstudio" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Install from Thingstudio
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#rp2040-and-rp2350-drag-and-drop" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2979,6 +2990,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#install-from-thingstudio" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Install from Thingstudio
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#rp2040-and-rp2350-drag-and-drop" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3103,6 +3125,22 @@ exact board if it's listed, or the generic build for your chip:</p>
 </tbody>
 </table>
 <p>For any other chip, see <a href="#other-microcontrollers">Other microcontrollers</a>.</p>
+<h2 id="install-from-thingstudio">Install from Thingstudio</h2>
+<p>Thingstudio can write the firmware itself on ESP32 boards and on boards that mount as a drive (RP2040 and
+RP2350).</p>
+<ol>
+<li>Put the board in its bootloader. Hold <strong>BOOT</strong> and tap <strong>RESET</strong> on an ESP32, or hold <strong>BOOTSEL</strong> while you
+   plug in a Pico.</li>
+<li>Choose <strong>Tools → Install firmware…</strong>.</li>
+<li>Pick <strong>Serial port</strong> or <strong>Mounted drive</strong>, then the port or drive from the list. If the board isn't there,
+   click ⟳.</li>
+<li>Pick the board if the list has it. Otherwise choose <strong>Choose a file…</strong> and pick the <code>.bin</code> or <code>.uf2</code> you
+   downloaded above.</li>
+<li>Click <strong>Flash</strong>. The dialog shows the step it is on and how far it has got; a failure says what to fix.</li>
+</ol>
+<p>Flashing erases the flows, settings and WiFi credentials on the board. Afterwards, <a href="../connecting/">connect</a> it
+and <a href="../installing-runtime/">install the runtime</a>.</p>
+<p>The rest of this page is the same job without the editor.</p>
 <h2 id="rp2040-and-rp2350-drag-and-drop">RP2040 and RP2350: drag and drop</h2>
 <p>Copy the firmware onto the board as a file:</p>
 <ol>

@@ -3109,15 +3109,15 @@ one image serves any classic ESP32 board. It is tested on the CYD.</p>
   C3 or C6, and not for RP2040 or RP2350 boards.</li>
 <li>A USB cable that carries data.</li>
 <li><code>esptool</code> and <code>mpremote</code> on the computer: <code>pip install esptool mpremote</code>.</li>
-<li>Four downloads from the project's <a href="https://github.com/mkarliner/ThingStudio/releases/latest">releases page</a>: the image, its <code>.sha256</code> file, <code>_deps.json</code> and <code>main.py</code>.</li>
+<li>Three downloads from the project's <a href="https://github.com/mkarliner/ThingStudio/releases/latest">releases page</a>: the image, its <code>.sha256</code> file, and <code>main.py</code>.</li>
 </ul>
 <h2 id="install">Install</h2>
 <p>Flashing erases the board: its saved flows, board settings and WiFi credentials are gone afterwards.</p>
 <ol>
-<li>Download the four files from the <a href="https://github.com/mkarliner/ThingStudio/releases/latest">releases page</a>: the image, its <code>.sha256</code>, <code>_deps.json</code> and <code>main.py</code>. Put them
+<li>Download the three files from the <a href="https://github.com/mkarliner/ThingStudio/releases/latest">releases page</a>: the image, its <code>.sha256</code> and <code>main.py</code>. Put them
    in one folder and go there. Check the image against its checksum:</li>
 </ol>
-<div class="highlight"><pre><span></span><code><span class="nv">IMAGE</span><span class="o">=</span>thingstudio-classic-esp32-14.0.1-7e7c73b.bin
+<div class="highlight"><pre><span></span><code><span class="nv">IMAGE</span><span class="o">=</span><span class="k">$(</span>ls<span class="w"> </span>thingstudio-classic-esp32-*.bin<span class="k">)</span><span class="w">   </span><span class="c1"># the image you downloaded</span>
 shasum<span class="w"> </span>-a<span class="w"> </span><span class="m">256</span><span class="w"> </span>-c<span class="w"> </span><span class="s2">"</span><span class="nv">$IMAGE</span><span class="s2">.sha256"</span><span class="w">      </span><span class="c1"># sha256sum -c on Linux</span>
 </code></pre></div>
 <ol>
@@ -3127,25 +3127,24 @@ shasum<span class="w"> </span>-a<span class="w"> </span><span class="m">256</spa
 </code></pre></div>
 <p>On macOS the port looks like <code>/dev/cu.usbserial-14420</code>. On Windows it is <code>COM3</code> or similar.</p>
 <ol>
-<li>Write the files that live on the filesystem, not in the image:</li>
+<li>Write the boot script, the one file that lives on the filesystem rather than in the image:</li>
 </ol>
 <div class="highlight"><pre><span></span><code>mpremote<span class="w"> </span>connect<span class="w"> </span>/dev/ttyUSB0<span class="w"> </span>fs<span class="w"> </span>cp<span class="w"> </span>main.py<span class="w"> </span>:/main.py
-mpremote<span class="w"> </span>connect<span class="w"> </span>/dev/ttyUSB0<span class="w"> </span>fs<span class="w"> </span>mkdir<span class="w"> </span>:/lib
-mpremote<span class="w"> </span>connect<span class="w"> </span>/dev/ttyUSB0<span class="w"> </span>fs<span class="w"> </span>cp<span class="w"> </span>_deps.json<span class="w"> </span>:/lib/_deps.json
 </code></pre></div>
-<p><code>main.py</code> is the boot script: it starts the runtime that is frozen into the firmware. A board with the image and
-   no <code>main.py</code> starts at the Python prompt instead.</p>
-<p><code>_deps.json</code> is the list of libraries the board has, so Deploy skips them. Without it Deploy sends its own copies,
-   which works but uses the memory the image was meant to save.</p>
+<p><code>main.py</code> starts the runtime that is frozen into the firmware. A board with the image and no <code>main.py</code> starts at
+   the Python prompt instead. The image carries the list of libraries it froze, so Deploy skips them without a file
+   on the board.</p>
 <ol>
 <li>Reset the board. It starts the listener and prints <code>LISTENER_READY</code>.</li>
 </ol>
+<p>From the editor, <strong>Tools → Install firmware…</strong> flashes the image and <strong>Tools → Install runtime…</strong> writes the boot
+script, so the terminal steps above are only needed when you want them.</p>
 <p>The repository also has <code>firmware/classic-esp32/install.sh</code>, which runs these steps in one command. Read it before
 running it: it erases the filesystem partition, and its port name comes from <code>PORT</code>.</p>
 <h2 id="connect-and-deploy">Connect and deploy</h2>
 <p>Connect in the editor as usual. Two things confirm the image is running:</p>
 <ul>
-<li>the console's version line reports runtime 12.1.0 or later</li>
+<li>the console's version line reports the runtime version the image was built with (14.1.0 for the current image)</li>
 <li><code>[libraries] … already on the board: …</code> names every library the flow imports</li>
 </ul>
 <p>Then deploy the flow. A GUI flow that failed with <code>MemoryError</code> on stock MicroPython should run.</p>

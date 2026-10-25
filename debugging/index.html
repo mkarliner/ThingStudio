@@ -2899,6 +2899,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#install-firmware-fails-or-lists-nothing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Install firmware… fails or lists nothing
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#deploy-is-grayed-out" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3161,6 +3172,17 @@
     <span class="md-ellipsis">
       
         Board won't connect
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#install-firmware-fails-or-lists-nothing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Install firmware… fails or lists nothing
       
     </span>
   </a>
@@ -3431,6 +3453,48 @@ what the board sent instead, and what to do:</p>
 </tbody>
 </table>
 <p>The raw error stays in the message, in brackets. Include it if you report a problem.</p>
+<h2 id="install-firmware-fails-or-lists-nothing">Install firmware… fails or lists nothing</h2>
+<p><strong>Tools → Install firmware…</strong> writes MicroPython onto a board in its bootloader. Each refusal names the step:</p>
+<table>
+<thead>
+<tr>
+<th>What the dialog says</th>
+<th>What to do</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>(no serial ports found), or the board's port is missing</td>
+<td>Put the board in download mode — hold <strong>BOOT</strong>, tap <strong>RESET</strong>, release <strong>BOOT</strong> — then click ⟳.</td>
+</tr>
+<tr>
+<td>(no mounted drives found)</td>
+<td>Hold <strong>BOOTSEL</strong> while plugging the board in, then click ⟳.</td>
+</tr>
+<tr>
+<td>… is not a .uf2</td>
+<td>A mounted drive takes the <code>.uf2</code> build, not a <code>.bin</code>. Download the right one from <a href="https://micropython.org/download/">micropython.org/download</a>.</td>
+</tr>
+<tr>
+<td>… is not the image this board expects</td>
+<td>The file isn't the image that board's entry pins. Pick the board's own image, or choose a different board entry.</td>
+</tr>
+<tr>
+<td>esptool is not installed on this machine</td>
+<td>The backend's Python has no <code>esptool</code>: <code>pip install esptool</code>, then restart Thingstudio.</td>
+</tr>
+<tr>
+<td>esptool exited N at … on PORT</td>
+<td>The write stopped. Check the cable, put the board in download mode again, and retry. A board with a separate USB-serial chip may need the slower write: clear its <code>baud</code> in the board file, or use the terminal route in <a href="../installing-micropython/">Install MicroPython</a>.</td>
+</tr>
+<tr>
+<td>the flash did not finish within …</td>
+<td>The tool stopped answering. Unplug and replug the board, then flash again.</td>
+</tr>
+</tbody>
+</table>
+<p>A flash that finishes but leaves the board silent usually means the image is stock MicroPython: connect it, then
+<strong>Tools → Install runtime…</strong>.</p>
 <h2 id="deploy-is-grayed-out">Deploy is grayed out</h2>
 <p><strong>Compile → Deploy</strong> is grayed out when:</p>
 <ul>
