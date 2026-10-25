@@ -111,11 +111,28 @@ def list_targets(transport: str) -> list[dict]:
     return _serial_targets() if transport == "serial" else _volume_targets()
 
 
+# pyserial's placeholder when the operating system gives a port no name. A label of just "n/a" tells the user
+# nothing and hides the device path, which is the part they can match against esptool's own output (2026-10-25:
+# the CYD's own port showed as "n/a" in the dialog).
+_NO_DESCRIPTION = {"", "n/a"}
+
+
 def _serial_targets() -> list[dict]:
-    return [
-        {"kind": "serial", "value": port.device, "label": port.description or port.device}
-        for port in list_ports.comports()
-    ]
+    """Serial ports, USB devices first, each labelled with its device path.
+
+    The ordering is presentation, not identification: a vendor id says only that a real USB device is behind the
+    port (the same rule the editor's port picker uses), never which board is on it. A plain `/dev/ttyS0` is one
+    of the computer's own UARTs, and it sorts below the USB ones rather than at the top of the list."""
+    ports = list(list_ports.comports())
+    ports.sort(key=lambda port: port.vid is None)
+    targets = []
+    for port in ports:
+        description = str(port.description or "").strip()
+        label = port.device
+        if description.lower() not in _NO_DESCRIPTION:
+            label = f"{port.device} -- {description}"
+        targets.append({"kind": "serial", "value": port.device, "label": label})
+    return targets
 
 
 def _volume_roots() -> list[Path]:

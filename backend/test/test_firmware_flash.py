@@ -105,16 +105,32 @@ def test_every_tool_names_a_known_transport():
         assert tool.transport in TRANSPORTS
 
 
-def test_targets_lists_the_serial_ports_without_probing_them(monkeypatch):
+def test_targets_lists_the_serial_ports_usb_first_and_by_device_path(monkeypatch):
     class Port:
-        def __init__(self, device, description):
+        def __init__(self, device, description, vid=None):
             self.device = device
             self.description = description
+            self.vid = vid
 
-    monkeypatch.setattr(firmware_flash.list_ports, "comports", lambda: [Port("/dev/ttyUSB0", "CH340"), Port("/dev/ttyACM0", "")])
+    # pyserial's own placeholders for "the OS named this port nothing": a label of "n/a" hides the one part of
+    # the line the user can match against esptool's output (2026-10-25).
+    monkeypatch.setattr(
+        firmware_flash.list_ports,
+        "comports",
+        lambda: [
+            Port("/dev/ttyS0", "n/a"),
+            Port("/dev/ttyUSB0", "CH340", vid=0x1A86),
+            Port("/dev/ttyACM0", ""),
+            Port("/dev/ttyS1", "n/a"),
+            Port("/dev/ttyACM1", "USB Serial", vid=0x2E8A),
+        ],
+    )
     assert list_targets("serial") == [
-        {"kind": "serial", "value": "/dev/ttyUSB0", "label": "CH340"},
+        {"kind": "serial", "value": "/dev/ttyUSB0", "label": "/dev/ttyUSB0 -- CH340"},
+        {"kind": "serial", "value": "/dev/ttyACM1", "label": "/dev/ttyACM1 -- USB Serial"},
+        {"kind": "serial", "value": "/dev/ttyS0", "label": "/dev/ttyS0"},
         {"kind": "serial", "value": "/dev/ttyACM0", "label": "/dev/ttyACM0"},
+        {"kind": "serial", "value": "/dev/ttyS1", "label": "/dev/ttyS1"},
     ]
 
 

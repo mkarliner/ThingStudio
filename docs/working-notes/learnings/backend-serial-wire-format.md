@@ -34,6 +34,15 @@ Status: detail file, started 2026-09-07 (editor-backend-wiring session). See `le
   coincidentally contain the CBOR-null byte as data) asserts no encoded message body ever contains
   an actual CBOR null.
 
+- **pyserial's `description` is the string `"n/a"` when the OS names a port nothing — it is not empty.** 2026-10-25,
+  found on the first hardware run of the firmware dialog: `/api/firmware/targets` labelled each port with
+  `port.description or port.device`, so a machine whose only visible ports were its own `/dev/ttyS0`-`3` UARTs
+  showed four identical `n/a` entries and no device path, which reads as "the port isn't found" rather than "the
+  label is useless". `serial_relay.list_ports()` had the same `or ""` shape but the editor formats that one as
+  `device -- description`, so the path always showed there and the difference between the two lists was invisible
+  in code review. Treat `""`/`"n/a"` as no description and always carry the device path in a port label; a fake
+  `Port` in a test with a real name never exercises the placeholder.
+
 - **pyserial's `read(n)` waits for n bytes or the timeout — it doesn't return early with what's there.**
   2026-09-23. Asking for a large buffer "to be efficient" turns every short reply into a full timeout wait:
   0.5s per raw-REPL exec (a ~6-minute silent runtime install) and up to 0.5s extra latency on every relayed

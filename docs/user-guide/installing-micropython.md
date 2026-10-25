@@ -30,8 +30,9 @@ RP2350).
 1. Put the board in its bootloader. Hold **BOOT** and tap **RESET** on an ESP32, or hold **BOOTSEL** while you
    plug in a Pico.
 2. Choose **Tools → Install firmware…**.
-3. Pick **Serial port** or **Mounted drive**, then the port or drive from the list. If the board isn't there,
-   click ⟳.
+3. Pick **Serial port** or **Mounted drive**, then the port or drive from the list. USB ports come first, shown as
+   the path and the adapter's name (for example `/dev/ttyUSB0 -- CH340`). If the board isn't there, put it in
+   download mode (step 1) and click ⟳; the line under the list says how many it found.
 4. Pick the board if the list has it. Otherwise choose **Choose a file…** and pick the `.bin` or `.uf2` you
    downloaded above.
 5. Click **Flash**. The dialog shows the step it is on and how far it has got; a failure says what to fix.

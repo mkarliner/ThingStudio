@@ -2588,15 +2588,26 @@ function renderFwBoards(): void {
 async function refreshFirmwareTargets(): Promise<void> {
   const transport = fwTransport();
   const select = el<HTMLSelectElement>("fwTargets");
+  const note = el("fwTargetsNote");
   const error = el("fwError");
+  const word = transport === "serial" ? "port" : "drive";
   error.textContent = "";
+  note.textContent = "";
   select.innerHTML = "";
   try {
     const targets = await listFirmwareTargets(currentBackendWsUrl(), transport);
     for (const target of targets) select.add(new Option(target.label, target.value));
-    if (!targets.length) {
-      select.add(new Option(transport === "serial" ? "(no serial ports found)" : "(no mounted drives found)", ""));
+    if (targets.length) {
+      // A ⟳ that finds the same list changes nothing visible, so say what it found: otherwise a refresh looks
+      // like a dead button (2026-10-25).
+      note.textContent = `${targets.length} ${word}${targets.length === 1 ? "" : "s"} found.`;
+      return;
     }
+    select.add(new Option(transport === "serial" ? "(no serial ports found)" : "(no mounted drives found)", ""));
+    note.textContent =
+      transport === "serial"
+        ? "None found: hold BOOT and tap RESET, then ⟳."
+        : "None found: hold BOOTSEL while plugging the board in, then ⟳.";
   } catch (err) {
     select.add(new Option("(could not list targets)", ""));
     error.textContent = err instanceof Error ? err.message : String(err);
