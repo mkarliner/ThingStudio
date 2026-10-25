@@ -19,6 +19,11 @@ been deployed and run on that hardware. Pin details for boards and processors ar
 | Seeed XIAO nRF52840 (Sense) | nRF52840 | Untested |
 | Wemos D1 R32 | ESP32 | Yes, with an RM68090 parallel TFT shield (rewired, custom node) |
 
+MicroPython can be written onto any board in this list from the editor, with **Tools → Install firmware…**: a
+serial port for the ESP32 family, a mounted drive for RP2040, RP2350 and nRF52 boards, or **Choose a file…** for
+an image you downloaded. The Pyboard is the exception: it installs over DFU, which the editor doesn't offer; see
+[Install MicroPython](installing-micropython.md).
+
 ## Processors without a board definition
 
 Any board with one of these processors can be used by picking the processor from the **Board** menu, for example
