@@ -20,5 +20,15 @@
     "31": 26, "32": 27, "33": "AGND", "34": 28, "35": "ADC_VREF",
     "36": "3V3(OUT)", "37": "3V3_EN", "38": "GND", "39": "VSYS", "40": "VBUS"
   },
-  "notes": "The onboard LED is GPIO 25."
+  "notes": "The onboard LED is GPIO 25.",
+  "firmware": {
+    "tool": "uf2",
+    "transport": "volume",
+    "image": {
+      "url": "https://micropython.org/resources/firmware/RPI_PICO-20260824-v1.29.0.uf2",
+      "sha256": "e1160e602e277d85920adb5fe741435edccba9ba6ecadc85fdab75252eeff4e9"
+    },
+    "runtime": "install",
+    "flash": {}
+  }
 }

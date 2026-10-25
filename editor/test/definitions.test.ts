@@ -482,6 +482,25 @@ describe("firmware recipes (flashing a blank board)", () => {
     expect(defs.boards.get("cyd")!.firmware).toBeNull();
   });
 
+  it("every board with a recipe pairs its tool with the transport it uses", () => {
+    const withRecipe = [...defs.boards.values()]
+      .filter((board) => board.firmware)
+      .map((board) => board.id)
+      .sort();
+    expect(withRecipe).toEqual([
+      "freenove-s3-4in", "lolin-s2-mini", "luatos-esp32c3-core", "pico", "pico-2", "pico-w", "wemos-d1-r32", "xiao-nrf52840",
+    ]);
+    for (const board of defs.boards.values()) {
+      if (!board.firmware) continue;
+      expect(board.firmware.transport).toBe(board.firmware.tool === "uf2" ? "volume" : "serial");
+      expect(board.firmware.image.sha256).toMatch(/^[0-9a-f]{64}$/);
+    }
+    // MicroPython's own layout: the classic ESP32 and S2 write at 0x1000, S3/C3 at 0.
+    const d1 = defs.boards.get("wemos-d1-r32")!.firmware;
+    if (d1?.tool !== "esptool") throw new Error("expected an esptool recipe");
+    expect(d1.flash.offset).toBe(4096);
+  });
+
   it("refuses a bad sha256, an unknown runtime, an unknown tool or a mismatched transport", () => {
     const base = { name: "X", processor: "esp32", match: [], pins: {} };
     const image = { url: "https://example.invalid/x.bin", sha256: "a".repeat(64) };

@@ -21,5 +21,15 @@
     "31": 26, "32": 27, "33": "AGND", "34": 28, "35": "ADC_VREF",
     "36": "3V3(OUT)", "37": "3V3_EN", "38": "GND", "39": "VSYS", "40": "VBUS"
   },
-  "notes": "RP2350A, so GPIO 0-29 only. The onboard LED is GPIO 25."
+  "notes": "RP2350A, so GPIO 0-29 only. The onboard LED is GPIO 25.",
+  "firmware": {
+    "tool": "uf2",
+    "transport": "volume",
+    "image": {
+      "url": "https://micropython.org/resources/firmware/RPI_PICO2-20260824-v1.29.0.uf2",
+      "sha256": "6bfc5d110f293870f60150468dfeec8aec5323b57415a0b9a86e6c334e876e93"
+    },
+    "runtime": "install",
+    "flash": {}
+  }
 }

@@ -27,5 +27,15 @@
     "1": 2, "2": 3, "3": 28, "4": 29, "5": 4, "6": 5, "7": 43,
     "8": 44, "9": 45, "10": 46, "11": 47, "12": "3V3", "13": "GND", "14": "5V"
   },
-  "notes": "The plain XIAO nRF52840 and the Sense run the same MicroPython firmware and both report XIAO nRF52840 Sense. D0-D5 are also A0-A5; D4/D5 are the usual I2C SDA/SCL, D6/D7 UART TX/RX, D8-D10 SPI SCK/MISO/MOSI. The RGB LED is active low: value 0 turns it on. NFC1/NFC2 are pads on the back. IMU (LSM6DS3TR-C) and microphone pins exist on the Sense only; set IMU_PWR or MIC_PWR high before using them. Files live under /flash. Bluetooth is through ubluepy only."
+  "notes": "The plain XIAO nRF52840 and the Sense run the same MicroPython firmware and both report XIAO nRF52840 Sense. D0-D5 are also A0-A5; D4/D5 are the usual I2C SDA/SCL, D6/D7 UART TX/RX, D8-D10 SPI SCK/MISO/MOSI. The RGB LED is active low: value 0 turns it on. NFC1/NFC2 are pads on the back. IMU (LSM6DS3TR-C) and microphone pins exist on the Sense only; set IMU_PWR or MIC_PWR high before using them. Files live under /flash. Bluetooth is through ubluepy only.",
+  "firmware": {
+    "tool": "uf2",
+    "transport": "volume",
+    "image": {
+      "url": "https://micropython.org/resources/firmware/SEEED_XIAO_NRF52-20260824-v1.29.0.uf2",
+      "sha256": "cfbc1b18c08fbde8682421dd84719d4cf0785e25554cb41f939071b78dfd6b78"
+    },
+    "runtime": "install",
+    "flash": {}
+  }
 }

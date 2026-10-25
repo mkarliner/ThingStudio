@@ -38,12 +38,16 @@ Corollaries, all decided 2026-10-25:
 - **Tools in the first slice: `esptool`** (ESP32 family: classic, S2, S3, C3, C6, …; also ESP8266) **and `uf2`**
   (RP2040/RP2350 and nRF52 boards whose bootloader mounts as a drive). Together these cover 9 of the 10 board
   definitions in the repo — five ESP32s, Pico, Pico W, Pico 2, XIAO nRF52840.
-- **One board recipe exists so far**: the Freenove S3, whose stock MicroPython image plus the normal runtime
-  install is complete. The CYD's own image is *not* self-sufficient — it has no `/main.py`, and its library
-  inventory is not on the board either — so its block was withdrawn on 2026-10-25 rather than shipped as a trap.
-  The fix is on the runtime-install side, not the board block: **Install runtime…** splits into a boot script
-  (always), the runtime core (only when `import listener` fails) and the inventory (frozen into the image), so
-  the CYD's block returns as `runtime: "install"` once the image is rebuilt. No new board-descriptor key:
+- **Eight of the ten board definitions carry a recipe** (2026-10-25): the Freenove S3 and the stock-ESP32
+  boards (Wemos D1 R32 at 0x1000, LOLIN S2 Mini at 0x1000, LuatOS C3 at 0) over `esptool`, and Pico, Pico W,
+  Pico 2 and XIAO nRF52840 over `uf2`. Every image is MicroPython v1.29.0 from micropython.org, downloaded and
+  hash-checked. The two left: the **CYD**, whose own image needs the runtime-install split (below) and a new
+  release to point at, and the **pyboard**, which waits for `dfu`.
+- **The CYD's image was not self-sufficient** — no `/main.py`, and its library inventory was not on the board —
+  so its block was withdrawn on 2026-10-25 rather than shipped as a trap. The fix landed on the runtime-install
+  side, not the board block: **Install runtime…** writes the boot script always, the runtime core only when the
+  board is not a custom image (recognised by its frozen `deps_frozen` module), and the inventory is frozen into
+  the image. No new board-descriptor key; the CYD's block returns with the next release's image.
   `outstanding-items/firmware-custom-image-boot-files.md`.
 - **`dfu` comes after** (STM32/pyboard: `dfu-util -a 0 -D`), as one more entry in the same registry and one more
   board file. Deferred by Mike, 2026-10-25.
@@ -138,9 +142,9 @@ Tools → **Install firmware…**:
 
 1. **Backend** — target enumeration, the tool registry (`esptool`, `uf2`), jobs, image download/cache/verify,
    tests with a fake esptool and a temp volume. Built once, now being refactored to the target/tool shape above.
-2. **Board data** — descriptor spec/schema and the Freenove S3 block are built. The CYD needs the post-flash
-   file step above first. Pico / Pico W / Pico 2 / XIAO nRF52840 blocks are owed, but only from a real image
-   whose hash has been checked.
+2. **Board data** — descriptor spec/schema built; eight boards carry a recipe (ESPT INT32 stock images for the
+   S3/S2/C3/classic, UF2 for the four RP2/nRF boards). Left: the CYD (next release's image) and the pyboard
+   (`dfu`).
 3. **Editor** — the Install firmware… dialog and job polling.
 4. **Hardware** — blank S3 (stock MicroPython + runtime) and a Pico 2 (UF2), each end to end, then the CYD once
    its boot files are written; record the exact sequence and failure lines in the brief.

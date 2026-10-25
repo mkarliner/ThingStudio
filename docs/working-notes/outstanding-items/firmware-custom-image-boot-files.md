@@ -45,7 +45,8 @@ nobody has to run, and no board has been deployed to protect.
   Build: `build.sh` writes `deps_frozen.py` into the frozen stage and `out/main.py` from the manifest;
   `install.sh`, `publish.sh` and the firmware README drop `/lib/_deps.json` (three release assets now). Runtime
   bumped to 14.1.0 with the editor target.
-- **Left:** rebuild and publish the image, re-add the CYD's recipe pinned to that asset, then the hardware pass
-  (blank CYD, one flash, **Install runtime…**, `HELLO` with the runtime version). `docs/user-guide/
-  custom-firmware.md` still describes the four-asset install of the currently released image; update it with the
-  release that carries the rebuilt image.
+- **Left:** publish the rebuilt image (built 2026-10-25: `thingstudio-classic-esp32-14.1.0-5e168de.bin`, sha256
+  `9a077d5ac89daba032f756a71fb27e40b377815c76eb1ac0cde09ed94cb13f33`), re-add the CYD's recipe pinned to that
+  asset, then the hardware pass (blank CYD, one flash, **Install runtime…**, `HELLO` with the runtime version).
+  `docs/user-guide/custom-firmware.md` still describes the four-asset install of the currently released image;
+  update it with the release that carries the rebuilt image.

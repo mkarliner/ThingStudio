@@ -15,5 +15,15 @@
     "5": "Strapping pin. Sets flash timing at reset.",
     "12": "Strapping pin. High at reset selects 1.8 V flash and the board won't boot, so a shield mustn't pull it high."
   },
-  "notes": "Arduino Uno layout with an ESP32-WROOM-32. Pins are labelled by their Arduino names: D0 and D1 are the USB serial link. A2-A5 (GPIO 35, 34, 36, 39) are input only, so a shield that drives them, such as an MCUFRIEND parallel TFT, needs wires to spare GPIOs (usually 15, 33 and 32). The onboard LED is on A0 (GPIO 2). The silkscreen on some boards mislabels A2 and A4. Pick this board by hand: MicroPython reports a generic ESP32."
+  "notes": "Arduino Uno layout with an ESP32-WROOM-32. Pins are labelled by their Arduino names: D0 and D1 are the USB serial link. A2-A5 (GPIO 35, 34, 36, 39) are input only, so a shield that drives them, such as an MCUFRIEND parallel TFT, needs wires to spare GPIOs (usually 15, 33 and 32). The onboard LED is on A0 (GPIO 2). The silkscreen on some boards mislabels A2 and A4. Pick this board by hand: MicroPython reports a generic ESP32.",
+  "firmware": {
+    "tool": "esptool",
+    "transport": "serial",
+    "image": {
+      "url": "https://micropython.org/resources/firmware/ESP32_GENERIC-20260824-v1.29.0.bin",
+      "sha256": "e67ad6015a0a504c1fec9aa9bbf589d0432ed28e62546f4f8dd8a147f8bd95f6"
+    },
+    "runtime": "install",
+    "flash": { "chip": "esp32", "baud": 460800, "offset": 4096 }
+  }
 }

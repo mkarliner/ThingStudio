@@ -8,5 +8,15 @@
     "19-20": "Native USB. Carries the serial link to Thingstudio.",
     "26": "Wired to the built-in PSRAM."
   },
-  "notes": "The onboard LED is GPIO 15. The button labelled 0 is GPIO 0."
+  "notes": "The onboard LED is GPIO 15. The button labelled 0 is GPIO 0.",
+  "firmware": {
+    "tool": "esptool",
+    "transport": "serial",
+    "image": {
+      "url": "https://micropython.org/resources/firmware/ESP32_GENERIC_S2-20260824-v1.29.0.bin",
+      "sha256": "c7e30ea6978437432cbb6233886a8037db766e84d6ae844acb6ed20d00cf5873"
+    },
+    "runtime": "install",
+    "flash": { "chip": "esp32s2", "baud": 460800, "offset": 4096 }
+  }
 }
