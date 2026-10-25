@@ -371,7 +371,7 @@ def test_an_esptool_flash_runs_one_command_with_the_address_erase_and_keep_optio
     assert job.state == "done", job.error
     argv = command(fake_tool)
     assert argv[:6] == ["--chip", "esp32", "--port", "/dev/fake", "--baud", "460800"]
-    assert argv[6:11] == ["write-flash", "--flash_mode", "keep", "--flash_size", "keep"]
+    assert argv[6:11] == ["write_flash", "--flash_mode", "keep", "--flash_size", "keep"]
     assert argv[11] == "--erase-all"
     assert argv[12] == "0x1000" and argv[13].endswith(".bin")
     assert job.progress == 100 and job.version == "1.29.0"

@@ -554,9 +554,11 @@ class Esptool(Tool):
         cmd += ["--port", target, "--baud", str(baud)]
         if options.get("noStub"):
             cmd.append("--no-stub")
-        # `keep` reads flash mode and size out of the image, which is what Thonny does by default and what stops
-        # us inventing a flash size for a board we have not seen.
-        cmd += ["write-flash", "--flash_mode", "keep", "--flash_size", "keep"]
+        # esptool spells the operation `write_flash`: the hyphenated form only exists from 5.x, and a board whose
+        # Python carries 4.x answers "invalid choice: 'write-flash'" (2026-10-25, Mike's first real flash).
+        # `keep` reads flash mode and size out of the image, which is Thonny's default and stops us inventing a
+        # flash size for a board we have not seen.
+        cmd += ["write_flash", "--flash_mode", "keep", "--flash_size", "keep"]
         if options.get("erase", True):
             cmd.append("--erase-all")
         cmd += [hex(address), str(image)]
