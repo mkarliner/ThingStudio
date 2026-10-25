@@ -1,55 +1,46 @@
-# A board recipe cannot write the files a custom image needs
+# A frozen image needs a boot script, and the runtime install should provide it
 
-Status: open, found 2026-10-25 while writing the user docs for **Tools → Install firmware…**.
+Status: open, found 2026-10-25 while writing the user docs for **Tools → Install firmware…**; direction settled the
+same day (Mike: choose the clean shape, no compatibility hedge while there is no user base).
 
 ## The problem
 
-The `firmware` block flashes one image. Thingstudio's own classic-ESP32 image is not self-sufficient: it holds
-the runtime and every library frozen, but a frozen module cannot be the boot script, so
-`firmware/classic-esp32/install.sh` also writes two files over `mpremote`:
+Thingstudio's classic-ESP32 image holds the runtime and every library frozen, but a frozen module cannot be the boot
+script, so `firmware/classic-esp32/install.sh` also writes `/main.py` over `mpremote`. A board flashed with the image
+alone boots to the REPL and never sends `HELLO`, so the CYD's `firmware` block was withdrawn rather than shipped as a
+trap.
 
-- `/main.py` — the three-line boot script (`import listener; listener.main()`)
-- `/lib/_deps.json` — the library inventory, so Deploy skips what is already frozen
+The image also has no `/lib/_deps.json`. Without it, Deploy pushes its own copies of every library into `/lib`, where
+`deps.ensure_on_path()` puts them ahead of the frozen ones — the heap saving the image exists for is lost.
 
-A board flashed with the image alone boots to the REPL and never sends `HELLO`. So the CYD's recipe, as written
-(`runtime: "none"`, image only), would have produced a board that looks like a failed flash. The CYD's
-`firmware` block was removed on 2026-10-25 rather than left as a trap; the editor now offers it **Choose a
-file…** with the stock MicroPython image and the normal runtime install.
+## The shape we chose
 
-`runtime: "install"` is not the answer for this image: it would push the runtime to the filesystem, so the board
-would run the filesystem listener and give up exactly the memory the frozen image exists to save.
+Split what one "Install runtime…" does into the pieces an image actually needs, and let the board's own state decide:
 
-## The shape of the fix
+1. **Boot script, always.** `/main.py` becomes one generated file for every case:
+   `import listener` / `listener.main()`. The installer stops copying `listener.py` as `main.py`; the behaviour is
+   the same once `listener` is importable from the filesystem or from flash.
+2. **Runtime core, only when it is missing.** One REPL probe decides: `import listener` succeeds on a frozen image
+   (and on a board already carrying the runtime), and fails on a blank stock board. Frozen → skip the core files;
+   failed → push `CORE_FILES` as today. One command, two outcomes, no retry chain.
+3. **Inventory, from the image.** The inventory is frozen into the image as a module (generated beside the image by
+   the build from the same hashes `gen_deps_index.mjs` already computes), and `deps.py` prefers the file when Deploy
+   has written one and falls back to the frozen module. No `/lib/_deps.json` in the image, no URL in the board
+   block, nothing to download before a flash, and the hashes cannot drift from the image because the build emits
+   both.
 
-The block needs a post-flash file step, as data:
+Consequence: no new board-descriptor key. The CYD's `firmware` block comes back as `runtime: "install"`, and
+**Tools → Install runtime…** does the right thing on a frozen image instead of pushing a filesystem copy of the
+runtime.
 
-```json
-"firmware": {
-  "tool": "esptool",
-  "transport": "serial",
-  "image": { "url": "…", "sha256": "…" },
-  "runtime": "none",
-  "flash": { "chip": "esp32", "baud": 460800, "offset": 0 },
-  "files": [
-    { "url": "…/main.py", "sha256": "…", "to": "/main.py" },
-    { "url": "…/_deps.json", "sha256": "…", "to": "/lib/_deps.json" }
-  ]
-}
-```
+Rejected on the same call: an interim `inventory`/`files` URL in the board block. It exists only to avoid a rebuild
+nobody has to run, and no board has been deployed to protect.
 
-- Backend: after a successful flash, download and verify each file (same cache), open the serial port at the
-  REPL, and write them. The existing raw-REPL path (`raw_repl.py` / `runtime_installer.py`) already does this
-  for the runtime install; this is the same mechanism with a file list from the board.
-- Job: a third step, `files`, so the dialog's progress line says which one failed.
-- Editor: nothing beyond showing that step.
-- Board data: the CYD gets the block back with its two files pinned from the same release as the image.
+## Order of work
 
-`files` is an interface change (the board-descriptor schema and SPEC), so it needs Mike's explicit OK.
-
-## Before re-adding the CYD recipe
-
-- The release publishes `main.py` and `_deps.json` next to the image (`publish.sh` verifies all four assets),
-  so pin their URLs and sha256 from the same tag as the image.
-- The board re-enumerates after a flash on some USB-serial bridges; the file step must open the port it is
-  given and refuse once if it never appears — no retry chain.
-- Then the hardware pass: blank CYD, one click, and the board sends `HELLO` with the runtime version.
+- Backend: `RuntimeInstaller` gains the probe and the three steps; tests with a fake port for both branches.
+- Device runtime: `deps.py` reads the frozen inventory when the file is absent (interface: `deps` surface, so
+  `interfaces/runtime-api/` conformance and the manifest move together).
+- Firmware build: stage the inventory module; rebuild the CYD image; publish a new image asset with its hash.
+- Board data: re-add the CYD's recipe pinned to the rebuilt image, and the hardware pass — blank CYD, one flash,
+  **Install runtime…**, and the board sends `HELLO` with the runtime version.

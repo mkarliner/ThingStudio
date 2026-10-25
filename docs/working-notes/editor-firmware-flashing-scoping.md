@@ -39,11 +39,12 @@ Corollaries, all decided 2026-10-25:
   (RP2040/RP2350 and nRF52 boards whose bootloader mounts as a drive). Together these cover 9 of the 10 board
   definitions in the repo — five ESP32s, Pico, Pico W, Pico 2, XIAO nRF52840.
 - **One board recipe exists so far**: the Freenove S3, whose stock MicroPython image plus the normal runtime
-  install is complete. The CYD's own image is *not* self-sufficient — it has no `/main.py` or
-  `/lib/_deps.json`, which the release ships beside it and `install.sh` writes over `mpremote` — so its block
-  was withdrawn on 2026-10-25 rather than shipped as a trap: see
-  `outstanding-items/firmware-custom-image-boot-files.md`. A block needs a post-flash file list before the CYD
-  can come back, and that is an interface change.
+  install is complete. The CYD's own image is *not* self-sufficient — it has no `/main.py`, and its library
+  inventory is not on the board either — so its block was withdrawn on 2026-10-25 rather than shipped as a trap.
+  The fix is on the runtime-install side, not the board block: **Install runtime…** splits into a boot script
+  (always), the runtime core (only when `import listener` fails) and the inventory (frozen into the image), so
+  the CYD's block returns as `runtime: "install"` once the image is rebuilt. No new board-descriptor key:
+  `outstanding-items/firmware-custom-image-boot-files.md`.
 - **`dfu` comes after** (STM32/pyboard: `dfu-util -a 0 -D`), as one more entry in the same registry and one more
   board file. Deferred by Mike, 2026-10-25.
 - **Out of scope for now**: RP2040/RP2350 through a non-UF2 bootloader, boards that need SWD/ST-Link, vendor-locked

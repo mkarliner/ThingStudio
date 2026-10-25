@@ -40,3 +40,14 @@ Status: detail file, split out of `decisions.md` on 2026-09-06 to keep that inde
   call: on-device compilation needs RAM on top of what the compiled code
   needs, and can OOM a constrained board even when the bytecode runs fine.
   §15.1 addendum.
+- **2026-10-25 — Before external testing, the bias is purity, not compatibility.**
+  With no user base yet, every choice leans to the clean/right architecture and
+  never to backward compatibility; preserving an old shape only starts to matter
+  after user testing begins. Mike's framing: "while we have no user base, the
+  bias is always to keep the architecture pure/clean, and don't worry about
+  backward compatibility. This only is relevant after user testing." It is the
+  one-way-door rule from `AGENTS.md` read in reverse: while nothing is deployed,
+  the door is still open, so take the shape the design wants rather than the
+  shape that avoids a migration nobody has to run. Applied the same day to the
+  firmware block: no interim `_deps.json` URL, the inventory gets frozen into
+  the image instead.

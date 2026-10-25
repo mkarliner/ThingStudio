@@ -141,6 +141,15 @@ foreclose the expensive one" calls, not exceptions to the cheap-by-default rule.
 applied consistently to new work — including plain engineering-effort trade-offs, not just protocol/hardware one-way
 doors — rather than re-derived per feature.
 
+**While there is no user base, take the clean shape and ignore compatibility.** Compatibility work exists to protect
+something already deployed; nothing is. Until user testing starts, the bias is always to the architecture the design
+wants, not to the shape that avoids a migration nobody has to run — and an interim field, a legacy alias or a
+"keep the old one working" branch is a cost with no beneficiary. The one-way-door rule above still applies; what
+changes is that most doors are still open, so walk through the one that leads to the clean design. Revisit the day
+outside testers have saved flows or deployed boards. Mike, 2026-10-25: "while we have no user base, the bias is
+always to keep the architecture pure/clean, and don't worry about backward compatibility. This only is relevant
+after user testing." Recorded with its first application in `decisions/architecture.md` (2026-10-25).
+
 ## Node format parity: built-in and custom nodes are one thing
 
 The end state is the Node-RED model — a node is one package (descriptor + device-side Python behavior), core
