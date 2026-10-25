@@ -181,6 +181,7 @@ class Build:
     label: str
     info_url: str
     runtime: str
+    note: str
     versions: tuple[BuildVersion, ...]
 
 
@@ -229,6 +230,7 @@ def _builds_from(data: object, where: str) -> list[Build]:
                 label=str(raw["label"]),
                 info_url=str(raw.get("infoUrl") or ""),
                 runtime=str(raw.get("runtime") or "none"),
+                note=str(raw.get("note") or ""),
                 versions=tuple(versions),
             )
         )
@@ -277,6 +279,7 @@ def catalogue(store: PersistedStore) -> dict:
                 "label": build.label,
                 "infoUrl": build.info_url,
                 "runtime": build.runtime,
+                "note": build.note,
                 "tool": family.tool,
                 "versions": [
                     {

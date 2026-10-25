@@ -368,6 +368,8 @@ export interface FirmwareBuild {
   infoUrl: string;
   /** "install" means the image carries no Thingstudio runtime, so Install runtime is the next step. */
   runtime: "none" | "install";
+  /** Anything the user should know before choosing this build, shown under the list. */
+  note?: string;
   tool: "esptool" | "uf2";
   versions: FirmwareVersion[];
 }

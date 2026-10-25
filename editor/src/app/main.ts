@@ -2639,9 +2639,10 @@ function renderFwFileNote(): void {
       : `${fwUploaded.name} will be used, at the address under Install options.`;
   } else if (build) {
     const version = fwSelectedVersion();
-    note.textContent = version?.cached
+    const where = version?.cached
       ? `${build.label} ${version.version} is already downloaded.`
       : `${build.label} ${version?.version ?? ""} will be downloaded and checked.`;
+    note.textContent = build.note ? `${where} ${build.note}` : where;
   } else {
     note.textContent = "No build chosen: pick the file MicroPython publishes for your chip.";
   }
@@ -2711,6 +2712,9 @@ el("btnInstallFirmware").addEventListener("click", () => {
   el<HTMLSelectElement>("fwBaud").value = "";
   el<HTMLInputElement>("fwNoStub").checked = false;
   el<HTMLInputElement>("fwErase").checked = true;
+  // A finished flash offers one thing to do next: close. Flash comes back only if the user changes something.
+  el("fwClose").textContent = "Cancel";
+  el<HTMLButtonElement>("fwFlash").hidden = false;
   el("fwLog").hidden = true;
   el("fwLog").textContent = "";
   el("fwError").textContent = "";
@@ -2744,12 +2748,15 @@ for (const radio of Array.from(document.querySelectorAll<HTMLInputElement>('inpu
 el("fwRefreshTargets").addEventListener("click", () => void refreshFirmwareTargets());
 el("fwTargets").addEventListener("change", () => {
   el<HTMLInputElement>("fwTargetPath").value = "";
+  fwButtonsForNewChoice();
 });
 el("fwFamily").addEventListener("change", () => {
+  fwButtonsForNewChoice();
   renderFwBuilds();
   renderFwAdvanced();
 });
 el("fwBuild").addEventListener("change", () => {
+  fwButtonsForNewChoice();
   // Picking a catalogue build drops a file the user had chosen: one answer to "what goes on the board".
   fwFile = null;
   fwUploaded = null;
@@ -2757,7 +2764,10 @@ el("fwBuild").addEventListener("change", () => {
   renderFwVersions();
   renderFwFileNote();
 });
-el("fwVersion").addEventListener("change", renderFwFileNote);
+el("fwVersion").addEventListener("change", () => {
+  fwButtonsForNewChoice();
+  renderFwFileNote();
+});
 
 // A file is uploaded as soon as it is picked, because the image's own header says which chip it is for -- the
 // family comes from the file, not from the user guessing.
@@ -2770,6 +2780,7 @@ el<HTMLInputElement>("fwFile").addEventListener("change", (event) => {
     renderFwFileNote();
     return;
   }
+  fwButtonsForNewChoice();
   void (async () => {
     el("fwProgress").textContent = `uploading ${picked.name}`;
     try {
@@ -2800,6 +2811,14 @@ el("fwFlash").addEventListener("click", (event) => {
   event.preventDefault();
   void runFirmwareFlash();
 });
+
+/** Changing any choice after a finished flash means there is something new to flash, so the buttons go back. */
+function fwButtonsForNewChoice(): void {
+  if (el("fwClose").textContent !== "Close") return;
+  el("fwClose").textContent = "Cancel";
+  el<HTMLButtonElement>("fwFlash").hidden = false;
+  el("fwProgress").textContent = "";
+}
 
 function appendFwLog(job: FirmwareJobState): void {
   const log = el("fwLog");
@@ -2862,6 +2881,10 @@ async function runFirmwareFlash(): Promise<void> {
     });
     const summary = doneLine(fwSelectedBuild());
     el("fwProgress").textContent = summary;
+    // Nothing left to flash: one button, and it says what it does (2026-10-25, Mike: "Cancel ... still says
+    // Flash" is confusing once the job is done).
+    el("fwClose").textContent = "Close";
+    el<HTMLButtonElement>("fwFlash").hidden = true;
     logLine(`[firmware] ${summary}`, "ok");
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

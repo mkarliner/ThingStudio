@@ -77,7 +77,8 @@ Flashing erases the board: its saved flow and all settings are gone afterwards.
 
 4. Reset the board. It starts the listener and prints `LISTENER_READY`.
 
-From the editor, **Tools → Install firmware…** flashes the image and **Tools → Install runtime…** writes the boot
+From the editor, **Tools → Install firmware…** offers the published image as a **Thingstudio image** build of the
+classic ESP32 family, and **Tools → Install runtime…** writes the boot
 script, so the terminal steps above are only needed when you want them.
 
 The repository also has `firmware/classic-esp32/install.sh`, which runs these steps in one command. Read it before

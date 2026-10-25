@@ -28,6 +28,20 @@ Mike: "Look at what Thonny does. I think that is our target in general." After r
 - **Not copied from Thonny:** fetching the catalogue from a remote server at flash time (unpinned download path);
   per-backend handler classes (our tool registry plus data is the package-extensible shape).
 
+## Variants are builds, not boards
+
+An ESP32 with extra PSRAM is not a different board to us, it is a different build: `esp32-spiram` sits beside
+`esp32-generic` under the same family, and the user picks it by name. Same for single-core SOLO and the 2 MB D2WD
+part, and for the S3 generic versus SPIRAM_OCT. This is why the family owns the address and the tool and the build
+only owns an image: a variant changes the image, never how it is written.
+
+A build also carries an optional `note`, shown under the list, for the thing the label cannot say in one line —
+"this image predates the frozen library inventory, so Deploy still pushes the libraries a flow uses".
+
+**A build we ship under our own name must be in `firmware/classic-esp32/tested.json`.** That record is keyed by
+sha256, so `editor/test/firmware-assets.test.ts` asserts every `supplier: "thingstudio"` version's hash is a key in
+it: an untested image cannot become a one-click option by editing the catalogue alone.
+
 ## Future: manufacturer-supplied catalogue repositories
 
 Mike, 2026-10-25, while this was being built: "an extension of what we're doing is to allow board manufacturers to

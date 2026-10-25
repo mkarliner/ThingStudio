@@ -128,6 +128,89 @@
           "sha256": "cfbc1b18c08fbde8682421dd84719d4cf0785e25554cb41f939071b78dfd6b78"
         }
       ]
+    },
+    {
+      "id": "esp32-spiram",
+      "supplier": "micropython",
+      "family": "esp32",
+      "label": "ESP32 with PSRAM (WROVER / SPIRAM)",
+      "infoUrl": "https://micropython.org/download/ESP32_GENERIC/",
+      "runtime": "install",
+      "versions": [
+        {
+          "version": "1.29.0",
+          "date": "2026-08-24",
+          "url": "https://micropython.org/resources/firmware/ESP32_GENERIC-SPIRAM-20260824-v1.29.0.bin",
+          "sha256": "a8dc95b75cbbda9e5702a37166f94d08469f5b9046262be7187b1911ac07a358"
+        }
+      ],
+      "note": "Use this on a board with extra PSRAM: the heap continues into it."
+    },
+    {
+      "id": "esp32-unicore",
+      "supplier": "micropython",
+      "family": "esp32",
+      "label": "ESP32 single-core (SOLO / UNICORE)",
+      "infoUrl": "https://micropython.org/download/ESP32_GENERIC/",
+      "runtime": "install",
+      "versions": [
+        {
+          "version": "1.29.0",
+          "date": "2026-08-24",
+          "url": "https://micropython.org/resources/firmware/ESP32_GENERIC-UNICORE-20260824-v1.29.0.bin",
+          "sha256": "464bb3226879a5a37dcf450c867e55682db79dfeff8d7d229cf4eb017896b703"
+        }
+      ]
+    },
+    {
+      "id": "esp32-d2wd",
+      "supplier": "micropython",
+      "family": "esp32",
+      "label": "ESP32 with 2 MB flash (D2WD)",
+      "infoUrl": "https://micropython.org/download/ESP32_GENERIC/",
+      "runtime": "install",
+      "versions": [
+        {
+          "version": "1.29.0",
+          "date": "2026-08-24",
+          "url": "https://micropython.org/resources/firmware/ESP32_GENERIC-D2WD-20260824-v1.29.0.bin",
+          "sha256": "186a4dfa329a4793eecaaaf72558ff2686a530eb5c0017a0e6899f2f921f1cf5"
+        }
+      ],
+      "note": "Only for a board whose chip is ESP32-D2WD; it will not fit a 4 MB board's layout expectations."
+    },
+    {
+      "id": "esp32-s3-generic",
+      "supplier": "micropython",
+      "family": "esp32-s3",
+      "label": "ESP32-S3 (generic, no PSRAM)",
+      "infoUrl": "https://micropython.org/download/ESP32_GENERIC_S3/",
+      "runtime": "install",
+      "versions": [
+        {
+          "version": "1.29.0",
+          "date": "2026-08-24",
+          "url": "https://micropython.org/resources/firmware/ESP32_GENERIC_S3-20260824-v1.29.0.bin",
+          "sha256": "1dd9dcd27ba2d6a1cb7f7b49a063f46d3d807d68b0151161233920228285e300"
+        }
+      ]
+    },
+    {
+      "id": "thingstudio-classic-esp32",
+      "supplier": "thingstudio",
+      "family": "esp32",
+      "label": "Thingstudio image (runtime and flow libraries frozen)",
+      "infoUrl": "https://github.com/mkarliner/ThingStudio/blob/main/docs/user-guide/custom-firmware.md",
+      "runtime": "install",
+      "note": "The runtime is frozen into this image, so Install runtime only writes the boot script. This build predates the frozen library inventory, so Deploy still pushes the libraries a flow uses.",
+      "versions": [
+        {
+          "version": "14.0.1",
+          "date": "2026-10-24",
+          "url": "https://github.com/mkarliner/ThingStudio/releases/download/v0.7.2/thingstudio-classic-esp32-14.0.1-7e7c73b.bin",
+          "sha256": "5acd9580170b172551f91310605465379d644689670b1f33d89e4e3724f7afc4"
+        }
+      ]
     }
   ]
 }

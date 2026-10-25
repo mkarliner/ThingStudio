@@ -39,6 +39,49 @@ function markdownFiles(dir: string): string[] {
   return out;
 }
 
+const CATALOGUE = JSON.parse(readFileSync(join(REPO, "firmware", "builds.json"), "utf8")) as {
+  builds: {
+    id: string;
+    supplier: string;
+    family: string;
+    label: string;
+    versions: { version: string; url: string; sha256: string }[];
+  }[];
+};
+
+describe("the flash catalogue", () => {
+  it("pins every version with a 64-character sha256 and an https URL", () => {
+    expect(CATALOGUE.builds.length).toBeGreaterThan(0);
+    for (const build of CATALOGUE.builds) {
+      expect(build.versions.length, build.id).toBeGreaterThan(0);
+      for (const version of build.versions) {
+        expect(version.sha256, `${build.id} ${version.version}`).toMatch(/^[0-9a-f]{64}$/);
+        expect(version.url, `${build.id} ${version.version}`).toMatch(/^https:\/\//);
+        expect(version.version).toMatch(/^\d+\.\d+/);
+      }
+    }
+  });
+
+  it("contains no build id twice", () => {
+    const ids = CATALOGUE.builds.map((build) => build.id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it("only offers a Thingstudio image that the board record says was tested", () => {
+    // A build we ship under our own name is a build a board ran: firmware/classic-esp32/tested.json is keyed by
+    // sha256, so the catalogue's hash has to be one of those keys. This is what stops an untested image being
+    // offered as a one-click option (2026-10-25).
+    const testedHashes = new Set(Object.keys(record));
+    const ours = CATALOGUE.builds.filter((build) => build.supplier === "thingstudio");
+    expect(ours.length).toBeGreaterThan(0);
+    for (const build of ours) {
+      for (const version of build.versions) {
+        expect(testedHashes.has(version.sha256), `${build.id} ${version.version}: record it with record-tested.sh`).toBe(true);
+      }
+    }
+  });
+});
+
 describe("the firmware page names a tested image", () => {
   it("has at least one recorded image, each with a 64-character sha256 key", () => {
     const hashes = Object.keys(record);

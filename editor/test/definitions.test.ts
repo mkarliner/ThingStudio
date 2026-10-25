@@ -484,7 +484,10 @@ describe("how a chip family is flashed (decisions/firmware-catalogue.md)", () =>
     expect(defs.boards.get("pyboard-v10")!.variant).toBeNull();
     // The CYD takes stock ESP32 MicroPython; its own frozen image returns through the catalogue when published
     // (outstanding-items/firmware-custom-image-boot-files.md).
-    expect(defs.boards.get("cyd")!.variant).toBe("esp32-generic");
+    // The CYD takes Thingstudio's own image: that is the board the image was built and tested for. The image it
+    // names is in firmware/classic-esp32/tested.json (firmware-assets.test.ts asserts that), and the next build
+    // replaces the version, not the board file.
+    expect(defs.boards.get("cyd")!.variant).toBe("thingstudio-classic-esp32");
   });
 
   it("every board's variant names a build the catalogue has, of that board's family", async () => {
