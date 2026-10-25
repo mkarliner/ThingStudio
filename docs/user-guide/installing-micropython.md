@@ -44,8 +44,8 @@ RP2040, RP2350 and nRF52 boards.
    reason a first install "succeeds" and then doesn't boot. The dialog shows each line the tool prints; a failure
    says what to fix.
 
-A board whose build isn't in the list — or any image you downloaded yourself — can be flashed with **Image file**
-instead. Pick the `.bin` or `.uf2`, and the address comes from the chip family: `0x1000` for an ESP32 or ESP32-S2,
+The list covers every build Thingstudio pins, so **Or use your own image file** is only for the rest: the build for
+your board isn't listed, or you want an image you downloaded yourself. Pick the `.bin` or `.uf2`, and the address comes from the chip family: `0x1000` for an ESP32 or ESP32-S2,
 `0` for an ESP32-S3, C3, C6 or ESP8266. A mounted drive needs no address, and the file's own header usually tells
 the editor which chip it is for.
 
