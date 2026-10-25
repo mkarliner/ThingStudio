@@ -93,6 +93,23 @@ If the port itself won't open, the console says why:
 
 The raw error stays in the message, in brackets. Include it if you report a problem.
 
+## Install firmware… fails or lists nothing
+
+**Tools → Install firmware…** writes MicroPython onto a board in its bootloader. Each refusal names the step:
+
+| What the dialog says | What to do |
+| --- | --- |
+| (no serial ports found), or the board's port is missing | Put the board in download mode — hold **BOOT**, tap **RESET**, release **BOOT** — then click ⟳. |
+| (no mounted drives found) | Hold **BOOTSEL** while plugging the board in, then click ⟳. |
+| … is not a .uf2 | A mounted drive takes the `.uf2` build, not a `.bin`. Download the right one from [micropython.org/download](https://micropython.org/download/). |
+| … is not the image this board expects | The file isn't the image that board's entry pins. Pick the board's own image, or choose a different board entry. |
+| esptool is not installed on this machine | The backend's Python has no `esptool`: `pip install esptool`, then restart Thingstudio. |
+| esptool exited N at … on PORT | The write stopped. Check the cable, put the board in download mode again, and retry. A board with a separate USB-serial chip may need the slower write: clear its `baud` in the board file, or use the terminal route in [Install MicroPython](installing-micropython.md). |
+| the flash did not finish within … | The tool stopped answering. Unplug and replug the board, then flash again. |
+
+A flash that finishes but leaves the board silent usually means the image is stock MicroPython: connect it, then
+**Tools → Install runtime…**.
+
 ## Deploy is grayed out
 
 **Compile → Deploy** is grayed out when:

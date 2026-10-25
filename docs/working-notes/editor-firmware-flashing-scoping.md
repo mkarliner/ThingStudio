@@ -38,6 +38,12 @@ Corollaries, all decided 2026-10-25:
 - **Tools in the first slice: `esptool`** (ESP32 family: classic, S2, S3, C3, C6, …; also ESP8266) **and `uf2`**
   (RP2040/RP2350 and nRF52 boards whose bootloader mounts as a drive). Together these cover 9 of the 10 board
   definitions in the repo — five ESP32s, Pico, Pico W, Pico 2, XIAO nRF52840.
+- **One board recipe exists so far**: the Freenove S3, whose stock MicroPython image plus the normal runtime
+  install is complete. The CYD's own image is *not* self-sufficient — it has no `/main.py` or
+  `/lib/_deps.json`, which the release ships beside it and `install.sh` writes over `mpremote` — so its block
+  was withdrawn on 2026-10-25 rather than shipped as a trap: see
+  `outstanding-items/firmware-custom-image-boot-files.md`. A block needs a post-flash file list before the CYD
+  can come back, and that is an interface change.
 - **`dfu` comes after** (STM32/pyboard: `dfu-util -a 0 -D`), as one more entry in the same registry and one more
   board file. Deferred by Mike, 2026-10-25.
 - **Out of scope for now**: RP2040/RP2350 through a non-UF2 bootloader, boards that need SWD/ST-Link, vendor-locked
@@ -131,13 +137,14 @@ Tools → **Install firmware…**:
 
 1. **Backend** — target enumeration, the tool registry (`esptool`, `uf2`), jobs, image download/cache/verify,
    tests with a fake esptool and a temp volume. Built once, now being refactored to the target/tool shape above.
-2. **Board data** — `firmware` blocks for the CYD and Freenove S3; descriptor spec/schema and conformance test.
-   Built once, now being refactored. Pico / Pico W / Pico 2 / XIAO nRF52840 blocks are owed, but only from a real
-   image whose hash has been checked.
+2. **Board data** — descriptor spec/schema and the Freenove S3 block are built. The CYD needs the post-flash
+   file step above first. Pico / Pico W / Pico 2 / XIAO nRF52840 blocks are owed, but only from a real image
+   whose hash has been checked.
 3. **Editor** — the Install firmware… dialog and job polling.
-4. **Hardware** — blank CYD (our image) and blank S3 (stock MicroPython + runtime), then a Pico 2 (UF2), each end
-   to end; record the exact sequence and failure lines in the brief.
-5. **Docs** — an install page update and a debugging entry for each refusal.
+4. **Hardware** — blank S3 (stock MicroPython + runtime) and a Pico 2 (UF2), each end to end, then the CYD once
+   its boot files are written; record the exact sequence and failure lines in the brief.
+5. **Docs** — the install page section and a debugging entry for each refusal (written 2026-10-25;
+   `custom-firmware.md` still describes the manual install, which is what works for that image).
 
 ## Answers and decisions
 

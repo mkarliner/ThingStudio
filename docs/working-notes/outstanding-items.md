@@ -76,6 +76,11 @@ ThingStudioMarketing repo, not here.
 
 ## Boards / definitions
 
+- **[P2]** **A board recipe cannot write the files a custom image needs -- found 2026-10-25.** The
+  classic-ESP32 image carries no `/main.py` or `/lib/_deps.json`, so flashing it alone leaves the board at the
+  REPL and it never sends `HELLO`. The CYD's `firmware` block is removed until the block can carry a
+  post-flash file list; that is a board-descriptor interface change, so it needs Mike's OK.
+  ([detail](outstanding-items/firmware-custom-image-boot-files.md))
 - **[P2]** **ESP32-C6 (and H2, P4...) detected as a classic ESP32 -- new bug, 2026-09-30.** Found by a test
   for the Pins… page. `target.ts`'s processor match is a substring test on the normalised MCU name and
   `processors/esp32.json` matches "ESP32", so a board reporting "... with ESP32C6" resolves to the classic

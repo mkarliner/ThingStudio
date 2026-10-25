@@ -469,15 +469,17 @@ describe("named pins (processors whose pins aren't numbered, e.g. the STM32 pybo
 });
 
 describe("firmware recipes (flashing a blank board)", () => {
-  it("the CYD and the Freenove carry a pinned recipe", () => {
-    const cyd = defs.boards.get("cyd")!;
-    expect(cyd.firmware).toMatchObject({ tool: "esptool", transport: "serial", runtime: "none" });
-    if (cyd.firmware?.tool !== "esptool") throw new Error("expected an esptool recipe");
-    expect(cyd.firmware.flash.chip).toBe("esp32");
-    expect(cyd.firmware.image.sha256).toMatch(/^[0-9a-f]{64}$/);
-    expect(cyd.firmware.image.url).toMatch(/^https:\/\//);
+  it("the Freenove carries a pinned recipe", () => {
     const s3 = defs.boards.get("freenove-s3-4in")!;
     expect(s3.firmware).toMatchObject({ tool: "esptool", transport: "serial", runtime: "install" });
+    if (s3.firmware?.tool !== "esptool") throw new Error("expected an esptool recipe");
+    expect(s3.firmware.flash.chip).toBe("esp32s3");
+    expect(s3.firmware.image.sha256).toMatch(/^[0-9a-f]{64}$/);
+    expect(s3.firmware.image.url).toMatch(/^https:\/\//);
+    // The CYD's image is flashed but the board also needs /main.py and /lib/_deps.json written after it, which
+    // the flow cannot do yet -- so it carries no recipe and the editor offers it a file instead
+    // (outstanding-items/firmware-custom-image-boot-files.md).
+    expect(defs.boards.get("cyd")!.firmware).toBeNull();
   });
 
   it("refuses a bad sha256, an unknown runtime, an unknown tool or a mismatched transport", () => {

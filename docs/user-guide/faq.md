@@ -163,3 +163,9 @@ the defaults. The old values are still on the board: rename the flow back to use
 The D1 R32 puts the shield's A2, A3 and A4 on GPIO 35, 34 and 36, which are input only on an ESP32. A parallel
 TFT shield drives its RS, CS and RST lines from those pins, so it can't start. Wire GPIO 15 to A2 (RS), GPIO 33
 to A3 (CS) and GPIO 32 to A4 (RST), then set those pins in the display node.
+
+## Do I need a terminal to install MicroPython?
+
+No, for boards Thingstudio can flash: an ESP32 over a serial port, and a board whose bootloader mounts as a drive
+(RP2040 and RP2350). Put the board in its bootloader and use **Tools → Install firmware…**. Other chips have
+their own installation routes; see [Install MicroPython](installing-micropython.md).
