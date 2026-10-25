@@ -10,6 +10,15 @@ working list the same day, per Mike's call.
 
 ## Launch
 
+- **Classic-ESP32 14.1.0 image: rebuilt, tested, published, in the catalogue** -- done 2026-10-25. Built from
+  `a236ba0`, so it carries the frozen library inventory (`c7aff3d`); flashed on the CYD with `install.sh` from
+  the merged image, booted 14.1.0, `HELLO.dependencies` listing all 34 libraries with an empty `/lib`.
+  `gui-hero-cyd-theme` deployed with `dependencies={}` and drew the theme demo -- every module came out of the
+  image, which is the frozen-library skip checked directly rather than by reproducing the deps index. Free RAM
+  62,736 / largest IDF block 14,336 with the flow running, against 41,520 / 10,752 on 14.0.1. Recorded in
+  `tested.json`, attached to the `v0.10.0` draft by `publish.sh`, offered as 14.1.0 in `firmware/builds.json`
+  (14.0.1 stays below it). The draft is Mike's to publish.
+  ([detail](outstanding-items/firmware-custom-image-boot-files.md))
 - **Classic-ESP32 13.0.0 image shipped in v0.5.0** -- built from `7f607bc`, flashed on the CYD, booted 13.0.0
   with all 34 libraries frozen, recorded in `firmware/classic-esp32/tested.json`; `publish.sh v0.5.0 --publish`
   attached and verified the image, `_deps.json` and `main.py`. The orphan v0.4.0 draft was deleted. The

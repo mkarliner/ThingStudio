@@ -1,8 +1,8 @@
 # A frozen image needs a boot script, and the runtime install should provide it
 
-Status: **built 2026-10-25** (runtime install split into boot script + core + frozen inventory; commit `c7aff3d`).
-What remains is publishing the rebuilt image and naming it in the catalogue -- see the backlog bullet in
-`outstanding-items.md`. Found while writing the user docs for **Tools → Install firmware…**; direction settled the
+Status: **resolved 2026-10-25** (runtime install split into boot script + core + frozen inventory, commit `c7aff3d`;
+image rebuilt from `a236ba0`, tested on the CYD, attached to the `v0.10.0` draft and offered as 14.1.0 in
+`firmware/builds.json`). Found while writing the user docs for **Tools → Install firmware…**; direction settled the
 same day (Mike: choose the clean shape, no compatibility hedge while there is no user base).
 
 ## The problem
@@ -47,8 +47,8 @@ nobody has to run, and no board has been deployed to protect.
   Build: `build.sh` writes `deps_frozen.py` into the frozen stage and `out/main.py` from the manifest;
   `install.sh`, `publish.sh` and the firmware README drop `/lib/_deps.json` (three release assets now). Runtime
   bumped to 14.1.0 with the editor target.
-- **Left:** publish the rebuilt image (built 2026-10-25: `thingstudio-classic-esp32-14.1.0-5e168de.bin`, sha256
-  `9a077d5ac89daba032f756a71fb27e40b377815c76eb1ac0cde09ed94cb13f33`), re-add the CYD's recipe pinned to that
-  asset, then the hardware pass (blank CYD, one flash, **Install runtime…**, `HELLO` with the runtime version).
-  `docs/user-guide/custom-firmware.md` still describes the four-asset install of the currently released image;
-  update it with the release that carries the rebuilt image.
+- **Published and offered, 2026-10-25.** Image `thingstudio-classic-esp32-14.1.0-a236ba0.bin` (sha256
+  `51116835b99ca1636ef4ce65e6b8b36197be7163c1f753d603eb95f170759990`) recorded in `tested.json`, attached to the
+  `v0.10.0` draft, and added to `firmware/builds.json` as 14.1.0 with 14.0.1 below it. Checked on the CYD: the
+  theme flow deployed with `dependencies={}` and drew, so the frozen set is complete. `custom-firmware.md` already
+  describes the three-asset install. What is left is Mike publishing the draft.

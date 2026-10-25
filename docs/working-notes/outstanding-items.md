@@ -81,14 +81,6 @@ ThingStudioMarketing repo, not here.
   Thingstudio release. The loader already takes a list of sources. The design cost is trust: a source's builds are
   bytes written to the user's flash, so they need a hash inside the source and an explicit acceptance.
   ([detail](outstanding-items/firmware-catalogue-repositories.md))
-- **[P2]** **Publish the rebuilt classic-ESP32 image and add it to the catalogue -- found 2026-10-25.** The
-  runtime-install split landed (boot script always, core only when `import listener` fails, inventory frozen into
-  the image), so an image flashed alone can boot. What remains: rebuild the image with that runtime, run it on the
-  CYD, then `firmware/classic-esp32/record-tested.sh` it and add it with `tools/firmware_catalogue.py` (the CYD's
-  board file already names the build, so the version changes, not the board). Until then the catalogue offers the
-  14.0.1 image, which has no frozen library inventory. The build itself needs ESP-IDF and the Xtensa toolchain, so
-  it runs on a development machine -- `firmware.yml` has never completed a build.
-  ([detail](outstanding-items/firmware-custom-image-boot-files.md))
 - **[P2]** **ESP32-C6 (and H2, P4...) detected as a classic ESP32 -- new bug, 2026-09-30.** Found by a test
   for the Pins… page. `target.ts`'s processor match is a substring test on the normalised MCU name and
   `processors/esp32.json` matches "ESP32", so a board reporting "... with ESP32C6" resolves to the classic

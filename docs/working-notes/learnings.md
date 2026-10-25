@@ -108,7 +108,9 @@ the code's wrong register addresses, a broken `deploy_runtime.py` that no test c
 omitted `flowName` (silently writing settings under the wrong namespace), and the first custom-image
 flash onto a CYD: a plain `write_flash 0x0` leaves the old filesystem partition in place (erase it
 explicitly), and a CH340 on a VM loses the port on some closes (EIO until replugged -- do the whole job
-in one session, never a probe that opens and closes). 18 entries:
+in one session, never a probe that opens and closes; confirmed 2026-10-25 as one open per replug, since a
+clean close wedges it every time), and a just-rebooted board answering the first line it reads as garbled
+(ROM boot log still in the UART FIFO: blank line, then retry). 25 entries:
 `docs/working-notes/learnings/hardware-bringup-hil-rig.md`.
 
 ## Editor / build tooling

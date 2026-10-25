@@ -220,3 +220,11 @@ the image, `_deps.json` and `main.py` on the release. The orphan v0.4.0 draft (a
 published v0.4.0) was deleted. The frozen-library skip was verified by reproducing `_deps.json` with the editor's
 own mpy-cross rather than by a CLI deploy -- see `learnings/micropython-device-runtime.md`, "The headless device
 CLI installs every library".
+
+**2026-10-25: the 14.1.0 image carries the frozen library inventory, and the skip was checked by a deploy that
+sent nothing.** Built from `a236ba0`, so it includes `deps_frozen.py` (`c7aff3d`): `HELLO.dependencies` lists all
+34 libraries and Deploy sends none of them. Verified on the CYD by deploying the theme flow with
+`dependencies={}` -- no library pushed, every module imported from flash, and the demo drew. This closes, with a
+direct check, the gap left by the 13.0.0 release, where the skip could only be inferred from a reproduced deps
+index because the headless CLI installs libraries unconditionally. With the theme flow running: 62,736 bytes free
+and a 14,336-byte largest IDF block, against 41,520 / 10,752 on 14.0.1.

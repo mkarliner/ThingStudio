@@ -240,6 +240,16 @@ First flash of the custom classic-ESP32 image onto the CYD, on a VMware guest wi
   open instead of one process per command -- `mpremote` per command is exactly that pattern. `--after no-reset`
   on esptool avoids triggering it with the bridge's re-enumeration, but the board then sits in the ROM
   bootloader, where no REPL will answer: pulse RTS/DTR before talking to it.
+  **Confirmed 2026-10-25, and worse than "can be":** one successful open followed by a clean `close()` wedges
+  it every time — a two-line "open, is it there?, close" probe costs a replug. It is not permanent, though: the
+  wedge clears on its own after a minute or two *sometimes*, which is worse than a reliable failure, so never
+  plan on it. The budget is one open per replug, and every step of a hardware session belongs inside it.
+- **A board that has just come back up answers the first line sent to it as garbled.** After a replug the ROM
+  boot log is still draining into the UART receive FIFO, so the listener's first `readline()` decodes junk
+  (`LISTENER_ERR readline UnicodeError()`) and answers `FLOW_ACK` `code=Garbled` — a `HELLO_REQUEST` sent
+  one line after opening gets that instead of a `HELLO`, which reads exactly like a dead listener. Send a
+  blank line or two first (the listener skips an empty line silently) and retry `HELLO_REQUEST`; the second
+  attempt answers normally. Cost two replugs to work out on 2026-10-25.
 
 Firmware side: `firmware/classic-esp32/install.sh`. The one-session provisioner used here is throwaway, not
 committed -- if this VM stays in the loop, `install.sh` should grow the same single-open behaviour.
