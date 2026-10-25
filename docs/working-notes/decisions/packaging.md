@@ -46,5 +46,9 @@
   `licenses/esptool-LICENSE` into every bundle (and fails the build if the license is missing), and
   `release.yml` attaches `esptool-<version>.tar.gz` — hash-checked against `backend/requirements.txt` — to the
   draft release. That satisfies GPL-2's source requirement mechanically rather than by remembering.
-  cryptography is pinned to 43.0.3 in `packaging/constraints.txt` so the bundle keeps its 2.28 glibc floor.
+  cryptography is current (50.0.2) and the wheelhouse picks its manylinux 2_17 wheel so the bundle keeps
+  its 2.28 glibc floor; **on macOS x86_64 it is 48.0.1**, the last release with a universal2 wheel (49+
+  is arm64 only), accepting one X.509 path-building advisory on that platform — esptool never builds
+  certificate chains. `PLATFORM_CONSTRAINTS` in `make_bundle.py` applies it; the bundle build failed on
+  Intel first, which is how the gap was found (2026-10-25).
   `docs/third-party-licenses.md`, "Bundled in the release archives".

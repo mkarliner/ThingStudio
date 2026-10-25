@@ -65,6 +65,32 @@ TARGETS = {
 GLIBC_FLOOR = (2, 28)
 _MANYLINUX_ALIASES = {"manylinux1": (2, 5), "manylinux2010": (2, 12), "manylinux2014": (2, 17)}
 
+# Constraints that cannot hold on one platform, with the reason. cryptography stopped publishing a
+# macOS x86_64 (universal2) wheel at 49.0.0 -- 49 and later are arm64 only, and esptool 5.x dropped the
+# "<49 on Darwin x86_64" cap that 4.x carried for exactly this reason. An Intel bundle therefore takes
+# the last release that has a wheel for it: 48.0.1, which still carries GHSA-jwv3-5hgf-82ww (X.509
+# path-building), a code path esptool never enters. Everything else gets the current pin.
+# docs/third-party-licenses.md.
+PLATFORM_CONSTRAINTS = {"macos-x86_64": {"cryptography": "48.0.1"}}
+
+
+def constraints_for(plat: str, base: Path, into: Path) -> Path:
+    """The constraints file to use for this platform: `base`, or a copy with PLATFORM_CONSTRAINTS
+    applied. Written beside the wheelhouse so the repo's own file stays the single visible record."""
+    overrides = PLATFORM_CONSTRAINTS.get(plat)
+    if not overrides:
+        return base
+    lines = []
+    for line in base.read_text().splitlines():
+        entry = line.split("#", 1)[0].strip()
+        name = entry.split("==", 1)[0] if "==" in entry else None
+        if name in overrides:
+            line = f"{name}=={overrides[name]}"
+        lines.append(line)
+    out = into / "constraints.txt"
+    out.write_text("\n".join(lines) + "\n")
+    return out
+
 
 MACHO_MAGICS = {b"\xfe\xed\xfa\xce", b"\xfe\xed\xfa\xcf", b"\xce\xfa\xed\xfe", b"\xcf\xfa\xed\xfe",
                 b"\xca\xfe\xba\xbe", b"\xbe\xba\xfe\xca"}
@@ -335,8 +361,9 @@ def bundle(plat: str, out_dir: Path, python_archive: Path | None = None, cache: 
         # and quietly raise the floor (check_glibc_floor catches it either way, but only after the
         # fact). macOS and Windows have no such tag choice, so they resolve natively.
         py_short = ".".join(PYTHON_VERSION.split(".")[:2])
+        constraints = constraints_for(plat, PACKAGING / "constraints.txt", Path(wheel_dir))
         download = [str(py), "-I", "-m", "pip", "download", "--quiet", "--no-cache-dir",
-                    "--only-binary=:all:", "-c", str(PACKAGING / "constraints.txt"),
+                    "--only-binary=:all:", "-c", str(constraints),
                     "-d", wheel_dir]
         if plat.startswith("linux"):
             tag = {"linux-x86_64": "manylinux2014_x86_64", "linux-aarch64": "manylinux2014_aarch64"}[plat]
@@ -344,7 +371,7 @@ def bundle(plat: str, out_dir: Path, python_archive: Path | None = None, cache: 
                          "--abi", f"cp{py_short.replace('.', '')}", "--abi", "abi3", "--abi", "none"]
         run(download + built)
         run([str(py), "-I", "-m", "pip", "install", "--quiet", "--no-cache-dir", "--only-binary=:all:",
-             "--no-index", "--find-links", wheel_dir, "-c", str(PACKAGING / "constraints.txt"),
+             "--no-index", "--find-links", wheel_dir, "-c", str(constraints),
              "--no-warn-script-location", "--root-user-action=ignore",
              f"thingstudio-backend=={version}", f"esptool=={esptool}"])
     shutil.rmtree(REPO / "backend" / "build", ignore_errors=True)  # setuptools' in-tree leftovers
