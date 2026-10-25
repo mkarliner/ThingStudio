@@ -3138,7 +3138,10 @@ RP2040, RP2350 and nRF52 boards.</p>
    type the path in the box (on macOS a mounted Pico is <code>/Volumes/RPI-RP2</code>).</li>
 <li>Pick the <strong>chip family</strong>, then the <strong>build</strong> and <strong>version</strong>. Only the families the editor can write are listed,
    and only builds whose hash is pinned, so what you flash is what was tested. A board that names its own build is
-   preselected.</li>
+   preselected. The build matters for the heap as much as for compatibility: an ESP32 with extra PSRAM wants the
+   <strong>PSRAM (WROVER)</strong> build, a single-core SOLO the <strong>single-core</strong> one. For a classic ESP32 there is also
+   <strong>Thingstudio image</strong>, which carries the runtime and the flow libraries frozen — flash it, then <strong>Install
+   runtime</strong> writes only the boot script.</li>
 <li>Click <strong>Flash</strong>. <strong>Erase all flash first</strong> is ticked: it clears an old partition table, which is the usual
    reason a first install "succeeds" and then doesn't boot. The dialog shows each line the tool prints; a failure
    says what to fix.</li>

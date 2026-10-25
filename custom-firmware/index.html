@@ -3137,7 +3137,8 @@ shasum<span class="w"> </span>-a<span class="w"> </span><span class="m">256</spa
 <ol>
 <li>Reset the board. It starts the listener and prints <code>LISTENER_READY</code>.</li>
 </ol>
-<p>From the editor, <strong>Tools → Install firmware…</strong> flashes the image and <strong>Tools → Install runtime…</strong> writes the boot
+<p>From the editor, <strong>Tools → Install firmware…</strong> offers the published image as a <strong>Thingstudio image</strong> build of the
+classic ESP32 family, and <strong>Tools → Install runtime…</strong> writes the boot
 script, so the terminal steps above are only needed when you want them.</p>
 <p>The repository also has <code>firmware/classic-esp32/install.sh</code>, which runs these steps in one command. Read it before
 running it: it erases the filesystem partition, and its port name comes from <code>PORT</code>.</p>
