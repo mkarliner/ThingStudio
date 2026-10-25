@@ -6,21 +6,7 @@ per board.
 A new board usually doesn't have MicroPython. If yours already has it, or you're not sure, go to
 [step 4](connecting.md). If MicroPython is missing, the console says so when you connect, and links back here.
 
-## Get the firmware
-
-Download the firmware for your board from [micropython.org/download](https://micropython.org/download/). Pick your
-exact board if it's listed, or the generic build for your chip:
-
-| Chip | Generic build | File type |
-| --- | --- | --- |
-| ESP32 | `ESP32_GENERIC` | `.bin` |
-| ESP32-S2 | `ESP32_GENERIC_S2` | `.bin` |
-| ESP32-S3 | `ESP32_GENERIC_S3` | `.bin` |
-| ESP32-C3 | `ESP32_GENERIC_C3` | `.bin` |
-| RP2040 (Pico, Pico W) | `RPI_PICO`, `RPI_PICO_W` | `.uf2` |
-| RP2350 (Pico 2, Pico 2 W) | `RPI_PICO2`, `RPI_PICO2_W` | `.uf2` |
-
-For any other chip, see [Other microcontrollers](#other-microcontrollers).
+Thingstudio can install it for you, on the chips it can write. Doing it by hand is at the bottom of this page.
 
 ## Install from Thingstudio
 
@@ -44,17 +30,37 @@ RP2040, RP2350 and nRF52 boards.
    reason a first install "succeeds" and then doesn't boot. The dialog shows each line the tool prints; a failure
    says what to fix.
 
-The list covers every build Thingstudio pins, so **Or use your own image file** is only for the rest: the build for
-your board isn't listed, or you want an image you downloaded yourself. Pick the `.bin` or `.uf2`, and the address comes from the chip family: `0x1000` for an ESP32 or ESP32-S2,
-`0` for an ESP32-S3, C3, C6 or ESP8266. A mounted drive needs no address, and the file's own header usually tells
-the editor which chip it is for.
+The list covers every build Thingstudio pins, so **Or use your own image file** is only for the rest: a build for a
+board we don't list, or an image you downloaded yourself. Pick the `.bin` or `.uf2`; the chip family you choose
+decides the address, and the file's own header usually decides the family.
 
 Flashing erases the flow and all settings on the board. Afterwards, [connect](connecting.md) it
 and [install the runtime](installing-runtime.md).
 
-The rest of this page is the same job without the editor.
+The rest of this page is the same job without the editor, for a chip it can't write or a build it doesn't pin.
 
-## RP2040 and RP2350: drag and drop
+## Doing it yourself
+
+You don't need any of this for a chip Thingstudio can write with a pinned build — that is the section above. It is
+here for the rest.
+
+### Get the firmware
+
+Download the firmware for your board from [micropython.org/download](https://micropython.org/download/). Pick your
+exact board if it's listed, or the generic build for your chip:
+
+| Chip | Generic build | File type |
+| --- | --- | --- |
+| ESP32 | `ESP32_GENERIC` | `.bin` |
+| ESP32-S2 | `ESP32_GENERIC_S2` | `.bin` |
+| ESP32-S3 | `ESP32_GENERIC_S3` | `.bin` |
+| ESP32-C3 | `ESP32_GENERIC_C3` | `.bin` |
+| RP2040 (Pico, Pico W) | `RPI_PICO`, `RPI_PICO_W` | `.uf2` |
+| RP2350 (Pico 2, Pico 2 W) | `RPI_PICO2`, `RPI_PICO2_W` | `.uf2` |
+
+For any other chip, see [Other microcontrollers](#other-microcontrollers).
+
+### RP2040 and RP2350: drag and drop
 
 Copy the firmware onto the board as a file:
 
@@ -64,7 +70,7 @@ Copy the firmware onto the board as a file:
 
 The board restarts into MicroPython by itself.
 
-## ESP32 family: esptool
+### ESP32 family: esptool
 
 If Thingstudio is connected to the board, click **Disconnect** first. Only one program can use the board's port at
 a time. If another program has it open, esptool reports `Resource busy` or `could not open port`.
@@ -98,14 +104,14 @@ fails partway, leave out `--baud 460800`.
 Press **RESET** when it finishes. A board that uses the chip's own USB (most ESP32-S2 and S3 boards) may show up on
 a different port afterwards.
 
-## Without a terminal: Thonny
+### Without a terminal: Thonny
 
 [Thonny](https://thonny.org) installs MicroPython on the board through a GUI. Open
 **Tools → Options → Interpreter** and use **Install or update MicroPython**.
 
 When it's done, close Thonny. Like esptool, it needs the board's port to itself.
 
-## Other microcontrollers
+### Other microcontrollers
 
 Other chips, such as STM32, nRF or SAMD, each have their own way of installing MicroPython. See your board's page
 on [micropython.org/download](https://micropython.org/download/) and the
