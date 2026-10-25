@@ -210,7 +210,8 @@
           "url": "https://github.com/mkarliner/ThingStudio/releases/download/v0.7.2/thingstudio-classic-esp32-14.0.1-7e7c73b.bin",
           "sha256": "5acd9580170b172551f91310605465379d644689670b1f33d89e4e3724f7afc4"
         }
-      ]
+      ],
+      "address": 0
     }
   ]
 }

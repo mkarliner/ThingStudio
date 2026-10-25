@@ -412,6 +412,19 @@ def test_a_local_file_is_written_at_the_family_address_after_an_override(store, 
     assert command(fake_tool, 1)[-2] == "0x0"
 
 
+def test_a_merged_build_writes_at_its_own_address_not_the_familys(store, tmp_path, fake_tool, monkeypatch):
+    # Thingstudio's classic-ESP32 image is one merged file (bootloader + partition table + app) written at 0,
+    # while the esp32 family's own address is 0x1000. The build's address has to win.
+    build = a_build(tmp_path, "thingstudio-classic-esp32", supplier="thingstudio", address=0)
+    write_catalogue(tmp_path, [build], monkeypatch)
+    job = FirmwareJobs(store).start(
+        {"target": {"kind": "serial", "value": "/dev/fake"}, "family": "esp32", "build": "thingstudio-classic-esp32", "version": "1.29.0"}
+    )
+    settled(job)
+    assert job.state == "done", job.error
+    assert command(fake_tool)[-2] == "0x0"
+
+
 def test_a_uf2_flash_copies_the_file_to_the_volume(store, tmp_path, monkeypatch):
     monkeypatch.setattr(firmware_flash, "catalogue_sources", lambda: [])
     volume = tmp_path / "RPI-RP2"

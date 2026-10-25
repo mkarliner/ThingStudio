@@ -95,7 +95,8 @@ owns this knowledge; a board only names a build, never an image (`decisions/firm
 | `address` | integer | no | Where the image goes, in bytes: `4096` (0x1000) for ESP32 and ESP32-S2, `0` for the rest. Default `0`. Not allowed for `uf2` — the address is inside the file. |
 
 An image comes from the **catalogue** (`firmware/builds.json`), not from a definition file: a build names a family,
-a supplier and its versions, each with a URL and a sha256. A board's `variant` points at one; the dialog offers
+a supplier and its versions, each with a URL and a sha256. A build may also carry its own `address`, for a merged
+image (bootloader, partition table and app in one file) that is written at 0 rather than at the family's address. A board's `variant` points at one; the dialog offers
 every build of the chosen family, and a local file works with no build at all (the file's family is read from its
 own header by `esptool image_info`).
 

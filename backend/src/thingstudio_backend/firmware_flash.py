@@ -182,6 +182,9 @@ class Build:
     info_url: str
     runtime: str
     note: str
+    # A merged image (bootloader + partition table + app in one file) goes at 0, whatever the family's usual
+    # address is -- Thingstudio's own classic-ESP32 image is one of those.
+    address: int | None
     versions: tuple[BuildVersion, ...]
 
 
@@ -231,6 +234,7 @@ def _builds_from(data: object, where: str) -> list[Build]:
                 info_url=str(raw.get("infoUrl") or ""),
                 runtime=str(raw.get("runtime") or "none"),
                 note=str(raw.get("note") or ""),
+                address=raw.get("address") if isinstance(raw.get("address"), int) else None,
                 versions=tuple(versions),
             )
         )
@@ -280,6 +284,7 @@ def catalogue(store: PersistedStore) -> dict:
                 "infoUrl": build.info_url,
                 "runtime": build.runtime,
                 "note": build.note,
+                "address": build.address,
                 "tool": family.tool,
                 "versions": [
                     {
@@ -672,6 +677,9 @@ class FirmwareJobs:
         if build_id:
             build, entry = build_version(load_catalogue(), str(build_id), str(version or ""))
 
+        # An address the user typed wins, then the build's own (a merged image), then the family's.
+        if address is None and build is not None:
+            address = build.address
         options = {
             "chip": family.chip if family else None,
             "address": address if address is not None else (family.address if family else 0),

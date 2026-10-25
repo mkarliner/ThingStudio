@@ -370,6 +370,8 @@ export interface FirmwareBuild {
   runtime: "none" | "install";
   /** Anything the user should know before choosing this build, shown under the list. */
   note?: string;
+  /** Where this build is written, when it differs from its family's address (a merged image goes at 0). */
+  address?: number | null;
   tool: "esptool" | "uf2";
   versions: FirmwareVersion[];
 }

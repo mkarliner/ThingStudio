@@ -2651,8 +2651,10 @@ function renderFwFileNote(): void {
 /** The family's own address is the placeholder, so the user can see what will happen without typing anything. */
 function renderFwAdvanced(): void {
   const family = fwCatalogue?.families.find((item) => item.id === fwFamilyId());
+  const build = fwSelectedBuild();
+  const effective = build?.address ?? family?.address;
   const address = el<HTMLInputElement>("fwAddress");
-  address.placeholder = family ? `0x${family.address.toString(16)}` : "family default";
+  address.placeholder = effective !== undefined ? `0x${effective.toString(16)}` : "family default";
   el("fwAdvanced").hidden = fwTransport() !== "serial";
 }
 
@@ -2757,6 +2759,7 @@ el("fwFamily").addEventListener("change", () => {
 });
 el("fwBuild").addEventListener("change", () => {
   fwButtonsForNewChoice();
+  renderFwAdvanced();
   // Picking a catalogue build drops a file the user had chosen: one answer to "what goes on the board".
   fwFile = null;
   fwUploaded = null;

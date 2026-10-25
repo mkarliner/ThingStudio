@@ -35,6 +35,10 @@ An ESP32 with extra PSRAM is not a different board to us, it is a different buil
 part, and for the S3 generic versus SPIRAM_OCT. This is why the family owns the address and the tool and the build
 only owns an image: a variant changes the image, never how it is written.
 
+A build may carry an `address` of its own: Thingstudio's classic-ESP32 image is one merged file written at 0, while
+the esp32 family's address is 0x1000, so the build's address has to win over the family's (found before it shipped
+-- the old CYD block had `offset: 0` and that is why).
+
 A build also carries an optional `note`, shown under the list, for the thing the label cannot say in one line —
 "this image predates the frozen library inventory, so Deploy still pushes the libraries a flow uses".
 
