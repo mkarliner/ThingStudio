@@ -687,8 +687,8 @@ For any other chip, see [Other microcontrollers](#other-microcontrollers).
 
 ## Install from Thingstudio
 
-Thingstudio can write the firmware itself on ESP32 boards and on boards that mount as a drive (RP2040 and
-RP2350).
+Thingstudio writes the firmware itself: over a serial port for the ESP32 family, and onto a mounted drive for
+RP2040, RP2350 and nRF52 boards.
 
 1. Put the board in its bootloader. Hold **BOOT** and tap **RESET** on an ESP32, or hold **BOOTSEL** while you
    plug in a Pico.
@@ -696,12 +696,18 @@ RP2350).
 3. Pick **Serial port** or **Mounted drive**, then the port or drive from the list. USB ports come first, shown as
    the path and the adapter's name (for example `/dev/ttyUSB0 -- CH340`). If the board isn't there, put it in
    download mode (step 1) and click ⟳; the line under the list says how many it found. If it still isn't listed,
-   type the path in the box under the list (on macOS a mounted Pico is `/Volumes/RPI-RP2`).
-4. Pick the board if the list has it. Only boards with a recipe are listed — the CYD is not one of them yet, and no
-   board is until its image is published. Otherwise pick the `.bin` or `.uf2` you downloaded above, and set
-   **Address** to the one MicroPython's download page gives for your chip: `0x1000` for an ESP32 or ESP32-S2, `0`
-   for an ESP32-S3, C3, C6 or ESP8266. A mounted drive needs no address.
-5. Click **Flash**. The dialog shows the step it is on and how far it has got; a failure says what to fix.
+   type the path in the box (on macOS a mounted Pico is `/Volumes/RPI-RP2`).
+4. Pick the **chip family**, then the **build** and **version**. Only the families the editor can write are listed,
+   and only builds whose hash is pinned, so what you flash is what was tested. A board that names its own build is
+   preselected.
+5. Click **Flash**. **Erase all flash first** is ticked: it clears an old partition table, which is the usual
+   reason a first install "succeeds" and then doesn't boot. The dialog shows each line the tool prints; a failure
+   says what to fix.
+
+A board whose build isn't in the list — or any image you downloaded yourself — can be flashed with **Image file**
+instead. Pick the `.bin` or `.uf2`, and the address comes from the chip family: `0x1000` for an ESP32 or ESP32-S2,
+`0` for an ESP32-S3, C3, C6 or ESP8266. A mounted drive needs no address, and the file's own header usually tells
+the editor which chip it is for.
 
 Flashing erases the flow and all settings on the board. Afterwards, [connect](connecting.md) it
 and [install the runtime](installing-runtime.md).
@@ -1425,8 +1431,9 @@ been deployed and run on that hardware. Pin details for boards and processors ar
 | Wemos D1 R32 | ESP32 | Yes, with an RM68090 parallel TFT shield (rewired, custom node) |
 
 MicroPython can be written onto any board in this list from the editor, with **Tools → Install firmware…**: a
-serial port for the ESP32 family, a mounted drive for RP2040, RP2350 and nRF52 boards, or **Choose a file…** for
-an image you downloaded. The Pyboard is the exception: it installs over DFU, which the editor doesn't offer; see
+serial port for the ESP32 family, a mounted drive for RP2040, RP2350 and nRF52 boards, or an image file you
+downloaded. A board in this list preselects its build, but any board on a supported chip can be flashed the same
+way. The Pyboard is the exception: it installs over DFU, which the editor doesn't offer; see
 [Install MicroPython](installing-micropython.md).
 
 ## Processors without a board definition
@@ -5138,12 +5145,17 @@ The raw error stays in the message, in brackets. Include it if you report a prob
 | (no serial ports found), or the board's port is missing | Put the board in download mode — hold **BOOT**, tap **RESET**, release **BOOT** — then click ⟳. |
 | (no mounted drives found), or the drive you want isn't listed | Hold **BOOTSEL** while plugging the board in, then click ⟳. If it's mounted somewhere the list doesn't look, type the path in the box under the list — on macOS a Pico shows up as `/Volumes/RPI-RP2`. |
 | A port named `/dev/ttyS0`, `/dev/ttyS1`… | Those are the computer's own serial ports, not the board. USB ports are listed above them, labelled with their path and the adapter's name (`/dev/ttyUSB0 -- CH340`). |
-| … is not a .uf2 | A mounted drive takes the `.uf2` build, not a `.bin`. Download the right one from [micropython.org/download](https://micropython.org/download/). |
-| … is not the image this board expects | The file isn't the image that board's entry pins. Pick the board's own image, or choose a different board entry. |
-| The board doesn't start after flashing a file with no board | The **Address** was wrong for the chip: `0x1000` for an ESP32 or ESP32-S2, `0` for an ESP32-S3, C3, C6 or ESP8266. Flash again with the right one; the board is recoverable. |
+| (no build for this chip — choose a file) | The catalogue has no pinned image for that family yet. Pick **Image file** and the `.bin`/`.uf2` from [micropython.org/download](https://micropython.org/download/). |
+| The chip family list is empty, or the catalogue can't be read | This install's `firmware/builds.json` is missing or malformed; the dialog says which line. A reinstall replaces it. |
+| … is not a .uf2, or is a .uf2 sent to a serial port | A mounted drive takes the `.uf2` build, a serial port the `.bin`. Pick the matching file. |
+| choose the chip family, so esptool knows which chip and address to use | A file on its own doesn't say which chip it is for. Pick the family; if the image is the reason, the editor reads it out of the file. |
+| The board doesn't start after flashing | The address or the family was wrong: `0x1000` for an ESP32 or ESP32-S2, `0` for an ESP32-S3, C3, C6 or ESP8266. Flash again with the right family; the board is recoverable. |
 | esptool is not installed on this machine | The backend's Python has no `esptool`: `pip install esptool`, then restart Thingstudio. |
-| esptool exited N at … on PORT | The write stopped. Check the cable, put the board in download mode again, and retry. A board with a separate USB-serial chip may need the slower write: clear its `baud` in the board file, or use the terminal route in [Install MicroPython](installing-micropython.md). |
+| esptool exited N at … on PORT | The write stopped; the dialog's log has the tool's own lines. Check the cable and the bootloader mode, and retry. In **Install options**, try a slower speed, or tick **Disable the stub loader**. |
 | the flash did not finish within … | The tool stopped answering. Unplug and replug the board, then flash again. |
+
+**Erase all flash first** is on by default: a board that had a different layout (a previous MicroPython, or a
+vendor image) needs it, or the new image can be written and still not boot.
 
 A flash that finishes but leaves the board silent usually means the image is stock MicroPython: connect it, then
 **Tools → Install runtime…**.
@@ -5489,6 +5501,6 @@ to A3 (CS) and GPIO 32 to A4 (RST), then set those pins in the display node.
 
 ## Do I need a terminal to install MicroPython?
 
-No, for boards Thingstudio can flash: an ESP32 over a serial port, and a board whose bootloader mounts as a drive
-(RP2040 and RP2350). Put the board in its bootloader and use **Tools → Install firmware…**. Other chips have
-their own installation routes; see [Install MicroPython](installing-micropython.md).
+No, for boards Thingstudio can flash: the ESP32 family over a serial port, and a board whose bootloader mounts as a
+drive (RP2040, RP2350, nRF52). Put the board in its bootloader and use **Tools → Install firmware…**. Other chips
+have their own installation routes; see [Install MicroPython](installing-micropython.md).

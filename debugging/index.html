@@ -3476,16 +3476,24 @@ what the board sent instead, and what to do:</p>
 <td>Those are the computer's own serial ports, not the board. USB ports are listed above them, labelled with their path and the adapter's name (<code>/dev/ttyUSB0 -- CH340</code>).</td>
 </tr>
 <tr>
-<td>… is not a .uf2</td>
-<td>A mounted drive takes the <code>.uf2</code> build, not a <code>.bin</code>. Download the right one from <a href="https://micropython.org/download/">micropython.org/download</a>.</td>
+<td>(no build for this chip — choose a file)</td>
+<td>The catalogue has no pinned image for that family yet. Pick <strong>Image file</strong> and the <code>.bin</code>/<code>.uf2</code> from <a href="https://micropython.org/download/">micropython.org/download</a>.</td>
 </tr>
 <tr>
-<td>… is not the image this board expects</td>
-<td>The file isn't the image that board's entry pins. Pick the board's own image, or choose a different board entry.</td>
+<td>The chip family list is empty, or the catalogue can't be read</td>
+<td>This install's <code>firmware/builds.json</code> is missing or malformed; the dialog says which line. A reinstall replaces it.</td>
 </tr>
 <tr>
-<td>The board doesn't start after flashing a file with no board</td>
-<td>The <strong>Address</strong> was wrong for the chip: <code>0x1000</code> for an ESP32 or ESP32-S2, <code>0</code> for an ESP32-S3, C3, C6 or ESP8266. Flash again with the right one; the board is recoverable.</td>
+<td>… is not a .uf2, or is a .uf2 sent to a serial port</td>
+<td>A mounted drive takes the <code>.uf2</code> build, a serial port the <code>.bin</code>. Pick the matching file.</td>
+</tr>
+<tr>
+<td>choose the chip family, so esptool knows which chip and address to use</td>
+<td>A file on its own doesn't say which chip it is for. Pick the family; if the image is the reason, the editor reads it out of the file.</td>
+</tr>
+<tr>
+<td>The board doesn't start after flashing</td>
+<td>The address or the family was wrong: <code>0x1000</code> for an ESP32 or ESP32-S2, <code>0</code> for an ESP32-S3, C3, C6 or ESP8266. Flash again with the right family; the board is recoverable.</td>
 </tr>
 <tr>
 <td>esptool is not installed on this machine</td>
@@ -3493,7 +3501,7 @@ what the board sent instead, and what to do:</p>
 </tr>
 <tr>
 <td>esptool exited N at … on PORT</td>
-<td>The write stopped. Check the cable, put the board in download mode again, and retry. A board with a separate USB-serial chip may need the slower write: clear its <code>baud</code> in the board file, or use the terminal route in <a href="../installing-micropython/">Install MicroPython</a>.</td>
+<td>The write stopped; the dialog's log has the tool's own lines. Check the cable and the bootloader mode, and retry. In <strong>Install options</strong>, try a slower speed, or tick <strong>Disable the stub loader</strong>.</td>
 </tr>
 <tr>
 <td>the flash did not finish within …</td>
@@ -3501,6 +3509,8 @@ what the board sent instead, and what to do:</p>
 </tr>
 </tbody>
 </table>
+<p><strong>Erase all flash first</strong> is on by default: a board that had a different layout (a previous MicroPython, or a
+vendor image) needs it, or the new image can be written and still not boot.</p>
 <p>A flash that finishes but leaves the board silent usually means the image is stock MicroPython: connect it, then
 <strong>Tools → Install runtime…</strong>.</p>
 <h2 id="deploy-is-grayed-out">Deploy is grayed out</h2>
