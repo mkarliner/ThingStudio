@@ -43,17 +43,17 @@ You need these:
   C3 or C6, and not for RP2040 or RP2350 boards.
 - A USB cable that carries data.
 - `esptool` and `mpremote` on the computer: `pip install esptool mpremote`.
-- Four downloads from the project's [releases page](https://github.com/mkarliner/ThingStudio/releases/latest): the image, its `.sha256` file, `_deps.json` and `main.py`.
+- Three downloads from the project's [releases page](https://github.com/mkarliner/ThingStudio/releases/latest): the image, its `.sha256` file, and `main.py`.
 
 ## Install
 
 Flashing erases the board: its saved flows, board settings and WiFi credentials are gone afterwards.
 
-1. Download the four files from the [releases page](https://github.com/mkarliner/ThingStudio/releases/latest): the image, its `.sha256`, `_deps.json` and `main.py`. Put them
+1. Download the three files from the [releases page](https://github.com/mkarliner/ThingStudio/releases/latest): the image, its `.sha256` and `main.py`. Put them
    in one folder and go there. Check the image against its checksum:
 
    ```sh
-   IMAGE=thingstudio-classic-esp32-14.0.1-7e7c73b.bin
+   IMAGE=$(ls thingstudio-classic-esp32-*.bin)   # the image you downloaded
    shasum -a 256 -c "$IMAGE.sha256"      # sha256sum -c on Linux
    ```
 
@@ -65,21 +65,20 @@ Flashing erases the board: its saved flows, board settings and WiFi credentials 
 
    On macOS the port looks like `/dev/cu.usbserial-14420`. On Windows it is `COM3` or similar.
 
-3. Write the files that live on the filesystem, not in the image:
+3. Write the boot script, the one file that lives on the filesystem rather than in the image:
 
    ```sh
    mpremote connect /dev/ttyUSB0 fs cp main.py :/main.py
-   mpremote connect /dev/ttyUSB0 fs mkdir :/lib
-   mpremote connect /dev/ttyUSB0 fs cp _deps.json :/lib/_deps.json
    ```
 
-   `main.py` is the boot script: it starts the runtime that is frozen into the firmware. A board with the image and
-   no `main.py` starts at the Python prompt instead.
-
-   `_deps.json` is the list of libraries the board has, so Deploy skips them. Without it Deploy sends its own copies,
-   which works but uses the memory the image was meant to save.
+   `main.py` starts the runtime that is frozen into the firmware. A board with the image and no `main.py` starts at
+   the Python prompt instead. The image carries the list of libraries it froze, so Deploy skips them without a file
+   on the board.
 
 4. Reset the board. It starts the listener and prints `LISTENER_READY`.
+
+From the editor, **Tools → Install firmware…** flashes the image and **Tools → Install runtime…** writes the boot
+script, so the terminal steps above are only needed when you want them.
 
 The repository also has `firmware/classic-esp32/install.sh`, which runs these steps in one command. Read it before
 running it: it erases the filesystem partition, and its port name comes from `PORT`.
@@ -88,7 +87,7 @@ running it: it erases the filesystem partition, and its port name comes from `PO
 
 Connect in the editor as usual. Two things confirm the image is running:
 
-- the console's version line reports runtime 12.1.0 or later
+- the console's version line reports the runtime version the image was built with (14.1.0 for the current image)
 - `[libraries] … already on the board: …` names every library the flow imports
 
 Then deploy the flow. A GUI flow that failed with `MemoryError` on stock MicroPython should run.
