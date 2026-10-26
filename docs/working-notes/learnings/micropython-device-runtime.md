@@ -585,6 +585,15 @@ the tool, so `install_dependencies()` now compiles libraries with the editor's v
 everything when there is no inventory. Verified against the 14.1.0 CYD: `font_body12` and `tsgui_trend` hashes from
 the CLI match what its HELLO reports. `backend/test/test_hil_deploy_dependencies.py` pins both.
 
+**Fixed 2026-10-26 (same day, second half): the automated deploys were the ones still pushing.** The skip above only
+helped callers that passed an inventory. `test/hil/run_*.py` and `deploy_flow.py`'s no-fresh-HELLO path called
+`deploy_message(...)` without one, so every scripted hardware pass still copied all thirteen libraries into `/lib`
+over the frozen image -- the bug as reported. `board_inventory()` had been written for exactly this and never called;
+`install_dependencies()` now asks when the caller didn't (`HELLO_REQUEST`, up to 3 attempts over ~12 s, since a
+request sent while the listener is still starting is silently lost), and only a board that never answers gets
+everything. On the 14.1.0 CYD a HIL-style deploy of a flow importing `font_body12`, `thingstudio_gui` and
+`tsgui_label` reports "board holds 34 libraries / already on the board: ..." and sends no `DEP_*` message.
+
 ## 2026-10-24: measuring the runtime's RAM, and what a table costs (protocol state machine work)
 
 - **Measure the three install paths separately; they disagree.** Frozen into the image, precompiled `.mpy`, and

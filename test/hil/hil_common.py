@@ -140,8 +140,8 @@ def compile_flow(mpy_cross, tmpdir, name, source, arch=None):
 
 # --- Flow dependencies (2026-10-07, docs/working-notes/flow-dependencies-scoping.md) ----------------
 # Runtimes from 7.0.0 hold vendored libraries only in /lib, installed per flow. A host tool that
-# deploys a flow installs the libraries it imports first, the same way the editor does. Always
-# sends every needed library (no inventory diff): test tools favour simple over fast.
+# deploys a flow installs the libraries it imports first, the same way the editor does -- and skips the
+# ones the board reports holding (install_dependencies), so a custom image's frozen copies stay frozen.
 
 import hashlib  # noqa: E402
 import importlib.util  # noqa: E402
@@ -249,10 +249,17 @@ def install_dependencies(dut, tmpdir, source, log=print, inventory=None):
     """Compiles the libraries `source` imports and DEP_PUTs the ones the board hasn't got. Returns
     {name: hash} for every library the flow needs, for DEPLOY's own `dependencies`.
 
-    `inventory` is what the board reported in HELLO (`dependencies`); None sends everything, which is
-    what a board too old to report an inventory needs. `log` lets a caller route the per-library line
-    into its own output (the device CLI's --json)."""
+    `inventory` is what the board reported in HELLO (`dependencies`); None means the caller never asked,
+    so this asks (board_inventory) before deciding: a custom image freezes the libraries a flow imports,
+    and pushing a copy into /lib shadows the frozen one -- the flow then loads its libraries from RAM and
+    the image's heap saving is gone. Only a board that does not answer HELLO_REQUEST gets everything,
+    which is what a board too old to report an inventory needs. `log` lets a caller route the
+    per-library line into its own output (the device CLI's --json)."""
     deps = needed_dependencies(source)
+    if deps and inventory is None:
+        inventory = board_inventory(dut)
+        log("board holds %d libraries" % len(inventory) if inventory is not None
+            else "no library inventory from the board: sending every library")
     compiled = compile_dependencies(deps, tmpdir, log=log)
     required = {name: c["hash"] for name, c in compiled.items()}
     to_send = libraries_to_send(required, inventory)
@@ -288,16 +295,22 @@ def install_dependencies(dut, tmpdir, source, log=print, inventory=None):
     return required
 
 
-def board_inventory(dut, timeout_s=4.0):
-    """What the board reports holding ({name: hash}), or None if it doesn't answer. A board that booted a
-    while ago sent its HELLO long before this client existed, so ask; a garbled first line after a replug
-    (see learnings/hardware-bringup-hil-rig.md) simply leaves it None, which sends every library."""
-    try:
-        dut.send_message({"type": "HELLO_REQUEST"})
-        hello = dut.wait_for_message(lambda m: m.get("type") == "HELLO", timeout_s=timeout_s, description="HELLO")
-    except (TimeoutError, RuntimeError):
-        return None
-    return hello.get("dependencies") or {}
+def board_inventory(dut, timeout_s=4.0, attempts=3):
+    """What the board reports holding ({name: hash}), or None if it doesn't answer.
+
+    A board that booted a while ago sent its HELLO long before this client existed, so ask. The question
+    is idempotent, so it is asked again up to `attempts` times: a request sent while the listener is still
+    coming up (or while it is busy starting the flow) is simply lost, and the first line after a replug can
+    be garbled (learnings/hardware-bringup-hil-rig.md). None after all of them means the board really will
+    not say, and the caller sends every library."""
+    for _ in range(attempts):
+        try:
+            dut.send_message({"type": "HELLO_REQUEST"})
+            hello = dut.wait_for_message(lambda m: m.get("type") == "HELLO", timeout_s=timeout_s, description="HELLO")
+            return hello.get("dependencies") or {}
+        except (TimeoutError, RuntimeError):
+            continue
+    return None
 
 
 def deploy_message(dut, tmpdir, source, bytecode, log=print, inventory=None):

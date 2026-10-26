@@ -36,8 +36,10 @@ wraps.
 
 A deploy installs the libraries the flow imports, but only those the board reports it hasn't got —
 the same hash comparison the editor's Deploy does, so a custom image with its libraries frozen
-gets nothing pushed. That needs `node` (the compiler is the editor's own mpy-cross, run through
-`test/hil/dep_compile.mjs`); the flow's own bytecode still uses the native `--mpy-cross` build.
+gets nothing pushed. A headless deploy that wasn't handed an inventory asks the board for one
+(`HELLO_REQUEST`); only a board that never answers gets every library. That needs `node` (the
+compiler is the editor's own mpy-cross, run through `test/hil/dep_compile.mjs`); the flow's own
+bytecode still uses the native `--mpy-cross` build.
 
 `interrupt-basic.flow.json` uses `FlowFile`'s real shape
 (`editor/src/flow-file/flow-file.ts`): `formatVersion` (must be `1`),

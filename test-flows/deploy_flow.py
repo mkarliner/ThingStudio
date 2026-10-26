@@ -71,7 +71,7 @@ def main():
                 inventory = hello.get("dependencies") or {}
                 print("Got HELLO.")
             except TimeoutError:
-                print("No fresh HELLO seen in 8s -- continuing anyway (the DUT may already be running from a prior boot); DEPLOY still works without one, per main.ts's own soft-on-absence gate. With no inventory, every library the flow imports is sent.")
+                print("No fresh HELLO seen in 8s -- continuing anyway (the DUT may already be running from a prior boot); DEPLOY still works without one, per main.ts's own soft-on-absence gate. Asking the board what it holds before sending any library.")
 
             print("Sending DEPLOY (%d bytes bytecode)..." % len(bytecode))
             message = deploy_message(dut, tmpdir, source, bytecode, inventory=inventory)

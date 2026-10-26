@@ -83,3 +83,86 @@ def test_the_two_hash_implementations_agree():
 @needs_node
 def test_a_flow_with_no_libraries_compiles_nothing():
     assert hil.compile_dependencies([], tempfile.mkdtemp()) == {}
+
+
+class _FakeDut:
+    """Just enough of DutLink for the deploy helpers: records what the host sent and answers HELLO."""
+
+    def __init__(self, hello):
+        self.sent = []
+        self.hello = hello
+
+    def send_message(self, message):
+        self.sent.append(message)
+
+    def wait_for_message(self, predicate, timeout_s=None, description=None):
+        if not predicate(self.hello):
+            raise TimeoutError(description)
+        return self.hello
+
+
+@needs_node
+def test_a_deploy_that_was_not_given_an_inventory_asks_the_board():
+    # The HIL drivers and deploy_flow.py call deploy_message with no inventory. Asking is the difference
+    # between honouring a custom image's frozen libraries and pushing all thirteen into /lib on top of them.
+    dut = _FakeDut({"type": "HELLO", "dependencies": {"font_body12": "15c91497a096e7fd"}})
+    lines = []
+    with tempfile.TemporaryDirectory() as tmpdir:
+        message = hil.deploy_message(dut, tmpdir, "import font_body12", b"", log=lines.append)
+    assert {"type": "HELLO_REQUEST"} in dut.sent
+    assert message["dependencies"] == {"font_body12": "15c91497a096e7fd"}
+    assert not [m for m in dut.sent if m["type"].startswith("DEP_")], "nothing to install, so nothing sent"
+    assert any("already on the board: font_body12" in line for line in lines)
+
+
+@needs_node
+def test_an_inventory_the_caller_supplied_is_used_as_is():
+    # The device CLI already has HELLO's answer; it must not be asked for it a second time.
+    dut = _FakeDut({"type": "HELLO", "dependencies": {}})
+    with tempfile.TemporaryDirectory() as tmpdir:
+        hil.deploy_message(dut, tmpdir, "import font_body12", b"",
+                           inventory={"font_body12": "15c91497a096e7fd"}, log=lambda _line: None)
+    assert dut.sent == [], "no HELLO_REQUEST and no DEP_PUT"
+
+
+@needs_node
+def test_a_board_that_does_not_answer_sends_every_library():
+    dut = _FakeDut({"type": "NO_HELLO"})
+    lines = []
+    with tempfile.TemporaryDirectory() as tmpdir:
+        with pytest.raises(TimeoutError):
+            hil.install_dependencies(dut, tmpdir, "import font_body12", log=lines.append)
+    assert any(m["type"] == "DEP_PUT" for m in dut.sent), "no inventory: the library is sent"
+    assert any("no library inventory" in line for line in lines)
+
+
+class _SlowDut(_FakeDut):
+    """Misses the first HELLO_REQUEST (the listener was still starting the flow), answers the second."""
+
+    def __init__(self, hello, misses=1):
+        super().__init__(hello)
+        self.misses = misses
+        self.asks = 0
+
+    def send_message(self, message):
+        if message["type"] == "HELLO_REQUEST":
+            self.asks += 1
+            self.sent.append(message)
+            return
+        self.sent.append(message)
+
+    def wait_for_message(self, predicate, timeout_s=None, description=None):
+        if predicate({"type": "HELLO"}) and self.asks <= self.misses:
+            raise TimeoutError(description)
+        return super().wait_for_message(predicate, timeout_s, description)
+
+
+@needs_node
+def test_a_lost_hello_request_is_asked_again():
+    dut = _SlowDut({"type": "HELLO", "dependencies": {"font_body12": "15c91497a096e7fd"}})
+    lines = []
+    with tempfile.TemporaryDirectory() as tmpdir:
+        hil.deploy_message(dut, tmpdir, "import font_body12", b"", log=lines.append)
+    assert dut.asks == 2
+    assert not [m for m in dut.sent if m["type"].startswith("DEP_")], "the answer arrived, so nothing is sent"
+    assert any("board holds 1 libraries" in line for line in lines)
