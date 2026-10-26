@@ -153,6 +153,14 @@ ThingStudioMarketing repo, not here.
 
 ## Hardware / rig
 
+- **[P3]** **Does the headless CLI open its serial port more than once per run?** This rig's CH340 takes one
+  open per replug (`learnings/hardware-bringup-hil-rig.md`), and the commands that kept wedging were the ones
+  that open more than once: `runtime install` opens a `DutLink` to send `STOP_TO_PROMPT`, closes it, lets
+  `deploy_runtime.py` open the port, then runs `mpremote connect ... reset` for a third open. `flow deploy`
+  itself opens once (counted 2026-10-26), so it is not the culprit -- check `runtime install` and any scripted
+  install-then-deploy pass first. Fold the opens into one where possible; a hardware session that gets a
+  reliable CLI out of it is worth more than another replug. Found 2026-10-26 while fixing the inventory skip
+  (`788fde7`).
 - **[P3]** **LSM6DS3TR-C interrupt-example node -- needs a real-hardware pass, 2026-10-15.** The example
   package `st/lsm6ds3_int` (`backend/.../example_nodes/`) proves a custom node can be a hardware-interrupt
   source (`eventSource` + `ThreadSafeEvent` + `Pin.irq`). Its data-ready path is well-trodden; its wake /
