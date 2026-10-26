@@ -1,0 +1,82 @@
+# Form for the "Onboarding reports" discussion category. The file name must match
+# the category's slug, so create that category first (Settings > Discussions).
+title: "Onboarding: <board> on <computer>"
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for trying Thingstudio from a blank board. The point is to find where the docs and the tool let
+        you down, so the rough bits are the useful bits. Rough times are fine.
+
+        Prefer to keep it private? Email mike@minus1.com instead.
+  - type: input
+    id: board
+    attributes:
+      label: Board
+      description: The board's name, and its chip if you know it.
+      placeholder: Raspberry Pi Pico W / LOLIN S2 Mini / unnamed ESP32-C3 board
+    validations:
+      required: true
+  - type: input
+    id: computer
+    attributes:
+      label: Computer and operating system
+      placeholder: MacBook Air M2, macOS 15.1 / ThinkPad, Ubuntu 24.04 / Windows 11
+    validations:
+      required: true
+  - type: dropdown
+    id: install
+    attributes:
+      label: How you installed Thingstudio
+      options:
+        - Downloaded a package from the releases page
+        - Ran the installer script
+        - From source
+        - Didn't get that far
+    validations:
+      required: true
+  - type: dropdown
+    id: micropython
+    attributes:
+      label: How MicroPython got onto the board
+      options:
+        - Tools > Install firmware... in the editor
+        - It was already on the board
+        - By hand, outside Thingstudio
+        - Didn't get that far
+    validations:
+      required: true
+  - type: textarea
+    id: times
+    attributes:
+      label: Roughly how long each step took
+      description: Leave a line blank if you didn't reach it.
+      value: |
+        1. Install Thingstudio:
+        2. Tour the editor:
+        3. Install MicroPython:
+        4. Connect your board:
+        5. Install the runtime:
+        6. Blink an LED:
+    validations:
+      required: true
+  - type: textarea
+    id: stuck
+    attributes:
+      label: Where you stopped, guessed, or swore
+      description: Which page or step, what you expected, and what happened. Error text and screenshots help.
+    validations:
+      required: true
+  - type: textarea
+    id: else
+    attributes:
+      label: Anything else
+      description: What you'd try next, what you'd want it to do, what you liked.
+  - type: checkboxes
+    id: experience
+    attributes:
+      label: Your background (tick any)
+      options:
+        - label: I've used MicroPython before
+        - label: I've used Node-RED before
+        - label: I've used Arduino or ESP-IDF before
