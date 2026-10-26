@@ -75,7 +75,9 @@ erratic on a nearly full ESP32, `network.WLAN(STA_IF)` starting WiFi on an ESP32
 widgets by 1px, and the stm32 port mounting its filesystem at `/flash` (not `/`), which ENODEVs every absolute
 runtime path, and the unix port's `time.time()` being a float, and this build's `set()` rejecting a single iterable
 argument (use a membership dict), mpy-cross embedding the source path in the `.mpy` (so compiling the same source
-from a different directory changes its bytes and any hash of them), sequential deploys on an ESP32-C3 leaving too
+from a different directory changes its bytes and any hash of them -- which is why the headless CLI's deploys could
+never match a board's inventory and pushed every library; fixed 2026-10-26 by compiling them with the editor's own
+WASM mpy-cross at `/in.py`), sequential deploys on an ESP32-C3 leaving too
 little contiguous IDF heap for the next deploy (reset, 40s per flow), a large HTTP response being one allocation
 (56 KB failed on a C3, 48 bytes passed), never calling `connect()` again while mqtt_as owns reconnection, the two
 facts behind a frozen image: `.frozen` precedes `/lib` on `sys.path` (so a pushed library does not

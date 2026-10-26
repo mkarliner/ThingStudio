@@ -259,7 +259,7 @@ def check_interrupt(dut, witness, mpy_cross, tmpdir, results):
     witness.ser.flush()
     time.sleep(0.3)  # settle -- same race check_gpio_in's original docstring documented
 
-    dut.send_message(deploy_message(dut, mpy_cross, tmpdir, source, bytecode))
+    dut.send_message(deploy_message(dut, tmpdir, source, bytecode))
     dut.wait_for_message(lambda m: m["type"] == "DEPLOY_ACK", timeout_s=8, description="DEPLOY_ACK for the interrupt mirror flow")
     check_no_early_node_error(dut, "interrupt", results)
 
@@ -361,7 +361,7 @@ def check_pwm_out(dut, mpy_cross, tmpdir, witness, results):
     ) % (DUT_PWM_PIN, DUT_PWM_PIN, configured_freq, DUT_PWM_PIN)
     bytecode = compile_flow(mpy_cross, tmpdir, "flow_pwm_out", source)
 
-    dut.send_message(deploy_message(dut, mpy_cross, tmpdir, source, bytecode))
+    dut.send_message(deploy_message(dut, tmpdir, source, bytecode))
     dut.wait_for_message(lambda m: m["type"] == "DEPLOY_ACK", timeout_s=8, description="DEPLOY_ACK for the pwm_out flow")
     early_error = check_no_early_node_error(dut, "pwm_out", results)
     if early_error is not None:
@@ -424,7 +424,7 @@ def check_timer(dut, witness, mpy_cross, tmpdir, results):
     witness.ser.flush()
     time.sleep(0.3)  # same arm/trigger race as check_gpio_in -- see its comment
 
-    dut.send_message(deploy_message(dut, mpy_cross, tmpdir, source, bytecode))
+    dut.send_message(deploy_message(dut, tmpdir, source, bytecode))
     dut.wait_for_message(lambda m: m["type"] == "DEPLOY_ACK", timeout_s=8, description="DEPLOY_ACK for the timer flow")
     check_no_early_node_error(dut, "timer", results)
 

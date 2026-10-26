@@ -562,7 +562,8 @@ Two things follow:
   pushes the library costs seconds.
 
 
-**The headless device CLI installs every library, so it cannot show a frozen image's skip** (2026-10-24).
+**The headless device CLI installs every library, so it cannot show a frozen image's skip** (2026-10-24; **fixed
+2026-10-26**, see below).
 `test/hil/hil_common.py`'s `install_dependencies()` compiles every library the flow imports and `DEP_PUT`s it,
 unconditionally -- it never consults HELLO's `dependencies`. Only the editor's `librariesToSend()` compares hashes.
 On a custom image a `device_cli.py flow deploy` therefore copies libraries into `/lib`, where
@@ -572,6 +573,17 @@ skip without a browser: deploy from the editor, or verify the index offline --
 `node firmware/classic-esp32/gen_deps_index.mjs firmware/classic-esp32/out/stage /tmp/deps.json` must reproduce
 `out/_deps.json` (34/34 identical on the 13.0.0 image). If a CLI deploy has already run, reflash to get the frozen
 state back (a reflash is the only reset; deleting `/lib` copies by hand is not the same thing).
+
+**Fixed 2026-10-26: the CLI now skips what the board reports, and the hash is why it never could.** `mpy-cross`
+embeds the source file's name in the `.mpy` it writes (byte 7), and the hash in the inventory is over those
+bytes. The editor and `gen_deps_index.mjs` always compile the input as `/in.py`; the CLI compiled it as
+`dep_<name>.py`, so its hashes could never match a board's -- `font_body12` came out `733a1c6141ee4faa` from the
+native `mpy-cross` against `15c91497a096e7fd` in the image's own inventory. Matching the inventory means matching
+the tool, so `install_dependencies()` now compiles libraries with the editor's vendored WASM `mpy-cross` through
+`test/hil/dep_compile.mjs` (node; the flow's own bytecode still uses the native `mpy-cross`, because that needs
+`-march`), and `libraries_to_send()` applies the editor's rule: skip on an equal hash, send on any difference, send
+everything when there is no inventory. Verified against the 14.1.0 CYD: `font_body12` and `tsgui_trend` hashes from
+the CLI match what its HELLO reports. `backend/test/test_hil_deploy_dependencies.py` pins both.
 
 ## 2026-10-24: measuring the runtime's RAM, and what a table costs (protocol state machine work)
 

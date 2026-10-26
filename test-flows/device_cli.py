@@ -444,9 +444,13 @@ def cmd_flow_deploy(args):
     port = resolve_port(args)
     dut = open_link(port)
     try:
-        # Ask the board what it is, both to report it and to pick mpy-cross -march for viper code.
+        # Ask the board what it is, both to report it and to pick mpy-cross -march for viper code. Its
+        # HELLO also carries the library inventory, which is what lets the deploy below skip what the
+        # board already holds (a frozen image holds everything its flows need).
+        inventory = None
         try:
             info = hello(dut, 3)
+            inventory = info.get("dependencies") or {}
             chip = info.get("chipType") or ""
             arch, confirmed = infer_arch(chip)
             emit("status", args.json, text="board: %s (runtime %s.%s.%s)" % (
@@ -471,8 +475,9 @@ def cmd_flow_deploy(args):
             try:
                 bytecode = compile_flow(mpy_cross, tmpdir, "flow", source, arch)
                 message = deploy_message(
-                    dut, mpy_cross, tmpdir, source, bytecode,
+                    dut, tmpdir, source, bytecode,
                     log=lambda text: emit("status", args.json, text=text),
+                    inventory=inventory,
                 )
             except subprocess.CalledProcessError as e:
                 detail = (e.stderr or b"").decode("utf-8", "replace").strip()

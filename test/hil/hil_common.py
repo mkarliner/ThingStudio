@@ -9,9 +9,11 @@
 # real risk of drift, not just duplication.
 #
 # Requires `pyserial` (not yet a tracked project dependency -- see
-# docs/third-party-licenses.md's note on this) and, for compile_flow, a
-# native `mpy-cross` build (device-runtime/test/README.md has the build
-# recipe).
+# docs/third-party-licenses.md's note on this) and, for the flow's own bytecode, a native
+# `mpy-cross` build (device-runtime/test/README.md has the build recipe). Installing the libraries a
+# flow imports also needs `node`: they are compiled with the editor's vendored mpy-cross WASM
+# (compile_dependencies), because only that reproduces the hashes a board reports and lets a deploy
+# skip what the board already has.
 
 import base64
 import os
@@ -143,7 +145,14 @@ def compile_flow(mpy_cross, tmpdir, name, source, arch=None):
 
 import hashlib  # noqa: E402
 import importlib.util  # noqa: E402
+import json  # noqa: E402
 import re  # noqa: E402
+import shutil  # noqa: E402
+
+# The editor's own mpy-cross (see compile_dependencies' docstring): the only tool that reproduces the
+# hashes a board reports. Node + a vendored WASM file, both already part of the repo.
+REPO = os.path.join(THIS_DIR, "..", "..")
+DEP_COMPILE_JS = os.path.join(THIS_DIR, "dep_compile.mjs")
 
 _IMPORT_RE = re.compile(r"^\s*(?:import\s+([\w.]+(?:\s*,\s*[\w.]+)*)|from\s+([\w.]+)\s+import\b)", re.M)
 
@@ -193,44 +202,105 @@ def dependency_hash(files):
     return h.hexdigest()[:16]
 
 
-def install_dependencies(dut, mpy_cross, tmpdir, source, log=print):
-    """Compiles and DEP_PUTs every library `source` imports. Returns {name: hash} for DEPLOY.
-    `log` lets a caller route the per-library line into its own output (the device CLI's --json)."""
-    vendor = os.path.join(SRC_DIR, "vendor")
-    required = {}
-    for dep in needed_dependencies(source):
+def libraries_to_send(required, inventory):
+    """Which of `required` ({name: hash}) the board still needs, given what it reported holding in HELLO.
+    Same rule as the editor's librariesToSend (flow-dependencies.ts): send everything when there is no
+    inventory (no HELLO, or a board too old to report one), and skip a library only when the hashes agree.
+    A different hash is sent, not trusted: the board's copy is then not the code this flow was compiled
+    against."""
+    return [name for name in sorted(required) if inventory is None or inventory.get(name) != required[name]]
+
+
+def compile_dependencies(deps, outdir, log=print):
+    """Compiles a flow's libraries with the editor's own mpy-cross, returning {name: {hash, files}}.
+
+    Not compile_flow()'s native mpy-cross: the hash is over the .mpy bytes and mpy-cross embeds the
+    source file's name in them, so only the editor's tool (input always /in.py, no -march) reproduces
+    the hash a board reports -- which is the whole point of the inventory check below. dep_compile.mjs
+    is that compiler; see its header for the incident (2026-10-26)."""
+    node = shutil.which("node")
+    if not node:
+        raise RuntimeError("node is not on PATH: installing libraries needs the editor's mpy-cross "
+                           "(node test/hil/dep_compile.mjs). Install Node 22+, or pass "
+                           "dependencies={} if the flow's libraries are already on the board")
+    wasm = os.path.join(REPO, "editor", "public", "vendor", "mpy-cross", "mpy-cross.mjs")
+    if not os.path.exists(wasm):
+        raise RuntimeError("%s is missing -- the editor's mpy-cross moves, so point DEP_COMPILE at it" % wasm)
+
+    spec = [{"name": dep["name"],
+             "files": [{"board": board_name.replace(".py", ".mpy"),
+                        "source": os.path.join(SRC_DIR, "vendor", src_rel)}
+                       for src_rel, board_name in dep["files"]]}
+            for dep in deps]
+    if not spec:
+        return {}
+    work = os.path.join(outdir, "dep-compile")
+    os.makedirs(work, exist_ok=True)
+    spec_path = os.path.join(work, "spec.json")
+    with open(spec_path, "w") as f:
+        json.dump(spec, f)
+    result = subprocess.run([node, DEP_COMPILE_JS, spec_path, work], capture_output=True, text=True)
+    if result.returncode != 0:
+        raise RuntimeError("compiling the flow's libraries failed: %s" % (result.stderr.strip() or result.returncode))
+    return {d["name"]: {"hash": d["hash"], "files": d["files"]} for d in json.loads(result.stdout)["deps"]}
+
+
+def install_dependencies(dut, tmpdir, source, log=print, inventory=None):
+    """Compiles the libraries `source` imports and DEP_PUTs the ones the board hasn't got. Returns
+    {name: hash} for every library the flow needs, for DEPLOY's own `dependencies`.
+
+    `inventory` is what the board reported in HELLO (`dependencies`); None sends everything, which is
+    what a board too old to report an inventory needs. `log` lets a caller route the per-library line
+    into its own output (the device CLI's --json)."""
+    deps = needed_dependencies(source)
+    compiled = compile_dependencies(deps, tmpdir, log=log)
+    required = {name: c["hash"] for name, c in compiled.items()}
+    to_send = libraries_to_send(required, inventory)
+    already = [name for name in required if name not in to_send]
+    if already:
+        log("already on the board: %s" % ", ".join(sorted(already)))
+    for name in to_send:
         files = {}
-        for src_rel, board_name in dep["files"]:
-            with open(os.path.join(vendor, src_rel)) as f:
-                mpy = compile_flow(mpy_cross, tmpdir, "dep_" + board_name[:-3], f.read())
-            files[board_name[:-3] + ".mpy"] = mpy
-        digest = dependency_hash(files)
+        for entry in compiled[name]["files"]:
+            with open(entry["path"], "rb") as f:
+                files[entry["board"]] = f.read()
         # 1 KB pieces, each confirmed by DEP_ACK before the next (runtime 9.0.0: a USB-UART board has no
         # flow control), then a commit -- as the editor sends them (flow-dependencies.ts, main.ts).
         for fname in sorted(files):
             data = files[fname]
             for off in range(0, max(len(data), 1), 1024):
-                dut.send_message({"type": "DEP_PUT", "name": dep["name"], "file": fname, "offset": off,
+                dut.send_message({"type": "DEP_PUT", "name": name, "file": fname, "offset": off,
                                   "total": len(data), "data": data[off:off + 1024]})
                 ack = dut.wait_for_message(
-                    lambda m, f=fname, o=off: m["type"] == "DEP_ACK" and m.get("name") == dep["name"]
+                    lambda m, f=fname, o=off: m["type"] == "DEP_ACK" and m.get("name") == name
                     and m.get("file") == f and m.get("offset") == o,
-                    timeout_s=10, description="DEP_ACK for %s %s@%d" % (dep["name"], fname, off))
+                    timeout_s=10, description="DEP_ACK for %s %s@%d" % (name, fname, off))
                 if not ack["ok"]:
                     raise RuntimeError("sending %s failed at %s byte %d: %s %s"
-                                       % (dep["name"], fname, off, ack.get("code"), ack.get("error")))
-        dut.send_message({"type": "DEP_COMMIT", "name": dep["name"], "hash": digest,
+                                       % (name, fname, off, ack.get("code"), ack.get("error")))
+        dut.send_message({"type": "DEP_COMMIT", "name": name, "hash": required[name],
                           "files": {f: len(d) for f, d in files.items()}})
-        res = dut.wait_for_message(lambda m: m["type"] == "DEP_RESULT" and m.get("name") == dep["name"], timeout_s=15,
-                                   description="DEP_RESULT for %s" % dep["name"])
+        res = dut.wait_for_message(lambda m: m["type"] == "DEP_RESULT" and m.get("name") == name, timeout_s=15,
+                                   description="DEP_RESULT for %s" % name)
         if not res["ok"]:
-            raise RuntimeError("installing %s failed: %s %s" % (dep["name"], res.get("code"), res.get("error")))
-        log("Installed library %s (%s)" % (dep["name"], digest))
-        required[dep["name"]] = digest
+            raise RuntimeError("installing %s failed: %s %s" % (name, res.get("code"), res.get("error")))
+        log("Installed library %s (%s)" % (name, required[name]))
     return required
 
 
-def deploy_message(dut, mpy_cross, tmpdir, source, bytecode, log=print):
+def board_inventory(dut, timeout_s=4.0):
+    """What the board reports holding ({name: hash}), or None if it doesn't answer. A board that booted a
+    while ago sent its HELLO long before this client existed, so ask; a garbled first line after a replug
+    (see learnings/hardware-bringup-hil-rig.md) simply leaves it None, which sends every library."""
+    try:
+        dut.send_message({"type": "HELLO_REQUEST"})
+        hello = dut.wait_for_message(lambda m: m.get("type") == "HELLO", timeout_s=timeout_s, description="HELLO")
+    except (TimeoutError, RuntimeError):
+        return None
+    return hello.get("dependencies") or {}
+
+
+def deploy_message(dut, tmpdir, source, bytecode, log=print, inventory=None):
     """A DEPLOY for `source`'s bytecode, after installing the libraries it imports."""
     return {"type": "DEPLOY", "bytecode": bytecode, "staticData": b"",
-            "dependencies": install_dependencies(dut, mpy_cross, tmpdir, source, log=log)}
+            "dependencies": install_dependencies(dut, tmpdir, source, log=log, inventory=inventory)}

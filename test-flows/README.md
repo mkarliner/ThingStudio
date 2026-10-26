@@ -34,6 +34,11 @@ python3 test-flows/device_cli.py flow deploy test-flows/settings-test.flow.json 
 `deploy_runtime.py` and `deploy_flow.py` sections below still describe the lower-level tools it
 wraps.
 
+A deploy installs the libraries the flow imports, but only those the board reports it hasn't got —
+the same hash comparison the editor's Deploy does, so a custom image with its libraries frozen
+gets nothing pushed. That needs `node` (the compiler is the editor's own mpy-cross, run through
+`test/hil/dep_compile.mjs`); the flow's own bytecode still uses the native `--mpy-cross` build.
+
 `interrupt-basic.flow.json` uses `FlowFile`'s real shape
 (`editor/src/flow-file/flow-file.ts`): `formatVersion` (must be `1`),
 `nodes` (`{ id, type, properties }[]`), `edges`
@@ -261,7 +266,8 @@ uses `runtime.settings`: the listener namespaces settings by it, and a
 deploy without it stores them under `""`. `--trigger <node-id>` (repeatable)
 fires an inject node after deploy, so a click-driven test flow can run
 headlessly. `--mpy-cross` needs a native build -- `device-runtime/test/README.md`
-has the recipe.
+has the recipe. The libraries' compiler is separate: they go through the editor's own mpy-cross
+(`node`, `test/hil/dep_compile.mjs`), which is what makes the deploy skip what the board already has.
 
 ## `udp-echo-tester.flow.json`
 

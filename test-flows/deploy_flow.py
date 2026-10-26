@@ -12,9 +12,11 @@
 #
 # Takes an already-compiled .py source file (NOT a flow.json -- see
 # test-flows/README.md for the JSON -> Python step via
-# editor/src/dev-tools/compile-flow.ts, kept separate so this script has
-# no Node/tsc dependency of its own, only pyserial + mpy-cross like the
-# rest of test/hil/).
+# editor/src/dev-tools/compile-flow.ts, kept separate so this script's own
+# flow bytecode needs only pyserial + a native mpy-cross like the rest of
+# test/hil/). Installing the libraries the flow imports also uses the
+# editor's vendored mpy-cross, so it needs `node` on PATH -- see
+# hil_common.install_dependencies.
 #
 # Usage:
 #   python3 deploy_flow.py --dut-port /dev/ttyUSB0 --mpy-cross /path/to/mpy-cross /tmp/interrupt-basic.py
@@ -61,14 +63,18 @@ def main():
         try:
             print("Waiting for the DUT's boot-time HELLO (reset the board now if it's not fresh)...")
             dut.ser.reset_input_buffer()
+            inventory = None
             try:
-                dut.wait_for_message(lambda m: m["type"] == "HELLO", timeout_s=8, description="DUT's boot-time HELLO")
+                hello = dut.wait_for_message(lambda m: m["type"] == "HELLO", timeout_s=8, description="DUT's boot-time HELLO")
+                # What the board already holds: its frozen image and any earlier deploy. The libraries it
+                # reports are not sent again (same rule as the editor's Deploy).
+                inventory = hello.get("dependencies") or {}
                 print("Got HELLO.")
             except TimeoutError:
-                print("No fresh HELLO seen in 8s -- continuing anyway (the DUT may already be running from a prior boot); DEPLOY still works without one, per main.ts's own soft-on-absence gate.")
+                print("No fresh HELLO seen in 8s -- continuing anyway (the DUT may already be running from a prior boot); DEPLOY still works without one, per main.ts's own soft-on-absence gate. With no inventory, every library the flow imports is sent.")
 
             print("Sending DEPLOY (%d bytes bytecode)..." % len(bytecode))
-            message = deploy_message(dut, args.mpy_cross, tmpdir, source, bytecode)
+            message = deploy_message(dut, tmpdir, source, bytecode, inventory=inventory)
             if args.flow_name:
                 message["flowName"] = args.flow_name
             else:
