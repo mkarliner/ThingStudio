@@ -67,15 +67,16 @@ To test the sensor first, wire the bme280 to a **debug** node and deploy. A read
     | invert colors, data latch order | on |
 
     Click 💾 to save these as a [preset](working-in-the-editor.md#presets) for next time.
-2. Drag a **gui screen**. Set its **width** and **height** to the panel's own size, `320` and `480`, and its
-   **frame format** to `rgb565`. Wire it to the display spi.
+2. Drag a **gui screen** and wire it to the display spi. It takes its width, height and frame format from the
+   display, so the panel's size is set in one place.
 3. In the gui screen's **touch panel** field, click **+** and make a Touch panel: controller FT6336U, the same I2C
    bus, address `0x38`, width `320`, height `480`.
 4. Drag three **gui readout** nodes (temperature, humidity, pressure) and a **gui light** for the sensor. Wire the
    function's outputs 1, 2, 3 and 5 to them. In each readout, set **units**, **decimals**, **lowest value** and
    **highest value**.
 5. Lay out the pages: select the gui screen and use the page outline in its properties to add rows of text and
-   readouts. See [Laying out pages](nodes/gui.md#laying-out-pages).
+   readouts. See [Laying out pages](nodes/gui.md#laying-out-pages), and [Laying out a display](gui-layout.md) for
+   why the layout is fixed when the flow compiles.
 
 Set **stale after** on the readouts and the light. A reading that stops arriving is then dimmed, so a dead sensor
 looks different from a steady room.
@@ -131,8 +132,8 @@ pass, and the clock starts once the board has the time.
 
 Each symptom below has its own fix:
 
-- **The picture is scrambled:** the **width** and **height** on both the gui screen and the display spi must be the
-  panel's own size, `320` and `480`, even when the picture is turned. Deploy checks this and says so.
+- **The picture is scrambled:** the **width** and **height** on the display spi must be the panel's own size,
+  `320` and `480`, even when the picture is turned; the gui screen follows them. Deploy checks this and says so.
 - **Touches land in the wrong place:** see [Touch panels](nodes/touch-panel.md).
 - **No readings:** check the wiring and the address (`0x76` or `0x77`), and test with a debug node.
 - **The clock stays at `--`:** the ntp node's status says why: no WiFi yet, or the NTP server can't be reached.

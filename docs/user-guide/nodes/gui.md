@@ -179,12 +179,9 @@ and a **timeout** above `0` closes it on its own. The modal node's output says w
 
 ## Laying out pages
 
-Thingstudio doesn't lay out like a web framework. A web page is laid out by the browser, in a window someone can
-resize. A Thingstudio display is one fixed panel: no windows, and no size change to react to. So the layout is
-worked out when the flow compiles — cell spans, gutters, font sizes and positions all become fixed numbers before
-the flow is deployed, and the board draws those numbers. There is no layout pass at runtime and nothing reflows.
-That is what keeps a GUI flow affordable on a microcontroller. A different panel means compiling for that panel,
-not a reflow on the board.
+A Thingstudio display is one fixed panel, not a window, and its layout is resolved when the flow compiles — there
+is no layout pass on the board and nothing reflows. See [Laying out a display](../gui-layout.md) for the model and
+how it differs from a web page.
 
 Every screen has a **cell grid**: **grid columns** on the gui screen (12 by default) and **grid rows**
 (`0` means "work them out from the display's shape", so cells stay roughly square). A position is a row and a

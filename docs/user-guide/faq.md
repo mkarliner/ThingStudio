@@ -131,6 +131,12 @@ its *on sends* and *off sends* values, `true` and `false` unless you changed the
 Both would poll the same chip, and each would take touches from the other. A gui screen reads its panel itself.
 Use the touch node only when you aren't using the GUI. Deploy stops and names both nodes if a panel is picked twice.
 
+## Why can't a page resize, or a text element take a percentage width?
+
+There is nothing to resize to: a page fills a display of one fixed size, and the layout is resolved when the flow
+compiles, not by a browser at runtime. An element's cells, its font and its position are fixed numbers on the
+board. See [Laying out a display](gui-layout.md).
+
 ## Why won't a function node's output wire into pwm out?
 
 A function node's output has the type `any`, and `pwm out`'s input takes a `number`. The editor refuses a wire from

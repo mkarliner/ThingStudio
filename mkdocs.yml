@@ -69,6 +69,7 @@ nav:
       - A sensor display: sensor-display.md
   - Building flows:
       - Editor in depth: working-in-the-editor.md
+      - Laying out a display: gui-layout.md
       - Flow lifecycle: flow-lifecycle.md
       - The Thingstudio folder: thingstudio-folder.md
   - Boards and networks:
