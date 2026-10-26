@@ -1017,6 +1017,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../gui-layout/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Laying out a display
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../flow-lifecycle/" class="md-nav__link">
         
   
@@ -3045,6 +3073,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#why-cant-a-page-resize-or-a-text-element-take-a-percentage-width" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why can't a page resize, or a text element take a percentage width?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#why-wont-a-function-nodes-output-wire-into-pwm-out" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3351,6 +3390,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#why-cant-a-page-resize-or-a-text-element-take-a-percentage-width" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why can't a page resize, or a text element take a percentage width?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#why-wont-a-function-nodes-output-wire-into-pwm-out" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3560,6 +3610,10 @@ its <em>on sends</em> and <em>off sends</em> values, <code>true</code> and <code
 <h2 id="why-cant-i-use-a-touch-node-and-a-gui-screen-on-the-same-panel">Why can't I use a touch node and a gui screen on the same panel?</h2>
 <p>Both would poll the same chip, and each would take touches from the other. A gui screen reads its panel itself.
 Use the touch node only when you aren't using the GUI. Deploy stops and names both nodes if a panel is picked twice.</p>
+<h2 id="why-cant-a-page-resize-or-a-text-element-take-a-percentage-width">Why can't a page resize, or a text element take a percentage width?</h2>
+<p>There is nothing to resize to: a page fills a display of one fixed size, and the layout is resolved when the flow
+compiles, not by a browser at runtime. An element's cells, its font and its position are fixed numbers on the
+board. See <a href="../gui-layout/">Laying out a display</a>.</p>
 <h2 id="why-wont-a-function-nodes-output-wire-into-pwm-out">Why won't a function node's output wire into pwm out?</h2>
 <p>A function node's output has the type <code>any</code>, and <code>pwm out</code>'s input takes a <code>number</code>. The editor refuses a wire from
 <code>any</code> to <code>number</code>, <code>int</code> or <code>string</code> inputs. See <a href="../working-in-the-editor/#wiring">Wiring</a>.</p>

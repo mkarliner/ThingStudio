@@ -1108,15 +1108,16 @@ To test the sensor first, wire the bme280 to a **debug** node and deploy. A read
     | invert colors, data latch order | on |
 
     Click 💾 to save these as a [preset](working-in-the-editor.md#presets) for next time.
-2. Drag a **gui screen**. Set its **width** and **height** to the panel's own size, `320` and `480`, and its
-   **frame format** to `rgb565`. Wire it to the display spi.
+2. Drag a **gui screen** and wire it to the display spi. It takes its width, height and frame format from the
+   display, so the panel's size is set in one place.
 3. In the gui screen's **touch panel** field, click **+** and make a Touch panel: controller FT6336U, the same I2C
    bus, address `0x38`, width `320`, height `480`.
 4. Drag three **gui readout** nodes (temperature, humidity, pressure) and a **gui light** for the sensor. Wire the
    function's outputs 1, 2, 3 and 5 to them. In each readout, set **units**, **decimals**, **lowest value** and
    **highest value**.
 5. Lay out the pages: select the gui screen and use the page outline in its properties to add rows of text and
-   readouts. See [Laying out pages](nodes/gui.md#laying-out-pages).
+   readouts. See [Laying out pages](nodes/gui.md#laying-out-pages), and [Laying out a display](gui-layout.md) for
+   why the layout is fixed when the flow compiles.
 
 Set **stale after** on the readouts and the light. A reading that stops arriving is then dimmed, so a dead sensor
 looks different from a steady room.
@@ -1172,8 +1173,8 @@ pass, and the clock starts once the board has the time.
 
 Each symptom below has its own fix:
 
-- **The picture is scrambled:** the **width** and **height** on both the gui screen and the display spi must be the
-  panel's own size, `320` and `480`, even when the picture is turned. Deploy checks this and says so.
+- **The picture is scrambled:** the **width** and **height** on the display spi must be the panel's own size,
+  `320` and `480`, even when the picture is turned; the gui screen follows them. Deploy checks this and says so.
 - **Touches land in the wrong place:** see [Touch panels](nodes/touch-panel.md).
 - **No readings:** check the wiring and the address (`0x76` or `0x77`), and test with a debug node.
 - **The clock stays at `--`:** the ntp node's status says why: no WiFi yet, or the NTP server can't be reached.
@@ -1275,6 +1276,60 @@ The nodes with a status are `wifi status`, `mqtt publish`, `mqtt subscribe`, `i2
 
 The **Notes** panel on the right is free text about the flow: what it does, what to wire up, how to use it. It's
 saved in the flow file, and opens by itself when you open a flow that has notes. **File → New flow** clears it.
+
+
+---
+
+Source: https://docs.thingstudio.net/gui-layout/
+
+# Laying out a display
+
+How a gui screen turns cells into a picture: a fixed panel, no windows, and a layout worked out when the flow
+compiles.
+
+## A panel, not a window
+
+A Thingstudio display is one panel of a known size, filled by one flow. There is no window system and no windows:
+a page fills the display, and the display's size never changes while the flow runs. Nothing on the board moves
+anything because the size changed, because the size never changes.
+
+Pages don't resize either. Turning to another page or setting a widget to a longer value draws in a place that was
+decided earlier; it never asks for room.
+
+## The layout is resolved at compile time
+
+When you compile, the compiler turns each element's cells into pixel positions, picks the font each piece of text
+needs, and fixes the gutters between them. Deploy sends those numbers, and the board paints them. No layout pass
+runs on the board and nothing reflows at runtime.
+
+That is what keeps a GUI flow affordable on a microcontroller: the board carries no layout engine, no font
+metrics and no page model, only the numbers needed to draw.
+
+## Compared with a web framework
+
+A web page is laid out by a browser, in a window someone can resize: CSS resolves sizes at runtime, media queries
+answer the window, and text reflows when content changes. On a board none of that applies.
+
+- There is no browser and no layout engine in the flow.
+- The panel's size is fixed, so nothing responds to a resize or to an orientation change at runtime.
+- Text doesn't reflow. An element gets the largest font that fits its cells, chosen at compile time; text that
+  doesn't fit is a Deploy error naming the element and the space it needs.
+- A layout is for one panel. A display of a different size means compiling for that display, not a reflow.
+
+The cell grid looks like CSS grid because it is a grid of cells and spans, but it is resolved once, when the flow
+compiles, rather than by a browser at runtime.
+
+## What that means when you build a page
+
+- The gui screen takes its width and height from the [display spi](nodes/display-spi.md) node it is wired to, so
+  set the panel's size there.
+- Set **grid columns** on the screen and give each element a row, a column, a row span and a column span. Nothing
+  is in pixels, so the same layout works across panels of a similar shape — but not across panels so different
+  that elements stop fitting.
+- Orientation is a display setting. The screen wired to it turns its layout to match when the flow compiles.
+
+The cells, the outline and the errors to expect are on [GUI nodes](nodes/gui.md#laying-out-pages). A worked example
+is in [A sensor display](sensor-display.md).
 
 
 ---
@@ -3453,12 +3508,9 @@ and a **timeout** above `0` closes it on its own. The modal node's output says w
 
 ## Laying out pages
 
-Thingstudio doesn't lay out like a web framework. A web page is laid out by the browser, in a window someone can
-resize. A Thingstudio display is one fixed panel: no windows, and no size change to react to. So the layout is
-worked out when the flow compiles — cell spans, gutters, font sizes and positions all become fixed numbers before
-the flow is deployed, and the board draws those numbers. There is no layout pass at runtime and nothing reflows.
-That is what keeps a GUI flow affordable on a microcontroller. A different panel means compiling for that panel,
-not a reflow on the board.
+A Thingstudio display is one fixed panel, not a window, and its layout is resolved when the flow compiles — there
+is no layout pass on the board and nothing reflows. See [Laying out a display](../gui-layout.md) for the model and
+how it differs from a web page.
 
 Every screen has a **cell grid**: **grid columns** on the gui screen (12 by default) and **grid rows**
 (`0` means "work them out from the display's shape", so cells stay roughly square). A position is a row and a
@@ -5488,6 +5540,12 @@ its *on sends* and *off sends* values, `true` and `false` unless you changed the
 
 Both would poll the same chip, and each would take touches from the other. A gui screen reads its panel itself.
 Use the touch node only when you aren't using the GUI. Deploy stops and names both nodes if a panel is picked twice.
+
+## Why can't a page resize, or a text element take a percentage width?
+
+There is nothing to resize to: a page fills a display of one fixed size, and the layout is resolved when the flow
+compiles, not by a browser at runtime. An element's cells, its font and its position are fixed numbers on the
+board. See [Laying out a display](gui-layout.md).
 
 ## Why won't a function node's output wire into pwm out?
 

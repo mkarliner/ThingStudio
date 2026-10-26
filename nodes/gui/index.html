@@ -1019,6 +1019,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../gui-layout/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Laying out a display
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../flow-lifecycle/" class="md-nav__link">
         
   
@@ -3297,12 +3325,9 @@ layout to the data you want shown (a modal can hold the same widget a page does)
 returning a message whose <code>payload</code> is <code>None</code>). A navigate button in the layout with target <code>back</code> acknowledges it,
 and a <strong>timeout</strong> above <code>0</code> closes it on its own. The modal node's output says which of the three happened.</p>
 <h2 id="laying-out-pages">Laying out pages</h2>
-<p>Thingstudio doesn't lay out like a web framework. A web page is laid out by the browser, in a window someone can
-resize. A Thingstudio display is one fixed panel: no windows, and no size change to react to. So the layout is
-worked out when the flow compiles — cell spans, gutters, font sizes and positions all become fixed numbers before
-the flow is deployed, and the board draws those numbers. There is no layout pass at runtime and nothing reflows.
-That is what keeps a GUI flow affordable on a microcontroller. A different panel means compiling for that panel,
-not a reflow on the board.</p>
+<p>A Thingstudio display is one fixed panel, not a window, and its layout is resolved when the flow compiles — there
+is no layout pass on the board and nothing reflows. See <a href="../../gui-layout/">Laying out a display</a> for the model and
+how it differs from a web page.</p>
 <p>Every screen has a <strong>cell grid</strong>: <strong>grid columns</strong> on the gui screen (12 by default) and <strong>grid rows</strong>
 (<code>0</code> means "work them out from the display's shape", so cells stay roughly square). A position is a row and a
 column, 0-based; a size is a row span and a column span. Nothing is in pixels, so the same layout works on a

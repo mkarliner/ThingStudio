@@ -1167,6 +1167,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../gui-layout/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Laying out a display
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../flow-lifecycle/" class="md-nav__link">
         
   
@@ -3226,15 +3254,16 @@ the pressure, for its journal. Output 5 says the sensor is alive.</p>
 </tbody>
 </table>
 <p>Click 💾 to save these as a <a href="../working-in-the-editor/#presets">preset</a> for next time.
-2. Drag a <strong>gui screen</strong>. Set its <strong>width</strong> and <strong>height</strong> to the panel's own size, <code>320</code> and <code>480</code>, and its
-   <strong>frame format</strong> to <code>rgb565</code>. Wire it to the display spi.
+2. Drag a <strong>gui screen</strong> and wire it to the display spi. It takes its width, height and frame format from the
+   display, so the panel's size is set in one place.
 3. In the gui screen's <strong>touch panel</strong> field, click <strong>+</strong> and make a Touch panel: controller FT6336U, the same I2C
    bus, address <code>0x38</code>, width <code>320</code>, height <code>480</code>.
 4. Drag three <strong>gui readout</strong> nodes (temperature, humidity, pressure) and a <strong>gui light</strong> for the sensor. Wire the
    function's outputs 1, 2, 3 and 5 to them. In each readout, set <strong>units</strong>, <strong>decimals</strong>, <strong>lowest value</strong> and
    <strong>highest value</strong>.
 5. Lay out the pages: select the gui screen and use the page outline in its properties to add rows of text and
-   readouts. See <a href="../nodes/gui/#laying-out-pages">Laying out pages</a>.</p>
+   readouts. See <a href="../nodes/gui/#laying-out-pages">Laying out pages</a>, and <a href="../gui-layout/">Laying out a display</a> for
+   why the layout is fixed when the flow compiles.</p>
 </li>
 </ol>
 <p>Set <strong>stale after</strong> on the readouts and the light. A reading that stops arriving is then dimmed, so a dead sensor
@@ -3279,8 +3308,8 @@ pass, and the clock starts once the board has the time.</p>
 <h2 id="if-it-doesnt-work">If it doesn't work</h2>
 <p>Each symptom below has its own fix:</p>
 <ul>
-<li><strong>The picture is scrambled:</strong> the <strong>width</strong> and <strong>height</strong> on both the gui screen and the display spi must be the
-  panel's own size, <code>320</code> and <code>480</code>, even when the picture is turned. Deploy checks this and says so.</li>
+<li><strong>The picture is scrambled:</strong> the <strong>width</strong> and <strong>height</strong> on the display spi must be the panel's own size,
+  <code>320</code> and <code>480</code>, even when the picture is turned; the gui screen follows them. Deploy checks this and says so.</li>
 <li><strong>Touches land in the wrong place:</strong> see <a href="../nodes/touch-panel/">Touch panels</a>.</li>
 <li><strong>No readings:</strong> check the wiring and the address (<code>0x76</code> or <code>0x77</code>), and test with a debug node.</li>
 <li><strong>The clock stays at <code>--</code>:</strong> the ntp node's status says why: no WiFi yet, or the NTP server can't be reached.

@@ -36,6 +36,7 @@
 ## Building flows
 
 - [Editor in depth](https://docs.thingstudio.net/working-in-the-editor/): How the editor's wiring, node labels, presets, config nodes and node status work.
+- [Laying out a display](https://docs.thingstudio.net/gui-layout/): How a gui screen turns cells into a picture: a fixed panel, no windows, and a layout worked out when the flow compiles.
 - [Flow lifecycle](https://docs.thingstudio.net/flow-lifecycle/): How a flow is saved, opened, deployed and disconnected.
 - [The Thingstudio folder](https://docs.thingstudio.net/thingstudio-folder/): Thingstudio keeps its own files in one folder on your computer:
 
