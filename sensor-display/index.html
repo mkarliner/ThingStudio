@@ -3249,7 +3249,9 @@ looks different from a steady room.</p>
 <li>Wire output 4, the pressure copy, to a journal with <strong>seconds per row</strong> <code>60</code>, and that to a third gui histogram.</li>
 </ol>
 <p>Each bar is the average of its row, and the thin line runs from the row's min to its max. Set each histogram's
-<strong>bottom at</strong> and <strong>top at</strong> to the range you expect, for example 15 to 30 for temperature. See
+<strong>bottom at</strong> and <strong>top at</strong> to the range you expect, for example 15 to 30 for temperature. A histograms shows only
+the rows its journal kept: give the journal at least as many <strong>rows kept</strong> as the histogram has columns, or the bars
+fill the right of the card and leave the rest empty — the compiler warns with the number to raise. See
 <a href="../nodes/gui/#histogram">Histogram</a>.</p>
 <h2 id="4-add-the-clock">4. Add the clock</h2>
 <ol>
