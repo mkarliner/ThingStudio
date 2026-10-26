@@ -151,7 +151,7 @@
       "type": "thingstudio/journal",
       "properties": {
         "name": "Pressure history",
-        "rows": 40,
+        "rows": 70,
         "stepSeconds": 0,
         "steps": 0
       }

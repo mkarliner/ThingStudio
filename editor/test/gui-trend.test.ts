@@ -52,6 +52,36 @@ describe("trend widget", () => {
   });
 });
 
+describe("a histogram fills its rect", () => {
+  // 2026-10-26, on the CYD: the theme flow's histogram drew 40 bars in a rect that holds 70, so the left of the
+  // card stayed empty and it read as a widget that stopped drawing. The bar width is fixed (a fraction of a grid
+  // cell), so the only way it fills is a journal keeping at least as many rows as the rect shows; the compiler
+  // knows both figures and says so. Mike's call: make the numbers agree, not variable-width bars.
+  const themeFlow = () => parseFlowFile(readFileSync(join(__dirname, "..", "..", "test-flows", "gui-hero-cyd-theme.flow.json"), "utf8"));
+
+  async function compileTheme(rows: number) {
+    const f = themeFlow();
+    f.nodes.find((x) => x.id === "n14-journal")!.properties.rows = rows;
+    const links = f.edges.map((e, i) => [i, e[0], e[1], e[2], e[3], "any"] as [number, string, number, string, number, string]);
+    return compileWithHooks({ nodes: f.nodes, links, configs: f.configs, screens: f.screens }, buildRegistry());
+  }
+
+  it("names the journal, the rows it keeps and the columns the space shows", async () => {
+    const { warnings } = await compileTheme(40);
+    expect(warnings).toContain(
+      'journal "Pressure history" keeps 40 rows but histogram "Pressure history" shows 70 columns, ' +
+        "so the left of it stays empty -- raise rows kept to 70",
+    );
+  });
+
+  it("says nothing once the journal is long enough, and the shipped flow is", async () => {
+    const { warnings } = await compileTheme(70);
+    expect(warnings.some((w) => w.includes("shows 70 columns"))).toBe(false);
+    const shipped = await compileTheme(Number(themeFlow().nodes.find((x) => x.id === "n14-journal")!.properties.rows));
+    expect(shipped.warnings.some((w) => w.includes("stays empty"))).toBe(false);
+  });
+});
+
 describe("journal in a flow", () => {
   it("compiles one ring per journal, each journal carrying its own class", async () => {
     const { source } = await compileFlow();

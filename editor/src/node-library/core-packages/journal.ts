@@ -10,6 +10,9 @@
 import type { NodeDescriptor } from "../../compiler/node-descriptor.js";
 
 export const JOURNAL_MAX_ROWS = 256;
+/** The `rows kept` default: how many columns a default histogram is told to expect (core-packages/journal.ts and
+ * gui/screens.ts's warning about a journal too short for its histogram both read this). */
+export const JOURNAL_DEFAULT_ROWS = 60;
 
 export const descriptor: NodeDescriptor = {
   type: "thingstudio/journal",
@@ -35,7 +38,7 @@ export const descriptor: NodeDescriptor = {
     ],
   },
   properties: [
-    { name: "rows", label: "rows kept", kind: "number", default: 60, min: 1, max: 256 },
+    { name: "rows", label: "rows kept", kind: "number", default: JOURNAL_DEFAULT_ROWS, min: 1, max: 256 },
     { name: "stepSeconds", label: "seconds per row (0 = one row per message)", kind: "number", default: 60, min: 0, step: "any" },
     { name: "steps", label: "rows per roll-up (0 = none)", kind: "number", default: 0, min: 0 },
     { name: "xff", label: "gaps allowed in a roll-up (0 to 1)", kind: "number", default: 0.5, min: 0, max: 1, step: 0.05, visibleWhen: { field: "steps", gt: 0 } },

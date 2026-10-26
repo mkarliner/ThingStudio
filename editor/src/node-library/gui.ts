@@ -39,6 +39,7 @@ import type {
   SinkCodegenResult,
   TransformCodegenResult,
 } from "../compiler/node-definition.js";
+import { JOURNAL_DEFAULT_ROWS } from "./core-packages/journal.js";
 import { compileScreens, GUI_BUTTON, GUI_SCREEN, GUI_MODAL, isWidgetType, modalName, nodeLabel, pyStr, WIDGET_TYPES, type CompiledScreens, type ScreenSize } from "../gui/screens.js";
 
 export type GuiFrameFormat = "gs4" | "gs2" | "mono" | "rgb565";
@@ -121,6 +122,21 @@ function screensFor(ctx: CodegenContext): CompiledScreens {
     c = compileScreens(ctx.screens ?? {}, nodes, (n) => screenSize(n, ctx));
     if (c.errors.length > 0) throw new CompileError(`GUI layout:\n  ${c.errors.join("\n  ")}`);
     for (const w of c.warnings) ctx.warn?.(w);
+    // A histogram draws as many columns as its rect holds, newest on the right, but only as many rows as its
+    // series has (tsgui_trend.draw). A journal keeping fewer rows than the rect holds fills part of it and leaves
+    // the rest empty, which reads as a widget that stopped drawing (Mike, 2026-10-26). Say the number to raise.
+    for (const journal of ctx.findNodesOfType?.("thingstudio/journal") ?? []) {
+      const rows = Math.round(Number(journal.properties.rows ?? JOURNAL_DEFAULT_ROWS));
+      if (!(rows > 0)) continue;
+      for (const target of ctx.findWiredTargets?.(journal.id) ?? []) {
+        const columns = c.trendColumns.get(target.id);
+        if (columns === undefined || columns <= rows) continue;
+        ctx.warn?.(
+          `journal ${nodeLabel(journal)} keeps ${rows} rows but histogram ${nodeLabel(target)} shows ${columns} columns, ` +
+            `so the left of it stays empty -- raise rows kept to ${columns}`,
+        );
+      }
+    }
     compiled.set(ctx, c);
   }
   return c;

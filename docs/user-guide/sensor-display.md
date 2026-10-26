@@ -91,7 +91,9 @@ A [journal](nodes/journal.md) keeps the recent readings, and a **gui histogram**
 3. Wire output 4, the pressure copy, to a journal with **seconds per row** `60`, and that to a third gui histogram.
 
 Each bar is the average of its row, and the thin line runs from the row's min to its max. Set each histogram's
-**bottom at** and **top at** to the range you expect, for example 15 to 30 for temperature. See
+**bottom at** and **top at** to the range you expect, for example 15 to 30 for temperature. A histograms shows only
+the rows its journal kept: give the journal at least as many **rows kept** as the histogram has columns, or the bars
+fill the right of the card and leave the rest empty — the compiler warns with the number to raise. See
 [Histogram](nodes/gui.md#histogram).
 
 ## 4. Add the clock

@@ -49,6 +49,9 @@ draws as many bars as fit, newest at the right edge.
   In a layout it can stretch, and then shows more rows.
 - **stale after** — dims the bars if nothing new arrives in this time.
 
+It shows only the rows its journal kept. With fewer rows than the space holds, the bars sit at the right edge and the
+left of the card stays empty; the compiler says how many rows to keep. Raising **rows kept** on the journal fills it.
+
 ## Buttons
 
 A button's **mode** says what a tap does.

@@ -102,6 +102,9 @@ export interface CompiledScreens {
   readonly surfaces: CompiledSurface[];
   /** Widget node id -> Python expression building its draw routine. */
   readonly widgetDraws: ReadonlyMap<string, string>;
+  /** Histogram node id -> how many columns its rect holds, at the column width codegen gave it. A series shorter
+   * than this draws only what it has, right-aligned, and leaves the rest of the rect empty (2026-10-26). */
+  readonly trendColumns: ReadonlyMap<string, number>;
   /** Font modules and widget libraries the generated code imports. */
   readonly imports: ReadonlySet<string>;
   readonly errors: string[];
@@ -165,6 +168,8 @@ export function compileScreens(
   const warnings: string[] = [];
   const imports = new Set<string>();
   const widgetDraws = new Map<string, string>();
+  // Histogram node id -> the columns its rect holds, so the journal feeding it can be checked against them.
+  const trendColumns = new Map<string, number>();
   const surfaces: CompiledSurface[] = [];
   const byId = new Map(nodes.map((n) => [n.id, n]));
   const placedOn = new Map<string, { screen: string; where: string }>(); // widget node id -> first placement
@@ -316,6 +321,8 @@ export function compileScreens(
             // Bars are a fraction of a cell, so the histogram scales with the panel (8 bars per cell by default).
             const colWidth = Math.max(1, Math.round(cellW / 8));
             draw = `tsgui_trend.make(${pyNum(lo)}, ${pyNum(hi)}, ${colWidth})`;
+            // The same arithmetic tsgui_trend.draw() uses: inner width, one column every colWidth px.
+            trendColumns.set(node.id, Math.max(0, Math.floor((w - 4) / colWidth)));
             break;
           }
           case "button": {
@@ -472,7 +479,7 @@ export function compileScreens(
       warnings.push(`widget ${nodeLabel(n)} isn't placed on any screen, so nothing shows it`);
     }
   }
-  return { surfaces, widgetDraws, imports, errors, warnings };
+  return { surfaces, widgetDraws, trendColumns, imports, errors, warnings };
 }
 
 /** A gui_modal node's name: its `name` property, else its short id. Unique per screen. */
