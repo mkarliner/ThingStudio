@@ -30,6 +30,12 @@
   case in the same per-kind dispatch `select` vs. plain `input` already
   used, not a parallel mechanism.
 
+  2026-10-29 (Mike: "the whole edit panel is confusing"): a credential-backed config's ✎ no longer nests
+  CredentialRefField (a "credential" dropdown with its own ✎ and +, inside this panel). It shows one form:
+  the saved credential's values plus the config's other fields, with one Save and a Cancel that discards.
+  Choosing a different saved credential is the outer dropdown. The auto-save below now applies only to
+  configs without a credential (I2C bus, touch panel, theme). The history that follows is kept as is.
+
   Auto-save, no outer Save button (2026-09-13, same day, Mike's own
   hands-on report): with a credential field in the mix, the original
   Save/Cancel pair here stacked on top of CredentialRefField's own
@@ -106,29 +112,57 @@
       </div>
     </label>
 
-    <div v-if="editingId" class="config-edit-panel">
-      <div class="config-edit-header">editing {{ descriptor.label }} <span class="config-edit-id">#{{ editingId.slice(0, 6) }}</span></div>
+    <!-- A config that holds a saved credential (MQTT broker, WiFi): one form with the credential's own values
+         and this config's other fields, saved together. Picking a different saved one is the dropdown above. -->
+    <div v-if="editingId && credentialField" class="config-edit-panel">
+      <div class="config-edit-header">
+        edit {{ descriptor.label }}<span v-if="editingCredentialName" class="config-edit-name"> "{{ editingCredentialName }}"</span>
+      </div>
+      <template v-if="editingCredentialName">
+        <p v-if="credentialLoading" class="field-note">loading...</p>
+        <p v-else-if="credentialMissing" class="field-note">
+          No saved {{ descriptor.label }} called "{{ editingCredentialName }}" on this computer. Fill it in and save to
+          create it.
+        </p>
+        <label v-for="cf in credentialDescriptor?.fields ?? []" :key="cf.name" class="field-row">
+          <span class="field-label">{{ cf.label }}</span>
+          <input
+            :type="cf.kind === 'password' ? 'password' : cf.kind === 'number' ? 'number' : 'text'"
+            :placeholder="cf.placeholder"
+            :disabled="credentialLoading"
+            v-model="editCredentialDraft[cf.name] as any"
+          />
+        </label>
+      </template>
+      <template v-for="f in otherFields" :key="f.name">
+        <label class="field-row">
+          <span class="field-label">{{ f.label }}</span>
+          <select v-if="f.kind === 'select'" v-model="draft[f.name] as any">
+            <option v-for="opt in f.options" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+          </select>
+          <input v-else-if="f.kind === 'boolean'" type="checkbox" v-model="draft[f.name] as any" />
+          <input v-else :type="f.kind === 'number' ? 'number' : 'text'" v-model="draft[f.name] as any" />
+        </label>
+        <p v-if="f.help" class="field-help">{{ f.help }}</p>
+      </template>
+      <p v-if="editingCredentialName" class="field-note">
+        Saved on this computer, not in the flow. Every flow that uses "{{ editingCredentialName }}" gets the change.
+      </p>
+      <p v-if="editError" class="field-error">{{ editError }}</p>
+      <div class="config-edit-actions">
+        <button type="button" :disabled="saving || credentialLoading" @click="saveEdit">{{ saving ? "saving..." : "Save" }}</button>
+        <button type="button" @click="closeEdit">Cancel</button>
+      </div>
+    </div>
+
+    <div v-else-if="editingId" class="config-edit-panel">
+      <div class="config-edit-header">edit {{ descriptor.label }}</div>
       <!-- Save/load a named preset of this config's values (touch panel); applies into draft, which auto-saves. -->
       <PresetRefField v-if="descriptor.presetType" :key="editingId" :preset-type="descriptor.presetType" :properties="draft" />
       <template v-for="f in descriptor.fields" :key="f.name">
-        <!-- CredentialRefField renders its own label (it needs to, for its
-             standalone use inside PropertyPanel.vue in principle, even
-             though today it's only ever used here) -- wrapping it in this
-             loop's own `<label>{{f.label}}</label>` too, the way every
-             other field kind below needs, stacked two labels on top of
-             each other ("credential" then "WiFi credential"). Skip that
-             outer label for this one kind and pass this field's own label
-             down instead, so there's exactly one. -->
-        <CredentialRefField
-          v-if="f.kind === 'credential'"
-          :credential-type="f.credentialType!"
-          :model-value="(draft[f.name] as string) || undefined"
-          :label="f.label"
-          @update:model-value="(name) => { draft[f.name] = name; }"
-        />
         <!-- A reference to another config (a touch panel's I2C bus): this same widget, nested. -->
         <ConfigRefField
-          v-else-if="f.kind === 'configRef'"
+          v-if="f.kind === 'configRef'"
           :config-type="f.configType!"
           :model-value="(draft[f.name] as string) || undefined"
           :label="f.label"
@@ -165,14 +199,16 @@
 
     <div v-if="creatingNew" class="config-edit-panel">
       <div class="config-edit-header">new {{ descriptor.label }}</div>
+      <p v-if="credentialDescriptor" class="field-note">Saved on this computer, not in the flow.</p>
       <label class="field-row">
         <span class="field-label">name</span>
-        <input v-model="newName" placeholder="e.g. home-wifi" />
+        <input v-model="newName" :placeholder="credentialDescriptor?.namePlaceholder ?? 'e.g. home'" />
       </label>
       <label v-for="cf in credentialDescriptor?.fields ?? []" :key="cf.name" class="field-row">
         <span class="field-label">{{ cf.label }}</span>
         <input
           :type="cf.kind === 'password' ? 'password' : cf.kind === 'number' ? 'number' : 'text'"
+          :placeholder="cf.placeholder"
           v-model="newCredentialDraft[cf.name] as any"
         />
       </label>
@@ -203,11 +239,10 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from "vue";
 import { backendWsUrl, configs, configsVersion, createConfig, getConfig, listConfigsOfType, nextFreeKey, updateConfig } from "./store";
-import { CONFIG_TYPES } from "./config-types";
+import { CONFIG_TYPES, type ConfigFieldDescriptor } from "./config-types";
 import { applyThemePreset, GUI_THEME_CONFIG_TYPE } from "../../node-library/gui-theme-shared";
 import { CREDENTIAL_TYPES } from "./credential-types";
-import { AdminApiError, listCredentials, putCredential } from "../../flow-file/admin-api-client";
-import CredentialRefField from "./CredentialRefField.vue";
+import { AdminApiError, getCredential, listCredentials, putCredential } from "../../flow-file/admin-api-client";
 import PinField from "./PinField.vue";
 import PresetRefField from "./PresetRefField.vue";
 
@@ -355,12 +390,66 @@ function onSelect(id: string): void {
 const editingId = ref<string | null>(null);
 const draft = reactive<Record<string, unknown>>({});
 
+// A credential-backed config (MQTT broker, WiFi) edits the saved credential's values and the config's other
+// fields in one form, saved together (2026-10-29, Mike: the old panel nested a "credential" dropdown with its
+// own pencil and + inside this one, and "the whole edit panel is confusing"). Which saved credential a node
+// uses is the outer dropdown's job, so the form doesn't repeat it.
+const editingCredentialName = ref("");
+const editCredentialDraft = reactive<Record<string, unknown>>({});
+const credentialLoading = ref(false);
+const credentialMissing = ref(false);
+const editError = ref<string | null>(null);
+const saving = ref(false);
+
 function openEdit(id: string): void {
   const cfg = getConfig(id);
   if (!cfg) return;
   editingId.value = id;
   for (const key of Object.keys(draft)) delete draft[key];
   Object.assign(draft, descriptor.value.defaults, cfg.properties);
+  const credField = credentialField.value;
+  if (credField?.credentialType) void loadCredential(credField.credentialType, String(cfg.properties[credField.name] ?? ""));
+}
+
+async function loadCredential(type: NonNullable<ConfigFieldDescriptor["credentialType"]>, name: string): Promise<void> {
+  editError.value = null;
+  credentialMissing.value = false;
+  editingCredentialName.value = name;
+  for (const key of Object.keys(editCredentialDraft)) delete editCredentialDraft[key];
+  Object.assign(editCredentialDraft, CREDENTIAL_TYPES[type]?.defaults ?? {});
+  if (!name) return; // an unmanaged WiFi config: no credential at all
+  credentialLoading.value = true;
+  try {
+    Object.assign(editCredentialDraft, await getCredential(backendWsUrl.value, type, name));
+  } catch (err) {
+    // A flow from another computer names a credential this one doesn't have: let the user create it here.
+    if (err instanceof AdminApiError && err.status === 404) credentialMissing.value = true;
+    else editError.value = err instanceof Error ? err.message : String(err);
+  } finally {
+    credentialLoading.value = false;
+  }
+}
+
+async function saveEdit(): Promise<void> {
+  const id = editingId.value;
+  const credField = credentialField.value;
+  if (!id || !credField?.credentialType) return;
+  saving.value = true;
+  editError.value = null;
+  try {
+    const name = editingCredentialName.value;
+    if (name) await putCredential(backendWsUrl.value, credField.credentialType, name, { ...editCredentialDraft });
+    const config: Record<string, unknown> = {};
+    for (const f of otherFields.value) config[f.name] = draft[f.name];
+    // The resolved values go on the in-memory config too, so the next compile sees them without a reload.
+    updateConfig(id, name ? { ...config, ...editCredentialDraft } : config);
+    editingId.value = null;
+    void refreshCredentialNames();
+  } catch (err) {
+    editError.value = err instanceof AdminApiError || err instanceof Error ? err.message : String(err);
+  } finally {
+    saving.value = false;
+  }
 }
 
 /** A theme's starting point replaces the colours. It used to only seed them at creation, so switching from
@@ -445,7 +534,7 @@ function cancelNew(): void {
 watch(
   draft,
   () => {
-    if (editingId.value) updateConfig(editingId.value, { ...draft });
+    if (editingId.value && !credentialField.value) updateConfig(editingId.value, { ...draft });
   },
   { deep: true },
 );
@@ -543,11 +632,6 @@ watch(
   flex: 1 1 auto;
   min-width: 0;
 }
-.config-edit-id {
-  color: #666;
-  text-transform: none;
-  letter-spacing: normal;
-}
 .config-edit-actions {
   display: flex;
   gap: 6px;
@@ -578,6 +662,16 @@ watch(
   font-size: 11px;
   padding: 6px 8px;
   border-radius: 3px;
+  margin: 0 0 6px 0;
+}
+/* A saved name is shown as typed, not upper-cased with the rest of the header. */
+.config-edit-name {
+  text-transform: none;
+  letter-spacing: normal;
+}
+.field-note {
+  color: #999;
+  font-size: 11px;
   margin: 0 0 6px 0;
 }
 .field-error {

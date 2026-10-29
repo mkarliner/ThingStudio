@@ -54,7 +54,12 @@
 
 export const DEFAULT_BACKEND_WS_URL = "ws://127.0.0.1:8765/ws"; // matches __main__.py's --host 127.0.0.1 --port 8765 default and app.py's /ws route
 
-export class AdminApiError extends Error {}
+export class AdminApiError extends Error {
+  /** The HTTP status, where the caller needs it (a credential that isn't saved on this computer is a 404). */
+  constructor(message: string, readonly status?: number) {
+    super(message);
+  }
+}
 
 /** The backend URL the editor starts with. When the backend itself served this page (the normal
  * case since 2026-09-23 -- editor_site.py), the backend is wherever the page came from, whatever
@@ -235,7 +240,7 @@ export async function listCredentials(wsUrl: string, type: CredentialType): Prom
 
 export async function getCredential(wsUrl: string, type: CredentialType, name: string): Promise<Record<string, unknown>> {
   const res = await request(wsUrl, `/api/credentials/${type}/${encodeURIComponent(name)}`);
-  if (!res.ok) throw new AdminApiError(`load ${type} credential "${name}" failed: ${await parseErrorBody(res)}`);
+  if (!res.ok) throw new AdminApiError(`load ${type} credential "${name}" failed: ${await parseErrorBody(res)}`, res.status);
   return (await res.json()) as Record<string, unknown>;
 }
 

@@ -404,8 +404,8 @@
     <h2>Install firmware</h2>
     <p>For a board with no MicroPython yet, or one you want to start over on.
       <strong>Flashing erases the flow and all settings on the board.</strong>
-      Afterwards choose <strong>Tools → Install runtime…</strong> to make it run Thingstudio: a stock MicroPython
-      build needs the whole runtime, a Thingstudio image only its boot script.</p>
+      Afterwards choose <strong>Tools → Install runtime…</strong> to make it run Thingstudio: official MicroPython
+      needs the whole runtime, the Thingstudio custom image only its boot script.</p>
     <fieldset>
       <legend>How is the board connected?</legend>
       <label class="check"><input type="radio" name="fwTransport" value="serial" checked />
@@ -419,10 +419,13 @@
     </div>
     <label>or type the path <input id="fwTargetPath" type="text" placeholder="/dev/ttyUSB0" /></label>
     <p id="fwTargetsNote" class="dialog-note"></p>
+    <!-- Firmware first, then build and version (2026-10-29, Mike): the Thingstudio image's pinned releases used to
+         sit at the bottom of the Build list, among the board variants, and were hard to find. -->
     <div class="dialog-row">
       <label>Chip family <select id="fwFamily"></select></label>
-      <label>Build <select id="fwBuild"></select></label>
+      <label>Firmware <select id="fwSupplier" title="Official MicroPython from micropython.org, or the Thingstudio custom image with the runtime and flow libraries built in"></select></label>
     </div>
+    <label>Build <select id="fwBuild"></select></label>
     <label>Version <select id="fwVersion"></select></label>
     <label>Or use your own image file <span class="hint">only if the build you need isn't listed</span>
       <input id="fwFile" type="file" accept=".bin,.uf2,.gz" /></label>

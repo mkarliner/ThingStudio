@@ -37,20 +37,33 @@ one image serves any classic ESP32 board. It is tested on the CYD.
 
 ## What you need
 
-You need these:
-
 - A classic ESP32 board with 4 MB of flash and no PSRAM (ESP32-D0WD and similar). This image is not for the S2, S3,
   C3 or C6, and not for RP2040 or RP2350 boards.
 - A USB cable that carries data.
-- `esptool` and `mpremote` on the computer: `pip install esptool mpremote`.
-- Three downloads from the project's [releases page](https://github.com/mkarliner/ThingStudio/releases/latest): the image, its `.sha256` file, and `main.py`.
 
-## Install
+## Install from the editor
 
 Flashing erases the board: its saved flow and all settings are gone afterwards.
 
-1. Download the three files from the [releases page](https://github.com/mkarliner/ThingStudio/releases/latest): the image, its `.sha256` and `main.py`. Put them
-   in one folder and go there. Check the image against its checksum:
+1. Put the board in download mode if it needs it: hold **BOOT** and tap **RESET**.
+2. Choose **Tools → Install firmware…**, pick **Serial port**, then the board's port.
+3. Set **Chip family** to **ESP32** and **Firmware** to **Thingstudio custom image**.
+4. Pick a **Version**. Each version listed ran on a board before it was published, and the editor checks the
+   download against its recorded SHA-256 before writing it.
+5. Click **Flash**.
+6. [Connect](connecting.md), then choose **Tools → Install runtime…**. It writes only the boot script, `main.py`:
+   the runtime is already in the image.
+
+## Install by hand
+
+You need `esptool` and `mpremote` on the computer: `pip install esptool mpremote`.
+
+Each image is attached to the Thingstudio release it was published with, which is often not the latest release.
+On the [releases page](https://github.com/mkarliner/ThingStudio/releases), open the release whose assets include the
+image version you want (the versions are the ones the editor lists), and download three files from it: the image,
+its `.sha256` file and `main.py`.
+
+1. Put the three files in one folder and go there. Check the image against its checksum:
 
    ```sh
    IMAGE=$(ls thingstudio-classic-esp32-*.bin)   # the image you downloaded
@@ -76,10 +89,6 @@ Flashing erases the board: its saved flow and all settings are gone afterwards.
    on the board.
 
 4. Reset the board. It starts the listener and prints `LISTENER_READY`.
-
-From the editor, **Tools → Install firmware…** offers the published image as a **Thingstudio image** build of the
-classic ESP32 family, and **Tools → Install runtime…** writes the boot
-script, so the terminal steps above are only needed when you want them.
 
 The repository also has `firmware/classic-esp32/install.sh`, which runs these steps in one command. Read it before
 running it: it erases the filesystem partition, and its port name comes from `PORT`.

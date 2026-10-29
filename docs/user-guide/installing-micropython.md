@@ -20,12 +20,16 @@ RP2040, RP2350 and nRF52 boards.
    the path and the adapter's name (for example `/dev/ttyUSB0 -- CH340`). If the board isn't there, put it in
    download mode (step 1) and click ⟳; the line under the list says how many it found. If it still isn't listed,
    type the path in the box (on macOS a mounted Pico is `/Volumes/RPI-RP2`).
-4. Pick the **chip family**, then the **build** and **version**. Only the families the editor can write are listed,
-   and only builds whose hash is pinned, so what you flash is what was tested. A board that names its own build is
-   preselected. The build matters for the heap as much as for compatibility: an ESP32 with extra PSRAM wants the
-   **PSRAM (WROVER)** build, a single-core SOLO the **single-core** one. For a classic ESP32 there is also
-   **Thingstudio image**, which carries the runtime and the flow libraries frozen — flash it, then **Install
-   runtime** writes only the boot script.
+4. Pick the **chip family** and the **firmware**, then the **build** and **version**. Only the families the editor
+   can write are listed, and only builds whose hash is pinned, so what you flash is what was tested. A board that
+   names its own build is preselected. The build matters for the heap as much as for compatibility: an ESP32 with
+   extra PSRAM wants the **PSRAM (WROVER)** build, a single-core SOLO the **single-core** one.
+
+   For a classic ESP32 with no PSRAM, **Firmware** also offers the
+   [Thingstudio custom image](custom-firmware.md). It saves memory: the runtime and the flow libraries are built
+   into flash, so they run from there instead of being loaded into RAM. Use it when RAM is tight, for example when
+   a GUI flow stops with `MemoryError` on official MicroPython. Its **Version** list holds the published releases.
+   After flashing it, **Install runtime** writes only the boot script.
 5. Click **Flash**. **Erase all flash first** is ticked: it clears an old partition table, which is the usual
    reason a first install "succeeds" and then doesn't boot. The dialog shows each line the tool prints; a failure
    says what to fix.

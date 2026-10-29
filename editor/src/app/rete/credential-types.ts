@@ -27,6 +27,7 @@ export interface CredentialFieldDescriptor {
   name: string;
   label: string;
   kind: "text" | "password" | "number";
+  placeholder?: string;
 }
 
 export interface CredentialTypeDescriptor {
@@ -37,6 +38,8 @@ export interface CredentialTypeDescriptor {
   /** Short label for the widget, e.g. "WiFi credential". */
   label: string;
   fields: CredentialFieldDescriptor[];
+  /** Shown in the empty name box when making a new one. */
+  namePlaceholder: string;
   /** Seed properties for a freshly "+"-added credential of this type. */
   defaults: Record<string, unknown>;
 }
@@ -45,6 +48,7 @@ export const CREDENTIAL_TYPES: Record<string, CredentialTypeDescriptor> = {
   wifi: {
     type: "wifi",
     label: "WiFi credential",
+    namePlaceholder: "e.g. home-wifi",
     fields: [
       { name: "ssid", label: "SSID", kind: "text" },
       { name: "password", label: "password", kind: "password" },
@@ -54,8 +58,9 @@ export const CREDENTIAL_TYPES: Record<string, CredentialTypeDescriptor> = {
   "mqtt-broker": {
     type: "mqtt-broker",
     label: "MQTT broker credential",
+    namePlaceholder: "e.g. home-broker",
     fields: [
-      { name: "broker", label: "broker host/IP", kind: "text" },
+      { name: "broker", label: "host", kind: "text", placeholder: "e.g. 192.168.1.20 or broker.local" },
       { name: "port", label: "port", kind: "number" },
       // Both optional, same reasoning config-types.ts's own header used
       // to give for these two fields before the migration: an empty
@@ -63,8 +68,8 @@ export const CREDENTIAL_TYPES: Record<string, CredentialTypeDescriptor> = {
       // broker setup (mqtt_as's own config defaults both to "" for
       // exactly this reason) -- not a likely-forgotten-credential case
       // worth a loud rejection over.
-      { name: "username", label: "username (optional)", kind: "text" },
-      { name: "password", label: "password (optional)", kind: "password" },
+      { name: "username", label: "username", kind: "text", placeholder: "optional" },
+      { name: "password", label: "password", kind: "password", placeholder: "optional" },
     ],
     defaults: { broker: "", port: 1883, username: "", password: "" },
   },

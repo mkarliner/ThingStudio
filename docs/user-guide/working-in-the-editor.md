@@ -53,18 +53,23 @@ A config node holds settings that several nodes share. A node's property panel h
 and **+** makes a new one. The config nodes are:
 
 - **WiFi:** a saved credential and a security mode: password, open, or [unmanaged](wifi-provisioning.md).
-- **MQTT Broker:** a saved credential holding the host, port and optional username and password.
+- **MQTT Broker:** a saved credential holding the host, port and optional username and password. One per flow.
 - **I2C bus:** the bus number, SCL and SDA pins, and frequency. See [I2C bus](nodes/i2c-bus.md).
 - **Touch panel:** the touch controller, its I2C bus and address, and its size and orientation. See
   [Touch panels](nodes/touch-panel.md).
 
 The WiFi and MQTT Broker configs hold only the name of a saved credential. The SSID, passwords and broker address
 are saved by name in `~/.thingstudio/credentials/`, not in the flow file, so a flow you share or commit holds no
-secrets. Two flows that use the same credential share its values: edit it once and both change. Pick, edit or add a
-credential from the config's **credential** field. See [The Thingstudio folder](thingstudio-folder.md#credentials).
+secrets. Two flows that use the same credential share its values: edit it once and both change.
 
-A flow has one WiFi network. Every node that uses WiFi has a **WiFi** field, and they all show the same setting:
-change it on one and it changes on all. A flow doesn't need a `wifi status` node to use the network.
+Pick a saved WiFi network or broker from the field's list. ✎ opens the saved values, such as a broker's host, port
+and login, with the config's other settings; **Save** stores them and **Cancel** discards the changes. **+** makes a
+new one: give it a name, fill it in and save. If a flow names a credential that isn't saved on this computer, ✎ says
+so, and saving creates it. See [The Thingstudio folder](thingstudio-folder.md#credentials).
+
+A flow has one WiFi network and one MQTT broker. Every node that uses WiFi has a **WiFi** field, and every MQTT node
+an **MQTT Broker** field. They all show the flow's one setting: change it on one node and it changes on all. A flow
+doesn't need a `wifi status` node to use the network.
 
 ## Node status
 

@@ -114,3 +114,10 @@ Status: detail file, split out of `decisions.md` on 2026-09-06 to keep that inde
   different `signature` (pins, clock) raises `ValueError` instead of silently returning an object built
   differently, and the table is cleared in `cancel_running()`, so a redeploy with new pins builds afresh. The I2C
   bus setup statement uses it. Part of runtime 6.0.0 (not yet on any board when added).
+- **2026-10-29 — one MQTT broker per flow** (Mike: "assume 1 mqtt broker for the moment, so all mqtt nodes get
+  the same one. we may go to multiple in the future, but for new users this is a trap"). The `mqtt-broker` config
+  type is a singleton, like WiFi: every MQTT node's field shows and edits the flow's one instance, and the compile
+  hook (`compile-hooks.ts`, `_ts_mqtt_broker`) uses that instance and ignores the node's own `brokerConfigId`.
+  None, or more than one, is a compile error. Several brokers can come back later as a non-singleton type; no
+  flow in the repo had more than one when this landed. The same day, the broker and WiFi edit panel became one
+  form (the saved values and the config's own fields, one Save) instead of a nested credential picker.

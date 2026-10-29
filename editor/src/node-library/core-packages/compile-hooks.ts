@@ -41,10 +41,13 @@ export const WIFI_DERIVATION = `def _ts_wifi(ctx):
  */
 export const MQTT_DERIVATION = `${WIFI_DERIVATION}
 def _ts_mqtt_broker(ctx, properties, label):
-    broker_id = str(properties.get('brokerConfigId') or '')
-    if not broker_id:
-        return None, label + ' requires an MQTT broker config (properties.brokerConfigId) -- reference one, or create a new one from the property panel'
-    cfg = (ctx.get('referencedConfigs') or {}).get(broker_id)
+    # One broker per flow (2026-10-29), like WiFi: the flow's one config, whatever the node's own brokerConfigId says.
+    configs = [c for c in ctx['flow']['configs'] if c['type'] == 'thingstudio/config/mqtt-broker']
+    if not configs:
+        return None, label + ' needs an MQTT broker -- set "MQTT Broker" in its properties (every MQTT node in a flow shares one)'
+    if len(configs) > 1:
+        return None, 'this flow has %d MQTT broker configs, but a flow can only have one -- remove the extras from the flow file' % len(configs)
+    cfg = (ctx.get('referencedConfigs') or {}).get(configs[0]['id'])
     if cfg is None:
         return None, 'could not resolve the MQTT broker config -- reopen the flow in the editor'
     broker = str(cfg.get('broker') or '').strip()

@@ -36,7 +36,7 @@ export const descriptor: NodeDescriptor = {
         { value: 1, label: "1" },
       ],
     },
-    { name: "brokerConfigId", label: "MQTT Broker", kind: "configRef", configType: "thingstudio/config/mqtt-broker", default: "" },
+    { name: "brokerConfigId", label: "MQTT Broker", kind: "configRef", configType: "thingstudio/config/mqtt-broker", singleton: true, default: "", help: "One MQTT broker per flow: every MQTT node shares this setting." },
     { name: "wifiConfigId", label: "WiFi", kind: "configRef", configType: "thingstudio/config/wifi", singleton: true, default: "", help: "One WiFi network per flow: every WiFi node shares this setting. With MQTT nodes in the flow, MQTT manages the connection, so \"unmanaged\" isn't accepted." },
     { name: "nodeId", label: "node id", kind: "nodeId", default: "" },
   ],

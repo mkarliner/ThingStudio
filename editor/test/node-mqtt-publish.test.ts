@@ -114,9 +114,17 @@ describe("thingstudio/mqtt_publish package", () => {
     expect(source).toContain('"brokerPassword": "brokerpw"');
   });
 
-  it("rejects a missing brokerConfigId", async () => {
-    const err = await hookError(graphWith({ topic: "t", brokerConfigId: "" }));
-    expect(err).toMatch(/requires an MQTT broker config/);
+  it("rejects a flow with no MQTT broker config", async () => {
+    expect(await hookError(graphWith({ topic: "t" }, [WIFI()]))).toMatch(/needs an MQTT broker/);
+  });
+
+  it("uses the flow's one broker whatever the node's own brokerConfigId says (one broker per flow)", async () => {
+    expect(await hookError(graphWith({ topic: "t", brokerConfigId: "" }))).toBeUndefined();
+  });
+
+  it("rejects a flow with two MQTT broker configs", async () => {
+    const two = [WIFI(), BROKER(), BROKER({ broker: "other", port: 1883 }, "broker2")];
+    expect(await hookError(graphWith({ topic: "t" }, two))).toMatch(/2 MQTT broker configs/);
   });
 
   it("rejects a referenced broker config with no broker hostname", async () => {

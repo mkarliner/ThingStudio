@@ -61,7 +61,8 @@ if your account isn't in the group, and prints the command to fix it.
 irm https://github.com/mkarliner/ThingStudio/releases/latest/download/install.ps1 | iex
 ```
 
-To upgrade or remove Thingstudio, or build it from source, see [Installation details](installation-details.md).
+To install a specific version, upgrade or remove Thingstudio, or build it from source, see
+[Installation details](installation-details.md).
 
 ## Start Thingstudio
 

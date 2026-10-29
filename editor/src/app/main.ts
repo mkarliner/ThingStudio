@@ -2559,6 +2559,16 @@ function fwFamilyId(): string {
   return el<HTMLSelectElement>("fwFamily").value;
 }
 
+/** Who made the firmware: the Firmware list's words for a catalogue `supplier`. */
+const FW_SUPPLIER_LABELS: Record<string, string> = {
+  micropython: "Official MicroPython (micropython.org)",
+  thingstudio: "Thingstudio custom image",
+};
+
+function fwSupplierLabel(supplier: string): string {
+  return FW_SUPPLIER_LABELS[supplier] ?? supplier;
+}
+
 function fwSelectedBuild(): FirmwareBuild | undefined {
   const id = el<HTMLSelectElement>("fwBuild").value;
   return fwCatalogue?.builds.find((build) => build.id === id);
@@ -2596,6 +2606,21 @@ function renderFwFamilies(): void {
   const families = (fwCatalogue?.families ?? []).filter((family) => familyTransport(family) === fwTransport());
   for (const family of families) select.add(new Option(family.label, family.id));
   if (previous && families.some((family) => family.id === previous)) select.value = previous;
+  renderFwSuppliers();
+}
+
+/** The firmware makers this family has builds from, MicroPython first. Only a classic ESP32 has a Thingstudio
+ * image today, so for the other families the list has one entry. */
+function renderFwSuppliers(): void {
+  const select = el<HTMLSelectElement>("fwSupplier");
+  const previous = select.value;
+  select.innerHTML = "";
+  const family = fwFamilyId();
+  const suppliers = [...new Set((fwCatalogue?.builds ?? []).filter((build) => build.family === family).map((build) => build.supplier))];
+  suppliers.sort((a, b) => Number(a === "thingstudio") - Number(b === "thingstudio"));
+  if (!suppliers.length) select.add(new Option("(none listed)", ""));
+  for (const supplier of suppliers) select.add(new Option(fwSupplierLabel(supplier), supplier));
+  if (previous && suppliers.includes(previous)) select.value = previous;
   renderFwBuilds();
 }
 
@@ -2604,14 +2629,10 @@ function renderFwBuilds(): void {
   const previous = select.value;
   select.innerHTML = "";
   const family = fwFamilyId();
-  const builds = (fwCatalogue?.builds ?? []).filter((build) => build.family === family);
+  const supplier = el<HTMLSelectElement>("fwSupplier").value;
+  const builds = (fwCatalogue?.builds ?? []).filter((build) => build.family === family && build.supplier === supplier);
   if (!builds.length) select.add(new Option("(no build for this chip — choose a file)", ""));
-  // Our own images last, labelled by supplier: they change what happens after the flash.
-  const ordered = [...builds].sort((a, b) => Number(a.supplier === "thingstudio") - Number(b.supplier === "thingstudio"));
-  for (const build of ordered) {
-    const suffix = build.supplier === "thingstudio" ? " (Thingstudio image)" : "";
-    select.add(new Option(`${build.label}${suffix}`, build.id));
-  }
+  for (const build of builds) select.add(new Option(build.label, build.id));
   if (previous && builds.some((build) => build.id === previous)) select.value = previous;
   renderFwVersions();
 }
@@ -2639,9 +2660,10 @@ function renderFwFileNote(): void {
       : `${fwUploaded.name} will be used, at the address under Install options.`;
   } else if (build) {
     const version = fwSelectedVersion();
+    const name = build.supplier === "thingstudio" ? "Thingstudio custom image" : build.label;
     const where = version?.cached
-      ? `${build.label} ${version.version} is already downloaded.`
-      : `${build.label} ${version?.version ?? ""} will be downloaded and checked.`;
+      ? `${name} ${version.version} is already downloaded.`
+      : `${name} ${version?.version ?? ""} will be downloaded and checked.`;
     note.textContent = build.note ? `${where} ${build.note}` : where;
   } else {
     note.textContent = "No build chosen: pick the file MicroPython publishes for your chip.";
@@ -2666,6 +2688,8 @@ function fwPreselectFromBoard(): void {
   const family = fwCatalogue?.families.find((item) => item.id === build.family);
   if (!family || familyTransport(family) !== fwTransport()) return;
   el<HTMLSelectElement>("fwFamily").value = family.id;
+  renderFwSuppliers();
+  el<HTMLSelectElement>("fwSupplier").value = build.supplier;
   renderFwBuilds();
   el<HTMLSelectElement>("fwBuild").value = build.id;
   renderFwVersions();
@@ -2754,6 +2778,14 @@ el("fwTargets").addEventListener("change", () => {
 });
 el("fwFamily").addEventListener("change", () => {
   fwButtonsForNewChoice();
+  renderFwSuppliers();
+  renderFwAdvanced();
+});
+el("fwSupplier").addEventListener("change", () => {
+  fwButtonsForNewChoice();
+  fwFile = null;
+  fwUploaded = null;
+  el<HTMLInputElement>("fwFile").value = "";
   renderFwBuilds();
   renderFwAdvanced();
 });
@@ -2793,7 +2825,7 @@ el<HTMLInputElement>("fwFile").addEventListener("change", (event) => {
         const family = fwCatalogue?.families.find((item) => item.id === saved.family);
         if (family && familyTransport(family) === fwTransport()) el<HTMLSelectElement>("fwFamily").value = family.id;
       }
-      renderFwBuilds();
+      renderFwSuppliers();
       renderFwVersions();
       el("fwProgress").textContent = "";
       renderFwFileNote();

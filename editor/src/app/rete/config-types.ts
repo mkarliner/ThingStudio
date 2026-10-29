@@ -73,9 +73,8 @@
 // network," so it isn't a secret and doesn't move.
 //
 // `kind: "credential"` is the new field kind this adds:
-// `ConfigRefField.vue`'s edit panel renders it as `CredentialRefField.vue`
-// instead of a plain input -- same per-kind dispatch pattern `select` vs.
-// plain `input` already uses, one level down. `credentialType` says which
+// `ConfigRefField.vue`'s edit panel shows the saved credential's own fields (2026-10-29; it used to nest
+// `CredentialRefField.vue` there). `credentialType` says which
 // credential-store namespace ("wifi" or "mqtt-broker") the field resolves
 // against; see credential-types.ts for that store's own field shapes.
 
@@ -157,7 +156,7 @@ export const CONFIG_TYPES: Record<string, ConfigTypeDescriptor> = {
     label: "WiFi",
     singleton: true,
     fields: [
-      { name: "credentialName", label: "credential", kind: "credential", credentialType: "wifi" },
+      { name: "credentialName", label: "saved network", kind: "credential", credentialType: "wifi" },
       {
         name: "security",
         label: "security",
@@ -276,7 +275,10 @@ export const CONFIG_TYPES: Record<string, ConfigTypeDescriptor> = {
   "thingstudio/config/mqtt-broker": {
     type: "thingstudio/config/mqtt-broker",
     label: "MQTT Broker",
-    fields: [{ name: "credentialName", label: "credential", kind: "credential", credentialType: "mqtt-broker" }],
+    // One broker per flow, like WiFi (Mike, 2026-10-29): a broker picked per node was a trap for new users, whose
+    // flows only ever talk to one. Several brokers can come back later as a non-singleton type.
+    singleton: true,
+    fields: [{ name: "credentialName", label: "saved broker", kind: "credential", credentialType: "mqtt-broker" }],
     defaults: { credentialName: "" },
     summarize: (properties) => (typeof properties.credentialName === "string" ? properties.credentialName : ""),
   },

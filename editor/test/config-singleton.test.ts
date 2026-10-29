@@ -33,11 +33,20 @@ describe("singleton config types", () => {
     expect(listConfigsOfType(WIFI)[0]!.properties.ssid).toBe("HomeNet");
   });
 
-  it("leaves non-singleton types alone", () => {
+  it("one MQTT broker per flow: picking another broker replaces the flow's one", () => {
     const a = createConfig(BROKER, { credentialName: "one" });
     const b = createConfig(BROKER, { credentialName: "two" });
+    expect(b).toBe(a);
+    expect(listConfigsOfType(BROKER)).toHaveLength(1);
+    expect(listConfigsOfType(BROKER)[0]!.properties.credentialName).toBe("two");
+  });
+
+  it("leaves non-singleton types alone", () => {
+    const TOUCH = "thingstudio/config/touch-panel";
+    const a = createConfig(TOUCH, { address: "0x38" });
+    const b = createConfig(TOUCH, { address: "0x5d" });
     expect(b).not.toBe(a);
-    expect(listConfigsOfType(BROKER)).toHaveLength(2);
+    expect(listConfigsOfType(TOUCH)).toHaveLength(2);
   });
 });
 

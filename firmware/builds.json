@@ -199,7 +199,7 @@
       "id": "thingstudio-classic-esp32",
       "supplier": "thingstudio",
       "family": "esp32",
-      "label": "Thingstudio image (runtime and flow libraries frozen)",
+      "label": "classic ESP32, 4 MB, no PSRAM",
       "infoUrl": "https://github.com/mkarliner/ThingStudio/blob/main/docs/user-guide/custom-firmware.md",
       "runtime": "install",
       "note": "The runtime is frozen into this image, so Install runtime only writes the boot script. 14.1.0 and later also freeze the library list, so Deploy sends nothing; earlier versions still push every library a flow uses.",

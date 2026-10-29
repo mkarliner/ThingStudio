@@ -8,13 +8,14 @@ the subscriptions while the flow runs.
 - **topic** — the topic to subscribe to. Required.
 - **QoS** — `0` or `1`. QoS 2 isn't supported.
 - **dynamic subscription** — accept subscribe/unsubscribe messages on the input (see below). Off by default.
-- **broker** — which MQTT broker config to use (see [Editor in depth](../working-in-the-editor.md#config-nodes)). Required — won't compile without one.
+- **MQTT Broker** — the flow's MQTT broker, shared by every MQTT node in the flow: change it on one and it changes on
+  all (see [Editor in depth](../working-in-the-editor.md#config-nodes)). Required — won't compile without one.
 
 ## Behavior
 
 The node subscribes to **topic** when the flow starts, and keeps it subscribed.
 
-Uses the flow's WiFi network and its own broker config, same as **mqtt publish**. An "unmanaged" WiFi config isn't accepted here, for the same reason.
+Uses the flow's WiFi network and broker config, same as **mqtt publish**. An "unmanaged" WiFi config isn't accepted here, for the same reason.
 
 The message carries the payload (decoded as text when possible, raw bytes otherwise), the actual topic it arrived on, and whether the broker sent it as a retained message.
 

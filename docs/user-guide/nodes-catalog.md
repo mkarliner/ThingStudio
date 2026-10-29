@@ -575,7 +575,7 @@ Defaults: `{"bus":0,"scl":null,"sda":null,"freq":100000}`
 
 ### MQTT Broker
 
-Type `thingstudio/config/mqtt-broker`.
+Type `thingstudio/config/mqtt-broker`, one per flow.
 
 - `credentialName`, credential
 
