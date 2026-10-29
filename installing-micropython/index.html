@@ -3154,16 +3154,19 @@ RP2040, RP2350 and nRF52 boards.</p>
    the path and the adapter's name (for example <code>/dev/ttyUSB0 -- CH340</code>). If the board isn't there, put it in
    download mode (step 1) and click ⟳; the line under the list says how many it found. If it still isn't listed,
    type the path in the box (on macOS a mounted Pico is <code>/Volumes/RPI-RP2</code>).</li>
-<li>Pick the <strong>chip family</strong>, then the <strong>build</strong> and <strong>version</strong>. Only the families the editor can write are listed,
-   and only builds whose hash is pinned, so what you flash is what was tested. A board that names its own build is
-   preselected. The build matters for the heap as much as for compatibility: an ESP32 with extra PSRAM wants the
-   <strong>PSRAM (WROVER)</strong> build, a single-core SOLO the <strong>single-core</strong> one. For a classic ESP32 there is also
-   <strong>Thingstudio image</strong>, which carries the runtime and the flow libraries frozen — flash it, then <strong>Install
-   runtime</strong> writes only the boot script.</li>
-<li>Click <strong>Flash</strong>. <strong>Erase all flash first</strong> is ticked: it clears an old partition table, which is the usual
-   reason a first install "succeeds" and then doesn't boot. The dialog shows each line the tool prints; a failure
-   says what to fix.</li>
+<li>Pick the <strong>chip family</strong> and the <strong>firmware</strong>, then the <strong>build</strong> and <strong>version</strong>. Only the families the editor
+   can write are listed, and only builds whose hash is pinned, so what you flash is what was tested. A board that
+   names its own build is preselected. The build matters for the heap as much as for compatibility: an ESP32 with
+   extra PSRAM wants the <strong>PSRAM (WROVER)</strong> build, a single-core SOLO the <strong>single-core</strong> one.</li>
 </ol>
+<p>For a classic ESP32 with no PSRAM, <strong>Firmware</strong> also offers the
+   <a href="../custom-firmware/">Thingstudio custom image</a>. It saves memory: the runtime and the flow libraries are built
+   into flash, so they run from there instead of being loaded into RAM. Use it when RAM is tight, for example when
+   a GUI flow stops with <code>MemoryError</code> on official MicroPython. Its <strong>Version</strong> list holds the published releases.
+   After flashing it, <strong>Install runtime</strong> writes only the boot script.
+5. Click <strong>Flash</strong>. <strong>Erase all flash first</strong> is ticked: it clears an old partition table, which is the usual
+   reason a first install "succeeds" and then doesn't boot. The dialog shows each line the tool prints; a failure
+   says what to fix.</p>
 <p>The list covers every build Thingstudio pins, so <strong>Or use your own image file</strong> is only for the rest: a build for a
 board we don't list, or an image you downloaded yourself. Pick the <code>.bin</code> or <code>.uf2</code>; the chip family you choose
 decides the address, and the file's own header usually decides the family.</p>

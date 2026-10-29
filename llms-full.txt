@@ -560,7 +560,8 @@ if your account isn't in the group, and prints the command to fix it.
 irm https://github.com/mkarliner/ThingStudio/releases/latest/download/install.ps1 | iex
 ```
 
-To upgrade or remove Thingstudio, or build it from source, see [Installation details](installation-details.md).
+To install a specific version, upgrade or remove Thingstudio, or build it from source, see
+[Installation details](installation-details.md).
 
 ## Start Thingstudio
 
@@ -683,12 +684,16 @@ RP2040, RP2350 and nRF52 boards.
    the path and the adapter's name (for example `/dev/ttyUSB0 -- CH340`). If the board isn't there, put it in
    download mode (step 1) and click ⟳; the line under the list says how many it found. If it still isn't listed,
    type the path in the box (on macOS a mounted Pico is `/Volumes/RPI-RP2`).
-4. Pick the **chip family**, then the **build** and **version**. Only the families the editor can write are listed,
-   and only builds whose hash is pinned, so what you flash is what was tested. A board that names its own build is
-   preselected. The build matters for the heap as much as for compatibility: an ESP32 with extra PSRAM wants the
-   **PSRAM (WROVER)** build, a single-core SOLO the **single-core** one. For a classic ESP32 there is also
-   **Thingstudio image**, which carries the runtime and the flow libraries frozen — flash it, then **Install
-   runtime** writes only the boot script.
+4. Pick the **chip family** and the **firmware**, then the **build** and **version**. Only the families the editor
+   can write are listed, and only builds whose hash is pinned, so what you flash is what was tested. A board that
+   names its own build is preselected. The build matters for the heap as much as for compatibility: an ESP32 with
+   extra PSRAM wants the **PSRAM (WROVER)** build, a single-core SOLO the **single-core** one.
+
+   For a classic ESP32 with no PSRAM, **Firmware** also offers the
+   [Thingstudio custom image](custom-firmware.md). It saves memory: the runtime and the flow libraries are built
+   into flash, so they run from there instead of being loaded into RAM. Use it when RAM is tight, for example when
+   a GUI flow stops with `MemoryError` on official MicroPython. Its **Version** list holds the published releases.
+   After flashing it, **Install runtime** writes only the boot script.
 5. Click **Flash**. **Erase all flash first** is ticked: it clears an old partition table, which is the usual
    reason a first install "succeeds" and then doesn't boot. The dialog shows each line the tool prints; a failure
    says what to fix.
@@ -991,7 +996,8 @@ Each [release](https://github.com/mkarliner/ThingStudio/releases/latest) has a p
 | Linux, ARM 64-bit (Raspberry Pi 4 and 5 on a 64-bit OS) | `thingstudio-VERSION-linux-aarch64.tar.gz` |
 | Windows, x86_64 | `thingstudio-VERSION-windows-x86_64.zip` |
 
-`SHA256SUMS` lists each package's checksum. The macOS packages are signed and notarized by Apple.
+`SHA256SUMS` lists each package's checksum. The macOS packages are signed and notarized by Apple. For a version
+other than the latest, open that release from the [releases page](https://github.com/mkarliner/ThingStudio/releases).
 
 
 A package doesn't add a `thingstudio` command; start it from its folder, or by its full path. To upgrade, replace
@@ -1007,6 +1013,35 @@ On Windows, it puts Thingstudio in `%LOCALAPPDATA%\Thingstudio` and adds the `th
 Your settings live in `%USERPROFILE%\.thingstudio`.
 
 To upgrade, run the installer script again.
+
+### Install a specific version
+
+The installer script installs the latest release unless `THINGSTUDIO_VERSION` names another one. Use the release's
+tag, with its `v`, as the [releases page](https://github.com/mkarliner/ThingStudio/releases) lists it, and take the
+script from that release too, so the script matches its packages.
+
+On macOS and Linux:
+
+```sh
+curl -fsSL https://github.com/mkarliner/ThingStudio/releases/download/v0.3.0/install.sh | THINGSTUDIO_VERSION=v0.3.0 sh
+```
+
+On Windows, in PowerShell:
+
+```powershell
+$env:THINGSTUDIO_VERSION = 'v0.3.0'
+irm https://github.com/mkarliner/ThingStudio/releases/download/v0.3.0/install.ps1 | iex
+```
+
+`$env:THINGSTUDIO_VERSION` stays set until you close that PowerShell window.
+
+To read the script before running it, download it from the same link and open it in a text editor.
+
+This works for an older version too. The installer keeps the version it replaces, and removes any older ones.
+Running the installer without `THINGSTUDIO_VERSION` goes back to the latest release.
+
+After changing version, the runtime on your board may not match the editor. If it doesn't, Deploy stops and the
+console says so. **Tools → Install runtime…** installs the matching one.
 
 To remove Thingstudio on macOS and Linux:
 
@@ -1242,18 +1277,23 @@ A config node holds settings that several nodes share. A node's property panel h
 and **+** makes a new one. The config nodes are:
 
 - **WiFi:** a saved credential and a security mode: password, open, or [unmanaged](wifi-provisioning.md).
-- **MQTT Broker:** a saved credential holding the host, port and optional username and password.
+- **MQTT Broker:** a saved credential holding the host, port and optional username and password. One per flow.
 - **I2C bus:** the bus number, SCL and SDA pins, and frequency. See [I2C bus](nodes/i2c-bus.md).
 - **Touch panel:** the touch controller, its I2C bus and address, and its size and orientation. See
   [Touch panels](nodes/touch-panel.md).
 
 The WiFi and MQTT Broker configs hold only the name of a saved credential. The SSID, passwords and broker address
 are saved by name in `~/.thingstudio/credentials/`, not in the flow file, so a flow you share or commit holds no
-secrets. Two flows that use the same credential share its values: edit it once and both change. Pick, edit or add a
-credential from the config's **credential** field. See [The Thingstudio folder](thingstudio-folder.md#credentials).
+secrets. Two flows that use the same credential share its values: edit it once and both change.
 
-A flow has one WiFi network. Every node that uses WiFi has a **WiFi** field, and they all show the same setting:
-change it on one and it changes on all. A flow doesn't need a `wifi status` node to use the network.
+Pick a saved WiFi network or broker from the field's list. ✎ opens the saved values, such as a broker's host, port
+and login, with the config's other settings; **Save** stores them and **Cancel** discards the changes. **+** makes a
+new one: give it a name, fill it in and save. If a flow names a credential that isn't saved on this computer, ✎ says
+so, and saving creates it. See [The Thingstudio folder](thingstudio-folder.md#credentials).
+
+A flow has one WiFi network and one MQTT broker. Every node that uses WiFi has a **WiFi** field, and every MQTT node
+an **MQTT Broker** field. They all show the flow's one setting: change it on one node and it changes on all. A flow
+doesn't need a `wifi status` node to use the network.
 
 ## Node status
 
@@ -1801,20 +1841,33 @@ one image serves any classic ESP32 board. It is tested on the CYD.
 
 ## What you need
 
-You need these:
-
 - A classic ESP32 board with 4 MB of flash and no PSRAM (ESP32-D0WD and similar). This image is not for the S2, S3,
   C3 or C6, and not for RP2040 or RP2350 boards.
 - A USB cable that carries data.
-- `esptool` and `mpremote` on the computer: `pip install esptool mpremote`.
-- Three downloads from the project's [releases page](https://github.com/mkarliner/ThingStudio/releases/latest): the image, its `.sha256` file, and `main.py`.
 
-## Install
+## Install from the editor
 
 Flashing erases the board: its saved flow and all settings are gone afterwards.
 
-1. Download the three files from the [releases page](https://github.com/mkarliner/ThingStudio/releases/latest): the image, its `.sha256` and `main.py`. Put them
-   in one folder and go there. Check the image against its checksum:
+1. Put the board in download mode if it needs it: hold **BOOT** and tap **RESET**.
+2. Choose **Tools → Install firmware…**, pick **Serial port**, then the board's port.
+3. Set **Chip family** to **ESP32** and **Firmware** to **Thingstudio custom image**.
+4. Pick a **Version**. Each version listed ran on a board before it was published, and the editor checks the
+   download against its recorded SHA-256 before writing it.
+5. Click **Flash**.
+6. [Connect](connecting.md), then choose **Tools → Install runtime…**. It writes only the boot script, `main.py`:
+   the runtime is already in the image.
+
+## Install by hand
+
+You need `esptool` and `mpremote` on the computer: `pip install esptool mpremote`.
+
+Each image is attached to the Thingstudio release it was published with, which is often not the latest release.
+On the [releases page](https://github.com/mkarliner/ThingStudio/releases), open the release whose assets include the
+image version you want (the versions are the ones the editor lists), and download three files from it: the image,
+its `.sha256` file and `main.py`.
+
+1. Put the three files in one folder and go there. Check the image against its checksum:
 
    ```sh
    IMAGE=$(ls thingstudio-classic-esp32-*.bin)   # the image you downloaded
@@ -1840,10 +1893,6 @@ Flashing erases the board: its saved flow and all settings are gone afterwards.
    on the board.
 
 4. Reset the board. It starts the listener and prints `LISTENER_READY`.
-
-From the editor, **Tools → Install firmware…** offers the published image as a **Thingstudio image** build of the
-classic ESP32 family, and **Tools → Install runtime…** writes the boot
-script, so the terminal steps above are only needed when you want them.
 
 The repository also has `firmware/classic-esp32/install.sh`, which runs these steps in one command. Read it before
 running it: it erases the filesystem partition, and its port name comes from `PORT`.
@@ -2554,13 +2603,14 @@ the subscriptions while the flow runs.
 - **topic** — the topic to subscribe to. Required.
 - **QoS** — `0` or `1`. QoS 2 isn't supported.
 - **dynamic subscription** — accept subscribe/unsubscribe messages on the input (see below). Off by default.
-- **broker** — which MQTT broker config to use (see [Editor in depth](../working-in-the-editor.md#config-nodes)). Required — won't compile without one.
+- **MQTT Broker** — the flow's MQTT broker, shared by every MQTT node in the flow: change it on one and it changes on
+  all (see [Editor in depth](../working-in-the-editor.md#config-nodes)). Required — won't compile without one.
 
 ## Behavior
 
 The node subscribes to **topic** when the flow starts, and keeps it subscribed.
 
-Uses the flow's WiFi network and its own broker config, same as **mqtt publish**. An "unmanaged" WiFi config isn't accepted here, for the same reason.
+Uses the flow's WiFi network and broker config, same as **mqtt publish**. An "unmanaged" WiFi config isn't accepted here, for the same reason.
 
 The message carries the payload (decoded as text when possible, raw bytes otherwise), the actual topic it arrived on, and whether the broker sent it as a retained message.
 
@@ -2696,11 +2746,12 @@ Publishes a message's payload to an MQTT topic.
 - **topic** — the topic to publish to. Required.
 - **retain** — publish as a retained message.
 - **QoS** — `0` or `1`. QoS 2 isn't supported.
-- **broker** — which MQTT broker config to use (see [Editor in depth](../working-in-the-editor.md#config-nodes)). Required — won't compile without one.
+- **MQTT Broker** — the flow's MQTT broker, shared by every MQTT node in the flow: change it on one and it changes on
+  all (see [Editor in depth](../working-in-the-editor.md#config-nodes)). Required — won't compile without one.
 
 ## Behavior
 
-Uses the flow's WiFi network (the WiFi config in the flow, shared by every WiFi node; the node's WiFi field selects that same network) and its own broker config for the MQTT connection. Nodes on the same broker share one connection. In a flow with MQTT nodes, MQTT manages the WiFi connection. An "unmanaged" WiFi config isn't accepted here: this node manages its own WiFi reconnection, so it needs a real network to connect to. The payload is sent as bytes (a string is UTF-8 encoded, other types are converted).
+Uses the flow's WiFi network (the WiFi config in the flow, shared by every WiFi node; the node's WiFi field selects that same network) and the flow's broker config for the MQTT connection. Nodes on the same broker share one connection. In a flow with MQTT nodes, MQTT manages the WiFi connection. An "unmanaged" WiFi config isn't accepted here: this node manages its own WiFi reconnection, so it needs a real network to connect to. The payload is sent as bytes (a string is UTF-8 encoded, other types are converted).
 
 Shows a connection-status dot on the canvas (see [Editor in depth](../working-in-the-editor.md#node-status)) once
 connected to a device. It reports its own broker connection state, even when it shares that broker with an
@@ -5077,7 +5128,7 @@ Defaults: `{"bus":0,"scl":null,"sda":null,"freq":100000}`
 
 ### MQTT Broker
 
-Type `thingstudio/config/mqtt-broker`.
+Type `thingstudio/config/mqtt-broker`, one per flow.
 
 - `credentialName`, credential
 

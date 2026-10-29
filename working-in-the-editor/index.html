@@ -3148,17 +3148,21 @@ isn't valid JSON appears in the menu disabled, with the file named. See
 and <strong>+</strong> makes a new one. The config nodes are:</p>
 <ul>
 <li><strong>WiFi:</strong> a saved credential and a security mode: password, open, or <a href="../wifi-provisioning/">unmanaged</a>.</li>
-<li><strong>MQTT Broker:</strong> a saved credential holding the host, port and optional username and password.</li>
+<li><strong>MQTT Broker:</strong> a saved credential holding the host, port and optional username and password. One per flow.</li>
 <li><strong>I2C bus:</strong> the bus number, SCL and SDA pins, and frequency. See <a href="../nodes/i2c-bus/">I2C bus</a>.</li>
 <li><strong>Touch panel:</strong> the touch controller, its I2C bus and address, and its size and orientation. See
   <a href="../nodes/touch-panel/">Touch panels</a>.</li>
 </ul>
 <p>The WiFi and MQTT Broker configs hold only the name of a saved credential. The SSID, passwords and broker address
 are saved by name in <code>~/.thingstudio/credentials/</code>, not in the flow file, so a flow you share or commit holds no
-secrets. Two flows that use the same credential share its values: edit it once and both change. Pick, edit or add a
-credential from the config's <strong>credential</strong> field. See <a href="../thingstudio-folder/#credentials">The Thingstudio folder</a>.</p>
-<p>A flow has one WiFi network. Every node that uses WiFi has a <strong>WiFi</strong> field, and they all show the same setting:
-change it on one and it changes on all. A flow doesn't need a <code>wifi status</code> node to use the network.</p>
+secrets. Two flows that use the same credential share its values: edit it once and both change.</p>
+<p>Pick a saved WiFi network or broker from the field's list. ✎ opens the saved values, such as a broker's host, port
+and login, with the config's other settings; <strong>Save</strong> stores them and <strong>Cancel</strong> discards the changes. <strong>+</strong> makes a
+new one: give it a name, fill it in and save. If a flow names a credential that isn't saved on this computer, ✎ says
+so, and saving creates it. See <a href="../thingstudio-folder/#credentials">The Thingstudio folder</a>.</p>
+<p>A flow has one WiFi network and one MQTT broker. Every node that uses WiFi has a <strong>WiFi</strong> field, and every MQTT node
+an <strong>MQTT Broker</strong> field. They all show the flow's one setting: change it on one node and it changes on all. A flow
+doesn't need a <code>wifi status</code> node to use the network.</p>
 <h2 id="node-status">Node status</h2>
 <p>Some nodes show a colored dot and a line of text under the node while the editor is connected to the board:</p>
 <table>

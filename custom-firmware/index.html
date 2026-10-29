@@ -1302,10 +1302,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#install" class="md-nav__link">
+  <a href="#install-from-the-editor" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Install
+        Install from the editor
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#install-by-hand" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Install by hand
       
     </span>
   </a>
@@ -3029,10 +3040,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#install" class="md-nav__link">
+  <a href="#install-from-the-editor" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Install
+        Install from the editor
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#install-by-hand" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Install by hand
       
     </span>
   </a>
@@ -3131,19 +3153,31 @@ of copying them into RAM. On a classic ESP32 that is the difference between a GU
 <p>The image carries no board-specific settings. Pins and the display come from the <a href="../boards/">board definition</a>, so
 one image serves any classic ESP32 board. It is tested on the CYD.</p>
 <h2 id="what-you-need">What you need</h2>
-<p>You need these:</p>
 <ul>
 <li>A classic ESP32 board with 4 MB of flash and no PSRAM (ESP32-D0WD and similar). This image is not for the S2, S3,
   C3 or C6, and not for RP2040 or RP2350 boards.</li>
 <li>A USB cable that carries data.</li>
-<li><code>esptool</code> and <code>mpremote</code> on the computer: <code>pip install esptool mpremote</code>.</li>
-<li>Three downloads from the project's <a href="https://github.com/mkarliner/ThingStudio/releases/latest">releases page</a>: the image, its <code>.sha256</code> file, and <code>main.py</code>.</li>
 </ul>
-<h2 id="install">Install</h2>
+<h2 id="install-from-the-editor">Install from the editor</h2>
 <p>Flashing erases the board: its saved flow and all settings are gone afterwards.</p>
 <ol>
-<li>Download the three files from the <a href="https://github.com/mkarliner/ThingStudio/releases/latest">releases page</a>: the image, its <code>.sha256</code> and <code>main.py</code>. Put them
-   in one folder and go there. Check the image against its checksum:</li>
+<li>Put the board in download mode if it needs it: hold <strong>BOOT</strong> and tap <strong>RESET</strong>.</li>
+<li>Choose <strong>Tools → Install firmware…</strong>, pick <strong>Serial port</strong>, then the board's port.</li>
+<li>Set <strong>Chip family</strong> to <strong>ESP32</strong> and <strong>Firmware</strong> to <strong>Thingstudio custom image</strong>.</li>
+<li>Pick a <strong>Version</strong>. Each version listed ran on a board before it was published, and the editor checks the
+   download against its recorded SHA-256 before writing it.</li>
+<li>Click <strong>Flash</strong>.</li>
+<li><a href="../connecting/">Connect</a>, then choose <strong>Tools → Install runtime…</strong>. It writes only the boot script, <code>main.py</code>:
+   the runtime is already in the image.</li>
+</ol>
+<h2 id="install-by-hand">Install by hand</h2>
+<p>You need <code>esptool</code> and <code>mpremote</code> on the computer: <code>pip install esptool mpremote</code>.</p>
+<p>Each image is attached to the Thingstudio release it was published with, which is often not the latest release.
+On the <a href="https://github.com/mkarliner/ThingStudio/releases">releases page</a>, open the release whose assets include the
+image version you want (the versions are the ones the editor lists), and download three files from it: the image,
+its <code>.sha256</code> file and <code>main.py</code>.</p>
+<ol>
+<li>Put the three files in one folder and go there. Check the image against its checksum:</li>
 </ol>
 <div class="highlight"><pre><span></span><code><span class="nv">IMAGE</span><span class="o">=</span><span class="k">$(</span>ls<span class="w"> </span>thingstudio-classic-esp32-*.bin<span class="k">)</span><span class="w">   </span><span class="c1"># the image you downloaded</span>
 shasum<span class="w"> </span>-a<span class="w"> </span><span class="m">256</span><span class="w"> </span>-c<span class="w"> </span><span class="s2">"</span><span class="nv">$IMAGE</span><span class="s2">.sha256"</span><span class="w">      </span><span class="c1"># sha256sum -c on Linux</span>
@@ -3165,9 +3199,6 @@ shasum<span class="w"> </span>-a<span class="w"> </span><span class="m">256</spa
 <ol>
 <li>Reset the board. It starts the listener and prints <code>LISTENER_READY</code>.</li>
 </ol>
-<p>From the editor, <strong>Tools → Install firmware…</strong> offers the published image as a <strong>Thingstudio image</strong> build of the
-classic ESP32 family, and <strong>Tools → Install runtime…</strong> writes the boot
-script, so the terminal steps above are only needed when you want them.</p>
 <p>The repository also has <code>firmware/classic-esp32/install.sh</code>, which runs these steps in one command. Read it before
 running it: it erases the filesystem partition, and its port name comes from <code>PORT</code>.</p>
 <h2 id="connect-and-deploy">Connect and deploy</h2>
