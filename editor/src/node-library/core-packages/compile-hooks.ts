@@ -12,7 +12,7 @@ export const WIFI_DERIVATION = `def _ts_wifi(ctx):
     if not configs:
         return None, 'needs a WiFi network -- set "WiFi" in its properties (every WiFi node in a flow shares one)'
     if len(configs) > 1:
-        return None, 'this flow has %d WiFi configs, but a flow can only have one -- reopen the flow in the editor to merge them' % len(configs)
+        return None, 'this flow has %d WiFi configs, but a flow can only have one -- pick the network in the WiFi field of any node to keep just that one' % len(configs)
     wifi = (ctx.get('referencedConfigs') or {}).get(configs[0]['id'])
     if wifi is None:
         return None, 'could not resolve the WiFi config -- reopen the flow in the editor'
@@ -46,7 +46,7 @@ def _ts_mqtt_broker(ctx, properties, label):
     if not configs:
         return None, label + ' needs an MQTT broker -- set "MQTT Broker" in its properties (every MQTT node in a flow shares one)'
     if len(configs) > 1:
-        return None, 'this flow has %d MQTT broker configs, but a flow can only have one -- remove the extras from the flow file' % len(configs)
+        return None, 'this flow has %d MQTT broker configs, but a flow can only have one -- pick the broker in the MQTT Broker field of any MQTT node to keep just that one' % len(configs)
     cfg = (ctx.get('referencedConfigs') or {}).get(configs[0]['id'])
     if cfg is None:
         return None, 'could not resolve the MQTT broker config -- reopen the flow in the editor'

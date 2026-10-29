@@ -694,7 +694,7 @@ function singletonConfigLiteral(f: PropertyFieldDescriptor, fieldLabel: string, 
   }
   const found = finder(configType);
   if (found.length === 0) throw new CompileError(`${fieldLabel}: needs a "${configType}" config -- add one to the flow`);
-  if (found.length > 1) throw new CompileError(`${fieldLabel}: the flow has ${found.length} "${configType}" configs, but a singleton reference needs exactly one -- reopen the flow to merge them`);
+  if (found.length > 1) throw new CompileError(`${fieldLabel}: the flow has ${found.length} "${configType}" configs, but a singleton reference needs exactly one -- pick one in the field to keep just that one`);
   return pyValueLiteral(found[0]!.properties, fieldLabel);
 }
 

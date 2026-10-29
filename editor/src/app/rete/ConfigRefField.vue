@@ -98,7 +98,9 @@
     <label class="ref-line"><span class="ref-name">{{ fieldLabel }}</span>
       <div class="config-ref-row">
         <select :value="effectiveValue ?? ''" @change="onSelect(($event.target as HTMLSelectElement).value)">
-          <option value="" disabled>select {{ descriptor.label }}...</option>
+          <!-- Not disabled: a browser shows the first enabled option when the selected one is disabled, which made
+               an unassigned field look as if it had a broker (2026-10-29). -->
+          <option value="" :selected="!effectiveValue">unassigned</option>
           <option v-for="opt in options" :key="opt.id" :value="opt.id">{{ opt.summary }}</option>
         </select>
         <button
@@ -238,7 +240,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from "vue";
-import { backendWsUrl, configs, configsVersion, createConfig, getConfig, listConfigsOfType, nextFreeKey, updateConfig } from "./store";
+import { backendWsUrl, configs, configsVersion, createConfig, getConfig, keepOnlyConfig, listConfigsOfType, nextFreeKey, updateConfig } from "./store";
 import { CONFIG_TYPES, type ConfigFieldDescriptor } from "./config-types";
 import { applyThemePreset, GUI_THEME_CONFIG_TYPE } from "../../node-library/gui-theme-shared";
 import { CREDENTIAL_TYPES } from "./credential-types";
@@ -344,9 +346,14 @@ const options = computed(() => {
 
 // A singleton config type (config-types.ts, e.g. WiFi) shows the flow's one instance whatever this node's
 // own property says -- an older node may hold no id, or a stale one from before the type was a singleton.
+// With several (a flow saved before the type became one per flow), none of them is the flow's: unassigned
+// until the user picks one, not whichever happens to be first.
 const effectiveValue = computed(() => {
   configsVersion.value;
-  if (descriptor.value.singleton) return listConfigsOfType(props.configType)[0]?.id;
+  if (descriptor.value.singleton) {
+    const all = listConfigsOfType(props.configType);
+    return all.length === 1 ? all[0]!.id : undefined;
+  }
   return props.modelValue;
 });
 
@@ -368,6 +375,7 @@ function onSelect(id: string): void {
     const newId =
       existing?.id ??
       createConfig(props.configType, { ...descriptor.value.defaults, [credField.name]: "", [uField.name]: UNMANAGED_SECURITY_VALUE });
+    if (descriptor.value.singleton) keepOnlyConfig(newId);
     emit("update:modelValue", newId);
     return;
   }
@@ -381,9 +389,11 @@ function onSelect(id: string): void {
     // a stale render (double-click, e.g.) could still race this.
     const existing = listConfigsOfType(props.configType).find((c) => c.properties[credField.name] === name);
     const newId = existing ? existing.id : createConfig(props.configType, { ...descriptor.value.defaults, [credField.name]: name });
+    if (descriptor.value.singleton) keepOnlyConfig(newId);
     emit("update:modelValue", newId);
     return;
   }
+  if (descriptor.value.singleton) keepOnlyConfig(id);
   emit("update:modelValue", id);
 }
 

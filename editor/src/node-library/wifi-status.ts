@@ -266,7 +266,7 @@ export function resolveFlowWifiCredentials(
   }
   if (wifiConfigs.length > 1) {
     throw new CompileError(
-      `this flow has ${wifiConfigs.length} WiFi configs, but a flow can only have one -- reopen the flow in the editor to merge them`,
+      `this flow has ${wifiConfigs.length} WiFi configs, but a flow can only have one -- pick the network in any node's WiFi field to keep just that one`,
     );
   }
   return resolveWifiCredentials({ wifiConfigId: wifiConfigs[0]!.id }, ctx, nodeTypeLabel);

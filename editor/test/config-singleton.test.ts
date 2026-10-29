@@ -2,7 +2,7 @@
 // already exists hands back the existing instance, so every node asking for "a WiFi config" gets the same one.
 
 import { beforeEach, describe, expect, it } from "vitest";
-import { clearConfigs, createConfig, listConfigsOfType, nextFreeKey } from "../src/app/rete/store.js";
+import { clearConfigs, configs, createConfig, keepOnlyConfig, listConfigsOfType, nextFreeKey } from "../src/app/rete/store.js";
 
 const WIFI = "thingstudio/config/wifi";
 const BROKER = "thingstudio/config/mqtt-broker";
@@ -39,6 +39,13 @@ describe("singleton config types", () => {
     expect(b).toBe(a);
     expect(listConfigsOfType(BROKER)).toHaveLength(1);
     expect(listConfigsOfType(BROKER)[0]!.properties.credentialName).toBe("two");
+  });
+
+  it("a flow with two brokers keeps only the one picked", () => {
+    configs.value.set("b1", { id: "b1", type: BROKER, properties: { credentialName: "lan" } });
+    configs.value.set("b2", { id: "b2", type: BROKER, properties: { credentialName: "verdi" } });
+    keepOnlyConfig("b2");
+    expect(listConfigsOfType(BROKER).map((c) => c.id)).toEqual(["b2"]);
   });
 
   it("leaves non-singleton types alone", () => {

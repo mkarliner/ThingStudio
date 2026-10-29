@@ -147,6 +147,7 @@ export function createConfig(type: string, properties: Record<string, unknown>):
       // name changes). A different one: start clean, and main.ts fetches the new values.
       const same = existing.properties.credentialName === properties.credentialName;
       existing.properties = same ? { ...existing.properties, ...properties } : { ...properties };
+      keepOnlyConfig(existing.id);
       bumpConfigsVersion();
       return existing.id;
     }
@@ -165,6 +166,22 @@ export function createConfig(type: string, properties: Record<string, unknown>):
   configs.value.set(id, { id, type, properties });
   bumpConfigsVersion();
   return id;
+}
+
+/** For a singleton config type: make `id` the flow's one config of its type, removing any others. A flow saved with
+ * several (one MQTT broker per flow came in on 2026-10-29) shows its field as unassigned until the user picks one;
+ * picking is what resolves it, never loading. */
+export function keepOnlyConfig(id: string): void {
+  const kept = configs.value.get(id);
+  if (!kept) return;
+  let removed = false;
+  for (const other of listConfigsOfType(kept.type)) {
+    if (other.id !== id) {
+      configs.value.delete(other.id);
+      removed = true;
+    }
+  }
+  if (removed) bumpConfigsVersion();
 }
 
 /** Merges `properties` into the existing config's own properties (partial
