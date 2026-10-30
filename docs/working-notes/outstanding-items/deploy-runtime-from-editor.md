@@ -1,4 +1,8 @@
 # Deploy the runtime itself from the browser editor, not just compiled flows
+> **2026-10-30 sweep:** Update: the closing "NOT yet verified against real hardware" is stale — the first end-to-end
+  runtime install and a first blink on a LOLIN S2 Mini happened 2026-09-23 (`decisions/runtime-
+  install-from-editor.md`), with later fixes this file doesn't know about.
+
 
 Confirmed untracked anywhere until 2026-09-12 (grep across `outstanding-items.md` and every
 `outstanding-items/*.md`). Still wanted, priority **P3** (Mike, 2026-09-13).

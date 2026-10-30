@@ -1,7 +1,9 @@
 # Outstanding items — working-notes backlog
 
 Status: index, restructured 2026-08-22 from the 2026-08-19 consolidated map
-(`working-notes-consolidation-briefing.md`). **Last audited 2026-10-24, against `git log` at `84dcbfc`.**
+(`working-notes-consolidation-briefing.md`). **Last audited 2026-10-30, against `git log` at `1e35dc1`**
+(the re-stage sweep: all 86 detail files checked against current code; closures moved to `resolved.md`,
+drifted files carry a dated banner).
 
 That pass was a readability one: every bullet whose own text said it was closed, done, settled, built or
 superseded moved out to [`outstanding-items/resolved.md`](outstanding-items/resolved.md), the append-only
@@ -15,8 +17,9 @@ of what's open across the whole project without opening every file in `docs/work
 settled decisions live in [`outstanding-items/resolved.md`](outstanding-items/resolved.md), not here.
 
 Tags: **[P1]**-**[P5]** priority (1 highest), **[POST-MVP]**, **[DEFERRED]**, **[TRACKING]** (a rollup pointer),
-**[LAUNCH]** / **[LAUNCH-NICE]** (a launch gate / not a gate -- `decisions/launch-scope.md`), **[BACKLOG]**
-(unscheduled idea). `[MVP]` marks an item promoted into the MVP plan by `road-to-mvp.md`.
+**[LAUNCH]** / **[LAUNCH-NICE]** (a launch gate / not a gate -- `decisions/launch-scope.md`), **[TR]** (a
+tester-ready gate -- `docs/tester-ready.md`), **[BACKLOG]** (unscheduled idea). `[MVP]` marks an item promoted
+into the MVP plan by `road-to-mvp.md`.
 
 History: the 2026-08-19/21 audit compiled this from every file in `docs/working-notes/` against its own
 success criteria, `git log` and the design doc. The 2026-09-06 pass re-checked every active item's own status
@@ -81,7 +84,7 @@ ThingStudioMarketing repo, not here.
   Thingstudio release. The loader already takes a list of sources. The design cost is trust: a source's builds are
   bytes written to the user's flash, so they need a hash inside the source and an explicit acceptance.
   ([detail](outstanding-items/firmware-catalogue-repositories.md))
-- **[P2]** **ESP32-C6 (and H2, P4...) detected as a classic ESP32 -- new bug, 2026-09-30.** Found by a test
+- **[TR]** **[P2]** **ESP32-C6 (and H2, P4...) detected as a classic ESP32 -- new bug, 2026-09-30.** Found by a test
   for the Pins… page. `target.ts`'s processor match is a substring test on the normalised MCU name and
   `processors/esp32.json` matches "ESP32", so a board reporting "... with ESP32C6" resolves to the classic
   ESP32: its pin checks and its native arch (`xtensawin`, where the C6 is RISC-V) both apply. Not an MVP chip,
@@ -169,9 +172,6 @@ ThingStudioMarketing repo, not here.
 - **`ntp` node (replaces `clock`) -- built 2026-10-14, owes a hardware check.** Sync, summer time,
   the headliner's clock page, and a flow with only `ntp` joining WiFi. `clock` is removed; seven-segment
   stays a gui label font. ([detail](outstanding-items/ntp-node-replaces-clock.md))
-- **GPIO pin range hardware pass.** The hardcoded 0–39 range was resolved 2026-09-23 by the
-  processor/board definitions (`decisions/chip-board-definitions.md`); the hardware pass is still owed.
-  ([detail](outstanding-items/gpio-pin-range-by-chip.md))
 - **[P2]** **Lazy loading, for RAM on small boards -- both parts done 2026-09-25 (runtime 5.1.0), not yet seen
   on hardware.** Context: an ESP32-C3 couldn't join WiFi from an MQTT flow, most likely memory
   (`learnings/micropython-device-runtime.md`, 2026-09-25); installs are now precompiled. Part 1: runtime
@@ -276,16 +276,14 @@ ThingStudioMarketing repo, not here.
   `node-format-parity-briefing.md`; roadmap and constraints: `decisions/node-authoring.md` (2026-10-15),
   `builtins-as-packages-scoping.md`, `package-compile-hooks-scoping.md`,
   `reviews/2026-10-18-node-parity-architecture.md`.
-- **[P3]** **Deploy the runtime itself from the browser editor, not just compiled flows -- confirmed untracked
-  until 2026-09-12.** Today `test-flows/deploy_runtime.py` is a standalone `mpremote` script; a runtime deploy
-  has to overwrite the listener's own currently-executing source, so it needs a real design session before it
-  is buildable. ([detail](outstanding-items/deploy-runtime-from-editor.md))
 - **[P2]** **Node connection-status indicators (`NODE_STATUS`) -- built and real-hardware confirmed
   2026-09-10/11; these are owed.** The `NODE_STATUS` message type, the state enum, clear-on-redeploy and the
   `wifi_status`/`mqtt_publish`/`mqtt_subscribe` rendering all landed; the WiFi-flapping fix is confirmed on
-  hardware. Owed: the real MicroPython test suite for the `device-runtime/src` changes, a `vitest` re-run
-  against the updated mqtt/wifi codegen, a hardware check of `mqtt_publish`'s connected/disconnected reporting
-  once it has published, and clear-on-redeploy. ([detail](outstanding-items/node-status-indicators.md))
+  hardware. Owed: the real MicroPython test suite for the `device-runtime/src` changes, and a hardware check
+  of `mqtt_publish`'s connected/disconnected reporting + clear-on-redeploy on the `ts_mqtt.py` package compute
+  path (the old "vitest re-run against mqtt-shared.ts" wording is superseded -- that file is gone,
+  2026-10-19).
+  ([detail](outstanding-items/node-status-indicators.md))
 - **[POST-MVP]** **Drag-to-splice -- not built, needs Mike's own real-browser call.** A working ~90-line
   poc-rete implementation exists to port; the trigger mechanism (`nodedragged` vs. `nodetranslated`) is an
   unresolved hands-on judgment only Mike can make. `editor/src/app/rete/insert-node.ts` was never ported.
@@ -357,7 +355,7 @@ ThingStudioMarketing repo, not here.
 
 ## Docs / process
 
-- **[P1] Tester-ready tutorials per the agreed ladder -- scope set 2026-10-30 (`docs/tester-ready.md` TBD).**
+- **[TR]** **[P1] Tester-ready tutorials per the agreed ladder (scope: `docs/tester-ready.md`, agreed 2026-10-30).**
   Five tutorials, each building from the previous flow: blink → function read/write (raw `machine.Pin` read in
   verbatim code, with the compile-checker-doesn't-see-function-code caveat) → node context → HTTP in (WiFi
   config, finding the board, the open-LAN-port note) → MQTT. Every tutorial page serves the learner profiles:
@@ -367,13 +365,10 @@ ThingStudioMarketing repo, not here.
 
 - **[BACKLOG]** **"Future" page in the user docs** (Mike, 2026-10-11). One clearly labelled page for planned
   features, inviting feedback, so the rest of the docs describe only the current state. Not scheduled.
-- **User docs rewrite to the style guide -- new item, 2026-10-11 (Mike, docs style review).** Prioritised page
+- **[TR]** **User docs rewrite to the style guide -- new item, 2026-10-11 (Mike, docs style review).** Prioritised page
   list: P1 Getting started, `working-in-the-editor.md`, `sensor-display.md`, `debugging.md`; P2 node pages to a
   fixed layout, `boards.md`, `custom-nodes.md`, `faq.md`, `flow-lifecycle.md`; P3 background pages. Rules:
   `docs-style-guide.md`. ([detail](outstanding-items/user-docs-rewrite.md))
-- **User docs on GitHub Pages -- new item, 2026-09-27 (Mike).** `docs.yml` deploys to the `gh-pages` branch
-  successfully; Pages isn't switched on in the repo settings. Then check links and link it from the README,
-  release notes and `install.sh`. ([detail](mvp-remaining-work-briefing.md), item A)
 - **MkDocs future -- stay on 1.x, Zensical likely later (2026-09-24).** MkDocs 1.x is unmaintained, 2.0 is an
   incompatible rewrite Material can't use, Material reportedly enters maintenance mode 2026-11-05. No action
   until a build breaks or packaging fixes the toolchain. ([detail](outstanding-items/mkdocs-future.md))
@@ -382,7 +377,7 @@ ThingStudioMarketing repo, not here.
   dev backend's unsigned venv Python can't reach boards over WiFi ("No route to host") and macOS never
   prompts; Terminal is exempt (TN3179). Confirmed 2026-09-27. Released builds carry their own signed
   executable and are unaffected. ([background](learnings/backend-security-research.md))
-- **User docs are missing an execution-model explanation.** `canvas-basics.md`'s Wiring section covers
+- **[TR]** **User docs are missing an execution-model explanation.** `canvas-basics.md`'s Wiring section covers
   connection mechanics but not the underlying model: each source node drives its own independent async loop,
   there's no shared tick, and multi-output fan-out iterates outputs in order. Worth a short new subsection; not
   big enough for its own detail file.
@@ -419,6 +414,10 @@ Done and verified (or settled as a decision) items are kept in
 
 - **`architecture-review-briefing.md`'s "browser-only, no install" claim (§4).** See
   [detail](outstanding-items/ambiguous-browser-only-claim.md).
+- **`cross-platform-requirement.md`'s "confirm per-OS behaviour once the backend is built" (2026-08-16).**
+  macOS is documented and packaging builds per-platform with smoke tests, but real editor+board runs on
+  Windows/Linux are hardware-side knowledge; only Mike can close it.
+  ([detail](outstanding-items/cross-platform-requirement.md))
 - **`mikes-questions-and-points.md` itself is a live, actively-appended file** -- treated as a permanent
   open-items scratchpad, not something to mark resolved or archive. Its still-open items are pulled into the
   sections above; re-check it directly for anything newer than this index.

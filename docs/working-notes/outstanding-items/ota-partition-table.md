@@ -1,3 +1,7 @@
 # OTA-capable partition table on the ESP32 build — still not done
+> **2026-10-30 sweep:** Update: settled — `firmware/classic-esp32/board/partitions.csv` deliberately uses a single app
+  slot, "not the dual-OTA layout" (`decisions/classic-esp32-firmware.md`), standalone builds
+  deferred past MVP per the index bullet. The detail text below predates that cast.
+
 
 Tier 0 item, flagged repeatedly across multiple later briefings as "still not done." Build-config only, one-way door (every field device would need a manual reflash later otherwise), no code dependency on anything else outstanding.

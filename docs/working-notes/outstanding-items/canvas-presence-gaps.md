@@ -1,4 +1,9 @@
 # Most of the node library still has no canvas presence
+> **2026-10-30 sweep:** Update: the `variable_get`/`variable_set` pair was removed entirely 2026-10-21 (commit
+  `2b9036b`, superseded by the `change` node), so the closing claim that their codegen/register
+  wiring is "not reverted, still fully working" no longer holds. The registry-only-presence
+  headline stands.
+
 
 `wire-type-system-scoping.md` flagged this directly: of 16 registered node types at the time, only
 `inject`/`function`/`debug`/`gpio_out`/`timer` were wired onto the Rete canvas originally. Since then `interrupt`,

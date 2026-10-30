@@ -1,4 +1,8 @@
 # `display_spi` framebuffer construction can exceed available heap — all three indexed depths (gs4/gs2/mono) confirmed on real CYD hardware
+> **2026-10-30 sweep:** All three depths built and hardware-confirmed; already closed at `outstanding-
+  items/resolved.md` ("`display_spi` full-resolution framebuffer memory", 2026-09-18). Banner
+  added 2026-10-30 sweep.
+
 
 Status: scoped 2026-09-18 (Mike's request after the CYD real-hardware bring-up session hit a real
 `MemoryError`), decided the same day, and `frameFormat: "gs4"` implemented the same day (`display-

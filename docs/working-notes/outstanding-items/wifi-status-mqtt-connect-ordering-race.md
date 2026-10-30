@@ -1,4 +1,10 @@
 # CONFIRMED BUG, 2026-09-04: wifi_status's WiFi connect can fire after mqtt's own precheck, defeating it
+> **2026-10-30 sweep:** Update: the closing "Resolved 2026-09-06" section predates two Thingstudio-side fixes:
+  `defer_to_mqtt` under a running MQTT client (2026-09-11, hardware-confirmed) and the
+  2026-09-25 rework in which generated MQTT code joins WiFi once at flow start with local
+  patches on `mqtt_as` (`decisions/redeploy-network.md`). Keep as incident record; the AGENTS.md
+  corollary should reference it for the lesson, not the current risk state.
+
 
 Mike hit this on real hardware testing `basic-mqtt.flow.json` with intentionally invalid ssid/password:
 

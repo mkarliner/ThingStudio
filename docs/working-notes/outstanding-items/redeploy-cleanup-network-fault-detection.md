@@ -1,4 +1,8 @@
 # Redeploy cleanup / network fault detection (implemented 2026-08-20, hardware pass still owed)
+> **2026-10-30 sweep:** Update: the title parenthetic "(hardware pass still owed)" is stale — the 2026-09-06 hardware
+  pass in the body shows it was done. The implementation itself is verified current
+  (`register_cleanup`, the compile hook's `WIFI_DERIVATION`, the "unmanaged" security state).
+
 
 `redeploy-cleanup-and-network-fault-detection-briefing.md` — **implemented 2026-08-20**, all three sub-items:
 

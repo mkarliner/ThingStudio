@@ -1,4 +1,8 @@
 # Posture-2 auth (app-secured) — not built, split from the backend/auth item, 2026-09-07
+> **2026-10-30 sweep:** Update: aligned at [P3] in the index and top-of-file tag (this file's body and the
+  `backend/__main__.py:9` comment still say [P4]). Still genuinely not built; the backend still
+  refuses non-loopback binds.
+
 
 **[P4].** Split from `backend-auth-overview.md` on Mike's call: this is real work, but lower priority than getting
 the backend itself (platform, relay, posture-1 Host-header allowlist) built and shipped under its default,

@@ -1,4 +1,9 @@
 # Single wifi_status ownership of WiFi credentials -- 2026-09-04 fix
+> **2026-10-30 sweep:** Update: superseded by the 2026-10-19/29 core-package flip — network nodes carry their own
+  `wifiConfigId` config-ref properties again; one-WiFi-config-per-flow is enforced by the
+  `WIFI_DERIVATION` compile hook plus `ts_wifi.ensure_station()`'s loud ValueError.
+  `resolveFlowWifiCredentials()` has no outside callers.
+
 
 Raised by Mike, hands-on, same session as confirming `basic-mqtt.flow.json` works on real
 hardware (see `mvp-validation-plan.md`'s 2026-09-04 entry): he could set the flow's

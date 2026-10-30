@@ -1,4 +1,8 @@
 # Documentation site — not scoped
+> **2026-10-30 sweep:** Both "still open" bullets closed: `wifi-provisioning.md` is in the nav and the site is live
+  (mkarliner.github.io/ThingStudio). Closed in `outstanding-items/resolved.md` (2026-10-30
+  sweep).
+
 
 `deployment-and-distribution-notes.md`: unclear whether this means a generated site off `docs/*.md` as-is or a purpose-built site for a different (end-user) audience than the working-notes/design-doc split serves today.
 

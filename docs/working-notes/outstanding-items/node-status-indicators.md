@@ -1,4 +1,9 @@
 # `wifi_status`/mqtt nodes should show connection status on the canvas
+> **2026-10-30 sweep:** Update: the owed list below references `mqtt-shared.ts`, superseded 2026-10-19 — mqtt status
+  now comes from the `ts_mqtt.py` package path. The live owed items: a real MicroPython-suite
+  run of the runtime changes and a hardware check of `mqtt_publish`'s connected/disconnected
+  reporting + clear-on-redeploy.
+
 
 Mike's ask, 2026-09-02: a visual indicator (not just generated console output) on `wifi_status`, `mqtt_publish`, `mqtt_subscribe` -- and probably any other network node -- showing current connection state directly on the canvas node itself. Not scoped -- needs a design for how a running device reports per-node state back to the editor in a way the canvas can render live, distinct from the existing NODE_ERROR/DEBUG console-only reporting (`console-node-id-mapping.md`). Likely connects to Tier 2's live-value-streaming work (`tier2-live-streaming-persistence.md`) -- a status indicator is a specific, simple case of the same "device pushes live state back to the editor" capability.
 

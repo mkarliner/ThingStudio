@@ -1,4 +1,8 @@
 # MQTT real-hardware validation + network follow-ups (in progress)
+> **2026-10-30 sweep:** Closed (`outstanding-items/resolved.md`: the 2026-10-19 package pass and the accepted
+  ordering- race limitation). The header's "(in progress)" and the duplicated blocks below are
+  history. Banner added 2026-10-30 sweep.
+
 
 Mike's own direct request, takes priority over the sequencing below. Doesn't remove or reorder the rp2350 item — just goes first.
 

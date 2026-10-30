@@ -1,4 +1,8 @@
 # Presets: named, saveable, human-editable per-node property bundles
+> **2026-10-30 sweep:** Built 2026-09-22, per-node scope only (`decisions/presets.md`); v1 limits still hold — no
+  board- seeding, no delete button. Closed in `outstanding-items/resolved.md` (2026-10-30
+  sweep).
+
 
 Raised by Mike two ways:
 

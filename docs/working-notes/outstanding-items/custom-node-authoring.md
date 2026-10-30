@@ -1,4 +1,8 @@
 # Custom node authoring — implemented 2026-08-20 (historical record)
+> **2026-10-30 sweep:** Update: the present-tense "persistence across app runs still not built" clause is false —
+  packages persist in the backend store and load via `GET /api/custom-nodes` (2026-09-27/30).
+  The 2026-08-20 historical record above is intact.
+
 
 **Implemented 2026-08-20** — scoped and built in one session per Mike's sequencing override. Left here as
 historical context (what was unknown going in), each "real open question" resolved inline.

@@ -1,4 +1,7 @@
 # GPIO pin range is hardcoded to 0–39
+> **2026-10-30 sweep:** Hardware passes recorded in this file (2026-09-24); the build side landed with the 2026-09-23
+  processor/board definitions. Closed in `outstanding-items/resolved.md` (2026-10-30 sweep).
+
 
 Found 2026-09-23 while writing the Blink an LED page. `gpio_out` (and `PropertyPanel.vue`'s pin input,
 `max="39"`) reject any pin above 39 — the classic ESP32's range. ESP32-S2 goes to GPIO 46 and ESP32-S3 to

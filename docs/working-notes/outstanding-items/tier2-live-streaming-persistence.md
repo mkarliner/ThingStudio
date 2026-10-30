@@ -1,4 +1,8 @@
 # Flash-backed runtime-state persistence (was "Tier 2 — live value streaming + flow/state persistence")
+> **2026-10-30 sweep:** Update: the `variable-set.ts` reference below points at the removed
+  `variable_get`/`variable_set` pair (superseded by the `change` node, 2026-10-21). The item's
+  substance (flash-backed, node-ID-keyed state) remains open and correctly scoped.
+
 
 Status: split 2026-09-06, during Mike's item-by-item priority pass over `outstanding-items.md`. The original item
 bundled three separate things under one "Tier 2" heading; each has its own status now:

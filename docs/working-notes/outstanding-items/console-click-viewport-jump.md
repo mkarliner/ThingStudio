@@ -1,4 +1,8 @@
 # Console-click-to-navigate always recenters the viewport, even when the node's already visible
+> **2026-10-30 sweep:** The suggested fix is implemented (`editor-setup.ts`'s `isNodeComesInView`/conditional pan),
+  matching the closure already in `outstanding-items/resolved.md`. Banner added 2026-10-30
+  sweep.
+
 
 Raised again 2026-09-13 (Mike), clarifying an original "this is annoying, remove it" bullet in
 `mikes-questions-and-points.md`. This is **not** a new bug in a broken feature -- the underlying behavior

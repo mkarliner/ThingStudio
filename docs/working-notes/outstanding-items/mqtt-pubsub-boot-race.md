@@ -1,4 +1,8 @@
 # Suspected: `mqtt_publish`/`mqtt_subscribe` boot-time race can silently drop a message
+> **2026-10-30 sweep:** Update: factor 1 below ("inject's click-fire is missing") is no longer true — click-fire
+  landed and was hardware-confirmed 2026-09-06. The race itself remains open, and `ts_mqtt.py`'s
+  header still points here.
+
 
 Found while investigating a real silent-failure hardware test, 2026-09-02: Mike's `basicmqtt.flow.json` (inject "manual" --> mqtt_publish; mqtt_subscribe --> debug, same broker/wifi config, qos 0, retain false) produced no debug output on real hardware, no error either.
 

@@ -1,4 +1,7 @@
 # `inject`'s click-only live-fire feature is missing from the repo
+> **2026-10-30 sweep:** Hardware-confirmed 2026-09-06 per `outstanding-items/resolved.md`; the file's paths predate
+  the `core-packages/` layout. Banner added 2026-10-30 sweep.
+
 
 `docs/working-notes/continue-on-bigmac-brief.md` (still untracked, per Mike's "commit the brief later") describes a prior session that implemented "inject-node click-only live-fire, new `startup` node, node-ID refactor from numeric to UUID -- 54 changed/new files," written directly to this repo via the device bridge, with exact `git add`/`git commit` commands handed to Mike to run himself.
 

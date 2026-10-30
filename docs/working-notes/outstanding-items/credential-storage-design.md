@@ -1,4 +1,9 @@
 # Credential storage: move WiFi/MQTT secrets into `~/.thingstudio`, out of the flow file
+> **2026-10-30 sweep:** Update: `CredentialRefField` is no longer nested inside `ConfigRefField`'s edit panel (the
+  saved credential's own fields are shown directly; `config-types.ts`), and the credential-store
+  namespace has broadened beyond wifi/mqtt-broker to include "board" (2026-10-29). The built-
+  and-resolved headline is unchanged.
+
 
 Raised by Mike, 2026-09-13 (`mikes-questions-and-points.md`): "Save credentials to persistence store in
 .thingstudio, not in flow." Same underlying need as the already-deferred

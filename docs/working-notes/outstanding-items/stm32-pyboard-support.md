@@ -1,4 +1,8 @@
 # STM32 / pyboard support
+> **2026-10-30 sweep:** Update: the unknown-board "Pins…" page (2026-09-30) already covers the "link Adding a
+  processor" half of point 2; what remains is the not-supported refusal behaviour for a no-
+  target flow (currently warn-and-proceed) and the pin-naming decision.
+
 
 Status: mostly done, 2026-10-14; **not yet verified on real hardware**. Found connecting a pyboard v1.0
 (`PYBv1.0 with STM32F405RG`) and deploying the blink flow: `DEPLOY_ERROR OSError [Errno 19] ENODEV`, and

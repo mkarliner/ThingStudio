@@ -1,4 +1,9 @@
 # Layout: filling the page, and page dots in a footer
+> **2026-10-30 sweep:** Update: the same-day grid rewrite (`gui-grid-layout-scoping.md`) replaced the flex build
+  described below — no `fill`/`grow` in `ScreenOutline.vue`, which is now a row/col/span grid
+  editor, and the theme demo flow is re-authored as grid spans. Fill-plus-footer survives as a
+  capability of the grid model, not this mechanism.
+
 
 Status: ruled by Mike 2026-10-24 (`decisions/gui-layout.md`), **built 2026-10-24**. What shipped is smaller than the
 first shape: no footer feature at all -- a footer is a container, and page dots are an ordinary widget. See "What

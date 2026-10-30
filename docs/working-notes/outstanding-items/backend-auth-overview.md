@@ -1,4 +1,10 @@
 # Backend / auth — minimal build (platform + relay + posture-1) landed 2026-09-07; complete for the moment, 2026-09-08
+> **2026-10-30 sweep:** The "what's still open" list on this page is stale: the editor now has both the WS transport
+  and the admin-API client (`editor/src/protocol/backend-transport.ts`, `editor/src/flow-
+  file/admin-api-client.ts`), static assets are served (`assets.py`/`editor_site.py`), and the
+  distribution story is decided (`decisions/packaging.md`). The perimeter-2 auth item itself
+  remains open.
+
 
 **Newly marked MVP-needed by Mike, 2026-08-21.** Trigger: custom node packages need to persist across app runs
 in a real `~/.thingstudio` local-state folder, and that's a backend-owned capability by the architecture's own

@@ -1,4 +1,9 @@
 # Node descriptor: unify built-in and custom node handling — Mike's concern, not scoped
+> **2026-10-30 sweep:** Update: the "remaining work" list below is behind events — the custom schema now carries
+  outputs/eventSource/description, `palette.ts` is a `KindStyle` map, and the built-ins moved
+  wholesale to packages. The live gap list is in the index's "Custom node format parity" item
+  and `decisions/node-authoring.md`.
+
 
 Raised by Mike during the 2026-10-14 architecture review: built-in nodes and custom nodes are handled as two
 different systems, and "they should all be implemented the same so users can modify them."

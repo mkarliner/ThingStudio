@@ -1,4 +1,8 @@
 # Palette ordering: an explicit priority field per node, replacing the hardcoded source-then-sink list
+> **2026-10-30 sweep:** Built 2026-09-13: numeric `priority` on kinds replaced the hardcoded `KINDS` array
+  (`palette.ts`, custom nodes default 1000); recorded in `outstanding-items/resolved.md`. Banner
+  added 2026-10-30 sweep.
+
 
 Mike's clarification, 2026-09-13, of the old, ambiguous "arrange to menu to better reflect workflow
 (connect/open/save...)" bullet in `mikes-questions-and-points.md` -- originally read as being about a top-level

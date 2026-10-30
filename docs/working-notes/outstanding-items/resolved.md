@@ -8,6 +8,30 @@ drop out of the backlog. Full reasoning stays at each pointer's target; `git log
 **Last audited 2026-10-24, against `git log` at `84dcbfc`** (see the parent file's header). Split out of the
 working list the same day, per Mike's call.
 
+## Added 2026-10-30 (the priorities re-stage sweep)
+
+The re-stage session's detail-file sweep (all 86 detail files checked against current code) confirmed these
+closed; the index bullets were removed the same day. Each carries its evidence line.
+
+- **Backend distribution story** -- decided, not open: `decisions/packaging.md` (2026-09-26..30) is
+  decision-complete (targets, signing, install routes, service recipes).
+- **Runtime install from the editor** -- built and real-hardware-verified: the raw-REPL install path reached a
+  LOLIN S2 Mini end-to-end with a first blink 2026-09-23 (`decisions/runtime-install-from-editor.md`); the
+  index bullet's "needs a real design session before it is buildable" predates it.
+  ([detail](outstanding-items/deploy-runtime-from-editor.md))
+- **GPIO pin-range by chip + the hardware pass** -- the hardcoded 0-39 range was resolved 2026-09-23 by the
+  processor/board definitions and the hardware passes are recorded in the detail file (2026-09-24).
+- **Low-memory warning before deploy** -- built and wired (`memory-advice.ts`'s
+  `lowMemoryWarningBeforeDeploy`/`lowFlowMemoryWarning` into the pre-deploy path); warns from HELLO figures,
+  not a stated flow-size ceiling.
+- **Presets (named, saveable per-node property bundles)** -- built 2026-09-22, per-node scope only
+  (`decisions/presets.md`); v1 limits hold: no board-family seeding, no delete button.
+- **Documentation site** -- docs are live (`mkarliner.github.io/ThingStudio`, custom domain
+  docs.thingstudio.net) and `wifi-provisioning.md` is in the nav; both of that detail file's "still open"
+  bullets closed.
+- **User docs on GitHub Pages** -- `docs.yml` watches the `gh-pages` branch and Pages is on (docs live at
+  docs.thingstudio.net); links checked from the site header.
+
 ## Launch
 
 - **Classic-ESP32 14.1.0 image: rebuilt, tested, published, in the catalogue** -- done 2026-10-25. Built from

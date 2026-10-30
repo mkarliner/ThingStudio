@@ -1,4 +1,7 @@
 # User docs: pages still to rewrite to the style guide
+> **2026-10-30 sweep:** Update: the "Decisions needed" bullet on clock/ntp is done — `clock.md` is replaced by
+  `ntp.md`. The P2/P3 rewrite outstanding list stands.
+
 
 Status: open, 2026-10-11. From the docs style review (`docs-style-review.md`); rules in `docs-style-guide.md`.
 

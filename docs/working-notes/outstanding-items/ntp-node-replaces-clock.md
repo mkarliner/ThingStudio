@@ -1,4 +1,8 @@
 # `ntp` node replaces `clock`
+> **2026-10-30 sweep:** Update: a 2026-10-19 pass ran an `ntp` flow on a real ESP32-C3 (the network-packages pass), so
+  the blanket "owes a hardware check" below is partially met. Still owed: the summer-time and
+  MQTT-defer checks the list names.
+
 
 Status: built 2026-10-14, off-device only; owes a hardware check (see "Built" at the end). Raised by Mike during the
 user-docs style review (`docs-style-review.md`).

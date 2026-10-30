@@ -1,4 +1,8 @@
 # `wifi_status` should only emit on change, not every poll
+> **2026-10-30 sweep:** Update: the compare-then-emit-or-skip behaviour proposed here is in the shipping code and was
+  hardware-validated 2026-09-10 (RSSI-only changes do not re-emit; `wifi-status-
+  completeness.md`).
+
 
 **Implemented 2026-09-02, not yet verified by Mike** (compiler/codegen change only -- `npm test`/`tsc --noEmit`/build not run from the sandbox, per CLAUDE.md's npm rule; real hardware retest still owed).
 

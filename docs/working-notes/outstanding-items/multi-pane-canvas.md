@@ -1,4 +1,8 @@
 # Multiple panes for one large flow (still one flow)
+> **2026-10-30 sweep:** Built 2026-09-13, tabbed panes (`e2359f3`; `panes` in flow-file, `panes-
+  store.ts`/`PaneTabs.vue`); already recorded in `outstanding-items/resolved.md`. Banner added
+  2026-10-30 sweep.
+
 
 Mike's clarification, 2026-09-13, of the "Allow multiple panes (still one flow)" bullet in
 `mikes-questions-and-points.md`: the goal is letting a large flow be split visually across multiple panes/areas
