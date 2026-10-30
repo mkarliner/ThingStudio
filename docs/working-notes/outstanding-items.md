@@ -414,8 +414,10 @@ Done and verified (or settled as a decision) items are kept in
 - **`mikes-questions-and-points.md` itself is a live, actively-appended file** -- treated as a permanent
   open-items scratchpad, not something to mark resolved or archive. Its still-open items are pulled into the
   sections above; re-check it directly for anything newer than this index.
-- **`mvp-feature-priorities.md` and `validation/mvp-validation-plan.md` remain the live sources of truth** for
-  tier-by-tier status. This file pulls their open items forward but doesn't replace them.
+- **The live priority documents are `docs/road-to-mvp.md`, `docs/tester-ready.md` (the deliverable before the
+  MVP, 2026-10-30) and `launch-mvp-scope-briefing.md`** (with decisions in `decisions/launch-scope.md`).
+  `mvp-feature-priorities.md` was demoted to a historical record the same day; this file is the live item
+  tracker and doesn't take priority definitions from them.
 
 ---
 

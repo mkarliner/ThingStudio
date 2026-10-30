@@ -188,7 +188,7 @@ Reasonable exceptions, each decided and stated rather than left implicit:
 
 Mike, 2026-10-17.
 
-## Architecture first at subsystem interfaces: MVP-ready is not tester-ready
+## Architecture first at subsystem interfaces: MVP-ready is not tester-hardened
 
 Two bars, not one. "MVP" means feature-complete enough to demonstrate and dogfood on hardware we hold; "suitable for
 initial testers" is higher — the subsystems are settled enough that a stranger's saved flows, deployed boards and

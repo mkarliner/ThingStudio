@@ -81,3 +81,8 @@ log's scope boundary, and its maintenance rule. Context: `../architecture-review
   exchange vectors say where alerts must and must not happen. Board RAM matters, the editor's code size doesn't:
   the board's table is a flat tuple of strings, a constant in flash when frozen into a custom image (the intended
   route for constrained boards).
+- **2026-10-30 — "MVP-ready is not tester-ready" renamed to "MVP-ready is not tester-hardened".** Mike's call, so
+  the `AGENTS.md` heading no longer collides with the tester-ready milestone's name, which is what people will say
+  out loud (`decisions/launch-scope.md`, same date: a tester-ready deliverable now sits before the MVP,
+  `docs/tester-ready.md`). Rule text unchanged. Dated entries above keep the old wording — history, not current
+  rule; the 2026-10-14 `decisions.md` index line records the name the rule shipped under.

@@ -41,5 +41,6 @@ separate ThingStudioMarketing repo — not logged here.
 - **2026-10-30 -- the AGENTS.md interface rule renamed to "tester-hardened".** Mike chose "tester-hardened"
   (over "initial-testers-ready") so the rule "Architecture first at subsystem interfaces: MVP-ready is not
   tester-ready" no longer collides with the new pre-MVP tester-ready milestone's name, which is what people
-  will say out loud. Rename pending application (this session stopped; it is the first edit of the next one),
-  with a dated note then added to `decisions/subsystem-interfaces.md`.
+   will say out loud. Applied 2026-10-30: `AGENTS.md` heading renamed, dated note added to
+   `decisions/subsystem-interfaces.md`; `decisions.md`'s dated 2026-08 index entry keeps the name the rule
+   shipped under.

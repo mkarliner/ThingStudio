@@ -2,6 +2,9 @@
 
 2026-09-22
 
+A smaller, earlier deliverable now sits before this one: [tester-ready.md](tester-ready.md). This file stays
+what it always was — the MVP's definition, scope and acceptance test.
+
 ## What "true MVP" means
 
 The MVP is done when someone who is not Mike can go from a fresh computer and a supported board to a working flow on hardware, using only the product and its docs.

@@ -1,5 +1,22 @@
 # Working note: MVP feature list, prioritized
 
+> **Status: demoted to a historical record, 2026-10-30.** Do not read this file as the current priority list.
+> The MVP's live definition, scope and acceptance test are [`docs/road-to-mvp.md`](../road-to-mvp.md); the
+> deliverable now staged *before* the MVP is [`docs/tester-ready.md`](../tester-ready.md); the launch work list
+> is `launch-mvp-scope-briefing.md` with decisions in `decisions/launch-scope.md`; open items are tagged and
+> tracked in `outstanding-items.md`. Nothing here was deleted: ~87 references in code and tests use this file
+> as a dated anchor for what was scoped and why in 2026-08, so the tiers below are kept exactly as written.
+>
+> One sweep was done on demotion, to move any genuinely-open item across. Checked 2026-10-30: every still-open
+> item in this file is already tracked in `outstanding-items.md` (TCP send/listen-receive and stateful
+> nodes/join, [POST-MVP]; the kitchen-sink gate, [P5]; HTTP in, mDNS and per-device config override under
+> "Already tracked" v2/v3 lists; the flash-backed state store and connection-state buffering under their
+> POST-MVP detail files), was superseded (live value streaming: Mike's 2026-10-14 call — not built,
+> `VALUE_STREAM` reserved; `gpio_in`: removed on `interrupt`'s arrival; the "ADC is not a node" call, superseded
+> by the `adc` node itself), or was already done (software-only, GPIO/timer, network and filter nodes; the
+> editor shell; the mpy-cross error-attribution proposal, built and verified 2026-09-04;
+> `outstanding-items/resolved.md`). Nothing new entered `outstanding-items.md` from this file.
+
 Status: working note, 2026-08-11. Task 1 from `mvp-planning-briefing.md`.
 Builds on `../thingstudio-design-doc.md` §10's rough v1 sketch, §15.5's
 pipeline-proven-vs-v1-done gap list, and this session's §11 resolutions
