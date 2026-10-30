@@ -30,3 +30,16 @@ separate ThingStudioMarketing repo — not logged here.
   is the BME280 readouts, trends and MQTT publish; a separate external-controls flow (Tasmota/WLED state, toggle,
   unknown/stale) keeps the launch acceptance. Mike's call.
 
+- **2026-10-30 -- a tester-ready milestone sits before the MVP; MVP keeps the hero demos.** Mike, as he found the
+  priorities docs drifted: "there is a milestone prior to MVP which is tester ready... I want a deliverable that
+  tests clean onboarding and basic functions, probably includes more tutorials." The MVP still means the launch
+  scope (headliner/hero demonstrations and the rest of `launch-mvp-scope-briefing.md`); tester-ready is the
+  deliverable before it. Thingstudio is soft-launched, so feedback now arrives as a trickle of real users;
+  clean onboarding, basic functions and more tutorials should be the tracked, tested deliverable first. To be
+  written up as `docs/tester-ready.md` (position chosen the same day; scope of "basic functions" still TBD with
+  Mike), alongside demoting `mvp-feature-priorities.md` (2026-08-11) to a historical record.
+- **2026-10-30 -- the AGENTS.md interface rule renamed to "tester-hardened".** Mike chose "tester-hardened"
+  (over "initial-testers-ready") so the rule "Architecture first at subsystem interfaces: MVP-ready is not
+  tester-ready" no longer collides with the new pre-MVP tester-ready milestone's name, which is what people
+  will say out loud. Rename pending application (this session stopped; it is the first edit of the next one),
+  with a dated note then added to `decisions/subsystem-interfaces.md`.
