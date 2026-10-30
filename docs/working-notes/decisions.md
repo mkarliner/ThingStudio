@@ -306,3 +306,16 @@ processor descriptor), a build is a variant inside a family with versions, a boa
 and a local file's family read from the image with `esptool image_info` rather than asked. Kept open for a future
 manufacturer-supplied repository (apt-style), which is why the loader takes a list of sources (2026-10-25).
 1 entry: `docs/working-notes/decisions/firmware-catalogue.md`.
+
+## Third-party pinning
+
+Anything fetched from outside the repo is untrusted until it is pinned to an immutable identifier, installed
+without its own code running, and covered by a check that fails when it changes; per-source pin inventory,
+exceptions and the mechanical-not-vigilant reasoning move here from `AGENTS.md` (2026-10-30, the AGENTS.md
+diet). 1 entry: `docs/working-notes/decisions/third-party-pinning.md`.
+
+## Handoff notes
+
+Handoff/briefing notes lead with the topic, never "next-session-picks"; a brief's environment facts cover every
+toolchain the session used. Naming procedure in `AGENTS.md`; the naming-violation and briefing-gap incidents
+moved here (2026-10-30, the AGENTS.md diet). 1 entry: `docs/working-notes/decisions/handoff-notes.md`.
