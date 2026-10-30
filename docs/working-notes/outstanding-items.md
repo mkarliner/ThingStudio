@@ -357,6 +357,14 @@ ThingStudioMarketing repo, not here.
 
 ## Docs / process
 
+- **[P1] Tester-ready tutorials per the agreed ladder -- scope set 2026-10-30 (`docs/tester-ready.md` TBD).**
+  Five tutorials, each building from the previous flow: blink → function read/write (raw `machine.Pin` read in
+  verbatim code, with the compile-checker-doesn't-see-function-code caveat) → node context → HTTP in (WiFi
+  config, finding the board, the open-LAN-port note) → MQTT. Every tutorial page serves the learner profiles:
+  importable flow at top, linear steps, "went off the path?" troubleshooting link. Onboarding reports gain
+  "what did you try next, and what happened?". Success-point pointers ("next, pick:") and the MQTT-missing-config
+  FAQ entry ride the same work.
+
 - **[BACKLOG]** **"Future" page in the user docs** (Mike, 2026-10-11). One clearly labelled page for planned
   features, inviting feedback, so the rest of the docs describe only the current state. Not scheduled.
 - **User docs rewrite to the style guide -- new item, 2026-10-11 (Mike, docs style review).** Prioritised page

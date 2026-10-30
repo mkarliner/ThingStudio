@@ -44,3 +44,9 @@ separate ThingStudioMarketing repo — not logged here.
    will say out loud. Applied 2026-10-30: `AGENTS.md` heading renamed, dated note added to
    `decisions/subsystem-interfaces.md`; `decisions.md`'s dated 2026-08 index entry keeps the name the rule
    shipped under.
+- **2026-10-30 -- the tester-ready scope discussion: tutorial ladder and learner profiles.** Basic functions
+  are a five-step ladder (blink → function read/write → node context → HTTP in → MQTT), each tutorial building
+  from the previous flow; MQTT is in scope because real users adventure there by themselves. Tutorials are
+  designed round learner profiles (path-follower, adventurer, reader, sample-scavenger, goal-driven arriver),
+  every tutorial page serving all modes; onboarding reports gain "what did you try next, and what
+  happened?". Written up in `docs/tester-ready.md` TBD section, same date.
