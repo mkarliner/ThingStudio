@@ -6,6 +6,8 @@ files to re-enter current work. The per-session handoff rules that produce these
 
 ## Live — active handoffs and open threads
 
+- `tutorial-ladder-authoring-briefing.md` — 2026-10-31 — the [P1] tutorial ladder's next session: scope
+  (agreed ladder, learner profiles, the adventurous-user learning), owed items, environment facts.
 - `context-diet-and-tooling-continuation-briefing.md` — 2026-10-30 — Phases A-C landed; tooling now
   installed, Phase D briefing sweep and the tutorial ladder remain.
 - `priorities-restage-and-context-diet-briefing.md` — 2026-10-30 — the tester-ready re-stage and
