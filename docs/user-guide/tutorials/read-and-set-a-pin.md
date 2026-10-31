@@ -23,14 +23,13 @@ return msg
 
 Deploy. The LED blinks as before, but the reason has changed: each message now reads the pin and writes back the
 opposite of what it found. The state — what the LED is actually showing — lives on the board between messages, so
-the flow can't contradict it. A lost message doesn't leave the blink waiting to recover; the next message reads
-where the LED is and carries on.
+the flow can't contradict it.
 
 `machine.Pin` is MicroPython's own pin API. Constructed with a number and no other settings, it takes the pin as it
 is and `.value()` reads the level the `gpio out` node has written. The write itself goes out of the function's
 output, through to `gpio out`.
 
-One limit to know: the pin fields on a `gpio out` node are checked against your board at compile time, but code
+One limit to know: the pin fields on gpio nodes are checked against your board at compile time, but code
 inside a function is not. If `PIN` isn't a pin number your board has, the compile check passes and the error arrives
 when the flow runs, as a `[NODE_ERROR]` in the console. See [Reading a node error](../debugging.md#reading-a-node-error);
 **Pins…** next to the **Board** menu lists your board's pins.
