@@ -5,7 +5,7 @@ directly — and then keep the state in the node with `context`.
 
 The flow you built in [Blink an LED](../first-flow.md) is the starting point: timer → function → gpio out, with the
 function turning the timer's count into on and off. Lost it? Download
-[read-and-set-a-pin.flow.json](https://github.com/mkarliner/ThingStudio/blob/main/test-flows/read-and-set-a-pin.flow.json)
+[read-and-set-a-pin.flow.json](https://github.com/mkarliner/ThingStudio/blob/main/test-flows/tutorials/read-and-set-a-pin.flow.json)
 and open it with **File → Open…**.
 
 If a step misbehaves on the way, start at [Debugging & troubleshooting](../debugging.md).

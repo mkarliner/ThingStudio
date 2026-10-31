@@ -258,6 +258,7 @@ Python body on its own with sample messages.
 | Task | File in `test-flows/` |
 | --- | --- |
 | Blink an LED | `blink.flow.json` |
+| Read and set a GPIO pin, keep state in the node | `tutorials/read-and-set-a-pin.flow.json` |
 | Publish to MQTT | `basic-mqtt.flow.json` |
 | Call a web service | `basic-http-request.flow.json` |
 | A BME280 reading | `bmp280-test-flow.flow.json` |
