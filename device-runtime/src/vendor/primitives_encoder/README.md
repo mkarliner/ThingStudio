@@ -5,7 +5,7 @@ Source: [peterhinch/micropython-async](https://github.com/peterhinch/micropython
 read from the repo's root `LICENSE`).
 
 Fetched 2026-10-11 for `editor/src/node-library/encoder.ts` (the `encoder` node,
-`docs/working-notes/adc-encoder-neopixel-briefing.md`). Pin: commit
+`docs/working-notes/briefings-archive/adc-encoder-neopixel-briefing.md`). Pin: commit
 `2258b693281508aeda119757875a9d0c9b9e5f5d` — the last commit to touch this path, per the GitHub commits API for the
 path, not just `master` HEAD at fetch time.
 

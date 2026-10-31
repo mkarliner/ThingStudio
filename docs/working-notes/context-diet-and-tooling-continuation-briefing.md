@@ -1,9 +1,9 @@
 # Continuation brief: context-diet Phases A-C landed; install the agent tooling, then Phase D
 
-Status: brief, 2026-10-30, end of session. All work is on **`docs/context-diet`**, committed, tree clean:
-`ff2cd1f` and earlier are pushed nowhere yet — push/merge are Mike's call. The prior brief
-(`priorities-restage-and-context-diet-briefing.md`) planned the work; Phases A-C are done, the scope
-discussion happened, Phase D has not started.
+Status: brief, 2026-10-30, end of session. All work is on **`docs/context-diet`**, committed, tree clean;
+Phase D is now done too (2026-10-31, see the environment update below). The prior brief
+(`briefings-archive/priorities-restage-and-context-diet-briefing.md`) planned the work; Phases A-D are
+done, the tutorial ladder has not started.
 
 ## What this session did
 
@@ -39,9 +39,11 @@ discussion happened, Phase D has not started.
 1. **Install the agent tooling on this Debian 13 box** — see Environment facts below; nothing local has run
    the test suites this session. `apt install npm python3-venv` is the fix (Mike's call on this shared box, or
    the editor suite keeps running on the Mac).
-2. **Phase D — briefing archive sweep.** ~44 top-level briefings; propose a landed/still-live split by agent,
-   Mike scans the list before executing. The 9 grandfathered `next-session-picks-*` files stay unrenamed.
-   Optional one-line-per-file `BRIEFINGS.md`.
+2. ~~**Phase D — briefing archive sweep.**~~ **Done 2026-10-31** (Mike approved the split in-session): 40
+   briefings git-mv'd to `docs/working-notes/briefings-archive/`, 19 stay top-level as live, the 9
+   grandfathered `next-session-picks-*` stay unrenamed; `BRIEFINGS.md` (one line per file, all 68) is the
+   index; 10 stale path references updated. 114 files, 40+19+9: the three descriptor/parity live briefs carry
+   format-parity's Phase 2/3 questions into the context-model conversation.
 3. **The tutorial ladder itself** — authored work, [P1] + [TR] in `outstanding-items.md`. Also owed when
    tutorial work starts: success-point pointers ("next, pick:"), the MQTT missing-config FAQ entry, the
    function-node pin caveat note, the HTTP-in open-port note, and the onboarding-report question.

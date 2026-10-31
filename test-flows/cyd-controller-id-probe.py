@@ -3,7 +3,7 @@
 # test-flows/cyd-controller-id-probe.py
 #
 # One-shot diagnostic for the open "which controller chip is actually on
-# this CYD unit" question (docs/working-notes/cyd-touch-gui-flash-budget-
+# this CYD unit" question (docs/working-notes/briefings-archive/cyd-touch-gui-flash-budget-
 # briefing.md item 1 / framebuffer-display-node-scoping.md's "CYD
 # controller-variant story ... unresolved"). NOT vendored driver code, not
 # part of display_spi -- a throwaway probe, safe to delete once the

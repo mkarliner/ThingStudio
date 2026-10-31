@@ -5,7 +5,7 @@ Source: [peterhinch/micropython-async](https://github.com/peterhinch/micropython
 read from the repo's root `LICENSE`).
 
 Fetched 2026-10-11 for `editor/src/node-library/adc.ts` (the `adc` node,
-`docs/working-notes/adc-encoder-neopixel-briefing.md`). Pin: commit
+`docs/working-notes/briefings-archive/adc-encoder-neopixel-briefing.md`). Pin: commit
 `0fb2f22d1b130d63be2ec4d66958c4f6eb8106b3` (2024-05-09, "Docs and code: Remove all references to uasyncio.") — the
 last commit to touch this path, per the GitHub commits API for the path, not just `master` HEAD at fetch time (the
 same tightened-pin standard `primitives_events/README.md` and `threadsafe_event/README.md` set).

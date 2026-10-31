@@ -43,7 +43,7 @@
 #    node as a documented fallback rather than silently lost.
 #
 # 3. register_cleanup()/the _cleanups registry (added
-#    docs/working-notes/redeploy-cleanup-and-network-fault-detection-briefing.md,
+#    docs/working-notes/briefings-archive/redeploy-cleanup-and-network-fault-detection-briefing.md,
 #    Problem 1) -- cancel_running() cancelling a task never touched any
 #    OS-level resource (a socket) that task's *module-level* setup code
 #    claimed, since that resource isn't owned by the cancelled task's own

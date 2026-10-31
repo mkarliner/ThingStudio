@@ -1,6 +1,6 @@
 # Working note: inject live-fire + startup node + node-ID UUID refactor, one session
 
-Session origin: `docs/working-notes/inject-node-briefing.md` ("Currently the inject
+Session origin: `docs/working-notes/briefings-archive/inject-node-briefing.md` ("Currently the inject
 node fires only at compile deploy time, which it shouldn't and doesn't fire when
 clicked, which it should"). Closes both halves of `outstanding-items.md`'s
 "`inject` might be doing the job of two separate nodes" review

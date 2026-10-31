@@ -31,7 +31,7 @@ export interface GraphNode {
 export type GraphLink = [number, string, number, string, number, string];
 
 /**
- * A config node (docs/working-notes/config-node-and-palette-implementation-
+ * A config node (docs/working-notes/briefings-archive/config-node-and-palette-implementation-
  * briefing.md) -- the Node-RED "Server"-dropdown pattern: a small object
  * configured once (e.g. WiFi credentials) and referenced by ID from
  * ordinary nodes' properties, instead of duplicated as raw values on every

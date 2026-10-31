@@ -9,7 +9,7 @@
 > `outstanding-items.md`. Kept for historical reference, not active
 > reading.
 
-Companion to `docs/working-notes/rp2-bringup-interrupt-briefing.md` (this
+Companion to `docs/working-notes/briefings-archive/rp2-bringup-interrupt-briefing.md` (this
 session's briefing) and `test-flows/rp2-pin-notes.md` (pre-flight pin
 research done before hardware was in hand). This is the actual hands-on
 result for the RP2040 leg — the one the briefing flagged as the session's

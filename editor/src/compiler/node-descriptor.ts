@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // editor/src/compiler/node-descriptor.ts
 //
-// The canonical NodeDescriptor (docs/working-notes/node-descriptor-unification-briefing.md,
+// The canonical NodeDescriptor (docs/working-notes/briefings-archive/node-descriptor-unification-briefing.md,
 // decisions/node-board-mapping.md's 2026-10-14 "metadata-first" call): the plain, serializable data
 // half of a node type -- id, kind, ports, palette styling, property schema, hardware requirements.
 // A built-in's NodeDefinition (./node-definition.ts) is a NodeDescriptor plus its TypeScript codegen

@@ -3,7 +3,7 @@
 Status: v2, in progress (2026-10-14). This is what a *node type* declares: its id, kind, ports,
 palette styling, property schema and hardware requirements. v1 described two separate mechanisms
 (built-in TypeScript vs custom JSON); v2 converges them on one **`NodeDescriptor`** data shape. The
-direction and scope are fixed by `../../docs/working-notes/node-descriptor-unification-briefing.md`
+direction and scope are fixed by `../../docs/working-notes/briefings-archive/node-descriptor-unification-briefing.md`
 and `../../docs/working-notes/decisions/node-board-mapping.md`; the built-in library migrates onto it
 family by family.
 

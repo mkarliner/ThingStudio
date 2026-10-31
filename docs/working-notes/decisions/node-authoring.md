@@ -239,7 +239,7 @@ Status: detail file, split out of `decisions.md` on 2026-09-06 to keep that inde
 
 - **2026-09-18 -- CYD (ESP32-2432S028, 2 USB ports) confirmed ST7789(V)-compatible, working
   display config found on real hardware.** `framebuffer-display-node-scoping.md`'s open "CYD
-  controller-variant story" resolved: `docs/working-notes/cyd-touch-gui-flash-budget-briefing.md`
+  controller-variant story" resolved: `docs/working-notes/briefings-archive/cyd-touch-gui-flash-budget-briefing.md`
   item 1's own fallback plan (chip-ID read first, then try candidate drivers on real hardware) run
   in full. Chip-ID reads (`RDDID`/`RDID1-3`/`RDID4`) all came back `0x00` -- inconclusive alone,
   consistent with these registers being known-unreliable on real CYD units (an independent CYD

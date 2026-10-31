@@ -3,12 +3,12 @@
 # test-flows/cyd-display-test-pattern.py
 #
 # Visual confirmation test for CYD's display controller-variant question
-# (docs/working-notes/cyd-touch-gui-flash-budget-briefing.md item 1).
+# (docs/working-notes/briefings-archive/cyd-touch-gui-flash-budget-briefing.md item 1).
 # Pushes a real frame through the ALREADY-VENDORED st7789py_mpy driver
 # (device-runtime/src/vendor/st7789py_mpy/st7789py.py, proven on TiDAL)
 # directly to the CYD panel, using framebuf.FrameBuffer + the manual
 # RGB565 byte-swap -- same pipeline display_spi's real codegen uses
-# (docs/working-notes/framebuffer-st7789-display-briefing.md's "Lessons
+# (docs/working-notes/briefings-archive/framebuffer-st7789-display-briefing.md's "Lessons
 # from the TiDAL session", item 4: "Applies identically to ILI9341 or any
 # other controller ... not a fresh investigation, just do the swap").
 #
