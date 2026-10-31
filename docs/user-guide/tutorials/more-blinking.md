@@ -53,6 +53,6 @@ runs, as a `[NODE_ERROR]` in the console. See [Reading a node error](../debuggin
 ## Next, pick:
 
 - [A sensor display](../sensor-display.md) — the next job past blinking: read a sensor and show it on a screen.
+- [The tutorial ladder](index.md) — the five tutorials, each starting from the flow the last one left you with.
 - [function](../nodes/function.md) — everything else a `function` node can do, from several outputs to state kept
   for the whole flow.
-- [Debugging & troubleshooting](../debugging.md) — what the console's lines mean when a change misbehaves.

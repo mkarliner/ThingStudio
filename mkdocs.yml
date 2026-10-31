@@ -66,6 +66,7 @@ nav:
       - 6. Blink an LED: first-flow.md
       - Installation details: installation-details.md
   - Tutorials:
+      - The tutorial ladder: tutorials/index.md
       - More blinking: tutorials/more-blinking.md
       - A sensor display: sensor-display.md
   - Building flows:
