@@ -150,3 +150,9 @@ A custom node's top-level code runs inside a generated per-instance wrapper, not
 ## Reusable patterns worth remembering
 
 A bounded, drop-oldest ring buffer for queued outbound messages — `mqtt_as`'s own `MsgQueue` is a validated precedent. 1 entry: `docs/working-notes/learnings/reusable-patterns.md`.
+
+## Public-page fetch caching
+
+Checking a public page's edits by fetching it plain returns a stale cached copy that looks exactly like "the
+edit didn't land"; cache-bust with a query parameter (`https://…?fresh=2`). 1 entry:
+`docs/working-notes/learnings/public-page-fetch-caching.md`.
