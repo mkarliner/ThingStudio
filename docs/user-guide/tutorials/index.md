@@ -1,20 +1,14 @@
-# The tutorial ladder
+# Tutorials
 
-Five tutorials, each one starting from the flow the last one left you with. [Getting started](../getting-started.md)
-ends with a blinking LED; the ladder picks up from there, one concept at a time, and you always have a flow that
-runs.
+Two tutorials, each one starting from the flow the last one left you with. [Getting started](../getting-started.md)
+ends with a blinking LED; the first tutorial picks up from that flow.
 
-1. [More blinking](more-blinking.md) — change the blink's speed, swap which half of it is lit, and read the LED's
-   pin instead of counting.
-2. Function and the pin — make the function node do all the work: read the pin and write the opposite, in your own
-   MicroPython, and what the pin checker can and can't see.
-3. Where the state lives — keep the LED's state in the function node with `context`, and meet the `change` node,
-   which does it without code.
-4. Blink from your network — drive the same flow over WiFi: connecting the board to your network, finding it
-   again, and what an open port means on it.
-5. Publish and subscribe — the same flow talking over MQTT, the way several devices and tools already speak to
-   each other.
+1. [Read and set a pin](read-and-set-a-pin.md) — the function node reads the LED's pin and writes back the opposite
+   of what it finds, in your own MicroPython; then it keeps the state in the node with `context`.
+2. Blink from your network — the same LED, driven by an `http in` node arriving over WiFi: putting the board on
+   your network, finding it again, and what an open port on the board means.
 
-Tutorials 2–5 are being written now, in this same order. If you've gone ahead of them and built something of your
-own, what worked and where it stalled is the most useful report you can send: what you tried next after a tutorial,
-and what happened — [file it on the issue tracker](https://github.com/mkarliner/ThingStudio/issues).
+More are coming, in this order: publish and subscribe over MQTT, then pages for whatever the first users got stuck
+on. If you've gone ahead of the tutorials and built something of your own, what worked and what stalled is the most
+useful report you can send: what you tried next, and what happened —
+[file it on the issue tracker](https://github.com/mkarliner/ThingStudio/issues).
