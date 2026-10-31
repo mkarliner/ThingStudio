@@ -25,11 +25,11 @@ RP2040, RP2350 and nRF52 boards.
    names its own build is preselected. The build matters for the heap as much as for compatibility: an ESP32 with
    extra PSRAM wants the **PSRAM (WROVER)** build, a single-core SOLO the **single-core** one.
 
-   For a classic ESP32 with no PSRAM, **Firmware** also offers the
-   [Thingstudio custom image](custom-firmware.md). It saves memory: the runtime and the flow libraries are built
-   into flash, so they run from there instead of being loaded into RAM. Use it when RAM is tight, for example when
-   a GUI flow stops with `MemoryError` on official MicroPython. Its **Version** list holds the published releases.
-   After flashing it, **Install runtime** writes only the boot script.
+   For a classic ESP32 with 4 MB of flash and no PSRAM, use the
+   [Thingstudio custom image](custom-firmware.md) rather than stock MicroPython: the runtime and the flow libraries
+   are frozen into flash, where they run without taking the RAM the display stack and the flow need. Its
+   **Version** list holds the published releases. After flashing it, **Install runtime** writes only the boot
+   script.
 5. Click **Flash**. **Erase all flash first** is ticked: it clears an old partition table, which is the usual
    reason a first install "succeeds" and then doesn't boot. The dialog shows each line the tool prints; a failure
    says what to fix.

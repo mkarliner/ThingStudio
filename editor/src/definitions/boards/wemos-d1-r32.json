@@ -1,7 +1,7 @@
 {
   "name": "Wemos D1 R32",
   "processor": "esp32",
-  "variant": "esp32-generic",
+  "variant": "thingstudio-classic-esp32",
   "match": [],
   "wifi": true,
   "pins": {

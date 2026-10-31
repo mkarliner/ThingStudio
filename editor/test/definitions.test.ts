@@ -479,11 +479,11 @@ describe("how a chip family is flashed (decisions/firmware-catalogue.md)", () =>
   });
 
   it("a board points at a catalogue build and never names an image", () => {
-    expect(defs.boards.get("wemos-d1-r32")!.variant).toBe("esp32-generic");
+    // The D1 R32 takes Thingstudio's classic-ESP32 image too (Mike, 2026-10-31: advise the custom image over
+    // stock for standard ESP32s); the flash dialog preselects it from the board's variant.
+    expect(defs.boards.get("wemos-d1-r32")!.variant).toBe("thingstudio-classic-esp32");
     expect(defs.boards.get("pico")!.variant).toBe("rpi-pico");
     expect(defs.boards.get("pyboard-v10")!.variant).toBeNull();
-    // The CYD takes stock ESP32 MicroPython; its own frozen image returns through the catalogue when published
-    // (outstanding-items/firmware-custom-image-boot-files.md).
     // The CYD takes Thingstudio's own image: that is the board the image was built and tested for. The image it
     // names is in firmware/classic-esp32/tested.json (firmware-assets.test.ts asserts that), and the next build
     // replaces the version, not the board file.

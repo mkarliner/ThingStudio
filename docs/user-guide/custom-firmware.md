@@ -1,12 +1,14 @@
 # Custom firmware for classic ESP32
 
-A MicroPython image with Thingstudio's runtime and every flow library built in, for classic ESP32 boards with no
-PSRAM. It is what lets those boards run a GUI flow: stock MicroPython runs out of memory loading the display stack.
+A MicroPython image with Thingstudio's runtime and every flow library built in, for classic ESP32 boards with 4 MB
+of flash and no PSRAM (ESP32-D0WD and similar). This is the image to flash on those boards: stock MicroPython
+loads the runtime and the flow into RAM, and the display stack pushes it over — with this image they run from
+flash instead, which is the difference between a GUI flow starting and failing with
+`MemoryError allocating 13317 bytes`.
 
-The image is optional. Stock MicroPython and the [runtime install](installing-runtime.md) work as usual, and nothing
-in the editor changes. Use it when a flow on a 4 MB ESP32 stops with `MemoryError` and the steps in
-[MemoryError or a library that won't load](debugging.md#memoryerror-or-a-library-that-wont-load) have not helped —
-this is the third of them, "run a firmware image with the libraries built in".
+Stock MicroPython is the fallback: [install the runtime](installing-runtime.md) onto it as the usual docs route
+describes. The custom image is the recommended one, but a stock build runs flows without the GUI, and it is what
+[Installing MicroPython](installing-micropython.md) sets out.
 
 The technique is not specific to this image or to this chip: freezing the runtime and the flow libraries into
 MicroPython works on any board. This image exists because a classic ESP32 is the board where it changes the most,
