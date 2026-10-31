@@ -132,3 +132,20 @@ soon as it ran; that test is the reason this was caught before hardware. Fixed t
 the hook's role tuple, default and preset table are now interpolated from `gui-theme-shared.ts` at module load,
 so there is one table. Rule of thumb: anything a `compileHook` string duplicates from TS (role lists, defaults,
 enumerations) should be interpolated, not typed twice, or the two will drift on the next edit.
+
+## The vendored `micropython-wasi.wasm` needs WasmGC; Node 20 can't run it, 2026-10-31
+
+First full editor-suite run on the Debian box (Node 20.19.2 from apt): 226 tests failed across 22 files, all
+tracing to one root cause — every compile-hook test failed with
+`WebAssembly.compile(): invalid value type 'noexternref', enable with --experimental-wasm-gc`
+(vendored at `editor/public/vendor/micropython-wasi/micropython-wasi.wasm`; `editor/src/compile-hook/wasi.ts`
+loads it). The wasm is built with the WasmGC typed-refs features, which ship by default in V8 11.9+; Node
+20.19's V8 is 11.3, and there the flag doesn't even exist — attempting `NODE_OPTIONS=--experimental-wasm-gc`
+is rejected outright ("is not allowed in NODE_OPTIONS"), so nothing short of a newer Node helps. Everything
+not touching the hook interpreter passed on Node 20, which made it look like a dozen specific bugs rather than
+one environment gap. The Makefile's existing floor (`^20.19 || >=22.12`) only encoded Vite 8/rolldown's need;
+it never knew about the wasm's, so `make` blessed a Node the suite cannot run. Fixed in the same change:
+floor is now `>=22.12` with a message naming the wasm, and the box got Node 22.23.4 (official tarball,
+SHASUM-verified, user-local in `~/.local/opt`, symlinked into `~/.local/bin`). Note the browser mattered too —
+WasmGC shipped clear back in Chrome 119 / Firefox 121 / Safari 17.2 (late 2023), so no practical browser is
+affected; this was purely a Node-runtime floor misstated by its only check.

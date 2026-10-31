@@ -117,7 +117,7 @@ clean close wedges it every time), and a just-rebooted board answering the first
 
 ## Editor / build tooling
 
-`vite build` not type-checking, Litegraph's file-picker extension-matching gap, `execFileSync` deadlocking against an in-process test server, Node's chunked-transfer default, the sandbox/`node_modules` native-binding corruption incidents, the vendored `mpy-cross` WASM never passing `-march=<arch>` (invisible until the first real `@micropython.viper` flow tried to Deploy, fixed with `-march=xtensawin`), and the editor tree's `npm install` needing `--legacy-peer-deps` (npm 10.9.9 arborist `edgesOut` crash on vitest's optional peers) while `npm ci` consumes the resulting lock normally. 7 entries: `docs/working-notes/learnings/editor-build-tooling.md`.
+`vite build` not type-checking, Litegraph's file-picker extension-matching gap, `execFileSync` deadlocking against an in-process test server, Node's chunked-transfer default, the sandbox/`node_modules` native-binding corruption incidents, the vendored `mpy-cross` WASM never passing `-march=<arch>` (invisible until the first real `@micropython.viper` flow tried to Deploy, fixed with `-march=xtensawin`), the editor tree's `npm install` needing `--legacy-peer-deps` (npm 10.9.9 arborist `edgesOut` crash on vitest's optional peers) while `npm ci` consumes the resulting lock normally, a compile hook's embedded Python table drifting from its TypeScript source (interpolate, don't type twice), and the vendored `micropython-wasi.wasm` needing WasmGC before V8 11.9 (Node 20 couldn't run the compile-hook interpreter at all — Makefile floor is now Node 22.12+, 2026-10-31). 10 entries: `docs/working-notes/learnings/editor-build-tooling.md`.
 
 ## Backend / security research
 

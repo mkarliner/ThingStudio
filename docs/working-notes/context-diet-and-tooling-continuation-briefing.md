@@ -70,3 +70,13 @@ discussion happened, Phase D has not started.
   "Thingstudio" → "ThingStudio" rename follow-up was discussed, not done — Mike hasn't called it.
 - **`npx` policy**: none installed yet; if the next session runs anything with npx, per `CLAUDE.md` never
   outright — `--no` or pre-install only.
+
+## Environment update, 2026-10-31
+
+Brief item 1 is closed. Mike installed npm + python3-venv via apt; Node 22.23.4 was added user-local
+(official tarball, SHASUM-checked, in `~/.local/opt`, symlinked into `~/.local/bin` — shadows apt's Node 20).
+First full local runs, all green: editor suite 1286 passed / 2 skipped (114 files), backend 361 passed,
+`make check-protocol`. The Node 20 run had surfaced the WasmGC learnings entry in `editor-build-tooling.md`;
+the Makefile `check-node` floor is now Node 22.12+ (was `^20.19 || >=22.12`). Still missing here:
+micropython/mpy-cross builds for the device-runtime suite; no git identity configured (commit via per-invocation
+`git -c user.name=… -c user.email=…`).

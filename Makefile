@@ -13,7 +13,7 @@
 # The link goes in the first writable one of ~/.local/bin, /opt/homebrew/bin, /usr/local/bin that is on
 # PATH. Set BINDIR=/some/dir to choose. An existing file there that isn't a link is never replaced.
 #
-# Needs Python 3.10+, Node.js 20.19+/22.12+ and git; make checks and says what's missing. PYTHON=/path/to/python3.12 picks the Python.
+# Needs Python 3.10+, Node.js 22.12+ and git; make checks and says what's missing. PYTHON=/path/to/python3.12 picks the Python.
 # Written for GNU make 3.81, the version macOS ships.
 #
 # device-runtime tests need a MicroPython unix-port build; see device-runtime/test/README.md.
@@ -40,12 +40,13 @@ RUNTIME_SHA := $(shell git log -1 --format=%H -- device-runtime/src 2>/dev/null)
 # --- prerequisite checks ------------------------------------------------------------
 # Order-only (| check-...) below, so they run first but never force a rebuild.
 
-# Vite 8 and rolldown need Node ^20.19 or >=22.12.
+# The compile-hook interpreter runs the vendored micropython-wasi.wasm, which is built with WasmGC; Node
+# 20's V8 (11.3) fails to compile it even with --experimental-wasm-gc. Vite 8 and rolldown need >=22.12 too.
 check-node:
 	@command -v node >/dev/null || { echo "Node.js not found. Install Node.js 22 (https://nodejs.org), then rerun make."; exit 1; }
 	@command -v $(NPM) >/dev/null || { echo "npm not found. It comes with Node.js; reinstall Node.js 22, then rerun make."; exit 1; }
-	@node -e 'const [a,b]=process.versions.node.split(".").map(Number); process.exit((a===20&&b>=19)||(a===22&&b>=12)||a>22?0:1)' || \
-	  { echo "Node.js $$(node -v) is too old. The editor build needs 20.19+ or 22.12+."; exit 1; }
+	@node -e 'const [a,b]=process.versions.node.split(".").map(Number); process.exit((a===22&&b>=12)||a>22?0:1)' || \
+	  { echo "Node.js $$(node -v) is too old. The editor needs 22.12+ (the compile-hook wasm and Vite 8 both do)."; exit 1; }
 	@command -v git >/dev/null || echo "warning: git not found; the editor won't know which device-runtime it was built with."
 
 check-python:
