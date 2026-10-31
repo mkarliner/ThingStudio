@@ -74,6 +74,15 @@ def make(diameter=12, style="light", on_text="On", off_text="Off", font=None):
     return draw
 
 
+def _chip_box(rect, font, text):
+    """The badge's footprint in its cells: the pill as wide and tall as its text, centred (2026-10-24)."""
+    x, y, w, h = rect
+    tw = _width(font, text)
+    pw = min(w, tw + 16)
+    ph = min(h, font.height() + 4)
+    return x + max(0, (w - pw) // 2), y + max(0, (h - ph) // 2), pw, ph, tw
+
+
 def _chip(on_text, off_text, font):
     def draw(surface, rect, value, state):
         fb = surface.fb
@@ -91,13 +100,7 @@ def _chip(on_text, off_text, font):
                 colour = surface.colour_for(state)
                 fill = surface.theme.get("track", surface.dim)
             text_bg = fill
-        # A badge, not a slab: the pill is as wide and tall as its text, centred in the cells. Filling the span
-        # made a two-row chip a 36px-tall pill on the CYD (2026-10-24).
-        tw = _width(font, text)
-        pw = min(w, tw + 16)
-        ph = min(h, font.height() + 4)
-        px = x + max(0, (w - pw) // 2)
-        py = y + max(0, (h - ph) // 2)
+        px, py, pw, ph, tw = _chip_box(rect, font, text)
         if fill is None:
             _pill(fb, px, py, pw, ph, surface.fg, False)
         else:

@@ -85,7 +85,8 @@ override a frozen one unless `/lib` is inserted first), and a frozen module cann
 manifest replacing the port's own frozen set (no filesystem at boot), `cancel_running()` not freeing the
 flow module's framebuffer, the split heap (`gc.mem_free()` sums several regions, so a large message can fail at
 100 KB free), and a flow-only deploy not being a deploy -- libraries are the other half, and a frozen library is the
-fallback source, not the last word (`/lib` is ahead of `.frozen` since runtime 11.1.0). 33 entries:
+fallback source, not the last word (`/lib` is ahead of `.frozen` since runtime 11.1.0), and one lost-exchange
+flake in `test_exchanges.py` on a busy box -- rerun before suspecting code. 34 entries:
 `docs/working-notes/learnings/micropython-device-runtime.md`.
 
 ## Headless browser testing

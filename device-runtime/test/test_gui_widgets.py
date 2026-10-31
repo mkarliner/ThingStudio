@@ -436,12 +436,16 @@ def test_chip_and_filled_button_clear_text_to_their_own_fill():
     """The CYD showed black boxes behind the chip's letters: glyph cells cleared to the screen background instead
     of the pill. Both now pass the fill as the text background."""
     rect = (0, 0, 44, 18)
-    chip = led.make(14, "chip", "OK", "Off", _font("font_body12"))
+    chip_font = _font("font_body12")
+    chip = led.make(14, "chip", "OK", "Off", chip_font)
     for value in (True, False):
         s = _themed_surface(framebuf.GS4_HMSB, FORMATS[0][1])
         s.fb.fill(0)
         chip(s, rect, value, gui.KNOWN)
-        assert _bg_in_middle(s, rect) == 0, ("chip", value, _bg_in_middle(s, rect))
+        # The chip is a badge centred in its cells, not a slab filling them: sample inside the badge itself, or
+        # its designed margins read as the very black boxes this guards against (badge redesign, 2026-10-24).
+        px, py, pw, ph, _ = led._chip_box(rect, chip_font, "OK" if value else "Off")
+        assert _bg_in_middle(s, (px, py, pw, ph)) == 0, ("chip", value, _bg_in_middle(s, (px, py, pw, ph)))
     f = _font("font_body16")
     brect = (0, 0, 60, 24)
     filled = button.make(f, "OK", style="filled")

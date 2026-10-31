@@ -615,3 +615,11 @@ everything. On the 14.1.0 CYD a HIL-style deploy of a flow importing `font_body1
 - **Never name a runtime module `machine.py`.** `machine` is MicroPython's hardware module; the protocol's
   interpreter is `statemachine.py` for that reason.
 
+## `test_exchanges.py` can lose one exchange on a busy box, 2026-10-31
+
+First run on the freshly built Debian unix-port (while the editor suite and a clone built in the background
+earlier): `12/13 passed`; nine straight runs after, all `13/13`. Each exchange polls for its board messages on a
+15 s deadline and then settles before the next one starts — on a slow or loaded machine one compile/poll window
+can be missed once and never again. Don't trust a single run as a regression signal against a busy box; rerun
+before imagining a code bug. Same method trap as the build-vs-suite contention in `editor-build-tooling.md`.
+
