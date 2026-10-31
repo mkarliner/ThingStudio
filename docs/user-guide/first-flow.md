@@ -54,33 +54,16 @@ and stay on.
 
 The **function** node turns the count into 1, 0, 1, 0 with `% 2`. That gives on, off, on, off.
 
-## Try these changes
+## Next, pick:
 
-Each change below edits the flow you built. Deploy after each one.
+Each version the function above could take holds the LED's state somewhere different: in the timer's count, on the
+hardware, or with `context` in the node (see
+[Context, flow and settings](nodes/function.md#context-flow-and-settings)). A flow keeps state only where you put
+it: in a message, on the hardware, or in a node.
 
-- **Change the timing.** Set the timer's **interval (ms)** to `100`, or `2000` for a slower blink.
-- **Read the pin instead of counting.** Replace the function's code with this, using your LED's GPIO number in
-  place of `2`. Each message sets the LED to the opposite of what the pin reads now.
-
-    ```python
-    import machine
-    msg['payload'] = 0 if machine.Pin(2).value() else 1
-    return msg
-    ```
-
-- **Keep your own state.** Replace the function's code with this. `context` stores a value between messages, private
-  to this function node. See [Context, flow and settings](nodes/function.md#context-flow-and-settings).
-
-    ```python
-    on = not context.get('on', False)
-    context.set('on', on)
-    msg['payload'] = on
-    return msg
-    ```
-
-The function node keeps nothing from one message to the next. In the first version the state is the timer's count,
-in the second it's the pin, in the third it's `context`. A flow keeps state only where you put it: in a message, on
-the hardware, or in `context`.
+- [More blinking](tutorials/more-blinking.md) — three changes to this flow, one at a time: the blink's speed, which
+  half is lit, and reading the LED's pin instead of counting.
+- [A sensor display](sensor-display.md) — the next job past blinking: read a sensor and show it on a screen.
 
 ## If it doesn't blink
 

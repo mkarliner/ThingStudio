@@ -76,6 +76,7 @@ One row per stall, question, error or hint.
 3. Did you read the introduction? Did it help, or get in the way?
 4. Which message from Thingstudio did you not understand?
 5. What would you try next with it?
+6. What did you try next, and what happened?
 
 ## Afterwards, on your own
 

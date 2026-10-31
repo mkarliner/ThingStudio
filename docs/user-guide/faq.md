@@ -142,6 +142,13 @@ board. See [Laying out a display](gui-layout.md).
 A function node's output has the type `any`, and `pwm out`'s input takes a `number`. The editor refuses a wire from
 `any` to `number`, `int` or `string` inputs. See [Wiring](working-in-the-editor.md#wiring).
 
+## Why does compile fail with "needs a WiFi network"?
+
+An `mqtt publish` or `mqtt subscribe` node talks to its broker over WiFi, and it manages that connection itself, so
+it needs real credentials: a WiFi config in the flow and a broker. Compile stops with one line naming what's
+missing — "needs a WiFi network" or "needs an MQTT broker". Set the node's **WiFi** (or **MQTT Broker**) field;
+every MQTT node in a flow shares that one setting. See [Config nodes](working-in-the-editor.md#config-nodes).
+
 ## Why is Compile → Deploy grayed out after a deploy?
 
 The board already runs the flow on the canvas. Deploy comes back when you change the flow. See

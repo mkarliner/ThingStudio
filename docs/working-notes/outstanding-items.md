@@ -362,6 +362,8 @@ ThingStudioMarketing repo, not here.
   importable flow at top, linear steps, "went off the path?" troubleshooting link. Onboarding reports gain
   "what did you try next, and what happened?". Success-point pointers ("next, pick:") and the MQTT-missing-config
   FAQ entry ride the same work.
+  Progress: tutorial 1 ("More blinking", `docs/user-guide/tutorials/more-blinking.md`) drafted 2026-10-31 —
+  review pending with Mike before tutorial 2.
 
 - **[BACKLOG]** **"Future" page in the user docs** (Mike, 2026-10-11). One clearly labelled page for planned
   features, inviting feedback, so the rest of the docs describe only the current state. Not scheduled.
