@@ -1,12 +1,16 @@
-# Read and set a pin
+# Two more blinks
 
-How to read the LED's pin and switch it from your own MicroPython — the `function` node running `machine.Pin`
-directly — and then keep the state in the node with `context`.
+You have a blinking LED from [Blink an LED](../first-flow.md): timer, function, gpio out, with the function
+turning the timer's count into on and off. That works. Two more ways to produce the same blink — and each way
+shows something different about Thingstudio:
 
-The flow you built in [Blink an LED](../first-flow.md) is the starting point: timer → function → gpio out, with the
-function turning the timer's count into on and off. Lost it? Download
-[read-and-set-a-pin.flow.json](https://github.com/mkarliner/ThingStudio/blob/main/test-flows/tutorials/read-and-set-a-pin.flow.json)
-and open it with **File → Open…**.
+- **Read the pin, write it back** — the blink's state lives on the board, in the pin, and the `function` node
+  runs your own MicroPython to reach it.
+- **Keep the state in the node** — the state lives inside the `function` node itself, in `context`.
+
+The flow stays the same; only the function's code changes. Lost it? Download
+[two-more-blinks.flow.json](https://github.com/mkarliner/ThingStudio/blob/main/test-flows/tutorials/two-more-blinks.flow.json)
+— it carries the first of the two, with `machine.Pin(15)` as the pin — and open it with **File → Open…**.
 
 If a step misbehaves on the way, start at [Debugging & troubleshooting](../debugging.md).
 

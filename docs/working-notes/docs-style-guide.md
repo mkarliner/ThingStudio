@@ -16,8 +16,9 @@ programming. Explain what's specific to Thingstudio, not Python, loops or MQTT.
 
 ## Voice
 
-Neutral. No "we", no jokes, no chattiness. The docs are AI-written and readers know it; an AI being personal puts
-people off. "You" is fine for instructions.
+Neutral. No jokes in reference and node pages, no chattiness. The docs are AI-written and readers know it; an AI
+being personal puts people off. "You" is fine for instructions. A tutorial's title may carry a light touch
+("Two more blinks", Mike, 2026-11-01); its body stays neutral.
 
 - Good: "Reports on any board, listed or not, are welcome."
 - Bad: "Other MicroPython boards should work too, but we can't test everything."

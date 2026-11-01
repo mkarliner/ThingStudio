@@ -362,9 +362,10 @@ ThingStudioMarketing repo, not here.
   importable flow at top, linear steps, "went off the path?" troubleshooting link. Onboarding reports gain
   "what did you try next, and what happened?". Success-point pointers ("next, pick:") and the MQTT-missing-config
   FAQ entry ride the same work.
-  Progress: tutorial 1 ("Read and set a pin", `docs/user-guide/tutorials/read-and-set-a-pin.md`, gpio read/set +
-  `context`, flow `test-flows/read-and-set-a-pin.flow.json`) drafted 2026-10-31, reshaped on Mike's review: the
-  speed/invert variations are out as too trivial, "ladder" stays briefing-only. Tutorial 2 ("Blink from your
+  Progress: tutorial 1 ("Two more blinks", `docs/user-guide/tutorials/two-more-blinks.md`, gpio read/set +
+  `context`, flow `test-flows/tutorials/two-more-blinks.flow.json`) drafted 2026-10-31, reshaped on Mike's review:
+  the speed/invert variations are out as too trivial and the name covers both halves — the blink again, two more
+  ways, each showing a different aspect of Thingstudio. Tutorial 2 ("Blink from your
   network", `docs/user-guide/tutorials/blink-from-your-network.md`, flow
   `test-flows/tutorials/http-blink.flow.json`) drafted in the same session, first pass. D1 R32 hardware check of
   tutorial 1's gpio read/blink, 2026-11-01 (onboard LED, GPIO 2), recorded in

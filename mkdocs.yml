@@ -67,7 +67,7 @@ nav:
       - Installation details: installation-details.md
   - Tutorials:
       - Overview: tutorials/index.md
-      - Read and set a pin: tutorials/read-and-set-a-pin.md
+      - Two more blinks: tutorials/two-more-blinks.md
       - Blink from your network: tutorials/blink-from-your-network.md
       - A sensor display: sensor-display.md
   - Building flows:

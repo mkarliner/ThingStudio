@@ -4,7 +4,7 @@ The same LED, driven from a browser: an `http in` node runs a web server on the 
 it. Along the way: telling the board which WiFi network to join, finding it from your computer, and what an open
 port on it means.
 
-It builds on [Read and set a pin](read-and-set-a-pin.md). If you're starting cold, download
+It builds on [Two more blinks](two-more-blinks.md). If you're starting cold, download
 [http-blink.flow.json](https://github.com/mkarliner/ThingStudio/blob/main/test-flows/tutorials/http-blink.flow.json)
 and open it with **File → Open…** — it carries the whole tutorial's flow: the blink from that tutorial, the web
 chain, and a wifi status node so the connection is visible.
@@ -47,7 +47,7 @@ connected (see [node status](../working-in-the-editor.md#node-status) when the d
 If `.local` names don't resolve on your network (they don't everywhere), the IP address is the dependable one.
 
 The page answers `LED on` or `LED off`, and the LED changes. The timer keeps its half-second blink from
-[Read and set a pin](read-and-set-a-pin.md)! So the network is one more thing that flips the LED; each event
+[Two more blinks](two-more-blinks.md)! So the network is one more thing that flips the LED; each event
 arrives and is handled on its own, and the `context` toggle from the last tutorial does the remembering.
 
 ## The two chains

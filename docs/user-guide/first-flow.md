@@ -61,8 +61,8 @@ hardware, or with `context` in the node (see
 [Context, flow and settings](nodes/function.md#context-flow-and-settings)). A flow keeps state only where you put
 it: in a message, on the hardware, or in a node.
 
-- [Read and set a pin](tutorials/read-and-set-a-pin.md) — read the LED's pin and write back the opposite of what it
-  finds, in your own MicroPython; then keep the state in the node with `context`.
+- [Two more blinks](tutorials/two-more-blinks.md) — the blink again, two more ways: the LED's state on the
+  hardware, read and written back in code, or kept in the node with `context`.
 - [A sensor display](sensor-display.md) — the next job past blinking: read a sensor and show it on a screen.
 
 ## If it doesn't blink

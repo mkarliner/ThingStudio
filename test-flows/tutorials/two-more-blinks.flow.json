@@ -1,6 +1,6 @@
 {
   "formatVersion": 1,
-  "flowName": "read-and-set-a-pin",
+  "flowName": "two more blinks",
   "nodes": [
     {
       "id": "pinset0timer00001",
