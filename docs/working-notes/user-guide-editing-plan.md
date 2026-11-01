@@ -63,11 +63,42 @@ Gap 1 (MQTT-unreachable troubleshooting entry, linked from both MQTT node pages)
 known finding 4 on `coming-from/node-red.md`; the Unmanaged-MQTT line on `wifi-provisioning.md`. This phase holds
 the most judgment: apply second-pass point 2 (one attributing clause per refusal) while stripping the rest of C2.
 
+Additions from discussion #5 (clharting, CYD on Ubuntu, 2026-10-27..11-01):
+
+- Gap 1's entry also covers the **runtime `wifi status 202` / "Wifi Internal State Error" variant** -- the
+  wifi-status node and MQTT fighting over the interface (the existing debugging.md entry is deploy-scoped; his
+  was a running flow). Advice: the wifi status node defers to MQTT by design; if the fight shows, remove the
+  wifi status node.
+- **"Where do I go for support"**: the user guide never names GitHub Discussions (he said so). One pointer in
+  `faq.md` and one in Getting started.
+- **Share the flow file, not the compiled output**: he pasted compiled Python containing his real WiFi password
+  (the compiled output embeds resolved credentials). FAQ entry: share the `.flow.json` (File -> Save), never the
+  console's compiled source. Product-side warning in the compiled-source view is Mike's call, not docs.
+
+### Phase 2a -- the sample-scavenger path (discussion #5 evidence; tester-ready's majority profile)
+
+The scavenger's surface exists unwired: 8 shipped example flows forming an accidental progression (blink ->
+two-more-blinks -> http-blink -> basic-http-request -> basic-mqtt -> bmp280 -> gui-touch -> gui-headliner),
+referenced from 5 pages, no index, layout-tested but not compile-tested.
+
+- **Examples page in the user guide** -- the scavenger's home. One entry per shipped flow: what it does, nodes it
+  uses, where the folder is (subsumes Gap 4), and 2-4 "try changing this" pointers each landing on a node page.
+  **Leads with File -> Open...** -- handed the file, he replicated it from a screenshot instead ("load, don't
+  copy"). A map, not steps. Cross-link `ai-authoring.md` (generate-then-modify is the same learner).
+- **Compile-check every `examples/**/*.flow.json` in CI** -- generalize the `gui-trend.test.ts` pattern
+  (`compileWithHooks` over one example) to all of them. They get a layout check today; a broken example is a
+  silent failure at the scavenger's front door.
+
 ### Phase 3 -- tutorials (review order item 3)
 
 Rewrite `blink-from-your-network.md` with a Build the flow section (facts from the review's item 1, template from
 `first-flow.md`); voice pass on `two-more-blinks.md`; tutorials index without plans; the work-in-progress note on
 `sensor-display.md` (remark 5). Then Gap 2, the MQTT tutorial, as its own session.
+
+Requirements added 2026-11-01 (scavenger wiring, tester-ready 2026-10-30): the success-point pointers stay -- the
+review's C7 renames the "Next, pick:" heading, it does not remove the 2-3 links under it; the MQTT pointer lands
+on both the Gap 2 tutorial and `examples/basic-mqtt.flow.json`. Every tutorial download gets a "load, don't
+copy" line (File -> Open...), from discussion #5.
 
 **Gap 2 spec (Mike, 2026-11-01): "Blink from anywhere" -- the two-direction loop on one board.** The same LED as
 Blink from your network, now reachable via a broker. Two halves: (1) board to world -- an `inject` node
@@ -81,7 +112,7 @@ from tutorial 3's. Left out: retain, LWT, local-broker setup beyond one end poin
 screen" tutorial stays blocked on the sensor-display rework (remark 5); custom-node and neopixel/ADC/encoder
 tutorials come later.
 
-**Tester-ready bar: phases 1-3.** Phases 4-7 are tractable with testers running.
+**Tester-ready bar: phases 1-3 (including 2a).** Phases 4-7 are tractable with testers running.
 
 ### Phase 4 -- contradictions (review order item 4)
 
@@ -92,7 +123,9 @@ layout model from phase 0's facts; `display-spi.md`'s double palette entry.
 ### Phase 5 -- node pages to layout and voice (review order item 5)
 
 C2/C3 passes in the review's batches: network pages, then general, then hardware. Each page's findings are its
-checklist; the lint plus `mkdocs build --strict` are the mechanical gate.
+checklist; the lint plus `mkdocs build --strict` are the mechanical gate. Requirement added 2026-11-01: every
+Wiring example is copy-pasteable -- the node page is the scavenger's document when an edit breaks, not the
+tutorial.
 
 ### Phase 6 -- structure (review order item 6)
 
