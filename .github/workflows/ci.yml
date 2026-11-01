@@ -96,6 +96,20 @@ jobs:
           print("%d libraries staged and indexed" % len(idx))
           PY
 
+  # The user guide's checkable style rules (tools/docs_lint.py) against docs/style-lint-baseline.json, a list
+  # of today's violations that only shrinks: a new violation fails, and so does a baseline entry whose
+  # violation is fixed. Standard library only, so no pip install. Not docs.yml: that one runs on main and deploys.
+  docs-lint:
+    name: user guide style lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+      - run: python3 tools/docs_lint.py
+      - run: python3 tools/test_docs_lint.py
+
   # device-runtime: headless MicroPython unix-port tests -- not added yet.
   # They need a MicroPython build (device-runtime/test/README.md: clone,
   # mpy-cross, ports/unix), which is heavier than the rest of CI; the

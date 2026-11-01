@@ -1,0 +1,195 @@
+{
+  "description": "Every user-guide style violation that exists today (tools/docs_lint.py). Entries only leave: fix the page, then delete its entry (or run `python3 tools/docs_lint.py --prune`). Adding one is a deliberate hand-edit that shows in review.",
+  "violations": [
+    {
+      "file": "docs/user-guide/boards.md",
+      "rule": "opening",
+      "snippet": "says which pins a flow may use. This page covers picking a board, seeing its"
+    },
+    {
+      "file": "docs/user-guide/boards.md",
+      "rule": "uk-spelling",
+      "snippet": "connected board. Auto recognises a board by the name"
+    },
+    {
+      "file": "docs/user-guide/boards.md",
+      "rule": "uk-spelling",
+      "snippet": "same way. The palette greys out such a node while"
+    },
+    {
+      "file": "docs/user-guide/coming-from/node-red.md",
+      "rule": "blank-lines",
+      "snippet": "after: it to the board, which then runs on its own. Close the edito"
+    },
+    {
+      "file": "docs/user-guide/coming-from/node-red.md",
+      "rule": "trailing-whitespace",
+      "snippet": "look familiar."
+    },
+    {
+      "file": "docs/user-guide/custom-nodes.md",
+      "rule": "uk-spelling",
+      "snippet": "on the device — units, a colour scheme — not for"
+    },
+    {
+      "file": "docs/user-guide/debugging.md",
+      "rule": "uk-spelling",
+      "snippet": "list is empty, or the catalogue can't be read | This"
+    },
+    {
+      "file": "docs/user-guide/debugging.md",
+      "rule": "uk-spelling",
+      "snippet": "— choose a file) | The catalogue has no pinned image for"
+    },
+    {
+      "file": "docs/user-guide/faq.md",
+      "rule": "blank-lines",
+      "snippet": "after: ## Why does http request fail with \"MemoryError\" fetching a "
+    },
+    {
+      "file": "docs/user-guide/faq.md",
+      "rule": "plans",
+      "snippet": "modem sleep in `working-notes/outstanding-items.md`."
+    },
+    {
+      "file": "docs/user-guide/faq.md",
+      "rule": "uk-spelling",
+      "snippet": "input sends a value it recognises. It matches the input"
+    },
+    {
+      "file": "docs/user-guide/installation-details.md",
+      "rule": "blank-lines",
+      "snippet": "after: other than the latest, open that release from the [releases "
+    },
+    {
+      "file": "docs/user-guide/nodes/display-spi.md",
+      "rule": "duplicate-term",
+      "snippet": "palette"
+    },
+    {
+      "file": "docs/user-guide/nodes/display-spi.md",
+      "rule": "uk-spelling",
+      "snippet": "- **palette** — the colours an indexed frame format"
+    },
+    {
+      "file": "docs/user-guide/nodes/function.md",
+      "rule": "uk-spelling",
+      "snippet": "colour scheme. It is namespaced"
+    },
+    {
+      "file": "docs/user-guide/nodes/gui.md",
+      "rule": "uk-spelling",
+      "snippet": "- a **gs2** panel (4 colours) keeps background,"
+    },
+    {
+      "file": "docs/user-guide/nodes/gui.md",
+      "rule": "uk-spelling",
+      "snippet": "- a **gs4** panel (16 colours) gets every role as its"
+    },
+    {
+      "file": "docs/user-guide/nodes/gui.md",
+      "rule": "uk-spelling",
+      "snippet": "- a **mono** panel (2 colours) is ink and paper: text,"
+    },
+    {
+      "file": "docs/user-guide/nodes/gui.md",
+      "rule": "uk-spelling",
+      "snippet": "A panel with fewer colours than that folds the"
+    },
+    {
+      "file": "docs/user-guide/nodes/gui.md",
+      "rule": "uk-spelling",
+      "snippet": "and any of the role colours in its Properties: the"
+    },
+    {
+      "file": "docs/user-guide/nodes/gui.md",
+      "rule": "uk-spelling",
+      "snippet": "cells, lit in the accent colour and unlit in the track,"
+    },
+    {
+      "file": "docs/user-guide/nodes/gui.md",
+      "rule": "uk-spelling",
+      "snippet": "colour; the preset is a"
+    },
+    {
+      "file": "docs/user-guide/nodes/gui.md",
+      "rule": "uk-spelling",
+      "snippet": "colours win when both are set."
+    },
+    {
+      "file": "docs/user-guide/nodes/gui.md",
+      "rule": "uk-spelling",
+      "snippet": "draws in the GUI's own colours. To choose your own,"
+    },
+    {
+      "file": "docs/user-guide/nodes/gui.md",
+      "rule": "uk-spelling",
+      "snippet": "edit form to save your colours by name under"
+    },
+    {
+      "file": "docs/user-guide/nodes/gui.md",
+      "rule": "uk-spelling",
+      "snippet": "every role as its own colour;"
+    },
+    {
+      "file": "docs/user-guide/nodes/gui.md",
+      "rule": "uk-spelling",
+      "snippet": "in the theme's accent colour, with a thin line from"
+    },
+    {
+      "file": "docs/user-guide/nodes/gui.md",
+      "rule": "uk-spelling",
+      "snippet": "in the theme's card colour. It's the cheapest way"
+    },
+    {
+      "file": "docs/user-guide/nodes/gui.md",
+      "rule": "uk-spelling",
+      "snippet": "muted colour — so the range reads as"
+    },
+    {
+      "file": "docs/user-guide/nodes/gui.md",
+      "rule": "uk-spelling",
+      "snippet": "theme is the whole colour scheme, not two lists to"
+    },
+    {
+      "file": "docs/user-guide/nodes/gui.md",
+      "rule": "uk-spelling",
+      "snippet": "theme keeps the default colours. An older flow may still"
+    },
+    {
+      "file": "docs/user-guide/nodes/index.md",
+      "rule": "opening",
+      "snippet": "its properties and its output. This page lists them all, grouped as in the"
+    },
+    {
+      "file": "docs/user-guide/nodes/neopixel.md",
+      "rule": "uk-spelling",
+      "snippet": "**Input** — a colour, or a set of them:"
+    },
+    {
+      "file": "docs/user-guide/nodes/neopixel.md",
+      "rule": "uk-spelling",
+      "snippet": "- **order** — the wire colour order of your strip:"
+    },
+    {
+      "file": "docs/user-guide/nodes/neopixel.md",
+      "rule": "uk-spelling",
+      "snippet": "A colour is a 24-bit (red,"
+    },
+    {
+      "file": "docs/user-guide/nodes/neopixel.md",
+      "rule": "uk-spelling",
+      "snippet": "last message sets the colours. The node has no output."
+    },
+    {
+      "file": "docs/user-guide/tutorials/blink-from-your-network.md",
+      "rule": "plans",
+      "snippet": "and subscribe over MQTT is next to be written."
+    },
+    {
+      "file": "docs/user-guide/tutorials/index.md",
+      "rule": "plans",
+      "snippet": "More are coming, in this order: publish and"
+    }
+  ]
+}

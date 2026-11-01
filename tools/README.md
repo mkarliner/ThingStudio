@@ -7,3 +7,5 @@ Build scripts and the dependency license-scan tooling flagged in design doc §12
 - `build_fonts.py` -- builds the GUI font set: board modules in `device-runtime/src/vendor/fonts/` and the
   editor's metrics in `editor/src/gui/fonts/`, from `tools/fonts/` with the vendored `font_to_py`. Needs
   `pip install freetype-py`. `--check` fails if the committed outputs are stale.
+- `docs_lint.py` (tests: `test_docs_lint.py`) -- style lint for `docs/user-guide/` with a shrinking baseline
+  (`docs/style-lint-baseline.json`); CI's `docs-lint` job runs both. Standard library only.

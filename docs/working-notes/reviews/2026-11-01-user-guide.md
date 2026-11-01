@@ -799,3 +799,107 @@ A response read of this review before acting on it. Four additions, in the revie
    list (`working-in-the-editor.md` finding 4), and the `http in` PUT claim.
 4. **State the bar.** The suggested order of work doesn't say what gates "suitable for initial testers". Bar:
    order items 1-3 (quick fixes, what the tester hits, tutorials). Items 4-7 are tractable with testers running.
+
+## Phase 0 fact-checks (2026-11-01, editing-side session)
+
+Answers to the open checks the second pass collected (`user-guide-editing-plan.md`, phase 0). Read from the source on
+this branch, not from a running editor. Each answer says what to write; the editing phase named in brackets acts on it.
+
+### C5.3. `gui.md`: one layout model, one label [phase 4]
+
+**The editor implements the cell grid, and its label is "panel".** The row/column container tree is not a layout
+model a user can reach.
+
+- `editor/src/gui/screens.ts` is the only compile step for a screen's pages. A page is `elements`, each a
+  `GridElement` with `row`, `col`, `rowSpan`, `colSpan`, an optional `card: true`, and a `kind` of `widget`, `text` or
+  `pagedots`. There is no container kind and no `spacer`.
+- `editor/src/app/rete/ScreenOutline.vue` (the outline under **Properties**) labels the fields **row**, **col**,
+  **rows**, **cols**; the checkbox is **panel** (tooltip "draw a card behind these cells"); the **+ add…** menu offers
+  widgets, **text**, **page dots**, **panel**; an element drawn as a card is listed as "panel". "Card" appears
+  nowhere in the editor's UI; it is only the flow-file key (`card`) and the theme role (**card**, a color).
+- `editor/src/gui/layout.ts` (row/column flexbox containers) is the earlier engine. Nothing in the compile path
+  imports it; only `editor/test/gui-layout.test.ts` does (`screens.ts` and `widgets.ts` import its types). It is dead
+  code for users.
+
+What to write in `nodes/gui.md`:
+
+1. Keep "Laying out pages" as the one model (cell grid). Delete the paragraph beginning "Pages live in the flow file,
+   under `"screens"`… A page is a tree of `row` and `column` containers…" (it also names `spacer`s, which don't exist).
+2. Themes: "tick **card** on a row or column in the layout outline" → "tick **panel** on an element in the layout
+   outline". Say "a panel is a card in the theme's **card** color" once, then use **panel** for the thing the reader
+   ticks and **card** only for the theme role.
+3. The `"screens"` JSON example (rows 168-169 of the page, with `rowSpan`/`colSpan`) is already the grid format; keep it.
+4. The closing sentence "Deploy stops and says which widget, on which page, needs how many pixels" doesn't match the
+   errors in `screens.ts` (overlap, span outside the grid, text that can't fit, widget drawn differently on two pages,
+   widget on two screens). "Laying out pages" already lists most of these two paragraphs earlier; delete the sentence.
+5. `gui-layout.md`'s merge needs no model change: it already describes the cell grid.
+
+### `topic` is not required [phase 2, `coming-from/node-red.md` finding 2]
+
+**[Fact]** "Every message needs a `topic`, even an empty one (`''`)" is wrong. Nothing in the compiler or the
+runtime checks for it. Nodes that read it default it: `msg.get('topic', '')` in `filter.ts` and `journal.ts`;
+`mqtt publish` and `mqtt subscribe` use their own **topic** property and never read the message's. Every built-in
+source sets `'topic': ''` (or a name), so messages from the palette always carry one, but a `function` node may
+return a dict without it. In `coming-from/node-red.md` replace the sentence with: "Messages carry `payload` and,
+usually, a `topic`; the built-in nodes that start a flow set `topic` to an empty string." Keep `flows-and-nodes.md`
+("`topic`: a label", dropping "short").
+
+### C5.6. Where the examples are [phase 1, Gap 4]
+
+Read from `packaging/install.sh`, `packaging/install.ps1` and `tools/make_bundle.py` (`shutil.copytree(examples,
+root / "examples")`: the bundle's top folder holds `examples/`). The review's guessed paths were wrong; use these.
+
+| Route | Examples folder |
+| --- | --- |
+| Installer script, macOS and Linux | `~/.local/share/thingstudio/current/examples/` (`current` links to `versions/thingstudio-VERSION-PLATFORM`; `THINGSTUDIO_HOME` moves the base folder) |
+| Installer script, Windows | `%LOCALAPPDATA%\Thingstudio\versions\thingstudio-VERSION-windows-x86_64\examples\` (no `current` link on Windows; the folder name changes on each upgrade) |
+| Package (tar.gz or zip) | `examples/` in the unpacked folder |
+| From source | `examples/` at the repository root |
+
+Suggested wording for Installation details, one sentence per route under "Where Thingstudio puts its files":
+"The example flows are in the `examples` folder of the install: …" with the table above. Home and Blink an LED then
+say "`examples/blink.flow.json`, in the install's `examples` folder (see Installation details)" and link there.
+`sensor-display.md` can link the same page instead of GitHub.
+
+### `working-in-the-editor.md` finding 4: the Node status list [phase 1]
+
+**[Fact]** The page's list ("`wifi status`, `mqtt publish`, `mqtt subscribe`, `i2c device`, `bme280`, `touch`, and a
+`gui screen` with a touch panel") omits `ntp`, `adc` and `neopixel`. Every caller of `runtime.report_status` in
+`editor/src` and `device-runtime/src`:
+
+| Node | States it reports | Source |
+| --- | --- | --- |
+| `wifi status` | connected (with the IP), disconnected | `wifi-status.ts` |
+| `mqtt publish`, `mqtt subscribe` | connected, disconnected, error (`connect to HOST:PORT failed`) | `vendor/thingstudio_mqtt/ts_mqtt.py` |
+| `ntp` | connecting (waiting for WiFi), connected (synced), error (`NTP from SERVER failed`) | `ntp.ts` |
+| `i2c device` | connected, disconnected (no reply), error | `i2c.ts` |
+| `bme280` | connected (BME280 or BMP280), disconnected (no reply at the address), error | `bme280.ts` |
+| `touch` | connected (FT6336U), disconnected (no reply), error | `touch-i2c.ts` |
+| `gui screen` with a touch panel | the touch panel's state, on the screen node | `gui.ts` |
+| `adc`, `neopixel` | error only (a read or write failed); no dot until then | `adc.ts`, `neopixel.ts` |
+| a custom node | whatever its code reports | `custom-node.ts` |
+
+No other node calls it (`display spi`, `display i2c`, `http *`, `udp *` and the rest show no dot). Write the list as:
+"`wifi status`, `mqtt publish`, `mqtt subscribe`, `ntp`, `i2c device`, `bme280`, `touch` and a `gui screen` with a
+touch panel show a dot from the start. `adc` and `neopixel` show a red dot only when a read or write fails. A custom
+node shows one if its code reports it." `ntp.md` already lists its three lines; `adc.md` and `neopixel.md` should
+name the red-dot error in Errors.
+
+### `http in` methods [phase 5, `nodes/http-in.md` finding 1, plus a second error]
+
+**[Fact]** Two claims on the page are wrong.
+
+1. "a `POST`/`PUT` body…" and the Limitations bullet: the node takes **GET or POST only**; any other method is a
+   compile error: `http_in node ID: method "X" must be "GET" or "POST"` (`http-in.ts`). Drop PUT. A request for a
+   method no node claims gets `404 Not Found` from the shared server (`ts_http_server.py`).
+2. "a `POST` body is read off the wire so it doesn't corrupt the next request, then discarded" — the server never
+   reads the body: it reads the request line and headers, then routes, and every response closes the connection
+   (`Connection: close`). Replace with: "A request body is ignored." Also true and unstated: the query string is
+   dropped before the path is matched (`/toggle?x=1` matches `/toggle`).
+
+The page's "No cap on requests in flight" bullet matches the code (no limiter); leave it.
+
+### Result
+
+All five checks resolved; none turned up a conflict that needs Mike. Two new factual errors found along the way
+(`gui.md`'s closing Deploy-errors sentence, `http-in.md`'s body-handling sentence); both are listed above.

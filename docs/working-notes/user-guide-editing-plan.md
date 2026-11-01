@@ -13,7 +13,8 @@ the checkable subset of the style guide gets the same treatment.
 - **`tools/docs_lint.py`** -- Python stdlib only, so no new third-party dependency and the pinning ledger is
   untouched. Runs in seconds. Local: `python3 tools/docs_lint.py`.
 - **Rules (start set; each maps to a cross-cutting finding, all near-zero false positives):**
-  1. Page-describing opening: "this page" / "this section" in the first body sentence (C1).
+  1. Page-describing opening: "this page" / "this section" in the opening paragraph (C1). Widened from the first
+     sentence: the review's own examples (`boards.md`, `nodes/index.md`) say it in the second.
   2. UK spellings outside code spans and fenced blocks: colour, catalogue, recognis\*, grey\*, centre, behaviour
      (C2). Code stripping makes `neopixel`'s `'colour'` payload key a non-issue.
   3. Plans and internal references in `docs/user-guide/`: `working-notes` paths, "coming soon", "next to be
@@ -47,6 +48,17 @@ commit prompt. Findings are quoted from the review, not re-derived -- sessions a
   `working-in-the-editor.md` finding 4, the `http in` methods claim.
 - Write `tools/docs_lint.py`, generate the baseline, add the ci.yml job, propose the AGENTS.md line.
 - Gate: CI green with the baseline covering every current violation.
+
+Phase 0 done, 2026-11-01. Fact-check answers are the last section of the review. `tools/docs_lint.py` and
+`tools/test_docs_lint.py` are written; `docs/style-lint-baseline.json` holds 38 violations; the `docs-lint` job is in
+`ci.yml`; the AGENTS.md line is in. Notes for the editing phases:
+
+- Rule 6 reports as two ids, `trailing-whitespace` and `blank-lines`.
+- Rules 4 and 5 start with one and zero baseline entries (`display-spi.md`'s `palette`; no verbatim repeated sentence
+  exists today, the WiFi sentence on the network pages differs between Properties and Behavior).
+- Phase 3's work-in-progress note on `sensor-display.md` trips rule 3: add its baseline entry by hand in that change.
+- The lint skips HTML comments, so phase 4's commented-out modal section in `gui.md` stays clean.
+- Phase 1's examples-folder wording and phase 2's `topic` fix use the review's phase 0 answers, not the earlier guesses.
 
 ### Phase 1 -- quick fixes (review order item 1)
 

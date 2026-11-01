@@ -279,6 +279,12 @@ sentences, short paragraphs, definitions over elaboration, an example only where
 `docs/working-notes/docs-style-guide.md` (draft, 2026-10-11). Read it before writing or editing anything in
 `docs/user-guide/`.
 
+Before committing a change under `docs/user-guide/`, run `python3 tools/docs_lint.py` (standard library only; CI
+runs it too). It checks the mechanical subset of the style guide against `docs/style-lint-baseline.json`, which
+lists today's violations and only shrinks: fix a violation, then delete its baseline entry (`--prune` does it).
+A new lint rule lands in the same change as the page fixes that make it pass. Voice, chattiness and repeated
+ideas are not linted; they stay with editing and review.
+
 ## Handoff/briefing note filenames: lead with the topic, not "next-session-picks"
 
 Before naming or writing the handoff file, actually do this, in order:
