@@ -142,14 +142,9 @@
       "snippet": "last message sets the colours. The node has no output."
     },
     {
-      "file": "docs/user-guide/tutorials/blink-from-your-network.md",
+      "file": "docs/user-guide/sensor-display.md",
       "rule": "plans",
-      "snippet": "and subscribe over MQTT is next to be written."
-    },
-    {
-      "file": "docs/user-guide/tutorials/index.md",
-      "rule": "plans",
-      "snippet": "More are coming, in this order: publish and"
+      "snippet": "!!! note \"Work in progress\""
     }
   ]
 }

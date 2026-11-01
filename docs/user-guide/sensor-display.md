@@ -1,5 +1,9 @@
 # A sensor display
 
+!!! note "Work in progress"
+
+    This tutorial is being reworked. The example flow runs, but some steps may not match the editor.
+
 Build a three-page touch display: the room's temperature, humidity and pressure with their recent history, and a
 clock. The flow also publishes the readings over MQTT.
 

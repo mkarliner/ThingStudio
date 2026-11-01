@@ -136,6 +136,12 @@ from tutorial 3's. Left out: retain, LWT, local-broker setup beyond one end poin
 screen" tutorial stays blocked on the sensor-display rework (remark 5); custom-node and neopixel/ADC/encoder
 tutorials come later.
 
+Phase 3 done except Gap 2, 2026-11-01. `blink-from-your-network.md` has a Build the flow section; `two-more-blinks.md`
+had its voice pass; the tutorials index has no plans and lists three tutorials; `sensor-display.md` carries the
+work-in-progress note, whose baseline entry was added by hand. Every tutorial download says to open the file, not
+copy it. Gap 2 has its brief (the spec above); it is its own session. When it lands, point "Next" on
+`blink-from-your-network.md` at it as well as at `examples/basic-mqtt.flow.json`, and add it to the tutorials index.
+
 **Tester-ready bar: phases 1-3 (including 2a).** Phases 4-7 are tractable with testers running.
 
 ### Phase 4 -- contradictions (review order item 4)
