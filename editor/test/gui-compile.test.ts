@@ -491,11 +491,21 @@ describe("a full-colour (RGB565) GUI screen", () => {
   });
 });
 
-describe.each(["gui-hero-cyd.flow.json", "gui-hero-cyd-theme.flow.json", "gui-hero-cyd-dummy.flow.json", "gui-hero-freenove-s3-4in.flow.json", "gui-hero-freenove-s3-4in-colour.flow.json", "gui-hero-freenove-s3-4in-landscape.flow.json", "gui-touch-freenove-s3-4in.flow.json", "gui-headliner-sensor-freenove-s3-4in.flow.json", "gui-orientation-test-freenove-s3-4in.flow.json"])("the example GUI flow test-flows/%s", (file) => {
+describe.each([
+  ["test-flows", "gui-hero-cyd.flow.json"],
+  ["test-flows", "gui-hero-cyd-theme.flow.json"],
+  ["test-flows", "gui-hero-cyd-dummy.flow.json"],
+  ["test-flows", "gui-hero-freenove-s3-4in.flow.json"],
+  ["test-flows", "gui-hero-freenove-s3-4in-colour.flow.json"],
+  ["test-flows", "gui-hero-freenove-s3-4in-landscape.flow.json"],
+  ["examples", "gui-touch-freenove-s3-4in.flow.json"],
+  ["examples", "gui-headliner-sensor-freenove-s3-4in.flow.json"],
+  ["test-flows", "gui-orientation-test-freenove-s3-4in.flow.json"],
+])("the example GUI flow %s/%s", (dir, file) => {
   it("loads and compiles without warnings", async () => {
     const { readFileSync } = await import("node:fs");
     const { parseFlowFile } = await import("../src/flow-file/flow-file.js");
-    const f = parseFlowFile(readFileSync(join(__dirname, "..", "..", "test-flows", file), "utf8"));
+    const f = parseFlowFile(readFileSync(join(__dirname, "..", "..", dir, file), "utf8"));
     const links = f.edges.map((e, i) => [i, e[0], e[1], e[2], e[3], "any"] as [number, string, number, string, number, string]);
     // Credentials are resolved by the editor from the backend at load; stand-ins here.
     const configs = f.configs.map((c) =>
@@ -512,7 +522,7 @@ describe.each(["gui-hero-cyd.flow.json", "gui-hero-cyd-theme.flow.json", "gui-he
     const { parseFlowFile } = await import("../src/flow-file/flow-file.js");
     const { socketForPayloadType } = await import("../src/app/rete/sockets.js");
     const { resolvePortType } = await import("../src/compiler/node-definition.js");
-    const f = parseFlowFile(readFileSync(join(__dirname, "..", "..", "test-flows", file), "utf8"));
+    const f = parseFlowFile(readFileSync(join(__dirname, "..", "..", dir, file), "utf8"));
     const reg = buildRegistry();
     const byId = new Map(f.nodes.map((n) => [n.id, n]));
     for (const [from, slot, to] of f.edges) {

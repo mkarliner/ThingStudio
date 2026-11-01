@@ -321,6 +321,10 @@ def bundle(plat: str, out_dir: Path, python_archive: Path | None = None, cache: 
     assets = REPO / "backend" / "src" / "thingstudio_backend" / "_assets"
     if not (assets / "editor" / "index.html").is_file():
         raise BundleError(f"{assets} isn't filled. Run `make assets` (or tools/build_assets.py) first.")
+    examples = REPO / "examples"
+    example_flows = list(examples.glob("*.flow.json"))
+    if len(example_flows) < 2:
+        raise BundleError(f"no example flows in {examples} -- the bundle ships them for File → Open…")
 
     version = backend_version()
     name = f"thingstudio-{version}-{plat}"
@@ -328,6 +332,7 @@ def bundle(plat: str, out_dir: Path, python_archive: Path | None = None, cache: 
     if root.exists():
         shutil.rmtree(root)
     root.mkdir(parents=True)
+    shutil.copytree(examples, root / "examples")
     windows = plat.startswith("windows")
 
     archive = fetch_python(TARGETS[plat], cache or out_dir / ".cache", python_archive)

@@ -3,7 +3,7 @@
 // node, so they cover what an agent or a script really does.
 
 import { execFileSync, spawnSync } from "node:child_process";
-import { mkdtempSync, readFileSync, writeFileSync, readdirSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, writeFileSync, readdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -13,6 +13,12 @@ import { checkFlowText } from "../src/cli/check-flow.js";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const editorDir = join(__dirname, "..");
 const flowsDir = join(__dirname, "..", "..", "test-flows");
+const examplesDir = join(__dirname, "..", "..", "examples");
+
+function firstExisting(paths: string[]): string {
+  for (const p of paths) if (existsSync(p)) return p;
+  return paths[0]!;
+}
 
 function flow(nodes: Array<Record<string, unknown>>, edges: unknown[] = [], extra: Record<string, unknown> = {}): string {
   return JSON.stringify({ formatVersion: 1, flowName: "t", nodes, edges, layout: {}, configs: [], ...extra });
@@ -80,7 +86,7 @@ describe("checkFlowText", () => {
   });
 
   it("says when credentials were stand-ins", () => {
-    const f = readFileSync(join(flowsDir, "gui-headliner-sensor-freenove-s3-4in.flow.json"), "utf8");
+    const f = readFileSync(join(examplesDir, "gui-headliner-sensor-freenove-s3-4in.flow.json"), "utf8");
     const r = checkFlowText(f, { board: "board:freenove-s3-4in" });
     expect(r.ok).toBe(true);
     expect(r.notes.join("\n")).toMatch(/WiFi credentials were not resolved/);
@@ -88,9 +94,11 @@ describe("checkFlowText", () => {
   });
 
   it("accepts every example GUI flow and the blink flow", () => {
-    for (const file of readdirSync(flowsDir).filter((f) => /^(gui-|blink).*\.flow\.json$/.test(f))) {
-      const r = checkFlowText(readFileSync(join(flowsDir, file), "utf8"));
-      expect(r.errors, file).toEqual([]);
+    for (const dir of [flowsDir, examplesDir]) {
+      for (const file of readdirSync(dir).filter((f) => /^(gui-|blink).*\.flow\.json$/.test(f))) {
+        const r = checkFlowText(readFileSync(join(dir, file), "utf8"));
+        expect(r.errors, `${dir}/${file}`).toEqual([]);
+      }
     }
   });
 });
@@ -112,7 +120,7 @@ describe("the command", () => {
   }, 60000);
 
   it("exits 0 and says OK for a good flow", () => {
-    const r = run([join(flowsDir, "blink.flow.json")]);
+    const r = run([join(examplesDir, "blink.flow.json")]);
     expect(r.status).toBe(0);
     expect(r.stdout).toMatch(/^OK .*blink\.flow\.json: 3 nodes, 2 wires/);
   });
@@ -131,7 +139,7 @@ describe("the command", () => {
   });
 
   it("prints JSON with --json, including the source when there is no --out", () => {
-    const r = run(["--json", join(flowsDir, "blink.flow.json")]);
+    const r = run(["--json", join(examplesDir, "blink.flow.json")]);
     const out = JSON.parse(r.stdout);
     expect(out[0]).toMatchObject({ ok: true, errors: [] });
     expect(out[0].source).toContain("async def");
@@ -139,7 +147,7 @@ describe("the command", () => {
 
   it("writes the source with --out", () => {
     const out = join(dir, "blink.py");
-    const r = run(["--out", out, join(flowsDir, "blink.flow.json")]);
+    const r = run(["--out", out, join(examplesDir, "blink.flow.json")]);
     expect(r.status).toBe(0);
     expect(readFileSync(out, "utf8")).toContain("async def");
   });
@@ -153,7 +161,7 @@ describe("the command", () => {
   });
 
   it("fails on warnings with --strict", () => {
-    const f = join(flowsDir, "blink.flow.json");
+    const f = join(examplesDir, "blink.flow.json");
     // blink without a board has the "no board known" warning.
     expect(run([f]).status).toBe(0);
     expect(run(["--strict", f]).status).toBe(1);
@@ -197,8 +205,8 @@ describe("docs/user-guide/ai-authoring.md", () => {
   });
 
   it("every board, example file and page it names exists", () => {
-    for (const f of page.matchAll(/`(?:test-flows\/)?([\w-]+\.flow\.json)`/g)) {
-      expect(() => readFileSync(join(flowsDir, f[1]!), "utf8"), f[1]).not.toThrow();
+    for (const f of page.matchAll(/`(?:test-flows\/|examples\/)?([\w-]+\.flow\.json)`/g)) {
+      expect(() => readFileSync(firstExisting([join(examplesDir, f[1]!), join(flowsDir, f[1]!)]), "utf8"), f[1]).not.toThrow();
     }
     for (const l of page.matchAll(/\]\(([\w-]+\.md)\)/g)) {
       expect(() => readFileSync(join(__dirname, "..", "..", "docs", "user-guide", l[1]!), "utf8"), l[1]).not.toThrow();

@@ -13,6 +13,8 @@
 #   _assets/definitions/{boards,processors}/*.json <- editor/src/definitions
 #   _assets/firmware/builds.json         <- firmware/builds.json (the flash catalogue)
 #
+# examples/ is not copied here: tools/make_bundle.py puts it at the bundle root, beside the launcher,
+# where a user can see it in the installed folder.
 # Run with `make assets` (which builds the editor and docs first), or directly after building them.
 # Stdlib only, so CI can run it with any Python 3.10+.
 #

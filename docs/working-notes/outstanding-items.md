@@ -355,19 +355,23 @@ ThingStudioMarketing repo, not here.
 
 ## Docs / process
 
+- **Not settled: how an installed copy surfaces these flows.** Browsing to the install folder and File → Open…
+  works, and the docs' links download them; an editor affordance ("Open example…") over the shipped folder is a
+  product idea needing Mike's call, not a decision.
+  ([the decision](decisions/examples-folder.md); filed 2026-11-01)
+
 - **[TR]** **[P1] Tester-ready tutorials per the agreed ladder (scope: `docs/tester-ready.md`, agreed 2026-10-30).**
-  Five tutorials, each building from the previous flow: blink → function read/write (raw `machine.Pin` read in
-  verbatim code, with the compile-checker-doesn't-see-function-code caveat) → node context → HTTP in (WiFi
-  config, finding the board, the open-LAN-port note) → MQTT. Every tutorial page serves the learner profiles:
-  importable flow at top, linear steps, "went off the path?" troubleshooting link. Onboarding reports gain
+  Five tutorials (reshaped on review: 1 = gpio read/set + `context`, 2 = networking/`http in`, MQTT next), each
+  building from the previous flow. Every tutorial page serves the learner profiles: importable flow at top, linear
+  steps, "went off the path?" troubleshooting link. Onboarding reports gain
   "what did you try next, and what happened?". Success-point pointers ("next, pick:") and the MQTT-missing-config
   FAQ entry ride the same work.
   Progress: tutorial 1 ("Two more blinks", `docs/user-guide/tutorials/two-more-blinks.md`, gpio read/set +
-  `context`, flow `test-flows/tutorials/two-more-blinks.flow.json`) drafted 2026-10-31, reshaped on Mike's review:
-  the speed/invert variations are out as too trivial and the name covers both halves — the blink again, two more
-  ways, each showing a different aspect of Thingstudio. Tutorial 2 ("Blink from your
-  network", `docs/user-guide/tutorials/blink-from-your-network.md`, flow
-  `test-flows/tutorials/http-blink.flow.json`) drafted in the same session, first pass. D1 R32 hardware check of
+  `context`, flow `examples/two-more-blinks.flow.json`) drafted 2026-10-31, reshaped on Mike's review: the
+  speed/invert variations are out as too trivial and the name covers both halves — "Two more blinks", the blink
+  again two more ways, each showing a different aspect of Thingstudio. Tutorial 2 ("Blink from your
+  network", `docs/user-guide/tutorials/blink-from-your-network.md`, flow `examples/http-blink.flow.json`) drafted
+  in the same session, first pass. D1 R32 hardware check of
   tutorial 1's gpio read/blink, 2026-11-01 (onboard LED, GPIO 2), recorded in
   `firmware/classic-esp32/tested.json` under the 14.1.0 image.
 

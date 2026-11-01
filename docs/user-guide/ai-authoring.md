@@ -242,9 +242,9 @@ No element takes a font, height, width, gap or padding: fonts follow the cells a
 `onValue`, ...) is on the node: see the [catalog](nodes-catalog.md). For a toggle that follows a real device (a smart
 plug), `gui.md` has the wiring.
 
-Read [GUI nodes](nodes/gui.md) for the details, and copy from `test-flows/`:
+Read [GUI nodes](nodes/gui.md) for the details, and copy from `examples/`:
 `gui-headliner-sensor-freenove-s3-4in.flow.json` (a sensor display with histograms, a clock and MQTT),
-`gui-touch-freenove-s3-4in.flow.json` (buttons), `gui-orientation-test-freenove-s3-4in.flow.json`.
+`gui-touch-freenove-s3-4in.flow.json` (buttons).
 
 ## Custom nodes
 
@@ -255,7 +255,7 @@ Python body on its own with sample messages.
 
 ## Examples to copy
 
-| Task | File in `test-flows/` |
+| Task | File in `examples/` |
 | --- | --- |
 | Blink an LED | `blink.flow.json` |
 | Read and set a GPIO pin, keep state in the node | `tutorials/two-more-blinks.flow.json` |

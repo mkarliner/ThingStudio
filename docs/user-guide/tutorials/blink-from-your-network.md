@@ -5,7 +5,7 @@ it. Along the way: telling the board which WiFi network to join, finding it from
 port on it means.
 
 It builds on [Two more blinks](two-more-blinks.md). If you're starting cold, download
-[http-blink.flow.json](https://github.com/mkarliner/ThingStudio/blob/main/test-flows/tutorials/http-blink.flow.json)
+[http-blink.flow.json](https://github.com/mkarliner/ThingStudio/blob/main/examples/http-blink.flow.json)
 and open it with **File → Open…** — it carries the whole tutorial's flow: the blink from that tutorial, the web
 chain, and a wifi status node so the connection is visible.
 

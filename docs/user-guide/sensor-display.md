@@ -4,7 +4,7 @@ Build a three-page touch display: the room's temperature, humidity and pressure 
 clock. The flow also publishes the readings over MQTT.
 
 The finished flow is in the Thingstudio repository:
-[`test-flows/gui-headliner-sensor-freenove-s3-4in.flow.json`](https://github.com/mkarliner/ThingStudio/blob/main/test-flows/gui-headliner-sensor-freenove-s3-4in.flow.json).
+[`examples/gui-headliner-sensor-freenove-s3-4in.flow.json`](https://github.com/mkarliner/ThingStudio/blob/main/examples/gui-headliner-sensor-freenove-s3-4in.flow.json).
 Open it in one of two ways:
 
 - **Open the finished flow.** Download it and open it with **File → Open…**, then set your own WiFi and MQTT

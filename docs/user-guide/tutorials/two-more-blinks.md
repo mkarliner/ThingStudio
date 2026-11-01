@@ -9,7 +9,7 @@ shows something different about Thingstudio:
 - **Keep the state in the node** — the state lives inside the `function` node itself, in `context`.
 
 The flow stays the same; only the function's code changes. Lost it? Download
-[two-more-blinks.flow.json](https://github.com/mkarliner/ThingStudio/blob/main/test-flows/tutorials/two-more-blinks.flow.json)
+[two-more-blinks.flow.json](https://github.com/mkarliner/ThingStudio/blob/main/examples/two-more-blinks.flow.json)
 — it carries the first of the two, with `machine.Pin(15)` as the pin — and open it with **File → Open…**.
 
 If a step misbehaves on the way, start at [Debugging & troubleshooting](../debugging.md).

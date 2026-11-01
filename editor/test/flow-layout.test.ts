@@ -6,15 +6,19 @@
 // to the left edge on a second row -- that wrap is what made the hero flows look like a rats nest even
 // though the graph itself was fine.
 //
-// The check is over test-flows/**/*flow.json, the flows this repo authors and ships as hand-run tests.
-// A user's own flow can be laid out however they like; the editor never repositions nodes on load.
+// The check is over test-flows/**/*flow.json and examples/**/*.flow.json -- the flows this repo
+// authors and ships. A user's own flow can be laid out however they like; the editor never repositions
+// nodes on load.
 // `python3 test-flows/relayout.py` fixes a file that fails this.
 
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
-const DIR = join(__dirname, "..", "..", "test-flows");
+const DIRS = [
+  join(__dirname, "..", "..", "test-flows"),
+  join(__dirname, "..", "..", "examples"),
+];
 
 interface FlowFile {
   flowName?: string;
@@ -23,18 +27,20 @@ interface FlowFile {
   layout?: Record<string, { pos: [number, number] }>;
 }
 
-// Collected recursively, so a subfolder (tutorials/, ai-authoring/) can't drift out of the check.
+// Collected recursively over each folder, so a subfolder (ai-authoring/) can't drift out of the check.
 const files: string[] = [];
-(function walk(dir: string) {
-  for (const entry of readdirSync(dir, { withFileTypes: true })) {
-    const path = join(dir, entry.name);
-    if (entry.isDirectory()) walk(path);
-    else if (entry.name.endsWith(".flow.json")) files.push(path);
-  }
-})(DIR);
+for (const DIR of DIRS) {
+  (function walk(dir: string) {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const path = join(dir, entry.name);
+      if (entry.isDirectory()) walk(path);
+      else if (entry.name.endsWith(".flow.json")) files.push(path);
+    }
+  })(DIR);
+}
 files.sort();
 
-const display = (path: string) => path.replace(`${DIR}/`, "");
+const display = (path: string) => path.replace(/.*?(?:^|\/)(?:test-flows|examples)\//, "");
 
 describe("authored flow layout", () => {
   it("finds the flows to check", () => {

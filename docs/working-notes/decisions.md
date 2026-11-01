@@ -319,3 +319,10 @@ diet). 1 entry: `docs/working-notes/decisions/third-party-pinning.md`.
 Handoff/briefing notes lead with the topic, never "next-session-picks"; a brief's environment facts cover every
 toolchain the session used. Naming procedure in `AGENTS.md`; the naming-violation and briefing-gap incidents
 moved here (2026-10-30, the AGENTS.md diet). 1 entry: `docs/working-notes/decisions/handoff-notes.md`.
+
+## Examples folder
+
+Test flows and example flows are separate things: users copy from `examples/` (shipped at the bundle root), checks
+run against `test-flows/`; the layout gate walks both. Re-phase of the shipped-flow split, decided while the
+tutorial ladder was being written (2026-11-01). 1 entry:
+`docs/working-notes/decisions/examples-folder.md`.
