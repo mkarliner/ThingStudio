@@ -20,10 +20,10 @@ several — one per network — and pick the right one per flow. See
 [The Thingstudio folder](../thingstudio-folder.md#credentials).
 
 1. Connect the board over USB, as in [Connect your board](../connecting.md).
-2. Open the flow's WiFi config: click **WiFi** on any `http in` node's property panel — it's the flow's one
-   network — then ✎ or **+** to make a new credential. Give the credential a name, your network's SSID and its
-   password, and save.
-3. The **WiFi** field on the `http in` node (and on the `wifi status` node) picks that credential.
+2. On the `http in` node's property panel, click **+** next to the **WiFi** field to make a new credential (✎
+   edits an existing one). Give the credential a name, your network's SSID and its password, and save.
+3. The **WiFi** field on the `http in` node (and on the `wifi status` node) picks that credential — one WiFi
+   network per flow, shared by every WiFi node in it.
 
 Compile stops with a one-line error if the flow's WiFi has no saved network behind it; the FAQ's
 [needs-a-WiFi-network](../faq.md#why-does-compile-fail-with-needs-a-wifi-network) entry is that error.
