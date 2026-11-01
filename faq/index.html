@@ -902,6 +902,90 @@
   
   
     <li class="md-nav__item">
+      <a href="../tutorials/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/two-more-blinks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Two more blinks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/blink-from-your-network/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Blink from your network
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../sensor-display/" class="md-nav__link">
         
   
@@ -1528,6 +1612,34 @@
     
   
     function
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/change/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    change
   
 
     
@@ -3095,6 +3207,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#why-does-compile-fail-with-needs-a-wifi-network" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why does compile fail with "needs a WiFi network"?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-do-http-in-requests-take-a-second-to-answer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why do http in requests take a second to answer?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#why-is-compile-deploy-grayed-out-after-a-deploy" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3412,6 +3546,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#why-does-compile-fail-with-needs-a-wifi-network" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why does compile fail with "needs a WiFi network"?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-do-http-in-requests-take-a-second-to-answer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why do http in requests take a second to answer?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#why-is-compile-deploy-grayed-out-after-a-deploy" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3617,6 +3773,18 @@ board. See <a href="../gui-layout/">Laying out a display</a>.</p>
 <h2 id="why-wont-a-function-nodes-output-wire-into-pwm-out">Why won't a function node's output wire into pwm out?</h2>
 <p>A function node's output has the type <code>any</code>, and <code>pwm out</code>'s input takes a <code>number</code>. The editor refuses a wire from
 <code>any</code> to <code>number</code>, <code>int</code> or <code>string</code> inputs. See <a href="../working-in-the-editor/#wiring">Wiring</a>.</p>
+<h2 id="why-does-compile-fail-with-needs-a-wifi-network">Why does compile fail with "needs a WiFi network"?</h2>
+<p>An <code>mqtt publish</code> or <code>mqtt subscribe</code> node talks to its broker over WiFi, and it manages that connection itself, so
+it needs real credentials: a WiFi config in the flow and a broker. Compile stops with one line naming what's
+missing — "needs a WiFi network" or "needs an MQTT broker". Set the node's <strong>WiFi</strong> (or <strong>MQTT Broker</strong>) field;
+every MQTT node in a flow shares that one setting. See <a href="../working-in-the-editor/#config-nodes">Config nodes</a>.</p>
+<h2 id="why-do-http-in-requests-take-a-second-to-answer">Why do http in requests take a second to answer?</h2>
+<p>The flow answers immediately — the wait is the board's WiFi waking up. An idle board's radio sleeps
+(modem-sleep); a new request pays the wake and the connection set-up before anything the flow does. Measured on a
+classic ESP32 (Wemos D1 R32) toggling an LED, through a VPN tunnel: 0.16–1.2 s per request, with the wake part of
+it; a volley of requests answered in 0.15–0.20 s each once the radio was warm. If the board has steady network
+traffic — a flow that talks, or sits connected — the wake cost goes away on its own. See the deferred note on
+modem sleep in <code>working-notes/outstanding-items.md</code>.</p>
 <h2 id="why-is-compile-deploy-grayed-out-after-a-deploy">Why is Compile → Deploy grayed out after a deploy?</h2>
 <p>The board already runs the flow on the canvas. Deploy comes back when you change the flow. See
 <a href="../debugging/#deploy-is-grayed-out">Deploy is grayed out</a>.</p>

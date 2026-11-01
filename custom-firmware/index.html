@@ -904,6 +904,90 @@
   
   
     <li class="md-nav__item">
+      <a href="../tutorials/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/two-more-blinks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Two more blinks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/blink-from-your-network/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Blink from your network
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../sensor-display/" class="md-nav__link">
         
   
@@ -1667,6 +1751,34 @@
     
   
     function
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/change/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    change
   
 
     
@@ -3126,12 +3238,14 @@
 
 
 <h1 id="custom-firmware-for-classic-esp32">Custom firmware for classic ESP32</h1>
-<p>A MicroPython image with Thingstudio's runtime and every flow library built in, for classic ESP32 boards with no
-PSRAM. It is what lets those boards run a GUI flow: stock MicroPython runs out of memory loading the display stack.</p>
-<p>The image is optional. Stock MicroPython and the <a href="../installing-runtime/">runtime install</a> work as usual, and nothing
-in the editor changes. Use it when a flow on a 4 MB ESP32 stops with <code>MemoryError</code> and the steps in
-<a href="../debugging/#memoryerror-or-a-library-that-wont-load">MemoryError or a library that won't load</a> have not helped —
-this is the third of them, "run a firmware image with the libraries built in".</p>
+<p>A MicroPython image with Thingstudio's runtime and every flow library built in, for classic ESP32 boards with 4 MB
+of flash and no PSRAM (ESP32-D0WD and similar). This is the image to flash on those boards: stock MicroPython
+loads the runtime and the flow into RAM, and the display stack pushes it over — with this image they run from
+flash instead, which is the difference between a GUI flow starting and failing with
+<code>MemoryError allocating 13317 bytes</code>.</p>
+<p>Stock MicroPython is the fallback: <a href="../installing-runtime/">install the runtime</a> onto it as the usual docs route
+describes. The custom image is the recommended one, but a stock build runs flows without the GUI, and it is what
+<a href="../installing-micropython/">Installing MicroPython</a> sets out.</p>
 <p>The technique is not specific to this image or to this chip: freezing the runtime and the flow libraries into
 MicroPython works on any board. This image exists because a classic ESP32 is the board where it changes the most,
 and because building one needs an ESP-IDF toolchain. <code>firmware/classic-esp32/</code> in the repository is a working
@@ -3151,7 +3265,7 @@ of copying them into RAM. On a classic ESP32 that is the difference between a GU
   yet. Judge a flow by a deploy over another flow, not by the first one.</li>
 </ul>
 <p>The image carries no board-specific settings. Pins and the display come from the <a href="../boards/">board definition</a>, so
-one image serves any classic ESP32 board. It is tested on the CYD.</p>
+one image serves any classic ESP32 board. It is tested on the CYD and, with a plain GPIO flow, on the Wemos D1 R32.</p>
 <h2 id="what-you-need">What you need</h2>
 <ul>
 <li>A classic ESP32 board with 4 MB of flash and no PSRAM (ESP32-D0WD and similar). This image is not for the S2, S3,

@@ -904,6 +904,90 @@
   
   
     <li class="md-nav__item">
+      <a href="../tutorials/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/two-more-blinks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Two more blinks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/blink-from-your-network/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Blink from your network
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../sensor-display/" class="md-nav__link">
         
   
@@ -1530,6 +1614,34 @@
     
   
     function
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/change/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    change
   
 
     
@@ -3505,9 +3617,9 @@ itself; a navigate button with <code>target</code> <code>back</code> acknowledge
 <p>No element takes a font, height, width, gap or padding: fonts follow the cells and spacing is the screen's gutter. The button's own behaviour (<code>mode</code>, <code>target</code>,
 <code>onValue</code>, ...) is on the node: see the <a href="../nodes-catalog/">catalog</a>. For a toggle that follows a real device (a smart
 plug), <code>gui.md</code> has the wiring.</p>
-<p>Read <a href="../nodes/gui/">GUI nodes</a> for the details, and copy from <code>test-flows/</code>:
+<p>Read <a href="../nodes/gui/">GUI nodes</a> for the details, and copy from <code>examples/</code>:
 <code>gui-headliner-sensor-freenove-s3-4in.flow.json</code> (a sensor display with histograms, a clock and MQTT),
-<code>gui-touch-freenove-s3-4in.flow.json</code> (buttons), <code>gui-orientation-test-freenove-s3-4in.flow.json</code>.</p>
+<code>gui-touch-freenove-s3-4in.flow.json</code> (buttons).</p>
 <h2 id="custom-nodes">Custom nodes</h2>
 <p>If no node does the job and a function node is not enough, write a custom node: <code>&lt;name&gt;.node.json</code> and
 <code>&lt;name&gt;.node.py</code>. <a href="../custom-nodes/">Writing custom nodes</a> is complete on its own. The two files go in <code>~/.thingstudio/custom-nodes/</code> on the
@@ -3518,13 +3630,21 @@ Python body on its own with sample messages.</p>
 <thead>
 <tr>
 <th>Task</th>
-<th>File in <code>test-flows/</code></th>
+<th>File in <code>examples/</code></th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>Blink an LED</td>
 <td><code>blink.flow.json</code></td>
+</tr>
+<tr>
+<td>Read and set a GPIO pin, keep state in the node</td>
+<td><code>tutorials/two-more-blinks.flow.json</code></td>
+</tr>
+<tr>
+<td>Blink an LED from an HTTP request (WiFi, <code>http in</code>)</td>
+<td><code>tutorials/http-blink.flow.json</code></td>
 </tr>
 <tr>
 <td>Publish to MQTT</td>

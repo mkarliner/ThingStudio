@@ -895,10 +895,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#try-these-changes" class="md-nav__link">
+  <a href="#next-pick" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Try these changes
+        Next, pick:
       
     </span>
   </a>
@@ -1011,6 +1011,90 @@
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/two-more-blinks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Two more blinks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/blink-from-your-network/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Blink from your network
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -1645,6 +1729,34 @@
     
   
     function
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/change/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    change
   
 
     
@@ -3040,10 +3152,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#try-these-changes" class="md-nav__link">
+  <a href="#next-pick" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Try these changes
+        Next, pick:
       
     </span>
   </a>
@@ -3120,31 +3232,16 @@ including the board's free memory.</p>
 <p><strong>gpio out</strong> turns the pin on for any payload that isn't zero. Wired straight to the timer, the LED would switch on
 and stay on.</p>
 <p>The <strong>function</strong> node turns the count into 1, 0, 1, 0 with <code>% 2</code>. That gives on, off, on, off.</p>
-<h2 id="try-these-changes">Try these changes</h2>
-<p>Each change below edits the flow you built. Deploy after each one.</p>
+<h2 id="next-pick">Next, pick:</h2>
+<p>Each version the function above could take holds the LED's state somewhere different: in the timer's count, on the
+hardware, or with <code>context</code> in the node (see
+<a href="../nodes/function/#context-flow-and-settings">Context, flow and settings</a>). A flow keeps state only where you put
+it: in a message, on the hardware, or in a node.</p>
 <ul>
-<li><strong>Change the timing.</strong> Set the timer's <strong>interval (ms)</strong> to <code>100</code>, or <code>2000</code> for a slower blink.</li>
-<li>
-<p><strong>Read the pin instead of counting.</strong> Replace the function's code with this, using your LED's GPIO number in
-  place of <code>2</code>. Each message sets the LED to the opposite of what the pin reads now.</p>
-<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">machine</span>
-<span class="n">msg</span><span class="p">[</span><span class="s1">'payload'</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">machine</span><span class="o">.</span><span class="n">Pin</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">()</span> <span class="k">else</span> <span class="mi">1</span>
-<span class="k">return</span> <span class="n">msg</span>
-</code></pre></div>
-</li>
-<li>
-<p><strong>Keep your own state.</strong> Replace the function's code with this. <code>context</code> stores a value between messages, private
-  to this function node. See <a href="../nodes/function/#context-flow-and-settings">Context, flow and settings</a>.</p>
-<div class="highlight"><pre><span></span><code><span class="n">on</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">context</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'on'</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
-<span class="n">context</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">'on'</span><span class="p">,</span> <span class="n">on</span><span class="p">)</span>
-<span class="n">msg</span><span class="p">[</span><span class="s1">'payload'</span><span class="p">]</span> <span class="o">=</span> <span class="n">on</span>
-<span class="k">return</span> <span class="n">msg</span>
-</code></pre></div>
-</li>
+<li><a href="../tutorials/two-more-blinks/">Two more blinks</a> — the blink again, two more ways: the LED's state on the
+  hardware, read and written back in code, or kept in the node with <code>context</code>.</li>
+<li><a href="../sensor-display/">A sensor display</a> — the next job past blinking: read a sensor and show it on a screen.</li>
 </ul>
-<p>The function node keeps nothing from one message to the next. In the first version the state is the timer's count,
-in the second it's the pin, in the third it's <code>context</code>. A flow keeps state only where you put it: in a message, on
-the hardware, or in <code>context</code>.</p>
 <h2 id="if-it-doesnt-blink">If it doesn't blink</h2>
 <p>Each symptom below has its own fix:</p>
 <ul>

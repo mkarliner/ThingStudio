@@ -31,6 +31,9 @@
 
 ## Tutorials
 
+- [Overview](https://docs.thingstudio.net/tutorials/): Two tutorials, each one starting from the flow the last one left you with.
+- [Two more blinks](https://docs.thingstudio.net/tutorials/two-more-blinks/): You have a blinking LED from Blink an LED: timer, function, gpio out, with the function turning the timer's count into on and off.
+- [Blink from your network](https://docs.thingstudio.net/tutorials/blink-from-your-network/): The same LED, driven from a browser: an http in node runs a web server on the board, and each request toggles it.
 - [A sensor display](https://docs.thingstudio.net/sensor-display/): Build a three-page touch display: the room's temperature, humidity and pressure with their recent history, and a clock.
 
 ## Building flows
@@ -44,7 +47,7 @@
 
 - [Supported hardware](https://docs.thingstudio.net/supported-hardware/): The boards, processors, displays, touch panels, sensors and other hardware below have built-in support.
 - [Boards and processors](https://docs.thingstudio.net/boards/): Each board and processor has a definition file that says which pins a flow may use.
-- [Custom firmware for classic ESP32](https://docs.thingstudio.net/custom-firmware/): A MicroPython image with Thingstudio's runtime and every flow library built in, for classic ESP32 boards with no PSRAM.
+- [Custom firmware for classic ESP32](https://docs.thingstudio.net/custom-firmware/): A MicroPython image with Thingstudio's runtime and every flow library built in, for classic ESP32 boards with 4 MB of flash and no PSRAM (ESP32-D0WD and simila…
 - [Connecting over WiFi](https://docs.thingstudio.net/wifi-connection/): The editor can connect to a board over WiFi instead of USB.
 - [WiFi provisioning](https://docs.thingstudio.net/wifi-provisioning/): You can leave a flow's WiFi network and password out, and enter them on the board when it first starts.
 
@@ -58,6 +61,7 @@
 - [startup](https://docs.thingstudio.net/nodes/startup/): Sends one message with a fixed payload each time the flow starts.
 - [timer](https://docs.thingstudio.net/nodes/timer/): Emits an increasing count on a fixed interval — a heartbeat with a sequence number, not a repeated value.
 - [function](https://docs.thingstudio.net/nodes/function/): Runs your own MicroPython on each message.
+- [change](https://docs.thingstudio.net/nodes/change/): Sets or deletes one value on each message, then passes the message on.
 - [delay](https://docs.thingstudio.net/nodes/delay/): Passes a message through unchanged, after waiting a configured interval.
 - [filter](https://docs.thingstudio.net/nodes/filter/): Passes a message on only when it's worth sending, and drops the rest.
 - [journal](https://docs.thingstudio.net/nodes/journal/): Keeps the recent history of a number, as rows of average, minimum and maximum, the way RRDtool and Cacti do.

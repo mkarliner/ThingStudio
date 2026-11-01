@@ -1047,6 +1047,90 @@
   
   
     <li class="md-nav__item">
+      <a href="../tutorials/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/two-more-blinks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Two more blinks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/blink-from-your-network/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Blink from your network
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../sensor-display/" class="md-nav__link">
         
   
@@ -1673,6 +1757,34 @@
     
   
     function
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/change/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    change
   
 
     
@@ -3159,11 +3271,11 @@ RP2040, RP2350 and nRF52 boards.</p>
    names its own build is preselected. The build matters for the heap as much as for compatibility: an ESP32 with
    extra PSRAM wants the <strong>PSRAM (WROVER)</strong> build, a single-core SOLO the <strong>single-core</strong> one.</li>
 </ol>
-<p>For a classic ESP32 with no PSRAM, <strong>Firmware</strong> also offers the
-   <a href="../custom-firmware/">Thingstudio custom image</a>. It saves memory: the runtime and the flow libraries are built
-   into flash, so they run from there instead of being loaded into RAM. Use it when RAM is tight, for example when
-   a GUI flow stops with <code>MemoryError</code> on official MicroPython. Its <strong>Version</strong> list holds the published releases.
-   After flashing it, <strong>Install runtime</strong> writes only the boot script.
+<p>For a classic ESP32 with 4 MB of flash and no PSRAM, use the
+   <a href="../custom-firmware/">Thingstudio custom image</a> rather than stock MicroPython: the runtime and the flow libraries
+   are frozen into flash, where they run without taking the RAM the display stack and the flow need. Its
+   <strong>Version</strong> list holds the published releases. After flashing it, <strong>Install runtime</strong> writes only the boot
+   script.
 5. Click <strong>Flash</strong>. <strong>Erase all flash first</strong> is ticked: it clears an old partition table, which is the usual
    reason a first install "succeeds" and then doesn't boot. The dialog shows each line the tool prints; a failure
    says what to fix.</p>

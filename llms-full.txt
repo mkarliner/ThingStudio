@@ -23,6 +23,22 @@ starts again after a reset or power cycle.
   part.</figcaption>
 </figure>
 
+!!! tip "For the impatient"
+
+    The whole path to a running flow, reading nothing else:
+
+    1. [Install Thingstudio](getting-started.md#step-1-install-thingstudio) and start it. The editor
+       opens in your browser.
+    2. [Tour the editor](editor-tour.md): the palette, the canvas, the console.
+    3. [Install MicroPython](installing-micropython.md) on your board. A standard ESP32 takes the advised
+       [custom image](custom-firmware.md).
+    4. [Connect your board](connecting.md), then [install the runtime](installing-runtime.md).
+    5. [Blink an LED](first-flow.md) — three nodes and deploy. Not in a building mood? Open
+       `examples/blink.flow.json` from your install folder with **File → Open…**, point the pin at your board's
+       own LED, deploy.
+
+    When something doesn't work, [Debugging](debugging.md) and the [FAQ](faq.md) go by what you see on screen.
+
 In practice, that means:
 
 - **Local dev.** Development happens locally; there is no cloud service.
@@ -689,11 +705,11 @@ RP2040, RP2350 and nRF52 boards.
    names its own build is preselected. The build matters for the heap as much as for compatibility: an ESP32 with
    extra PSRAM wants the **PSRAM (WROVER)** build, a single-core SOLO the **single-core** one.
 
-   For a classic ESP32 with no PSRAM, **Firmware** also offers the
-   [Thingstudio custom image](custom-firmware.md). It saves memory: the runtime and the flow libraries are built
-   into flash, so they run from there instead of being loaded into RAM. Use it when RAM is tight, for example when
-   a GUI flow stops with `MemoryError` on official MicroPython. Its **Version** list holds the published releases.
-   After flashing it, **Install runtime** writes only the boot script.
+   For a classic ESP32 with 4 MB of flash and no PSRAM, use the
+   [Thingstudio custom image](custom-firmware.md) rather than stock MicroPython: the runtime and the flow libraries
+   are frozen into flash, where they run without taking the RAM the display stack and the flow need. Its
+   **Version** list holds the published releases. After flashing it, **Install runtime** writes only the boot
+   script.
 5. Click **Flash**. **Erase all flash first** is ticked: it clears an old partition table, which is the usual
    reason a first install "succeeds" and then doesn't boot. The dialog shows each line the tool prints; a failure
    says what to fix.
@@ -928,33 +944,16 @@ and stay on.
 
 The **function** node turns the count into 1, 0, 1, 0 with `% 2`. That gives on, off, on, off.
 
-## Try these changes
+## Next, pick:
 
-Each change below edits the flow you built. Deploy after each one.
+Each version the function above could take holds the LED's state somewhere different: in the timer's count, on the
+hardware, or with `context` in the node (see
+[Context, flow and settings](nodes/function.md#context-flow-and-settings)). A flow keeps state only where you put
+it: in a message, on the hardware, or in a node.
 
-- **Change the timing.** Set the timer's **interval (ms)** to `100`, or `2000` for a slower blink.
-- **Read the pin instead of counting.** Replace the function's code with this, using your LED's GPIO number in
-  place of `2`. Each message sets the LED to the opposite of what the pin reads now.
-
-    ```python
-    import machine
-    msg['payload'] = 0 if machine.Pin(2).value() else 1
-    return msg
-    ```
-
-- **Keep your own state.** Replace the function's code with this. `context` stores a value between messages, private
-  to this function node. See [Context, flow and settings](nodes/function.md#context-flow-and-settings).
-
-    ```python
-    on = not context.get('on', False)
-    context.set('on', on)
-    msg['payload'] = on
-    return msg
-    ```
-
-The function node keeps nothing from one message to the next. In the first version the state is the timer's count,
-in the second it's the pin, in the third it's `context`. A flow keeps state only where you put it: in a message, on
-the hardware, or in `context`.
+- [Two more blinks](tutorials/two-more-blinks.md) — the blink again, two more ways: the LED's state on the
+  hardware, read and written back in code, or kept in the node with `context`.
+- [A sensor display](sensor-display.md) — the next job past blinking: read a sensor and show it on a screen.
 
 ## If it doesn't blink
 
@@ -1072,6 +1071,208 @@ WiFi connections from a copy run from source in other terminals, such as iTerm.
 
 ---
 
+Source: https://docs.thingstudio.net/tutorials/
+
+# Tutorials
+
+Two tutorials, each one starting from the flow the last one left you with. [Getting started](../getting-started.md)
+ends with a blinking LED; the first tutorial picks up from that flow.
+
+1. [Two more blinks](two-more-blinks.md) — the blink again, two more ways: one with the LED's state on the
+   hardware, one keeping it in the `function` node with `context`.
+2. [Blink from your network](blink-from-your-network.md) — the same LED, driven by an `http in` node arriving over
+   WiFi: putting the board on your network, finding it again, and what an open port on the board means.
+
+More are coming, in this order: publish and subscribe over MQTT, then pages for whatever the first users got stuck
+on. If you've gone ahead of the tutorials and built something of your own, what worked and what stalled is the most
+useful report you can send: what you tried next, and what happened —
+[file it on the issue tracker](https://github.com/mkarliner/ThingStudio/issues).
+
+
+---
+
+Source: https://docs.thingstudio.net/tutorials/two-more-blinks/
+
+# Two more blinks
+
+You have a blinking LED from [Blink an LED](../first-flow.md): timer, function, gpio out, with the function
+turning the timer's count into on and off. That works. Two more ways to produce the same blink — and each way
+shows something different about Thingstudio:
+
+- **Read the pin, write it back** — the blink's state lives on the board, in the pin, and the `function` node
+  runs your own MicroPython to reach it.
+- **Keep the state in the node** — the state lives inside the `function` node itself, in `context`.
+
+The flow stays the same; only the function's code changes. Lost it? Download
+[two-more-blinks.flow.json](https://github.com/mkarliner/ThingStudio/blob/main/examples/two-more-blinks.flow.json)
+— it carries the first of the two, with `machine.Pin(15)` as the pin — and open it with **File → Open…**.
+
+If a step misbehaves on the way, start at [Debugging & troubleshooting](../debugging.md).
+
+## Read the pin, write it back
+
+Each message so far decides the LED by counting. Let the pin say where it is instead. Replace the function's code
+with this, using your LED's GPIO number in place of `PIN`:
+
+```python
+import machine
+msg['payload'] = 0 if machine.Pin(PIN).value() else 1
+return msg
+```
+
+Deploy. The LED blinks as before, but the reason has changed: each message now reads the pin and writes back the
+opposite of what it found. The state — what the LED is actually showing — lives on the board between messages, so
+the flow can't contradict it.
+
+`machine.Pin` is MicroPython's own pin API. Constructed with a number and no other settings, it takes the pin as it
+is and `.value()` reads the level the `gpio out` node has written. The write itself goes out of the function's
+output, through to `gpio out`.
+
+One limit to know: the pin fields on gpio nodes are checked against your board at compile time, but code
+inside a function is not. If `PIN` isn't a pin number your board has, the compile check passes and the error arrives
+when the flow runs, as a `[NODE_ERROR]` in the console. See [Reading a node error](../debugging.md#reading-a-node-error);
+**Pins…** next to the **Board** menu lists your board's pins.
+
+## Keep the state in the node
+
+!!! note "An important point to understand"
+
+    A flow is stateless: each event is handled on its own, without regard to what came before. In general this is
+    a good thing:
+
+    - An error shows up with the message that caused it, not in some state built over earlier operations.
+    - Recovery is doing nothing: the next message starts clean. A crashed stateful component needs its data
+      restored to an acceptable earlier version, with nothing to say which that is.
+
+    When a flow does need to remember, Thingstudio's answer is a **context** — state held between messages, either
+    private to one node (`context`) or shared across the whole flow (`flow`). This blink's LED level belongs to one
+    function node, so its private store is the one to use. All three stores, `context` and `flow` among them, are
+    in [Context, flow and settings](../nodes/function.md#context-flow-and-settings); `settings` even survives a
+    reboot.
+
+The pin was one place for the state — the board holds it, and the messages only read it. The other is inside the
+function node itself:
+
+```python
+on = not context.get('on', False)
+context.set('on', on)
+msg['payload'] = on
+return msg
+```
+
+Deploy again: the same blink. Nothing outside the node holds the state now. `context.get('on', False)` reads this
+function node's own memory; `context.set('on', on)` writes it; the `False` is what `.get` answers when nothing is
+stored yet, which is why the first message turns the LED on.
+
+For state kept without code, the [change](../nodes/change.md) node stores a flow variable, the same store a
+`function`'s `flow.get()`/`flow.set()` reads. Making it the opposite of its old value needs the old value read, and
+`change`'s one rule doesn't do that — so a toggle stays in `context`.
+
+## Next, pick:
+
+- [Blink from your network](blink-from-your-network.md) — the next tutorial: the same LED, driven by an `http in`
+  node from anywhere on your WiFi.
+- [A sensor display](../sensor-display.md) — the next job: read a sensor and show it on a screen.
+- [gpio out](../nodes/gpio-out.md) — what else the node that drives the LED can do.
+- [function](../nodes/function.md) — `context`, `flow` and `settings`, and several outputs from one function node.
+
+
+---
+
+Source: https://docs.thingstudio.net/tutorials/blink-from-your-network/
+
+# Blink from your network
+
+The same LED, driven from a browser: an `http in` node runs a web server on the board, and each request toggles
+it. Along the way: telling the board which WiFi network to join, finding it from your computer, and what an open
+port on it means.
+
+It builds on [Two more blinks](two-more-blinks.md). If you're starting cold, download
+[http-blink.flow.json](https://github.com/mkarliner/ThingStudio/blob/main/examples/http-blink.flow.json)
+and open it with **File → Open…** — it carries the whole tutorial's flow: the web chain (`http in`, a toggle,
+`gpio out`, an answer back to the browser) and a `wifi status` node so the connection is visible. The timer
+chain that made the LED blink is gone from this flow: on the network the request is the event, and the LED
+holds whatever level you last asked it to.
+
+If a step misbehaves on the way, start at [Debugging & troubleshooting](../debugging.md).
+
+## First: the board joins WiFi
+
+The board joins the network named in the flow — so first, tell the flow which network. Flow files hold no
+passwords or other secrets: the WiFi details live in the `.thingstudio` folder in your home directory
+(`~/.thingstudio/credentials/`), as **credentials**. Each credential is named, and you can keep
+several — one per network — and pick the right one per flow. See
+[The Thingstudio folder](../thingstudio-folder.md#credentials).
+
+1. Connect the board over USB, as in [Connect your board](../connecting.md).
+2. On the `http in` node's property panel, click **+** next to the **WiFi** field to make a new credential (✎
+   edits an existing one). Give the credential a name, your network's SSID and its password, and save.
+3. The **WiFi** field on the `http in` node (and on the `wifi status` node) picks that credential — one WiFi
+   network per flow, shared by every WiFi node in it.
+
+Compile stops with a one-line error if the flow's WiFi has no saved network behind it; the FAQ's
+[needs-a-WiFi-network](../faq.md#why-does-compile-fail-with-needs-a-wifi-network) entry is that error.
+
+## Name the board, then deploy
+
+1. With the board still on USB, choose **Tools → Board settings…** and give the board a network name, say
+   `blink`. A name is how your computer finds it later without an IP address.
+2. Click **Compile → Deploy**. The board swaps in the flow and joins your WiFi.
+
+A few seconds after the deploy, `wifi status`'s console line prints `true`, and its dot on the canvas shows
+connected (see [node status](../working-in-the-editor.md#node-status) when the dot is something else). The LED
+itself goes dark: nothing drives the pin until a request does — the blink is over; the switch is yours.
+
+## Find the board
+
+- **By name:** open `http://blink.local:9999/toggle` in your browser. The name is the one from Board settings,
+  plus `.local`; port 9999 and path `/toggle` are the `http in` node's **port** and **path**.
+- **By IP:** tick **full message** on the `debug` node and read the `ip` from its next console line — the fields
+  are listed under [wifi status](../nodes/wifi-status.md#behavior). Then `http://<that ip>:9999/toggle`.
+
+If `.local` names don't resolve on your network (they don't everywhere, and they don't across VPN tunnels at all —
+multicast doesn't pass), the IP address is the dependable one.
+
+The page answers `LED on` or `LED off`, and the LED does what it says. Expect the first answer after an idle
+stretch to take up to a second: the board's WiFi wakes on the request (see
+[Why do http in requests take a second to answer?](../faq.md#why-do-http-in-requests-take-a-second-to-answer)).
+The request is the only event this flow
+gets, and each one is handled on its own: between requests the LED holds its level, remembered in the
+`context` toggle from the last tutorial.
+
+## The chain, and the reply
+
+One chain, two outputs:
+
+```python
+on = not context.get('on', False)
+context.set('on', on)
+msg['payload'] = on
+reply = dict(msg)
+reply['payload'] = 'LED ' + ('on' if on else 'off')
+return [msg, reply]
+```
+
+The chain is `http in → function → gpio out`. The web chain's function has two outputs, and the second one
+carries `reply` to an [`http response`](../nodes/http-response.md) node, so the browser gets an answer.
+`return [msg, reply]` is the [function node's](../nodes/function.md) output-1/output-2 routing, Node-RED style.
+
+## One line on the open port
+
+`http in` runs an unauthenticated server on the board: whatever reaches that network can call every path. Keep
+those routes non-sensitive, or keep the board off shared networks. See [http in](../nodes/http-in.md#limitations)
+for what the server does and does not do.
+
+## Next, pick:
+
+- [Tutorials](index.md) — what comes after the network: publish and subscribe over MQTT is next to be written.
+- [http in](../nodes/http-in.md) — routes, methods, timeouts, and the server's limits.
+- [Connecting over WiFi](../wifi-connection.md) — the board as an editor peer on your network, not just a web
+  server.
+
+
+---
+
 Source: https://docs.thingstudio.net/sensor-display/
 
 # A sensor display
@@ -1080,7 +1281,7 @@ Build a three-page touch display: the room's temperature, humidity and pressure 
 clock. The flow also publishes the readings over MQTT.
 
 The finished flow is in the Thingstudio repository:
-[`test-flows/gui-headliner-sensor-freenove-s3-4in.flow.json`](https://github.com/mkarliner/ThingStudio/blob/main/test-flows/gui-headliner-sensor-freenove-s3-4in.flow.json).
+[`examples/gui-headliner-sensor-freenove-s3-4in.flow.json`](https://github.com/mkarliner/ThingStudio/blob/main/examples/gui-headliner-sensor-freenove-s3-4in.flow.json).
 Open it in one of two ways:
 
 - **Open the finished flow.** Download it and open it with **File → Open…**, then set your own WiFi and MQTT
@@ -1804,13 +2005,15 @@ Source: https://docs.thingstudio.net/custom-firmware/
 
 # Custom firmware for classic ESP32
 
-A MicroPython image with Thingstudio's runtime and every flow library built in, for classic ESP32 boards with no
-PSRAM. It is what lets those boards run a GUI flow: stock MicroPython runs out of memory loading the display stack.
+A MicroPython image with Thingstudio's runtime and every flow library built in, for classic ESP32 boards with 4 MB
+of flash and no PSRAM (ESP32-D0WD and similar). This is the image to flash on those boards: stock MicroPython
+loads the runtime and the flow into RAM, and the display stack pushes it over — with this image they run from
+flash instead, which is the difference between a GUI flow starting and failing with
+`MemoryError allocating 13317 bytes`.
 
-The image is optional. Stock MicroPython and the [runtime install](installing-runtime.md) work as usual, and nothing
-in the editor changes. Use it when a flow on a 4 MB ESP32 stops with `MemoryError` and the steps in
-[MemoryError or a library that won't load](debugging.md#memoryerror-or-a-library-that-wont-load) have not helped —
-this is the third of them, "run a firmware image with the libraries built in".
+Stock MicroPython is the fallback: [install the runtime](installing-runtime.md) onto it as the usual docs route
+describes. The custom image is the recommended one, but a stock build runs flows without the GUI, and it is what
+[Installing MicroPython](installing-micropython.md) sets out.
 
 The technique is not specific to this image or to this chip: freezing the runtime and the flow libraries into
 MicroPython works on any board. This image exists because a classic ESP32 is the board where it changes the most,
@@ -1837,7 +2040,7 @@ Two things follow from that, and both matter on a board with this little RAM:
   yet. Judge a flow by a deploy over another flow, not by the first one.
 
 The image carries no board-specific settings. Pins and the display come from the [board definition](boards.md), so
-one image serves any classic ESP32 board. It is tested on the CYD.
+one image serves any classic ESP32 board. It is tested on the CYD and, with a plain GPIO flow, on the Wemos D1 R32.
 
 ## What you need
 
@@ -2336,6 +2539,42 @@ return msg
 
 ---
 
+Source: https://docs.thingstudio.net/nodes/change/
+
+# change
+
+Sets or deletes one value on each message, then passes the message on.
+
+Use it to hold a value between messages (a last reading, a counter set elsewhere) or to copy one into a message.
+It is the no-code way to work with the flow store that a **function** node's `flow.get`/`flow.set` uses.
+
+## Properties
+
+- **operation** — `set` or `delete`.
+- **target** — `msg property` or `flow variable`.
+- **property / name** — the message property or flow variable to change.
+- **value from** (set only) — `a literal value`, `another msg property`, or `a flow variable`.
+- **literal type** (set from a literal) — `string`, `number` or `bool`.
+- **value / source property** — the literal, or the name of the message property / flow variable to copy.
+
+## Behavior
+
+One rule per node. Chain **change** nodes for more than one change.
+
+A flow variable is shared by name across the whole flow: another **change** node and a **function** node using
+`flow.get`/`flow.set` see the same value. Flow variables are in RAM and are cleared when the flow is redeployed.
+
+Node context is not offered here; use a **function** node for a value private to that one node.
+
+```text
+inject "hello" → change (flow.last = msg.payload) → change (msg.payload = flow.last) → debug
+```
+
+The second node reads the value the first one stored, and the debug node prints `hello`.
+
+
+---
+
 Source: https://docs.thingstudio.net/nodes/delay/
 
 # delay
@@ -2442,7 +2681,7 @@ A sensor reads every 5 seconds.
 2. Journal B, fed from A's second output: rows 156, **seconds per row** 0. Its first output goes to a second
    histogram: the last 2.6 hours, one bar a minute, each with its min to max line.
 
-`test-flows/gui-headliner-sensor-freenove-s3-4in.flow.json` does this with a BME280.
+`examples/gui-headliner-sensor-freenove-s3-4in.flow.json` does this with a BME280.
 
 
 ---
@@ -4375,9 +4614,9 @@ No element takes a font, height, width, gap or padding: fonts follow the cells a
 `onValue`, ...) is on the node: see the [catalog](nodes-catalog.md). For a toggle that follows a real device (a smart
 plug), `gui.md` has the wiring.
 
-Read [GUI nodes](nodes/gui.md) for the details, and copy from `test-flows/`:
+Read [GUI nodes](nodes/gui.md) for the details, and copy from `examples/`:
 `gui-headliner-sensor-freenove-s3-4in.flow.json` (a sensor display with histograms, a clock and MQTT),
-`gui-touch-freenove-s3-4in.flow.json` (buttons), `gui-orientation-test-freenove-s3-4in.flow.json`.
+`gui-touch-freenove-s3-4in.flow.json` (buttons).
 
 ## Custom nodes
 
@@ -4388,9 +4627,11 @@ Python body on its own with sample messages.
 
 ## Examples to copy
 
-| Task | File in `test-flows/` |
+| Task | File in `examples/` |
 | --- | --- |
 | Blink an LED | `blink.flow.json` |
+| Read and set a GPIO pin, keep state in the node | `tutorials/two-more-blinks.flow.json` |
+| Blink an LED from an HTTP request (WiFi, `http in`) | `tutorials/http-blink.flow.json` |
 | Publish to MQTT | `basic-mqtt.flow.json` |
 | Call a web service | `basic-http-request.flow.json` |
 | A BME280 reading | `bmp280-test-flow.flow.json` |
@@ -5602,6 +5843,22 @@ board. See [Laying out a display](gui-layout.md).
 
 A function node's output has the type `any`, and `pwm out`'s input takes a `number`. The editor refuses a wire from
 `any` to `number`, `int` or `string` inputs. See [Wiring](working-in-the-editor.md#wiring).
+
+## Why does compile fail with "needs a WiFi network"?
+
+An `mqtt publish` or `mqtt subscribe` node talks to its broker over WiFi, and it manages that connection itself, so
+it needs real credentials: a WiFi config in the flow and a broker. Compile stops with one line naming what's
+missing — "needs a WiFi network" or "needs an MQTT broker". Set the node's **WiFi** (or **MQTT Broker**) field;
+every MQTT node in a flow shares that one setting. See [Config nodes](working-in-the-editor.md#config-nodes).
+
+## Why do http in requests take a second to answer?
+
+The flow answers immediately — the wait is the board's WiFi waking up. An idle board's radio sleeps
+(modem-sleep); a new request pays the wake and the connection set-up before anything the flow does. Measured on a
+classic ESP32 (Wemos D1 R32) toggling an LED, through a VPN tunnel: 0.16–1.2 s per request, with the wake part of
+it; a volley of requests answered in 0.15–0.20 s each once the radio was warm. If the board has steady network
+traffic — a flow that talks, or sits connected — the wake cost goes away on its own. See the deferred note on
+modem sleep in `working-notes/outstanding-items.md`.
 
 ## Why is Compile → Deploy grayed out after a deploy?
 
