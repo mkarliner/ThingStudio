@@ -16,21 +16,6 @@
       "properties": {}
     },
     {
-      "id": "httpbl0timer00003",
-      "type": "thingstudio/timer",
-      "properties": {
-        "intervalMs": 500
-      }
-    },
-    {
-      "id": "httpbl0funct00004",
-      "type": "thingstudio/function",
-      "properties": {
-        "code": "on = not context.get('on', False)\ncontext.set('on', on)\nmsg['payload'] = on\nreturn msg",
-        "outputCount": 1
-      }
-    },
-    {
       "id": "httpbl0httpin00005",
       "type": "thingstudio/http_in",
       "properties": {
@@ -52,9 +37,7 @@
     {
       "id": "httpbl0gpio00007",
       "type": "thingstudio/gpio_out",
-      "properties": {
-        "pin": 15
-      }
+      "properties": { "pin": 15 }
     },
     {
       "id": "httpbl0respon00008",
@@ -63,92 +46,18 @@
     }
   ],
   "edges": [
-    [
-      "httpbl0wifistat01",
-      0,
-      "httpbl0debug00002",
-      0
-    ],
-    [
-      "httpbl0timer00003",
-      0,
-      "httpbl0funct00004",
-      0
-    ],
-    [
-      "httpbl0httpin00005",
-      0,
-      "httpbl0funct00006",
-      0
-    ],
-    [
-      "httpbl0funct00004",
-      0,
-      "httpbl0gpio00007",
-      0
-    ],
-    [
-      "httpbl0funct00006",
-      0,
-      "httpbl0gpio00007",
-      0
-    ],
-    [
-      "httpbl0funct00006",
-      1,
-      "httpbl0respon00008",
-      0
-    ]
+    ["httpbl0wifistat01", 0, "httpbl0debug00002", 0],
+    ["httpbl0httpin00005", 0, "httpbl0funct00006", 0],
+    ["httpbl0funct00006", 0, "httpbl0gpio00007", 0],
+    ["httpbl0funct00006", 1, "httpbl0respon00008", 0]
   ],
   "layout": {
-    "httpbl0wifistat01": {
-      "pos": [
-        80,
-        80
-      ]
-    },
-    "httpbl0debug00002": {
-      "pos": [
-        300,
-        80
-      ]
-    },
-    "httpbl0timer00003": {
-      "pos": [
-        80,
-        180
-      ]
-    },
-    "httpbl0funct00004": {
-      "pos": [
-        300,
-        180
-      ]
-    },
-    "httpbl0httpin00005": {
-      "pos": [
-        80,
-        250
-      ]
-    },
-    "httpbl0funct00006": {
-      "pos": [
-        300,
-        250
-      ]
-    },
-    "httpbl0gpio00007": {
-      "pos": [
-        520,
-        215
-      ]
-    },
-    "httpbl0respon00008": {
-      "pos": [
-        520,
-        285
-      ]
-    }
+    "httpbl0wifistat01": { "pos": [80, 140] },
+    "httpbl0debug00002": { "pos": [300, 140] },
+    "httpbl0httpin00005": { "pos": [80, 240] },
+    "httpbl0funct00006": { "pos": [300, 240] },
+    "httpbl0gpio00007": { "pos": [520, 240] },
+    "httpbl0respon00008": { "pos": [520, 310] }
   },
   "configs": [
     {

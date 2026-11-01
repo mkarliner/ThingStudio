@@ -6,8 +6,10 @@ port on it means.
 
 It builds on [Two more blinks](two-more-blinks.md). If you're starting cold, download
 [http-blink.flow.json](https://github.com/mkarliner/ThingStudio/blob/main/examples/http-blink.flow.json)
-and open it with **File → Open…** — it carries the whole tutorial's flow: the blink from that tutorial, the web
-chain, and a wifi status node so the connection is visible.
+and open it with **File → Open…** — it carries the whole tutorial's flow: the web chain (`http in`, a toggle,
+`gpio out`, an answer back to the browser) and a `wifi status` node so the connection is visible. The timer
+chain that made the LED blink is gone from this flow: on the network the request is the event, and the LED
+holds whatever level you last asked it to.
 
 If a step misbehaves on the way, start at [Debugging & troubleshooting](../debugging.md).
 
@@ -35,7 +37,8 @@ Compile stops with a one-line error if the flow's WiFi has no saved network behi
 2. Click **Compile → Deploy**. The board swaps in the flow and joins your WiFi.
 
 A few seconds after the deploy, `wifi status`'s console line prints `true`, and its dot on the canvas shows
-connected (see [node status](../working-in-the-editor.md#node-status) when the dot is something else).
+connected (see [node status](../working-in-the-editor.md#node-status) when the dot is something else). The LED
+itself goes dark: nothing drives the pin until a request does — the blink is over; the switch is yours.
 
 ## Find the board
 
@@ -46,13 +49,13 @@ connected (see [node status](../working-in-the-editor.md#node-status) when the d
 
 If `.local` names don't resolve on your network (they don't everywhere), the IP address is the dependable one.
 
-The page answers `LED on` or `LED off`, and the LED changes. The timer keeps its half-second blink from
-[Two more blinks](two-more-blinks.md)! So the network is one more thing that flips the LED; each event
-arrives and is handled on its own, and the `context` toggle from the last tutorial does the remembering.
+The page answers `LED on` or `LED off`, and the LED does what it says. The request is the only event this flow
+gets, and each one is handled on its own: between requests the LED holds its level, remembered in the
+`context` toggle from the last tutorial.
 
-## The two chains
+## The chain, and the reply
 
-One flow, two chains into one pin:
+One chain, two outputs:
 
 ```python
 on = not context.get('on', False)
@@ -63,10 +66,9 @@ reply['payload'] = 'LED ' + ('on' if on else 'off')
 return [msg, reply]
 ```
 
-The `http in → function → gpio out` chain is the timer chain plus a reply: the web chain's function has two
-outputs, and the second one carries `reply` to an [`http response`](../nodes/http-response.md) node, so the
-browser gets an answer. `return [msg, reply]` is the [function node's](../nodes/function.md) output-1/output-2
-routing, Node-RED style.
+The chain is `http in → function → gpio out`. The web chain's function has two outputs, and the second one
+carries `reply` to an [`http response`](../nodes/http-response.md) node, so the browser gets an answer.
+`return [msg, reply]` is the [function node's](../nodes/function.md) output-1/output-2 routing, Node-RED style.
 
 ## One line on the open port
 

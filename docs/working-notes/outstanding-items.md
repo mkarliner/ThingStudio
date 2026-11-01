@@ -371,7 +371,9 @@ ThingStudioMarketing repo, not here.
   speed/invert variations are out as too trivial and the name covers both halves — "Two more blinks", the blink
   again two more ways, each showing a different aspect of Thingstudio. Tutorial 2 ("Blink from your
   network", `docs/user-guide/tutorials/blink-from-your-network.md`, flow `examples/http-blink.flow.json`) drafted
-  in the same session, first pass. D1 R32 hardware check of
+  in the same session, first pass, reworked on Mike's D1 R32 run: the timer chain is out of the flow -- a
+  constantly-blinking LED drowns the request's toggle and the two functions' separate `context`s don't agree; the
+  request is now the only event the flow gets. D1 R32 hardware check of
   tutorial 1's gpio read/blink, 2026-11-01 (onboard LED, GPIO 2), recorded in
   `firmware/classic-esp32/tested.json` under the 14.1.0 image.
 
