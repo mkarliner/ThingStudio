@@ -9,7 +9,6 @@ from where the flow runs: on a microcontroller, not on a server.
 The editor runs on your computer, but the flow runs on the board. Deploy compiles the flow to MicroPython and sends
 it to the board, which then runs on its own. Close the editor, unplug the USB cable, and the flow carries on.
 
-
 ## Function nodes are Python
 
 Function nodes run MicroPython, not JavaScript. A message is a Python dict, so write `msg['payload']`, not
@@ -30,14 +29,19 @@ instead. See [event-driven programming](../background/event-driven.md).
 
 ## Messages
 
-Every message needs a `topic`, even an empty one (`''`). Ports also have types, such as `int`, `bool` and `string`, and
+A message carries a `payload` and usually a `topic`; the built-in nodes that start a flow set `topic` to an empty
+string. Ports also have types, such as `int`, `bool` and `string`, and
 the editor refuses a wire between types that don't fit. See [Editor in depth](../working-in-the-editor.md#wiring).
 
 ## Nodes
 
 The palette is smaller, and made for hardware. `timer`, `interrupt`, `gpio out`, `pwm out` and the sensor and
-display nodes work with the board directly. `inject`, `debug`, `function`, `delay`, `mqtt`, `http` and `udp` will
-look familiar. 
+display nodes work with the board directly. `inject`, `debug`, `function` and `delay` will look familiar, and so will
+the network nodes: `mqtt publish`, `mqtt subscribe`, `http request`, `http in`, `http response`, `udp send` and
+`udp receive`.
+
+A flow has one MQTT broker and one WiFi network, set on any MQTT or WiFi node and shared by all of them. Node-RED's
+broker per node doesn't carry over. See [Config nodes](../working-in-the-editor.md#config-nodes).
 
 You add node types by writing a JSON file and a Python file. See
 [writing custom nodes](../custom-nodes.md).

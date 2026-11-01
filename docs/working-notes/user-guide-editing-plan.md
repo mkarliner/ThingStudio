@@ -75,6 +75,17 @@ Gap 1 (MQTT-unreachable troubleshooting entry, linked from both MQTT node pages)
 known finding 4 on `coming-from/node-red.md`; the Unmanaged-MQTT line on `wifi-provisioning.md`. This phase holds
 the most judgment: apply second-pass point 2 (one attributing clause per refusal) while stripping the rest of C2.
 
+Phase 2 done, 2026-11-01. Notes for later phases:
+
+- The memory home is two places on purpose: `debugging.md` "Memory" says what the `[memory]` line shows and which
+  figure matters; "MemoryError or a library that won't load" keeps the recovery steps, because the editor links to
+  that heading (`DEPLOY_MEMORY_DOC`) and a reader arriving from a failed deploy wants the steps. The FAQ's memory
+  answers are one or two sentences linking them.
+- The lint's repeated-sentence rule ignores sentences starting "See " (a cross-reference repeated across FAQ
+  entries tripped it).
+- The MQTT node pages now have a one-line `## Errors` section; phase 5 moves their error text there.
+- The style guide has the one-attributing-clause rule ("A refusal says it is deliberate, once").
+
 ### Phase 3 -- tutorials (review order item 3)
 
 Rewrite `blink-from-your-network.md` with a Build the flow section (facts from the review's item 1, template from

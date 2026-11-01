@@ -903,3 +903,10 @@ The page's "No cap on requests in flight" bullet matches the code (no limiter); 
 
 All five checks resolved; none turned up a conflict that needs Mike. Two new factual errors found along the way
 (`gui.md`'s closing Deploy-errors sentence, `http-in.md`'s body-handling sentence); both are listed above.
+
+### Correction to C6 (b), found in phase 2
+
+C6 says the `[memory]` line shows MicroPython's largest block. It doesn't: `memory-report.ts` prints MicroPython's
+total free, and the ESP-IDF heap's free and largest block (ESP32 only). MicroPython's largest block appears only in
+a failed deploy's own figures. `debugging.md` "Memory" describes the line as printed.
+

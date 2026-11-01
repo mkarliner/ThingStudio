@@ -1,7 +1,5 @@
 # Debugging & troubleshooting
 
-What the console and compiled source show, and what to do when a board or deploy fails.
-
 ## Console and compiled source
 
 The **console** shows what the board and Thingstudio report: deploy results, node errors, and what `debug` nodes
@@ -22,10 +20,31 @@ you built it from uncommitted changes. Include the versions when you report a pr
 
 ### Memory
 
-With **Show** set to **Info**, a `[memory]` line after each connect and deploy shows the board's free RAM. On an
-ESP32 it also shows the ESP-IDF heap and its largest free block. WiFi, MQTT and TLS use the ESP-IDF heap, not
-MicroPython's. If WiFi won't join while MicroPython has plenty free, a low ESP-IDF figure is the likely cause. The
-[FAQ](faq.md) explains where an ESP32's memory goes.
+With **Show** set to **Info**, the console prints a `[memory]` line after each connect and deploy. On an ESP32 it
+looks like this:
+
+```text
+[memory] MicroPython 118 KB free · ESP-IDF heap 64 KB free, largest block 31 KB
+```
+
+- **MicroPython … free** is the memory your flow and its libraries run in. It is the total free, not the largest
+  piece.
+- **ESP-IDF heap … free** is the memory the chip's own software uses, including WiFi, MQTT and TLS. **largest
+  block** is the biggest single piece of it. Only ESP32 boards report this part.
+
+Which figure matters depends on the failure:
+
+- A deploy or a library failing with `MemoryError` is about MicroPython's memory. The total can look healthy while
+  no single piece is big enough. See
+  [MemoryError or a library that won't load](#memoryerror-or-a-library-that-wont-load).
+- WiFi failing to start on an ESP32 is about the ESP-IDF heap. Below about 30 KB WiFi may not start, and the console
+  warns before a deploy when less is free. **Tools → Reset board (hard)** returns that memory; a soft restart
+  doesn't. See [Restarting the board](#restarting-the-board).
+
+A real memory failure says `MemoryError`, `memory allocation failed` or names memory. A network error with a low
+figure beside it is still a network error: if the board has joined WiFi and the console says it can't reach a
+broker or host, memory isn't the cause. For an MQTT broker, see [MQTT broker unreachable](#mqtt-broker-unreachable).
+The [FAQ](faq.md) explains where an ESP32's memory goes.
 
 ## Commands and the Python prompt
 
@@ -118,6 +137,21 @@ A flash that finishes but leaves the board silent usually means it is waiting fo
 stock MicroPython build has no runtime at all, and the Thingstudio custom image carries one but not the boot script that
 starts it.
 
+## A full runtime on a custom-image board
+
+On the Thingstudio custom image, **Tools → Install runtime…** writes only the boot script, `main.py`; the runtime
+is already in the firmware. A full copy of the runtime on the board's filesystem can only come from flashing the
+image without **Erase all flash first** over an older install that had one.
+
+To see what is on the filesystem, type this in the command box:
+
+```python
+import os; print(os.listdir('/'))
+```
+
+A board with only the boot script lists `main.py` among a few small files. A full runtime adds a long list of its
+own files. Flash the image again with **Erase all flash first** ticked, then install the runtime.
+
 ## Deploy is grayed out
 
 **Compile → Deploy** is grayed out when:
@@ -145,9 +179,9 @@ Thingstudio's own libraries, such as the MQTT client and display drivers, are se
 
 ## MemoryError or a library that won't load
 
-A board can be short of memory while its `[memory]` line still shows free RAM. The free RAM is in pieces, and a
-flow or a library needs one piece big enough to fit. This is common on boards with little RAM, most of all on an
-ESP32 without PSRAM once a display flow has run.
+The `[memory]` line can show free RAM while a deploy still fails with `MemoryError`: the free RAM is in pieces, and
+a flow or a library needs one piece big enough to fit. This is common on ESP32 boards without PSRAM once a display
+flow has run.
 
 When a deploy fails this way, work through these in order:
 
@@ -155,28 +189,23 @@ When a deploy fails this way, work through these in order:
 2. **Power cycle the board** — unplug its USB cable and plug it back in, or **Tools → Reset board (hard)**.
 3. Deploy again.
 
-Removing the flow alone does not help: the running flow keeps its memory until the chip restarts. A soft restart
-does not help either — it restarts the interpreter over the same heap regions and gives no chip memory back. Only a
-power cycle gives the board a clean heap, which is why it is the step above.
+Removing the flow alone doesn't help: the running flow keeps its memory until the chip restarts. A soft restart
+doesn't either: it restarts the interpreter over the same heap regions and returns no chip memory. Only a power
+cycle gives the board a clean heap.
 
-**If it still fails after the power cycle, the flow may be too big for this board.** That is a limit of the board,
-not a fault in the flow. Three things can still work:
+If it still fails after the power cycle, the flow may be too big for this board. Then do one of these:
 
-- **Make the flow smaller.** Fewer pages in the GUI, fewer libraries imported, a smaller frame. The gui screen node
+- **Make the flow smaller.** Use fewer GUI pages, import fewer libraries, pick a smaller frame. The gui screen node
   sends a frame in strips for this reason; a `function` node that builds a whole frame at once still needs one big
   block.
-- **Use a board with more memory.** Boards with PSRAM have room for flows a board without it cannot start.
+- **Use a board with more memory.** A board with PSRAM can start flows that a board without it cannot.
 - **Run a firmware image with the libraries built in.** On a classic ESP32 there is a ready-made one:
-  [Custom firmware for classic ESP32](custom-firmware.md). On other boards the same technique works — freeze the
-  runtime and the flow libraries into MicroPython — if you build your own.
+  [Custom firmware for classic ESP32](custom-firmware.md). On other boards, build your own by freezing the runtime
+  and the flow libraries into MicroPython.
 
-If none of those is possible, the flow does not fit that board. Nothing in the editor can make room that the board
-does not have.
-
-Deploy does not try to fix this for you: it reports the failure and stops, because freeing or restarting on your
-behalf would leave the board in a state you didn't choose. When the board looks short of memory before a deploy
-starts, the console says so in one line (`only 19 KB free on the board, this flow is 10 KB -- it may not fit`) and
-deploys anyway. That figure is total free memory, not the largest free block, so it is a hint rather than a verdict.
+Deploy stops here on purpose; freeing or restarting is yours to invoke. When the board looks short of memory before
+a deploy starts, the console says so in one line (`only 19 KB free on the board, this flow is 10 KB -- it may not
+fit`) and deploys anyway. The figure is total free memory, not the largest block, so it is a hint, not a verdict.
 
 ## WiFi Internal State Error on deploy
 
@@ -184,11 +213,41 @@ On an ESP32, deploying a flow with MQTT nodes can fail with "Wifi Internal State
 reconnecting to the network the previous flow used, and refuses a new connection until that finishes. The MQTT nodes
 retry up to three times. If it still fails, deploy again.
 
+## MQTT broker unreachable
+
+An `mqtt publish` or `mqtt subscribe` node shows a red dot, and the console says:
+
+```text
+mqtt connect to HOST:1883 failed after 3 attempts (… 'Timeout on socket write' …, wifi status 1010)
+```
+
+The board has joined WiFi (`wifi status 1010` means it has an address) but can't reach the broker from its network.
+The cause is the network between the board and the broker, not the board's memory.
+
+Check, in order:
+
+- The host and port in the flow's MQTT broker. The board connects to exactly what the flow says.
+- That the board's network can reach the broker. Your computer reaching it proves nothing: a laptop can reach a home
+  broker over a VPN the board isn't on, and a board on a phone hotspot isn't on the home network.
+- That the network lets port 1883 through. Some mobile networks block it.
+- That the broker listens beyond localhost. Mosquitto 2 listens on localhost only, unless its configuration has
+  `listener 1883` and either `allow_anonymous true` or a password file.
+
+Then do one of these:
+
+- Put the board on the broker's network.
+- Use the public test broker `test.mosquitto.org`, port 1883. It is public: anyone can read what you publish, so
+  use a topic nobody else will, such as one with a random number in it (`thingstudio/4821937/temperature`). A broker
+  on your own network is better if you have one.
+- Relay through a computer the board can reach. With Remote Login on, run
+  `ssh -g -N -L 0.0.0.0:1883:BROKER:1883 localhost` on that computer, and set the flow's broker to that computer's
+  address.
+
 ## Deploy resends a piece, or fails part-way
 
 Deploy sends the flow, and each library it uses, in pieces, and waits for the board to confirm each one. Over a
 USB-serial chip such as the CYD's, a piece can arrive damaged or its confirmation can get lost. The console then
-shows `resending (1/2)`, and Deploy carries on. That is normal now and then.
+shows `resending (1/2)`, and Deploy carries on.
 
 If a piece still fails after three tries, Deploy stops and says so, and the flow on the board is unchanged. Deploy
 again. If it keeps happening, try another USB cable or port, close anything else using the serial port, or connect
@@ -243,7 +302,7 @@ Check these, in order:
 - The state is sent in a form the toggle matches. A toggle set to `true` and `false` ignores `ON` and `OFF`: set its
   **value type** to text.
 
-## Native code (Tools → Native code)
+## Deploy fails with an architecture or native-module error
 
 The `gs4`, `gs2` and `mono` frame formats of [display spi](nodes/display-spi.md) compile part of their code to
 native machine code, which needs the right architecture for the board's chip.
@@ -255,22 +314,20 @@ the list and deploy again.
 ## Restarting the board
 
 A board can run short of memory after several deploys, or after a flow that uses a lot of it, such as a display.
-The console suggests a restart when a deploy fails with `MemoryError`, the board restarts while starting a flow, or
-an ESP32 has too little memory left for WiFi.
+The console suggests a restart when a deploy fails with `MemoryError`, when the board restarts while starting a flow,
+or when an ESP32 has too little memory left for WiFi.
 
 The Tools menu has two restarts:
 
-- **Tools → Restart board (soft)** restarts MicroPython. The saved flow starts again with a clean interpreter: the
-  flow's own objects are gone, but the heap regions are the same ones and memory MicroPython took from the chip is
-  not returned. USB stays connected.
+- **Tools → Restart board (soft)** restarts MicroPython. The saved flow starts again with a clean interpreter and the
+  flow's own objects are gone; the heap stays as it was. USB stays connected.
 - **Tools → Reset board (hard)** resets the whole chip, like its reset button, and frees all memory. A board with
   native USB (Pico, ESP32-S2, S3 and C3) disconnects; click **Connect** when it's back.
 
-A soft restart is enough to clear a flow's own leftovers, such as a big buffer a faulty node left behind. It is not
-enough for a board that cannot fit a *deploy*: nothing short of a full power cycle gives the memory back in one
-piece, so that case is Remove flow…, power cycle, deploy (above). When an ESP32 is short of memory for WiFi, only
-the hard reset helps either. The console says which to use. Deploy is off until the board is back, which can take
-several seconds.
+A soft restart clears a flow's own leftovers, such as a big buffer a faulty node left behind. A deploy that doesn't
+fit needs the steps under [MemoryError or a library that won't load](#memoryerror-or-a-library-that-wont-load), and
+an ESP32 short of memory for WiFi needs the hard reset. The console says which. Deploy is off until the board is
+back, which can take several seconds.
 
 ## Board stuck restarting
 

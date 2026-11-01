@@ -8,6 +8,9 @@ for a board you hand to someone else, or one that goes on a network you don't ha
 In the flow's WiFi config, set **security** to **Unmanaged** and leave the **credential** blank. See
 [Config nodes](working-in-the-editor.md#config-nodes). Deploy as usual.
 
+A flow with MQTT nodes can't use **Unmanaged**: an MQTT node connects to the network itself, so the network's name
+and password must be in the flow.
+
 ## Entering the network on the board
 
 When the board starts with no saved network, it opens its own WiFi network, **Thingstudio-Setup-XXXX**, with the

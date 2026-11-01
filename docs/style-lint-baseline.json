@@ -17,34 +17,9 @@
       "snippet": "same way. The palette greys out such a node while"
     },
     {
-      "file": "docs/user-guide/coming-from/node-red.md",
-      "rule": "blank-lines",
-      "snippet": "after: it to the board, which then runs on its own. Close the edito"
-    },
-    {
-      "file": "docs/user-guide/coming-from/node-red.md",
-      "rule": "trailing-whitespace",
-      "snippet": "look familiar."
-    },
-    {
       "file": "docs/user-guide/custom-nodes.md",
       "rule": "uk-spelling",
       "snippet": "on the device — units, a colour scheme — not for"
-    },
-    {
-      "file": "docs/user-guide/faq.md",
-      "rule": "blank-lines",
-      "snippet": "after: ## Why does http request fail with \"MemoryError\" fetching a "
-    },
-    {
-      "file": "docs/user-guide/faq.md",
-      "rule": "plans",
-      "snippet": "modem sleep in `working-notes/outstanding-items.md`."
-    },
-    {
-      "file": "docs/user-guide/faq.md",
-      "rule": "uk-spelling",
-      "snippet": "input sends a value it recognises. It matches the input"
     },
     {
       "file": "docs/user-guide/nodes/display-spi.md",

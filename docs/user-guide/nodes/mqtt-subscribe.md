@@ -34,3 +34,8 @@ or an action without a topic, raises an error too.
 A subscription isn't guaranteed to be fully confirmed before an **mqtt publish** node on the same broker sends its first message. This is usually not an issue, but an early publish can go unheard by a subscriber that was still connecting.
 
 Shows a connection-status dot on the canvas (see [Editor in depth](../working-in-the-editor.md#node-status)) once connected to a device, same as **mqtt publish**.
+
+## Errors
+
+A red dot, with a console line starting `mqtt connect to` and ending `failed after 3 attempts`, means the board can't
+reach the broker. See [MQTT broker unreachable](../debugging.md#mqtt-broker-unreachable).

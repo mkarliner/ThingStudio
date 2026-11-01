@@ -97,7 +97,8 @@ running it: it erases the filesystem partition, and its port name comes from `PO
 
 Connect in the editor as usual. Two things confirm the image is running:
 
-- the console's version line reports the runtime version the image was built with (14.1.0 for the current image)
+- the console's version line reports the image's runtime version, as listed under **Version** in the Install
+  firmware dialog
 - `[libraries] … already on the board: …` names every library the flow imports
 
 Then deploy the flow. A GUI flow that failed with `MemoryError` on stock MicroPython should run.
@@ -117,14 +118,8 @@ Read the third row before leaning on deploys: each deploy over a running flow le
 the chip's own heap shrinks as MicroPython takes from it. A GUI flow still starts (a 9.5 KB flow needs far less than
 the 27 KB block), but WiFi draws from that shrinking chip heap, and the console warns when it is low.
 
-Two habits avoid the limits that remain:
-
-- Keep frames small. The gui screen node sends a frame in strips for exactly this reason; a `function` node that
-  builds a whole frame as one buffer still needs that buffer to be contiguous.
-- When a deploy fails with `MemoryError`, the console says how much memory the board had. If the board cannot make
-  room, [remove the flow and power cycle](debugging.md#memoryerror-or-a-library-that-wont-load) before deploying
-  again. A soft restart does not help: it reuses the same heap. A power cycle also returns the chip heap that
-  repeated deploys take.
+Keeping frames small and recovering from a `MemoryError` are covered in [Memory](debugging.md#memory) and
+[MemoryError or a library that won't load](debugging.md#memoryerror-or-a-library-that-wont-load).
 
 ## Back to stock MicroPython
 

@@ -19,7 +19,8 @@ Rules (rule id: what it flags; each maps to a finding in reviews/2026-11-01-user
     plans                working-notes paths, "coming soon", "next to be written", "more are coming",
                          "work in progress" (C4)
     duplicate-term       the same leading **term** twice in one Properties section (C5.5)
-    repeated-sentence    a sentence of eight or more words that appears twice in one file (C2)
+    repeated-sentence    a sentence of eight or more words that appears twice in one file (C2); a "See …"
+                         cross-reference doesn't count
     trailing-whitespace  trailing spaces or tabs
     blank-lines          more than one consecutive blank line
 
@@ -246,7 +247,8 @@ def sentences(text: str) -> list[tuple[int, str]]:
 def check_repeated_sentences(rel: str, text: str) -> list[Violation]:
     seen: dict[str, list[int]] = {}
     for no, s in sentences(text):
-        if len(s.split()) >= MIN_REPEAT_WORDS:
+        # A "See [Page](link)." pointer is a cross-reference, and repeating one is how pages link a shared home.
+        if len(s.split()) >= MIN_REPEAT_WORDS and not s.startswith("see "):
             seen.setdefault(s, []).append(no)
     found = []
     for s, nos in seen.items():

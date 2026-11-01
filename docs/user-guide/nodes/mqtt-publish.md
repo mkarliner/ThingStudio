@@ -18,3 +18,8 @@ Shows a connection-status dot on the canvas (see [Editor in depth](../working-in
 connected to a device. It reports its own broker connection state, even when it shares that broker with an
 `mqtt subscribe` node. The node opens its broker connection only when there's actually something to publish, so the
 dot stays blank until the first message reaches it, even if the flow has been running a while.
+
+## Errors
+
+A red dot, with a console line starting `mqtt connect to` and ending `failed after 3 attempts`, means the board can't
+reach the broker. See [MQTT broker unreachable](../debugging.md#mqtt-broker-unreachable).

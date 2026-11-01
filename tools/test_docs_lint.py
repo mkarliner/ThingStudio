@@ -101,6 +101,10 @@ class RepeatedSentenceTests(unittest.TestCase):
         self.assertEqual(rules(f"```\n{self.S}\n{self.S}\n```\n", "repeated-sentence"), [])
         self.assertEqual(rules(f"| {self.S} |\n| {self.S} |\n", "repeated-sentence"), [])
 
+    def test_a_repeated_see_pointer_is_not_a_repeat(self):
+        text = "A.\n\nSee [MemoryError or a library that won't load](d.md#m).\n\nB.\n\nSee [MemoryError or a library that won't load](d.md#m).\n"
+        self.assertEqual(rules(text, "repeated-sentence"), [])
+
     def test_different_code_in_the_same_sentence_is_not_a_repeat(self):
         text = "Set the `pin` property to the board's LED pin.\n\nSet the `rate` property to the board's LED pin.\n"
         self.assertEqual(rules(text, "repeated-sentence"), [])

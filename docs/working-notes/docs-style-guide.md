@@ -23,6 +23,16 @@ being personal puts people off. "You" is fine for instructions. A tutorial's tit
 - Good: "Reports on any board, listed or not, are welcome."
 - Bad: "Other MicroPython boards should work too, but we can't test everything."
 
+## A refusal says it is deliberate, once
+
+When Deploy or the editor stops on purpose (a deploy that won't fit, a WiFi config a node won't accept), the
+troubleshooting page says so in one short clause, so the stop doesn't read as a bug. Nothing more: no history and no
+defence of the design. Happy-path and reference pages leave the clause out. (Mike, 2026-11-01.)
+
+- Good: "Deploy stops here on purpose; freeing or restarting is yours to invoke."
+- Bad: "Deploy does not try to fix this for you: it reports the failure and stops, because freeing or restarting on
+  your behalf would leave the board in a state you didn't choose."
+
 ## Say what's true now
 
 Describe the current state only. No "v1", "preview", "not yet", "coming", decision dates or project history. Don't

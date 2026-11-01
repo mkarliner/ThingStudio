@@ -25,51 +25,20 @@ and uses its RAM. So a 264 KB Pico W leaves more for your flow than a 400 KB ESP
 
 ## Deploy failed with "MemoryError ... allocating 38400 bytes". Why, when there's more free memory than that?
 
-Free memory is in pieces. A big buffer needs one piece that size, and after a while an ESP32 may not have
-one. A 240x320 frame in 16 grays is 38,400 bytes. The [GUI nodes](nodes/gui.md) avoid this by drawing the
-screen in strips. If your own `function` node builds a full frame, draw it in strips too, or restart
-the board before deploying.
-
-## Why doesn't Deploy clear the old flow or retry when the board runs out of memory?
-
-Because a repair nobody asked for hides the limit. The editor used to stop the running flow and retry when a
-deploy didn't fit; the retry then failed a step later, and the board was left stopped without anyone deciding
-that. Now a deploy that doesn't fit fails once, with the board's free-memory figure, and the console says what
-to do. The steps are yours to take: **Tools → Remove flow…**, **power cycle the board** (unplug and replug the
-USB cable, or **Tools → Reset board (hard)**), then deploy. See
-[MemoryError or a library that won't load](debugging.md#memoryerror-or-a-library-that-wont-load).
+Free memory is in pieces, and a big buffer needs one piece that size. A 240x320 frame in 16 grays is 38,400 bytes.
+The [GUI nodes](nodes/gui.md) draw in strips to avoid this; a `function` node that builds a full frame should too.
+See [MemoryError or a library that won't load](debugging.md#memoryerror-or-a-library-that-wont-load).
 
 ## Why isn't a soft restart enough after "too full to receive the flow"?
 
-Because a soft restart reuses the same heap. It restarts the interpreter, so the flow's own objects go away, but
-the heap regions MicroPython took as it grew stay where they were, and memory taken from the chip is not given
-back. A board that couldn't find one big block before the soft restart still can't after it. Only cutting power
-to the chip rebuilds the heap from scratch — hence the power cycle in the recipe above.
+A soft restart reuses the same heap; only a power cycle rebuilds it. See [MemoryError or a library that won't load](debugging.md#memoryerror-or-a-library-that-wont-load).
 
 ## Deploy failed a second time. Is the flow too big for my board?
 
-Possibly, yes. Work through this in order:
-
-1. **Tools → Remove flow…**, then **power cycle the board** (unplug and replug the USB cable, or
-   **Tools → Reset board (hard)**), then deploy.
-2. If it still fails, the flow may be too big for the board. Make it smaller (fewer GUI pages, fewer libraries, a
-   smaller frame), use a board with more memory, or — on a classic ESP32 — run the
-   [custom firmware](custom-firmware.md), which keeps the runtime and the libraries in the firmware.
-
-Boards with little RAM have a point where a flow simply does not fit. Nothing in the editor can make room the
-board does not have. The console shows how much memory the board had when it failed; see
-[MemoryError or a library that won't load](debugging.md#memoryerror-or-a-library-that-wont-load).
-
-## Why is Deploy sending the flow in pieces?
-
-Some boards (classic ESP32 with no PSRAM) can't take a whole flow in one message once a display flow has run:
-the memory is free but in pieces too small for one message. Deploy sends the flow in 5 KB pieces instead, each
-confirmed before the next. Larger pieces keep a deploy quick; a board that can't take 5 KB has a memory problem
-worth seeing rather than one to work around.
+Possibly. If a deploy still fails after **Tools → Remove flow…** and a power cycle, the flow may be too big for the
+board. See [MemoryError or a library that won't load](debugging.md#memoryerror-or-a-library-that-wont-load) for what to do.
 
 ## Why does http request fail with "MemoryError" fetching a page?
-
-
 
 The node reads the whole response body into memory at once. A page larger than the largest free block fails, even
 when the console shows more free memory than the page size. A 56 KB page on an ESP32-C3 failed with
@@ -90,10 +59,10 @@ only at lower color depths and with little to spare.
 
 ## My WiFi flow worked before, but now the board crashes or won't join. Why?
 
-On an ESP32, MicroPython's heap grows by taking memory from ESP-IDF when a flow needs more, and keeps it until the
-chip is reset. After a flow that uses a lot of memory, such as a display, WiFi may not have enough left to start.
-The console warns you before you deploy. Use **Tools → Reset board (hard)**: a soft restart doesn't give that
-memory back. See [Restarting the board](debugging.md#restarting-the-board).
+On an ESP32, MicroPython's heap grows by taking memory from ESP-IDF, and keeps it until the chip is reset. After a
+flow that uses a lot of memory, such as a display, WiFi may have too little left to start. Use
+**Tools → Reset board (hard)**: a soft restart doesn't give that memory back. See [Memory](debugging.md#memory) and
+[Restarting the board](debugging.md#restarting-the-board).
 
 ## Why does opening a flow ask "Save changes to …?" even though I changed nothing?
 
@@ -112,7 +81,7 @@ Connect and deploy again.
 
 ## How do I tell which version of the editor I'm running?
 
-It's next to **Thingstudio** in the toolbar, and in **Help → About**. A `+` after it means you built the editor
+It's next to **Thingstudio** in the toolbar, and in **Help → About Thingstudio**. A `+` after it means you built the editor
 from uncommitted changes.
 
 ## My clock shows `--` and never the time. Why?
@@ -122,7 +91,7 @@ board can't reach the server. It tries again every 30 seconds. See [ntp](nodes/n
 
 ## My gui toggle shows `--`. Why?
 
-A toggle with its input wired shows `--` until the input sends a value it recognises. It matches the input against
+A toggle with its input wired shows `--` until the input sends a value it recognizes. It matches the input against
 its *on sends* and *off sends* values, `true` and `false` unless you changed them. A Tasmota plug reports `ON` and
 `OFF` as text: set the toggle's value type to text. See [a toggle that follows the real device](nodes/gui.md#a-toggle-that-follows-the-real-device).
 
@@ -151,12 +120,10 @@ every MQTT node in a flow shares that one setting. See [Config nodes](working-in
 
 ## Why do http in requests take a second to answer?
 
-The flow answers immediately — the wait is the board's WiFi waking up. An idle board's radio sleeps
-(modem-sleep); a new request pays the wake and the connection set-up before anything the flow does. Measured on a
-classic ESP32 (Wemos D1 R32) toggling an LED, through a VPN tunnel: 0.16–1.2 s per request, with the wake part of
-it; a volley of requests answered in 0.15–0.20 s each once the radio was warm. If the board has steady network
-traffic — a flow that talks, or sits connected — the wake cost goes away on its own. See the deferred note on
-modem sleep in `working-notes/outstanding-items.md`.
+The flow answers immediately; the wait is the board's WiFi waking up. An idle board's radio sleeps (modem-sleep), and
+a new request pays the wake and the connection set-up before anything the flow does. On a classic ESP32 behind a VPN
+tunnel, requests took up to 1.2 s with the radio asleep and 0.15–0.20 s once it was warm. If the board has steady
+network traffic, a flow that talks or sits connected, the wake cost goes away on its own.
 
 ## Why is Compile → Deploy grayed out after a deploy?
 
