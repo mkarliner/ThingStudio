@@ -105,3 +105,21 @@ installing `mkdocs`/`mkdocs-material` and running a real build to confirm the si
   with ESP32 memory, display-plus-WiFi board choice, the hard reset for WiFi memory, runtime reinstalls and the
   editor version. Standing rule in `CLAUDE.md` ("Watch for troubleshooting and FAQ entries"): sessions add
   entries to the FAQ or `debugging.md` as they find things users would hit.
+
+## 2026-11-01: user-guide review follow-ups (lint gate, gui modal, refusal clauses)
+
+Three decisions on the back of `reviews/2026-11-01-user-guide.md`'s second-pass section; execution plan in
+`docs/working-notes/user-guide-editing-plan.md`.
+
+- **Docs style lint (Mike, approved):** the checkable subset of the style guide is enforced mechanically --
+  `tools/docs_lint.py` (stdlib only) with a checked-in shrinking baseline and a `docs-lint` job in `ci.yml`.
+  AGENTS.md gains a project rule in the same change as the lint: run it before committing docs changes; new lint
+  rules land only with the fixes that make them pass. Reason: the page-opening rule had already regressed once
+  between review passes.
+- **`gui modal` in the user guide (Mike):** not deleted -- commented out for future inclusion (HTML comment in
+  `gui.md`), so the text survives for when modal layout lands in the editor. `gui navigator` stays simply removed
+  per remark 6 (it is `hidden: true`; nothing to comment back in).
+- **Refusal clauses (Mike):** the style guide's voice rule is refined -- on `debugging.md` and `faq.md`, a refusal
+  keeps one short clause saying the behavior is deliberate ("Deploy stops here on purpose"); the rest of the
+  defence is cut. Happy-path pages lose justifications entirely, as the review's C2 says. The style guide gets
+  the refinement in the same change as the debugging/FAQ edits (phase 2 of the plan).

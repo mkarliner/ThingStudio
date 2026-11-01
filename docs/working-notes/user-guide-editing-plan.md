@@ -32,7 +32,7 @@ the checkable subset of the style guide gets the same treatment.
   convention applied to the lint, so it is always green on main.
 - **Deliberately not checked:** voice, chattiness, repetition of ideas, word counts. Judgment stays with editing
   sessions and future reviews.
-- Needs Mike's OK: the AGENTS.md line pointing docs sessions at the lint, and the ci.yml job.
+- Approved by Mike, 2026-11-01: the AGENTS.md line and the ci.yml job land with the lint in phase 0.
 
 ## Phases
 
@@ -73,9 +73,9 @@ Rewrite `blink-from-your-network.md` with a Build the flow section (facts from t
 
 ### Phase 4 -- contradictions (review order item 4)
 
-`node-conventions.md` vs `custom-nodes.md` (C5.1); `gui.md` -- merge `gui-layout.md` (remark 7), drop
-`gui navigator` and the modal flow-file section (remark 6, Mike to confirm modal's one-line mention), one layout
-model from phase 0's facts; `display-spi.md`'s double palette entry.
+`node-conventions.md` vs `custom-nodes.md` (C5.1); `gui.md` -- merge `gui-layout.md` (remark 7), remove
+`gui navigator` (remark 6), comment out the modal flow-file section for future inclusion (Mike, 2026-11-01), one
+layout model from phase 0's facts; `display-spi.md`'s double palette entry.
 
 ### Phase 5 -- node pages to layout and voice (review order item 5)
 
@@ -106,10 +106,14 @@ Available providers checked 2026-11-01 (`opencode-go`, `opencode`).
   model pays; it is not trusted with phases 1-4.
 - **Phase 0's lint:** written and tested by the strong model in-session; no subagent (it gates everything after).
 
-## Open questions for Mike
+## Decisions (Mike, 2026-11-01)
 
-1. AGENTS.md: add the lint to the project rules ("run `python3 tools/docs_lint.py` before committing docs
-   changes; new lint rules land only with the fixes that make them pass")?
-2. `gui modal`: removed from the docs entirely, or one line saying it isn't laid out in the editor (remark 6)?
-3. The C2 refusal-clause refinement (second pass, point 2) changes how `debugging.md` and `faq.md` get edited --
-   confirm it stands, since it softens a rule as written in the style guide.
+Recorded in `decisions/documentation-process.md`.
+
+1. **Lint in AGENTS.md:** yes -- the project rule lands in the same change as the lint (phase 0): run
+   `python3 tools/docs_lint.py` before committing docs changes; new lint rules land only with the fixes that make
+   them pass.
+2. **`gui modal`:** commented out for future inclusion (HTML comment in `gui.md`), not deleted -- the text
+   survives for when modal layout lands in the editor. `gui navigator` stays simply removed (remark 6).
+3. **C2 refusal clause:** stands. `debugging.md`/`faq.md` keep one short clause per refusal saying the behavior is
+   deliberate; the style guide gets the refinement in the same change as the phase 2 edits.
