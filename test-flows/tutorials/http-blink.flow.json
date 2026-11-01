@@ -1,0 +1,163 @@
+{
+  "formatVersion": 1,
+  "flowName": "http-blink",
+  "nodes": [
+    {
+      "id": "httpbl0wifistat01",
+      "type": "thingstudio/wifi_status",
+      "properties": {
+        "pollMs": 5000,
+        "wifiConfigId": "httpb0wifi0000001"
+      }
+    },
+    {
+      "id": "httpbl0debug00002",
+      "type": "thingstudio/debug",
+      "properties": {}
+    },
+    {
+      "id": "httpbl0timer00003",
+      "type": "thingstudio/timer",
+      "properties": {
+        "intervalMs": 500
+      }
+    },
+    {
+      "id": "httpbl0funct00004",
+      "type": "thingstudio/function",
+      "properties": {
+        "code": "on = not context.get('on', False)\ncontext.set('on', on)\nmsg['payload'] = on\nreturn msg",
+        "outputCount": 1
+      }
+    },
+    {
+      "id": "httpbl0httpin00005",
+      "type": "thingstudio/http_in",
+      "properties": {
+        "port": 9999,
+        "path": "/toggle",
+        "method": "GET",
+        "responseTimeoutMs": 10000,
+        "wifiConfigId": "httpb0wifi0000001"
+      }
+    },
+    {
+      "id": "httpbl0funct00006",
+      "type": "thingstudio/function",
+      "properties": {
+        "code": "on = not context.get('on', False)\ncontext.set('on', on)\nmsg['payload'] = on\nreply = dict(msg)\nreply['payload'] = 'LED ' + ('on' if on else 'off')\nreturn [msg, reply]",
+        "outputCount": 2
+      }
+    },
+    {
+      "id": "httpbl0gpio00007",
+      "type": "thingstudio/gpio_out",
+      "properties": {
+        "pin": 15
+      }
+    },
+    {
+      "id": "httpbl0respon00008",
+      "type": "thingstudio/http_response",
+      "properties": {}
+    }
+  ],
+  "edges": [
+    [
+      "httpbl0wifistat01",
+      0,
+      "httpbl0debug00002",
+      0
+    ],
+    [
+      "httpbl0timer00003",
+      0,
+      "httpbl0funct00004",
+      0
+    ],
+    [
+      "httpbl0httpin00005",
+      0,
+      "httpbl0funct00006",
+      0
+    ],
+    [
+      "httpbl0funct00004",
+      0,
+      "httpbl0gpio00007",
+      0
+    ],
+    [
+      "httpbl0funct00006",
+      0,
+      "httpbl0gpio00007",
+      0
+    ],
+    [
+      "httpbl0funct00006",
+      1,
+      "httpbl0respon00008",
+      0
+    ]
+  ],
+  "layout": {
+    "httpbl0wifistat01": {
+      "pos": [
+        80,
+        80
+      ]
+    },
+    "httpbl0debug00002": {
+      "pos": [
+        300,
+        80
+      ]
+    },
+    "httpbl0timer00003": {
+      "pos": [
+        80,
+        180
+      ]
+    },
+    "httpbl0funct00004": {
+      "pos": [
+        300,
+        180
+      ]
+    },
+    "httpbl0httpin00005": {
+      "pos": [
+        80,
+        250
+      ]
+    },
+    "httpbl0funct00006": {
+      "pos": [
+        300,
+        250
+      ]
+    },
+    "httpbl0gpio00007": {
+      "pos": [
+        520,
+        215
+      ]
+    },
+    "httpbl0respon00008": {
+      "pos": [
+        520,
+        285
+      ]
+    }
+  },
+  "configs": [
+    {
+      "id": "httpb0wifi0000001",
+      "type": "thingstudio/config/wifi",
+      "properties": {
+        "credentialName": "tutorial wifi",
+        "security": "password"
+      }
+    }
+  ]
+}

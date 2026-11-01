@@ -36,8 +36,23 @@ when the flow runs, as a `[NODE_ERROR]` in the console. See [Reading a node erro
 
 ## Keep the state in the node
 
-The pin was one place for the state. Replace the function's code with this and the state moves into the function
-node itself, in `context`:
+!!! note "An important point to understand"
+
+    A flow is stateless: each event is handled on its own, without regard to what came before. In general this is
+    a good thing:
+
+    - An error shows up with the message that caused it, not in some state built over earlier operations.
+    - Recovery is doing nothing: the next message starts clean. A crashed stateful component needs its data
+      restored to an acceptable earlier version, with nothing to say which that is.
+
+    When a flow does need to remember, Thingstudio's answer is a **context** — state held between messages, either
+    private to one node (`context`) or shared across the whole flow (`flow`). This blink's LED level belongs to one
+    function node, so its private store is the one to use. All three stores, `context` and `flow` among them, are
+    in [Context, flow and settings](../nodes/function.md#context-flow-and-settings); `settings` even survives a
+    reboot.
+
+The pin was one place for the state — the board holds it, and the messages only read it. The other is inside the
+function node itself:
 
 ```python
 on = not context.get('on', False)
@@ -48,8 +63,7 @@ return msg
 
 Deploy again: the same blink. Nothing outside the node holds the state now. `context.get('on', False)` reads this
 function node's own memory; `context.set('on', on)` writes it; the `False` is what `.get` answers when nothing is
-stored yet, which is why the first message turns the LED on. A `function` node keeps nothing between messages on
-its own — `context` is the part of it that does.
+stored yet, which is why the first message turns the LED on.
 
 For state kept without code, the [change](../nodes/change.md) node stores a flow variable, the same store a
 `function`'s `flow.get()`/`flow.set()` reads. Making it the opposite of its old value needs the old value read, and
@@ -57,7 +71,8 @@ For state kept without code, the [change](../nodes/change.md) node stores a flow
 
 ## Next, pick:
 
-- [Tutorials](index.md) — what comes next: the same LED, driven by an `http in` node from anywhere on your WiFi.
+- [Blink from your network](blink-from-your-network.md) — the next tutorial: the same LED, driven by an `http in`
+  node from anywhere on your WiFi.
 - [A sensor display](../sensor-display.md) — the next job: read a sensor and show it on a screen.
 - [gpio out](../nodes/gpio-out.md) — what else the node that drives the LED can do.
 - [function](../nodes/function.md) — `context`, `flow` and `settings`, and several outputs from one function node.

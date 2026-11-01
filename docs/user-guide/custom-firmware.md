@@ -35,7 +35,7 @@ Two things follow from that, and both matter on a board with this little RAM:
   yet. Judge a flow by a deploy over another flow, not by the first one.
 
 The image carries no board-specific settings. Pins and the display come from the [board definition](boards.md), so
-one image serves any classic ESP32 board. It is tested on the CYD.
+one image serves any classic ESP32 board. It is tested on the CYD and, with a plain GPIO flow, on the Wemos D1 R32.
 
 ## What you need
 

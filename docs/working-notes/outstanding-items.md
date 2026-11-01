@@ -364,8 +364,11 @@ ThingStudioMarketing repo, not here.
   FAQ entry ride the same work.
   Progress: tutorial 1 ("Read and set a pin", `docs/user-guide/tutorials/read-and-set-a-pin.md`, gpio read/set +
   `context`, flow `test-flows/read-and-set-a-pin.flow.json`) drafted 2026-10-31, reshaped on Mike's review: the
-  speed/invert variations are out as too trivial, "ladder" stays briefing-only. Tutorial 2 = networking + `http in`,
-  next.
+  speed/invert variations are out as too trivial, "ladder" stays briefing-only. Tutorial 2 ("Blink from your
+  network", `docs/user-guide/tutorials/blink-from-your-network.md`, flow
+  `test-flows/tutorials/http-blink.flow.json`) drafted in the same session, first pass. D1 R32 hardware check of
+  tutorial 1's gpio read/blink, 2026-11-01 (onboard LED, GPIO 2), recorded in
+  `firmware/classic-esp32/tested.json` under the 14.1.0 image.
 
 - **[BACKLOG]** **"Future" page in the user docs** (Mike, 2026-10-11). One clearly labelled page for planned
   features, inviting feedback, so the rest of the docs describe only the current state. Not scheduled.
