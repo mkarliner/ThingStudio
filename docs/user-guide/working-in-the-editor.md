@@ -1,7 +1,5 @@
 # Editor in depth
 
-How the editor's wiring, node labels, presets, config nodes and node status work.
-
 ## Wiring
 
 Every port has a type: `int`, `number`, `bool`, `string`, `bytes` or `any`. The editor refuses a wire between
@@ -85,8 +83,9 @@ Some nodes show a colored dot and a line of text under the node while the editor
 The dot shows what the board reports, not the editor's guess. It appears once the running flow first reports, and
 clears on every deploy until the new flow reports.
 
-The nodes with a status are `wifi status`, `mqtt publish`, `mqtt subscribe`, `i2c device`, `bme280`, `touch`, and a
-`gui screen` with a touch panel.
+These nodes report a status: `wifi status`, `mqtt publish`, `mqtt subscribe`, `ntp`, `i2c device`, `bme280`, `touch`
+and a `gui screen` with a touch panel. `adc` and `neopixel` report only a failed read or write, as a red dot. A custom
+node reports one if its code does.
 
 ## Notes
 

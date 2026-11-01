@@ -18,7 +18,6 @@ Each [release](https://github.com/mkarliner/ThingStudio/releases/latest) has a p
 `SHA256SUMS` lists each package's checksum. The macOS packages are signed and notarized by Apple. For a version
 other than the latest, open that release from the [releases page](https://github.com/mkarliner/ThingStudio/releases).
 
-
 A package doesn't add a `thingstudio` command; start it from its folder, or by its full path. To upgrade, replace
 the folder with a newer one. To remove it, delete the folder. On Linux, add your account to the `dialout` group
 (`uucp` on Arch) yourself to use USB boards.
@@ -33,34 +32,7 @@ Your settings live in `%USERPROFILE%\.thingstudio`.
 
 To upgrade, run the installer script again.
 
-### Install a specific version
-
-The installer script installs the latest release unless `THINGSTUDIO_VERSION` names another one. Use the release's
-tag, with its `v`, as the [releases page](https://github.com/mkarliner/ThingStudio/releases) lists it, and take the
-script from that release too, so the script matches its packages.
-
-On macOS and Linux:
-
-```sh
-curl -fsSL https://github.com/mkarliner/ThingStudio/releases/download/v0.3.0/install.sh | THINGSTUDIO_VERSION=v0.3.0 sh
-```
-
-On Windows, in PowerShell:
-
-```powershell
-$env:THINGSTUDIO_VERSION = 'v0.3.0'
-irm https://github.com/mkarliner/ThingStudio/releases/download/v0.3.0/install.ps1 | iex
-```
-
-`$env:THINGSTUDIO_VERSION` stays set until you close that PowerShell window.
-
-To read the script before running it, download it from the same link and open it in a text editor.
-
-This works for an older version too. The installer keeps the version it replaces, and removes any older ones.
-Running the installer without `THINGSTUDIO_VERSION` goes back to the latest release.
-
-After changing version, the runtime on your board may not match the editor. If it doesn't, Deploy stops and the
-console says so. **Tools → Install runtime…** installs the matching one.
+### Remove
 
 To remove Thingstudio on macOS and Linux:
 
@@ -74,7 +46,23 @@ On Windows:
 & ([scriptblock]::Create((irm https://github.com/mkarliner/ThingStudio/releases/latest/download/install.ps1))) -Uninstall
 ```
 
-Upgrading and removing never touch `~/.thingstudio`, or your flows, which are saved wherever you chose.
+Upgrading and removing never touch `~/.thingstudio` (`%USERPROFILE%\.thingstudio` on Windows), or your flows, which
+are saved wherever you chose. To start again as a new user, move that folder aside as well: it holds your credentials,
+presets, custom nodes and board definitions.
+
+## Example flows
+
+Every install has an `examples` folder of flows that **File → Open…** can load, such as `blink.flow.json`. Where it
+is depends on how you installed:
+
+| Install | Examples folder |
+| --- | --- |
+| Installer script, macOS and Linux | `~/.local/share/thingstudio/current/examples` |
+| Installer script, Windows | `%LOCALAPPDATA%\Thingstudio\versions\thingstudio-VERSION-windows-x86_64\examples` |
+| Package | `examples`, inside the folder you unpacked |
+| From source | `examples`, in the repository folder |
+
+The Windows path contains the version, so it changes when you upgrade.
 
 ## From source
 

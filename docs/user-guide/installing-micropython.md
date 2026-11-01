@@ -6,47 +6,45 @@ per board.
 A new board usually doesn't have MicroPython. If yours already has it, or you're not sure, go to
 [step 4](connecting.md). If MicroPython is missing, the console says so when you connect, and links back here.
 
-Thingstudio can install it for you, on the chips it can write. Doing it by hand is at the bottom of this page.
+Thingstudio can install it for you, on the chips it can write.
 
 ## Install from Thingstudio
 
 Thingstudio writes the firmware itself: over a serial port for the ESP32 family, and onto a mounted drive for
 RP2040, RP2350 and nRF52 boards.
 
-1. Put the board in its bootloader. Hold **BOOT** and tap **RESET** on an ESP32, or hold **BOOTSEL** while you
-   plug in a Pico.
+For a classic ESP32 with 4 MB of flash and no PSRAM, pick the [Thingstudio custom image](custom-firmware.md) as the
+**Firmware** rather than official MicroPython: the runtime and the flow libraries are frozen into flash, where they
+run without taking the RAM the display stack and the flow need. Its **Version** list holds the published releases.
+After flashing it, **Install runtime** writes only the boot script.
+
+1. Plug the board into USB. A Pico needs **BOOTSEL** held while you plug it in.
 2. Choose **Tools → Install firmware…**.
 3. Pick **Serial port** or **Mounted drive**, then the port or drive from the list. USB ports come first, shown as
-   the path and the adapter's name (for example `/dev/ttyUSB0 -- CH340`). If the board isn't there, put it in
-   download mode (step 1) and click ⟳; the line under the list says how many it found. If it still isn't listed,
-   type the path in the box (on macOS a mounted Pico is `/Volumes/RPI-RP2`).
-4. Pick the **chip family** and the **firmware**, then the **build** and **version**. Only the families the editor
-   can write are listed, and only builds whose hash is pinned, so what you flash is what was tested. A board that
-   names its own build is preselected. The build matters for the heap as much as for compatibility: an ESP32 with
-   extra PSRAM wants the **PSRAM (WROVER)** build, a single-core SOLO the **single-core** one.
-
-   For a classic ESP32 with 4 MB of flash and no PSRAM, use the
-   [Thingstudio custom image](custom-firmware.md) rather than stock MicroPython: the runtime and the flow libraries
-   are frozen into flash, where they run without taking the RAM the display stack and the flow need. Its
-   **Version** list holds the published releases. After flashing it, **Install runtime** writes only the boot
-   script.
+   the path and the adapter's name (for example `/dev/ttyUSB0 -- CH340`). If an ESP32 isn't listed, hold **BOOT**,
+   tap **RESET** and click ⟳; the line under the list says how many it found. If it still isn't listed, type the
+   path in the box (on macOS a mounted Pico is `/Volumes/RPI-RP2`).
+4. Pick the **Chip family**, the **Firmware** (**Official MicroPython (micropython.org)** or **Thingstudio custom
+   image**), the **Build** and the **Version**. A board that names its own build is preselected.
 5. Click **Flash**. **Erase all flash first** is ticked: it clears an old partition table, which is the usual
-   reason a first install "succeeds" and then doesn't boot. The dialog shows each line the tool prints; a failure
+   reason a board doesn't boot after a successful install. The dialog shows each line the tool prints; a failure
    says what to fix.
 
+The **Build** matters for the heap as much as for compatibility: an ESP32 with extra PSRAM wants
+**ESP32 with PSRAM (WROVER / SPIRAM)**, and a single-core SOLO wants **ESP32 single-core (SOLO / UNICORE)**. Only the
+chip families the editor can write are listed, and only builds whose hash is pinned, so what you flash is what was
+tested.
+
 The list covers every build Thingstudio pins, so **Or use your own image file** is only for the rest: a build for a
-board we don't list, or an image you downloaded yourself. Pick the `.bin` or `.uf2`; the chip family you choose
-decides the address, and the file's own header usually decides the family.
+board Thingstudio doesn't list, or an image you downloaded yourself. Pick the `.bin` or `.uf2`; the chip family you
+choose decides the address, and the file's own header usually decides the family.
 
 Flashing erases the flow and all settings on the board. Afterwards, [connect](connecting.md) it
 and [install the runtime](installing-runtime.md).
 
-The rest of this page is the same job without the editor, for a chip it can't write or a build it doesn't pin.
-
 ## Doing it yourself
 
-You don't need any of this for a chip Thingstudio can write with a pinned build — that is the section above. It is
-here for the rest.
+For a chip Thingstudio can't write, or a build it doesn't pin, install MicroPython without the editor.
 
 ### Get the firmware
 

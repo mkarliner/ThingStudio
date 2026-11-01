@@ -29,6 +29,9 @@ Don't leave out the resistor. Without it, the LED draws too much current and can
 3. Drag a **gpio out** onto the canvas. Set **pin** to your LED's GPIO number.
 4. Wire **timer** → **function** → **gpio out**.
 
+This flow is `examples/blink.flow.json`, in the [examples folder](installation-details.md#example-flows). Opened from
+there, it needs only **pin** set to your LED's GPIO number.
+
 ## Deploy
 
 Click **Compile → Deploy**. A successful deploy ends like this in the console:
@@ -54,12 +57,9 @@ and stay on.
 
 The **function** node turns the count into 1, 0, 1, 0 with `% 2`. That gives on, off, on, off.
 
-## Next, pick:
+## Next
 
-Each version the function above could take holds the LED's state somewhere different: in the timer's count, on the
-hardware, or with `context` in the node (see
-[Context, flow and settings](nodes/function.md#context-flow-and-settings)). A flow keeps state only where you put
-it: in a message, on the hardware, or in a node.
+Two tutorials take the flow further:
 
 - [Two more blinks](tutorials/two-more-blinks.md) — the blink again, two more ways: the LED's state on the
   hardware, read and written back in code, or kept in the node with `context`.

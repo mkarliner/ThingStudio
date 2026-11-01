@@ -6,9 +6,8 @@ loads the runtime and the flow into RAM, and the display stack pushes it over â€
 flash instead, which is the difference between a GUI flow starting and failing with
 `MemoryError allocating 13317 bytes`.
 
-Stock MicroPython is the fallback: [install the runtime](installing-runtime.md) onto it as the usual docs route
-describes. The custom image is the recommended one, but a stock build runs flows without the GUI, and it is what
-[Installing MicroPython](installing-micropython.md) sets out.
+On stock MicroPython, flows without a GUI run as usual. [Back to stock MicroPython](#back-to-stock-micropython) says
+how to return to it.
 
 The technique is not specific to this image or to this chip: freezing the runtime and the flow libraries into
 MicroPython works on any board. This image exists because a classic ESP32 is the board where it changes the most,
@@ -17,9 +16,8 @@ example to copy for another board.
 
 ## What it changes
 
-The runtime and the flow libraries are frozen into the firmware, which means MicroPython runs them from flash instead
-of copying them into RAM. On a classic ESP32 that is the difference between a GUI flow starting and failing with
-`MemoryError allocating 13317 bytes`.
+The runtime and the flow libraries are frozen into the firmware, so MicroPython runs them from flash instead of
+copying them into RAM.
 
 Because the libraries are already there, Deploy does not send them. The console says so after connecting:
 
@@ -130,9 +128,8 @@ Two habits avoid the limits that remain:
 
 ## Back to stock MicroPython
 
-Flash a standard MicroPython build for the board, then [install the runtime](installing-runtime.md) again. The stock
-flow of [Installing MicroPython](installing-micropython.md) to [Install the runtime](installing-runtime.md) covers
-both steps. Flashing erases the board's flows and settings, as above.
+[Install MicroPython](installing-micropython.md) with a standard build for the board, then
+[install the runtime](installing-runtime.md) again. Flashing erases the board's flows and settings, as above.
 
 ## Reporting a problem
 

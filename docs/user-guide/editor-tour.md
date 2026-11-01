@@ -1,7 +1,6 @@
 # Step 2: Tour the editor
 
-A tour of the editor, naming each part of the screen. Start Thingstudio if it isn't running: see
-[step 1](getting-started.md#start-thingstudio).
+Start Thingstudio if it isn't running: see [step 1](getting-started.md#start-thingstudio).
 
 <figure markdown="span">
   [![The Thingstudio editor with each part labelled](images/editor-parts.png)](images/editor-parts.png)<figcaption>The parts of the editor. Click to see it full size.</figcaption>

@@ -102,8 +102,8 @@ The raw error stays in the message, in brackets. Include it if you report a prob
 | (no serial ports found), or the board's port is missing | Put the board in download mode — hold **BOOT**, tap **RESET**, release **BOOT** — then click ⟳. |
 | (no mounted drives found), or the drive you want isn't listed | Hold **BOOTSEL** while plugging the board in, then click ⟳. If it's mounted somewhere the list doesn't look, type the path in the box under the list — on macOS a Pico shows up as `/Volumes/RPI-RP2`. |
 | A port named `/dev/ttyS0`, `/dev/ttyS1`… | Those are the computer's own serial ports, not the board. USB ports are listed above them, labelled with their path and the adapter's name (`/dev/ttyUSB0 -- CH340`). |
-| (no build for this chip — choose a file) | The catalogue has no pinned image for that family yet. Pick **Image file** and the `.bin`/`.uf2` from [micropython.org/download](https://micropython.org/download/). |
-| The chip family list is empty, or the catalogue can't be read | This install's `firmware/builds.json` is missing or malformed; the dialog says which line. A reinstall replaces it. |
+| (no build for this chip — choose a file) | The catalog has no pinned image for that chip family. Under **Or use your own image file**, pick the `.bin` or `.uf2` from [micropython.org/download](https://micropython.org/download/). |
+| The chip family list is empty, or the catalog can't be read | This install's `firmware/builds.json` is missing or malformed; the dialog says which line. A reinstall replaces it. |
 | … is not a .uf2, or is a .uf2 sent to a serial port | A mounted drive takes the `.uf2` build, a serial port the `.bin`. Pick the matching file. |
 | choose the chip family, so esptool knows which chip and address to use | A file on its own doesn't say which chip it is for. Pick the family; if the image is the reason, the editor reads it out of the file. |
 | The board doesn't start after flashing | The address or the family was wrong: `0x1000` for an ESP32 or ESP32-S2, `0` for an ESP32-S3, C3, C6 or ESP8266. Flash again with the right family; the board is recoverable. |
@@ -115,7 +115,7 @@ The raw error stays in the message, in brackets. Include it if you report a prob
 vendor image) needs it, or the new image can be written and still not boot.
 
 A flash that finishes but leaves the board silent usually means it is waiting for **Tools → Install runtime…**: a
-stock MicroPython build has no runtime at all, and a Thingstudio image carries one but not the boot script that
+stock MicroPython build has no runtime at all, and the Thingstudio custom image carries one but not the boot script that
 starts it.
 
 ## Deploy is grayed out

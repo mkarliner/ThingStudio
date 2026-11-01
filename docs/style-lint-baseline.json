@@ -32,16 +32,6 @@
       "snippet": "on the device — units, a colour scheme — not for"
     },
     {
-      "file": "docs/user-guide/debugging.md",
-      "rule": "uk-spelling",
-      "snippet": "list is empty, or the catalogue can't be read | This"
-    },
-    {
-      "file": "docs/user-guide/debugging.md",
-      "rule": "uk-spelling",
-      "snippet": "— choose a file) | The catalogue has no pinned image for"
-    },
-    {
       "file": "docs/user-guide/faq.md",
       "rule": "blank-lines",
       "snippet": "after: ## Why does http request fail with \"MemoryError\" fetching a "
@@ -55,11 +45,6 @@
       "file": "docs/user-guide/faq.md",
       "rule": "uk-spelling",
       "snippet": "input sends a value it recognises. It matches the input"
-    },
-    {
-      "file": "docs/user-guide/installation-details.md",
-      "rule": "blank-lines",
-      "snippet": "after: other than the latest, open that release from the [releases "
     },
     {
       "file": "docs/user-guide/nodes/display-spi.md",
