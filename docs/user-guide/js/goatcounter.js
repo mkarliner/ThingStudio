@@ -1,0 +1,18 @@
+// GoatCounter page counting for the public docs site.
+//
+// Same counting site as the thingstudio.net landing page (ts-stats.minus1.com, Mike's own
+// server) -- the counts for both land in one dashboard, told apart by URL path.
+//
+// The built site ships in two places: here, and inside every Thingstudio install (the
+// backend serves it at /docs/ for Help -> User guide). Only the public host counts:
+// anything else -- the offline copy, Mike's LAN review server, someone running the
+// editor from a laptop -- loads nothing, sends nothing. Matches the product's rule:
+// no telemetry from the product, measurement is external only.
+if (location.hostname === 'docs.thingstudio.net') {
+    var s = document.createElement('script');
+    s.async = 1;
+    // Same snippet as the landing page: data-goatcounter names the count endpoint.
+    s.dataset.goatcounter = 'https://ts-stats.minus1.com/count';
+    s.src = 'https://ts-stats.minus1.com/count.js';
+    document.head.appendChild(s);
+}

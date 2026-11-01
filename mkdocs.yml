@@ -19,6 +19,14 @@ site_dir: site
 hooks:
   - tools/mkdocs_llms_hook.py
 
+# Visitor counting on the public site, same GoatCounter site as the thingstudio.net
+# landing page (see docs/user-guide/js/goatcounter.js header for why it gates by hostname).
+extra_javascript:
+  - js/goatcounter.js
+
+# Shown at the bottom of every page, same wording as the landing page's count line.
+copyright: "Visits are counted with <a href=\"https://www.goatcounter.com/\">GoatCounter</a>, run on my own server: pages viewed, the site you came from, browser, screen size and country. No cookies, and nothing that identifies you."
+
 theme:
   name: material
   # No Google Fonts: the backend serves these docs locally (/docs/) and they must work offline.

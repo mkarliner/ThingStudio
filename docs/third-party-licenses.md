@@ -288,6 +288,15 @@ Versions and licenses confirmed 2026-09-23 from the installed packages' own meta
 | playwright (Python) | 1.63.0 | Apache-2.0 | Drives headless Chromium for `tools/screenshots.py`. Build-time only; pinned in `docs/screenshots/requirements.txt`, not `docs/requirements.txt`, so a plain `make` doesn't install it. Pulls in greenlet 3.5.6 (MIT AND PSF-2.0), pyee 13.0.1 (MIT) and typing_extensions 4.16.0 (PSF-2.0). Versions/licenses from the installed packages' metadata, 2026-10-01. |
 | Chromium (Playwright's build) | as pinned by playwright 1.63.0 | BSD-3-Clause and others | Downloaded by `playwright install chromium` in CI and `make screenshots`. Build-time only; nothing from it ships. |
 
+**GoatCounter (docs-side visitor counting, added 2026-11-01).** Not a build or packaging dependency, so no
+package pin: one of its two purposes is counted at page requests via `docs/user-guide/js/goatcounter.js`
+(this is site code, not third-party), which on the public docs domain only loads `count.js` from
+`ts-stats.minus1.com` — Mike's self-hosted GoatCounter **v2.7.0** instance (`/home/mike/goatcounter/`, same
+url for thingstudio.net's landing page). Nothing redistributes: nothing bundles it, and the
+copies the backend serves locally load nothing (the loader gates on `docs.thingstudio.net`). Counted data
+is the landing page's: pages, referrer, browser, screen size, country — no cookies. Version checked
+2026-11-01 from the running binary's own `version` output.
+
 Both pinned in `.github/workflows/docs.yml`'s `pip install` step -- update the pin there in the same change if
 either version changes here. Not gated by `CLAUDE.md`'s npm-specific install-flag rule (these are pip, not npm
 packages), but flagged and tracked here per that rule's own spirit, same as `test/hil/`'s `pyserial` entry above.
