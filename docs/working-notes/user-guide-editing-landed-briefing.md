@@ -8,7 +8,7 @@ the C6 correction). They carry the answers this brief only points at.
 
 ## State
 
-Branch `docs/context-diet`, local only (Mike pushes and merges). Seven commits not on the remote:
+Branch `docs/context-diet`, local only (Mike pushes and merges). Seven commits not on the remote, plus the one that filed this brief:
 
 | Commit | What |
 | --- | --- |
@@ -164,4 +164,5 @@ note (a deliberate hand-added entry). Phases 4-5 delete most of them.
 - Screenshots for phase 7 (`tools/screenshots.py`): the device VM can't download Chromium. Stage `editor/dist`,
   `backend/src`, `tools/screenshots.py` and `docs/screenshots/` into the container, `pip install aiohttp pyserial`, run
   with `PYTHONPATH=backend/src` and `--chromium` pointing at the preinstalled Playwright Chromium, then commit the PNGs back.
-- The ThingStudio Project docs mirror briefings; `project_write` a copy of this one after filing it.
+- The ThingStudio Project docs mirror briefings; this one has a copy at `claude/user-guide-editing-landed-briefing.md`.
+  `project_write` takes `content` or a staged file under `/mnt/user-data/uploads` (stage with `device_stage_files`).
