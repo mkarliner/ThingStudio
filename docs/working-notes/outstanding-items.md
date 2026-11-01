@@ -383,6 +383,12 @@ ThingStudioMarketing repo, not here.
   tutorial 1's gpio read/blink, 2026-11-01 (onboard LED, GPIO 2), recorded in
   `firmware/classic-esp32/tested.json` under the 14.1.0 image.
 
+- **"For the impatient" section in the user docs** (Mike, 2026-11-01). Drafted that day in `index.md`
+  (uncommitted -- Mike reviews from the live docs server): a tip box right under the opening figure, five
+  bullets, install to deployed blink, plus a File → Open… example shortcut and a debugging/FAQ pointer.
+  Candidate bullets Mike named: the editor tour "and ???". Open choice: stays as the index tip box, or also a
+  "For the impatient" page of its own.
+
 - **[BACKLOG]** **"Future" page in the user docs** (Mike, 2026-10-11). One clearly labelled page for planned
   features, inviting feedback, so the rest of the docs describe only the current state. Not scheduled.
 - **[TR]** **User docs rewrite to the style guide -- new item, 2026-10-11 (Mike, docs style review).** Prioritised page

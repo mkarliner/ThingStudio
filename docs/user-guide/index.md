@@ -14,6 +14,22 @@ starts again after a reset or power cycle.
   part.</figcaption>
 </figure>
 
+!!! tip "For the impatient"
+
+    The whole path to a running flow, reading nothing else:
+
+    1. [Install Thingstudio](getting-started.md#step-1-install-thingstudio) and start it. The editor
+       opens in your browser.
+    2. [Tour the editor](editor-tour.md): the palette, the canvas, the console.
+    3. [Install MicroPython](installing-micropython.md) on your board. A standard ESP32 takes the advised
+       [custom image](custom-firmware.md).
+    4. [Connect your board](connecting.md), then [install the runtime](installing-runtime.md).
+    5. [Blink an LED](first-flow.md) — three nodes and deploy. Not in a building mood? Open
+       `examples/blink.flow.json` from your install folder with **File → Open…**, point the pin at your board's
+       own LED, deploy.
+
+    When something doesn't work, [Debugging](debugging.md) and the [FAQ](faq.md) go by what you see on screen.
+
 In practice, that means:
 
 - **Local dev.** Development happens locally; there is no cloud service.
