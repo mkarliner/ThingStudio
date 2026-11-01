@@ -123,3 +123,17 @@ Three decisions on the back of `reviews/2026-11-01-user-guide.md`'s second-pass 
   keeps one short clause saying the behavior is deliberate ("Deploy stops here on purpose"); the rest of the
   defence is cut. Happy-path pages lose justifications entirely, as the review's C2 says. The style guide gets
   the refinement in the same change as the debugging/FAQ edits (phase 2 of the plan).
+- **Next tutorial is MQTT (Mike, same day):** Gap 2 becomes "Blink from anywhere" -- the two-direction loop on one
+  board (inject/`mosquitto_sub` out, `mosquitto_pub`/LED in), unique topic prefix on `test.mosquitto.org`, the
+  public-broker caveat taught by shape. Chosen over a GUI "first screen" tutorial (blocked on the sensor-display
+  rework, remark 5) and over custom-node/neopixel topics (later). Full spec: the editing plan's phase 3.
+- **The sample-scavenger path gets wired (Mike, same day):** tester-ready's majority profile, confirmed by
+  discussion #5 (clharting, CYD on Ubuntu -- directed path worked, then straight to MQTT asking "just having an
+  example flow would make this so much easier", and replicated a posted flow from its screenshot, not noticing
+  the file). Plan gains phase 2a: an Examples page leading with File -> Open..., and a CI compile check over
+  every shipped example (they were layout-tested only). Same discussion's frictions, per the tester-ready
+  feedback loop: docs never named GitHub Discussions (support pointer, phase 2); a FAQ entry to share the
+  `.flow.json`, never the compiled output -- it embeds resolved credentials, and his real WiFi password landed in
+  the public discussion (phase 2; product-side warning in the compiled-source view is Mike's call); the runtime
+  `wifi status 202` MQTT variant joins Gap 1's debugging entry (phase 2); the misleading
+  `[wifi] ... reachable over WiFi` console line becomes an outstanding item (product wording, not docs).

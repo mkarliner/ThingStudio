@@ -392,6 +392,10 @@ ThingStudioMarketing repo, not here.
   or refused connection with WiFi up shows only the raw `mqtt connect … failed after 3 attempts` error; add one plain
   line saying the board can't reach the broker from its network, with a doc link. Suggested in the editor's
   error-help layer. ([detail](outstanding-items/mqtt-unreachable-console-message.md))
+- **[TR]** **Reword the `[wifi] … reachable over WiFi` console line -- new item, 2026-11-01 (discussion #5).** A
+  first-timer read it as "the board is connected" while his flow's WiFi was in fact failing; it reports
+  name-visibility, not his flow's network state. Product wording, same family as the MQTT line above.
+  ([detail](outstanding-items/wifi-reachable-console-message.md))
 - **[BACKLOG]** **"Future" page in the user docs** (Mike, 2026-10-11). One clearly labelled page for planned
   features, inviting feedback, so the rest of the docs describe only the current state. Not scheduled.
 - **[TR]** **User docs rewrite to the style guide -- new item, 2026-10-11 (Mike, docs style review).** Prioritised page
