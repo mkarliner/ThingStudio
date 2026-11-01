@@ -1,5 +1,20 @@
 # FAQ
 
+## Where do I ask a question or report a problem?
+
+Ask questions, and show what you've built, in [GitHub Discussions](https://github.com/mkarliner/ThingStudio/discussions).
+Report a bug or a missing feature on the [issue tracker](https://github.com/mkarliner/ThingStudio/issues), or with
+**Help → Report a problem**. Include the editor's version (**Help → About Thingstudio**), your board, and the console
+lines around the problem. Share the flow file, not compiled output; see the next question.
+
+## How do I share a flow when I ask for help?
+
+Share the flow file: **File → Save**, then attach or paste the `.flow.json`. It holds the nodes and wiring and no
+passwords: the WiFi and broker logins stay on your computer
+([The Thingstudio folder](thingstudio-folder.md#credentials)). Don't paste the **Compiled source** panel or the
+console's compiled output: it contains the resolved WiFi password and broker login. If you pasted it somewhere
+public, change the password.
+
 ## Why does my ESP32 have so little free memory?
 
 An ESP32's RAM is shared between MicroPython and the chip's own software: ESP-IDF, its FreeRTOS scheduler, and

@@ -78,6 +78,13 @@ there to stop Thingstudio.
 
 Thingstudio also serves this user guide, so it works offline. **Help → User guide** opens it.
 
+## Getting help
+
+When something goes wrong, [Debugging & troubleshooting](debugging.md) and the [FAQ](faq.md) go by what you see on
+screen. Questions, and what you've built, go in
+[GitHub Discussions](https://github.com/mkarliner/ThingStudio/discussions). Bugs go on the
+[issue tracker](https://github.com/mkarliner/ThingStudio/issues), or use **Help → Report a problem**.
+
 ## Next
 
 Step 2: [tour the editor](editor-tour.md).

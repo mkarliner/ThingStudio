@@ -87,8 +87,8 @@ Additions from discussion #5 (clharting, CYD on Ubuntu, 2026-10-27..11-01):
   (the compiled output embeds resolved credentials). FAQ entry: share the `.flow.json` (File -> Save), never the
   console's compiled source. Product-side warning in the compiled-source view is Mike's call, not docs.
 
-Phase 2 done for its original scope, 2026-11-01. The discussion #5 additions above arrived after it and are not done.
-Notes for later phases:
+Phase 2 done, 2026-11-01, including the discussion #5 additions above (done in a second pass, once they had been
+merged in). Notes for later phases:
 
 - The memory home is two places on purpose: `debugging.md` "Memory" says what the `[memory]` line shows and which
   figure matters; "MemoryError or a library that won't load" keeps the recovery steps, because the editor links to
@@ -98,6 +98,11 @@ Notes for later phases:
   entries tripped it).
 - The MQTT node pages now have a one-line `## Errors` section; phase 5 moves their error text there.
 - The style guide has the one-attributing-clause rule ("A refusal says it is deliberate, once").
+- The `wifi status 202` variant is a sub-entry of "MQTT broker unreachable". Its first two checks (credential, then a
+  `wifi status` node beside MQTT nodes) follow the plan's advice; the source shows MQTT owning the WiFi join in such a
+  flow (`ts_wifi.ensure_station`, `mqtt_as` README), but nothing in it proves the `wifi status` node is the cause.
+  The wording was not checked against discussion #5, which wasn't readable from the sandbox.
+- Support pointer: FAQ top entry and a "Getting help" section on Getting started. Sharing: FAQ entry second.
 
 ### Phase 2a -- the sample-scavenger path (discussion #5 evidence; tester-ready's majority profile)
 

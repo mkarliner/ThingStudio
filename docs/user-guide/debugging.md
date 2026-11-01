@@ -221,10 +221,12 @@ An `mqtt publish` or `mqtt subscribe` node shows a red dot, and the console says
 mqtt connect to HOST:1883 failed after 3 attempts (… 'Timeout on socket write' …, wifi status 1010)
 ```
 
-The board has joined WiFi (`wifi status 1010` means it has an address) but can't reach the broker from its network.
-The cause is the network between the board and the broker, not the board's memory.
+The line ends with the board's WiFi status. `wifi status 1010` means the board has joined WiFi and has an address
+but can't reach the broker from its network: the cause is the network between the board and the broker, not the
+board's memory. `201` or `202` means the board never joined WiFi; see
+[The board hasn't joined WiFi](#the-board-hasnt-joined-wifi).
 
-Check, in order:
+With `1010`, check in order:
 
 - The host and port in the flow's MQTT broker. The board connects to exactly what the flow says.
 - That the board's network can reach the broker. Your computer reaching it proves nothing: a laptop can reach a home
@@ -242,6 +244,21 @@ Then do one of these:
 - Relay through a computer the board can reach. With Remote Login on, run
   `ssh -g -N -L 0.0.0.0:1883:BROKER:1883 localhost` on that computer, and set the flow's broker to that computer's
   address.
+
+### The board hasn't joined WiFi
+
+On an ESP32, status `201` means the network wasn't found, and `202` means joining failed authentication, usually a
+wrong password. Check, in order:
+
+- The network name and password in the flow's WiFi credential: ✎ next to the **WiFi** field.
+- Whether the flow has both MQTT nodes and a `wifi status` node. In a flow with MQTT nodes, MQTT manages the WiFi
+  connection and `wifi status` only reports on it. If the join fails, remove the `wifi status` node and deploy
+  again.
+- The ESP-IDF figure on the `[memory]` line. Below about 30 KB WiFi may not start; use
+  **Tools → Reset board (hard)**. See [Memory](#memory).
+
+The console can also show "Wifi Internal State Error". For that error at deploy time, see
+[WiFi Internal State Error on deploy](#wifi-internal-state-error-on-deploy).
 
 ## Deploy resends a piece, or fails part-way
 
