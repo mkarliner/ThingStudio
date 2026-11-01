@@ -6,6 +6,8 @@ files to re-enter current work. The per-session handoff rules that produce these
 
 ## Live — active handoffs and open threads
 
+- `user-guide-editing-landed-briefing.md` — 2026-11-01 — user guide editing plan phases 0-3 and the discussion #5
+  additions landed with a style lint; next: phase 2a (Examples page, CI compile check), the MQTT tutorial, phases 4-7.
 - `tutorials-and-examples-landed-briefing.md` — 2026-11-01 — tutorials 1-2 written, reviewed live with Mike
   and reworked on his findings; `examples/` shipped at the bundle root; the D1 R32/board story settled;
   modem-sleep parked with its scope; next: tutorial 3 (MQTT).
