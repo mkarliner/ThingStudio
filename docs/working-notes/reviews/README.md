@@ -28,4 +28,6 @@ it reviewed has moved on; write a new one and link back.
 - `2026-11-01-user-guide.md` -- the whole user guide after the first real tester: style, readability and facts per
   page in nav order, cross-cutting patterns (page-describing openings, the pre-guide voice on node pages,
   contradictions, memory advice spread over four pages), gaps (MQTT broker unreachable, an MQTT tutorial, a
-  developer section) and a suggested order of work. Mike's stage 1 remarks verbatim at the top.
+  developer section) and a suggested order of work. Mike's stage 1 remarks verbatim at the top. Ends with a
+  same-day second-pass section (regression lint, the C2 refusal-clause refinement, open fact-checks, the
+  tester-ready bar); execution plan in `docs/working-notes/user-guide-editing-plan.md`.

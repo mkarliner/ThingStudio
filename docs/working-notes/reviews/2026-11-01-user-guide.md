@@ -773,3 +773,29 @@ Read whole with `installing-micropython.md` (known finding 5).
   Per-page counts are on each page heading above.
 - Not run: checks against a running editor (labels were read from `editor/index.html` and `editor/src`); the
   screenshot regeneration.
+
+## Second pass (2026-11-01, editing-side session; Mike accepted and asked for these to be added)
+
+A response read of this review before acting on it. Four additions, in the review's own terms.
+
+1. **C1 has already regressed once; it will regress again.** `debugging.md`'s opening was removed on 2026-10-11
+   and came back (C1 above). A rule enforced only by review passes regresses between passes. The checkable subset
+   of the style guide needs a mechanical gate in CI -- the same pattern as `module-boundaries.test.ts` and the
+   conformance vectors -- not another review pass. Mechanical with near-zero false positives: a page-describing
+   opening sentence, UK spellings outside code spans, plans and `working-notes` references in the user guide, a
+   term listed twice in one Properties section, a sentence repeated verbatim on one page, trailing whitespace and
+   double blank lines. Strategy and rollout: `docs/working-notes/user-guide-editing-plan.md`. Voice, chattiness
+   and repeated *ideas* stay judgment calls for editing sessions and future reviews.
+2. **C2 refinement: keep one attributing clause per refusal.** Applied mechanically, the voice rule strips every
+   justification, but the project's fault-handling rule wants a refusal to read as intent, not as a bug. On
+   `debugging.md` and `faq.md`, keep one short clause saying the behavior is deliberate ("Deploy stops here on
+   purpose; freeing or restarting is yours to invoke") and cut the rest of the defence. On happy-path pages, cut
+   all of it, as C2 says.
+3. **C5.3's fact-check belongs in the review, not the editing session.** "Check the editor and keep one model and
+   one label" makes the editing session stop for source archaeology, against this review's own standard (each
+   finding "written to be acted on by an editing session that has not seen this one"). The open fact-checks are
+   collected as phase 0 of the plan: C5.3 (panel vs card; cell grid vs row/column tree), the [Fact?] on `topic`
+   being required (`coming-from/node-red.md`), C5.6's install paths against the installer, the `ntp` status-dot
+   list (`working-in-the-editor.md` finding 4), and the `http in` PUT claim.
+4. **State the bar.** The suggested order of work doesn't say what gates "suitable for initial testers". Bar:
+   order items 1-3 (quick fixes, what the tester hits, tutorials). Items 4-7 are tractable with testers running.
