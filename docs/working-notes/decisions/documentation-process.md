@@ -123,3 +123,7 @@ Three decisions on the back of `reviews/2026-11-01-user-guide.md`'s second-pass 
   keeps one short clause saying the behavior is deliberate ("Deploy stops here on purpose"); the rest of the
   defence is cut. Happy-path pages lose justifications entirely, as the review's C2 says. The style guide gets
   the refinement in the same change as the debugging/FAQ edits (phase 2 of the plan).
+- **Next tutorial is MQTT (Mike, same day):** Gap 2 becomes "Blink from anywhere" -- the two-direction loop on one
+  board (inject/`mosquitto_sub` out, `mosquitto_pub`/LED in), unique topic prefix on `test.mosquitto.org`, the
+  public-broker caveat taught by shape. Chosen over a GUI "first screen" tutorial (blocked on the sensor-display
+  rework, remark 5) and over custom-node/neopixel topics (later). Full spec: the editing plan's phase 3.

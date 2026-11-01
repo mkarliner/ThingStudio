@@ -69,6 +69,18 @@ Rewrite `blink-from-your-network.md` with a Build the flow section (facts from t
 `first-flow.md`); voice pass on `two-more-blinks.md`; tutorials index without plans; the work-in-progress note on
 `sensor-display.md` (remark 5). Then Gap 2, the MQTT tutorial, as its own session.
 
+**Gap 2 spec (Mike, 2026-11-01): "Blink from anywhere" -- the two-direction loop on one board.** The same LED as
+Blink from your network, now reachable via a broker. Two halves: (1) board to world -- an `inject` node
+(live-fire, no extra hardware) publishes to `thingstudio/<random>/button`, watched with `mosquitto_sub` or a
+phone MQTT app (the mobile-data moment is the payoff); (2) world to board -- `mqtt subscribe` on
+`thingstudio/<random>/led` to `gpio out`, driven from `mosquitto_pub`. Optional sidebar: a wired
+button/`eswitch` replacing the inject. Teaches: broker config node, topic design with a random prefix, publish
+vs subscribe; the public-broker caveat is taught by shape (`test.mosquitto.org`, trivial payloads, one honest
+sentence that anyone can subscribe). "Nothing arrives?" links the Gap 1 troubleshooting entry. Same flow grows
+from tutorial 3's. Left out: retain, LWT, local-broker setup beyond one end pointer, anything GUI. A GUI "first
+screen" tutorial stays blocked on the sensor-display rework (remark 5); custom-node and neopixel/ADC/encoder
+tutorials come later.
+
 **Tester-ready bar: phases 1-3.** Phases 4-7 are tractable with testers running.
 
 ### Phase 4 -- contradictions (review order item 4)
