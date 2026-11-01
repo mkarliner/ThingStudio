@@ -389,6 +389,10 @@ ThingStudioMarketing repo, not here.
   Candidate bullets Mike named: the editor tour "and ???". Open choice: stays as the index tip box, or also a
   "For the impatient" page of its own.
 
+- **Plain console line for an unreachable MQTT broker -- new item, 2026-11-01 (Mike, user guide review).** A timeout
+  or refused connection with WiFi up shows only the raw `mqtt connect … failed after 3 attempts` error; add one plain
+  line saying the board can't reach the broker from its network, with a doc link. Suggested in the editor's
+  error-help layer. ([detail](outstanding-items/mqtt-unreachable-console-message.md))
 - **[BACKLOG]** **"Future" page in the user docs** (Mike, 2026-10-11). One clearly labelled page for planned
   features, inviting feedback, so the rest of the docs describe only the current state. Not scheduled.
 - **[TR]** **User docs rewrite to the style guide -- new item, 2026-10-11 (Mike, docs style review).** Prioritised page

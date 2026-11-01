@@ -25,3 +25,7 @@ it reviewed has moved on; write a new one and link back.
   `interfaces/protocol/SEQUENCES.md`; re-run with `device-runtime/test/audit_protocol_exchanges.py`.
 - `2026-10-24-protocol-state-machine.md` -- follow-up: the conversation as a specified state machine (SPEC §7),
   implemented on both sides and checked by shared exchange vectors; what the audit's findings say now.
+- `2026-11-01-user-guide.md` -- the whole user guide after the first real tester: style, readability and facts per
+  page in nav order, cross-cutting patterns (page-describing openings, the pre-guide voice on node pages,
+  contradictions, memory advice spread over four pages), gaps (MQTT broker unreachable, an MQTT tutorial, a
+  developer section) and a suggested order of work. Mike's stage 1 remarks verbatim at the top.

@@ -1,4 +1,5 @@
 # User docs: pages still to rewrite to the style guide
+> **2026-11-01:** the current list is `reviews/2026-11-01-user-guide.md` (whole-guide review after the first tester); work from its "Suggested order of work".
 > **2026-10-30 sweep:** Update: the "Decisions needed" bullet on clock/ntp is done — `clock.md` is replaced by
   `ntp.md`. The P2/P3 rewrite outstanding list stands.
 
