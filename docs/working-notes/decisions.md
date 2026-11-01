@@ -326,3 +326,10 @@ Test flows and example flows are separate things: users copy from `examples/` (s
 run against `test-flows/`; the layout gate walks both. Re-phase of the shipped-flow split, decided while the
 tutorial ladder was being written (2026-11-01). 1 entry:
 `docs/working-notes/decisions/examples-folder.md`.
+
+## Modem-sleep setting
+
+A WiFi "Power save" control (on by default, off for an immediate-answer mains board) is a yes and is scoped --
+hook in `ts_wifi.ensure_station`, one select on the flow's WiFi config, a major runtime bump -- but parked until a
+runtime change touches `ts_wifi` anyway (Mike, 2026-11-01, having hit the idle-board wake on `http in`). 1 entry:
+`docs/working-notes/decisions/modem-sleep-setting.md`.

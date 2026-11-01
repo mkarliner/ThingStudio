@@ -47,9 +47,13 @@ itself goes dark: nothing drives the pin until a request does — the blink is o
 - **By IP:** tick **full message** on the `debug` node and read the `ip` from its next console line — the fields
   are listed under [wifi status](../nodes/wifi-status.md#behavior). Then `http://<that ip>:9999/toggle`.
 
-If `.local` names don't resolve on your network (they don't everywhere), the IP address is the dependable one.
+If `.local` names don't resolve on your network (they don't everywhere, and they don't across VPN tunnels at all —
+multicast doesn't pass), the IP address is the dependable one.
 
-The page answers `LED on` or `LED off`, and the LED does what it says. The request is the only event this flow
+The page answers `LED on` or `LED off`, and the LED does what it says. Expect the first answer after an idle
+stretch to take up to a second: the board's WiFi wakes on the request (see
+[Why do http in requests take a second to answer?](../faq.md#why-do-http-in-requests-take-a-second-to-answer)).
+The request is the only event this flow
 gets, and each one is handled on its own: between requests the LED holds its level, remembered in the
 `context` toggle from the last tutorial.
 

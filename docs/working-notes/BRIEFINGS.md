@@ -6,8 +6,9 @@ files to re-enter current work. The per-session handoff rules that produce these
 
 ## Live — active handoffs and open threads
 
-- `tutorial-ladder-authoring-briefing.md` — 2026-10-31 — the [P1] tutorial ladder's next session: scope
-  (agreed ladder, learner profiles, the adventurous-user learning), owed items, environment facts.
+- `tutorials-and-examples-landed-briefing.md` — 2026-11-01 — tutorials 1-2 written, reviewed live with Mike
+  and reworked on his findings; `examples/` shipped at the bundle root; the D1 R32/board story settled;
+  modem-sleep parked with its scope; next: tutorial 3 (MQTT).
 - `context-diet-and-tooling-continuation-briefing.md` — 2026-10-30 — Phases A-C landed; tooling now
   installed, Phase D briefing sweep and the tutorial ladder remain.
 - `priorities-restage-and-context-diet-briefing.md` — 2026-10-30 — the tester-ready re-stage and
@@ -107,6 +108,8 @@ files to re-enter current work. The per-session handoff rules that produce these
   WiFi declaration; all resolved.
 - `rp2-bringup-interrupt-briefing.md` — 2026-08-17 — RP2 interrupt bring-up succeeded.
 - `rp2350-bringup-briefing.md` — 2026-08-18 — Pico 2 bring-up; RAM-floor comparison recorded.
+- `tutorial-ladder-authoring-briefing.md` — 2026-10-31 — the ladder's original plan; superseded 2026-11-01
+  by the reshaped, reviewed tutorials (see `tutorials-and-examples-landed-briefing.md`).
 - `udp-tcp-nodes-implementation-briefing.md` — 2026-08-18 — UDP shipped; TCP deferred past MVP.
 - `user-docs-rewrite-briefing.md` — 2026-10-11 — docs rewritten to the style guide.
 - `user-docs-style-review-briefing.md` — 2026-10-10 — style review; guide written and adopted.

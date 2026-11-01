@@ -149,6 +149,15 @@ it needs real credentials: a WiFi config in the flow and a broker. Compile stops
 missing — "needs a WiFi network" or "needs an MQTT broker". Set the node's **WiFi** (or **MQTT Broker**) field;
 every MQTT node in a flow shares that one setting. See [Config nodes](working-in-the-editor.md#config-nodes).
 
+## Why do http in requests take a second to answer?
+
+The flow answers immediately — the wait is the board's WiFi waking up. An idle board's radio sleeps
+(modem-sleep); a new request pays the wake and the connection set-up before anything the flow does. Measured on a
+classic ESP32 (Wemos D1 R32) toggling an LED, through a VPN tunnel: 0.16–1.2 s per request, with the wake part of
+it; a volley of requests answered in 0.15–0.20 s each once the radio was warm. If the board has steady network
+traffic — a flow that talks, or sits connected — the wake cost goes away on its own. See the deferred note on
+modem sleep in `working-notes/outstanding-items.md`.
+
 ## Why is Compile → Deploy grayed out after a deploy?
 
 The board already runs the flow on the canvas. Deploy comes back when you change the flow. See

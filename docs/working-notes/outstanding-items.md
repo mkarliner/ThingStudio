@@ -152,7 +152,13 @@ ThingStudioMarketing repo, not here.
   runtime bump. Today discovery runs only on ⟳ ports / page load (`tcp_relay.discover()`).
 - **[DEFERRED]** **ESP32-C3 slow, lossy pings over WiFi** (2-324 ms, ~33% loss; Pico W 2-25 ms, none). Probably
   the C3's default modem sleep; not confirmed (`w.config(pm=w.PM_NONE)` then ping). Mike, 2026-09-25: defer
-  unless it causes other problems. A fix would switch power saving off during a WiFi session only.
+  unless it causes other problems. A fix would switch power saving off during a WiFi session only. **More
+  evidence, 2026-11-01 (Mike + a curl run from this session): a classic ESP32 (Wemos D1 R32) answering `http in`
+  toggles took 0.16-1.2 s per request over WiFi+VPN, collapsing to a steady 0.15-0.20 s once the radio was warm
+  -- the wake, on the D0WD too, and it is now what a user sees.** Documented rather than fixed: the FAQ entry
+  "Why do http in requests take a second to answer?"; the fix, if ever taken, stays the same PM_NONE shape.
+  The setting itself is decided and parked with its scope:
+  `working-notes/decisions/modem-sleep-setting.md`.
 
 ## Hardware / rig
 
