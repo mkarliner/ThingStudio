@@ -383,11 +383,10 @@ ThingStudioMarketing repo, not here.
   tutorial 1's gpio read/blink, 2026-11-01 (onboard LED, GPIO 2), recorded in
   `firmware/classic-esp32/tested.json` under the 14.1.0 image.
 
-- **"For the impatient" section in the user docs** (Mike, 2026-11-01). Drafted that day in `index.md`
-  (uncommitted -- Mike reviews from the live docs server): a tip box right under the opening figure, five
-  bullets, install to deployed blink, plus a File → Open… example shortcut and a debugging/FAQ pointer.
-  Candidate bullets Mike named: the editor tour "and ???". Open choice: stays as the index tip box, or also a
-  "For the impatient" page of its own.
+- **"For the impatient" section in the user docs** (Mike, 2026-11-01). Shipped that day in `index.md`
+  (`fdece55`): a tip box right under the opening figure, five bullets, install to deployed blink, plus a
+  File → Open… example shortcut and a debugging/FAQ pointer. Choice (tip box vs its own page) settled: the
+  tip box, on Mike's merge; the Getting started ladder stays the full-length path.
 
 - **Plain console line for an unreachable MQTT broker -- new item, 2026-11-01 (Mike, user guide review).** A timeout
   or refused connection with WiFi up shows only the raw `mqtt connect … failed after 3 attempts` error; add one plain
