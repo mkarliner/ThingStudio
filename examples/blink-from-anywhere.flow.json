@@ -1,0 +1,161 @@
+{
+  "formatVersion": 1,
+  "flowName": "blink from anywhere",
+  "nodes": [
+    {
+      "id": "1",
+      "type": "thingstudio/inject",
+      "properties": {
+        "payloadType": "string",
+        "payloadValue": "pressed",
+        "repeat": "manual"
+      }
+    },
+    {
+      "id": "2",
+      "type": "thingstudio/mqtt_publish",
+      "properties": {
+        "topic": "thingstudio/change-this-number/button",
+        "retain": false,
+        "qos": 0,
+        "brokerConfigId": "8e47a2b3-1c9d-4e60-b5f2-6a3d9c0e7b24",
+        "wifiConfigId": "3c1d5f10-6b2e-4f7a-9a41-0d2b7e5c8a11"
+      }
+    },
+    {
+      "id": "3",
+      "type": "thingstudio/mqtt_subscribe",
+      "properties": {
+        "topic": "thingstudio/change-this-number/led",
+        "qos": 0,
+        "brokerConfigId": "8e47a2b3-1c9d-4e60-b5f2-6a3d9c0e7b24",
+        "wifiConfigId": "3c1d5f10-6b2e-4f7a-9a41-0d2b7e5c8a11"
+      }
+    },
+    {
+      "id": "4",
+      "type": "thingstudio/function",
+      "properties": {
+        "code": "msg['payload'] = str(msg['payload']).lower() in ('on', '1', 'true')\nreturn msg",
+        "outputCount": 1
+      }
+    },
+    {
+      "id": "5",
+      "type": "thingstudio/gpio_out",
+      "properties": {
+        "pin": 15
+      }
+    },
+    {
+      "id": "6",
+      "type": "thingstudio/debug",
+      "properties": {}
+    }
+  ],
+  "edges": [
+    [
+      "1",
+      0,
+      "2",
+      0
+    ],
+    [
+      "3",
+      0,
+      "4",
+      0
+    ],
+    [
+      "4",
+      0,
+      "5",
+      0
+    ],
+    [
+      "3",
+      0,
+      "6",
+      0
+    ]
+  ],
+  "layout": {
+    "1": {
+      "pos": [
+        60,
+        60
+      ],
+      "size": [
+        96,
+        34
+      ]
+    },
+    "2": {
+      "pos": [
+        280,
+        60
+      ],
+      "size": [
+        128,
+        34
+      ]
+    },
+    "3": {
+      "pos": [
+        60,
+        160
+      ],
+      "size": [
+        132,
+        34
+      ]
+    },
+    "4": {
+      "pos": [
+        280,
+        160
+      ],
+      "size": [
+        96,
+        34
+      ]
+    },
+    "5": {
+      "pos": [
+        500,
+        160
+      ],
+      "size": [
+        96,
+        34
+      ]
+    },
+    "6": {
+      "pos": [
+        280,
+        230
+      ],
+      "size": [
+        84,
+        34
+      ]
+    }
+  },
+  "configs": [
+    {
+      "id": "3c1d5f10-6b2e-4f7a-9a41-0d2b7e5c8a11",
+      "type": "thingstudio/config/wifi",
+      "properties": {
+        "credentialName": "tutorial wifi",
+        "security": "password"
+      }
+    },
+    {
+      "id": "8e47a2b3-1c9d-4e60-b5f2-6a3d9c0e7b24",
+      "type": "thingstudio/config/mqtt-broker",
+      "properties": {
+        "credentialName": "test-mosquitto"
+      }
+    }
+  ]
+}

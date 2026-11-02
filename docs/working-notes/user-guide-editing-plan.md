@@ -160,6 +160,17 @@ work-in-progress note, whose baseline entry was added by hand. Every tutorial do
 copy it. Gap 2 has its brief (the spec above); it is its own session. When it lands, point "Next" on
 `blink-from-your-network.md` at it as well as at `examples/basic-mqtt.flow.json`, and add it to the tutorials index.
 
+Gap 2 written, 2026-11-02, not yet run on a board. `tutorials/blink-from-anywhere.md` and
+`examples/blink-from-anywhere.flow.json` follow the spec above: `inject` publishes to `thingstudio/<number>/button`,
+`mqtt subscribe` on `.../led` feeds a `function` into `gpio out`, a `debug` shows what arrives, `test.mosquitto.org`
+with a number of the reader's own, and "Nothing arrives?" linking the broker-unreachable entry. It starts a new flow
+rather than growing tutorial 2's: that one has `http in` and `wifi status`, and the debugging entry says a `wifi
+status` node beside MQTT nodes can fail the join, which nothing here could test. The example ships with the placeholder
+`change-this-number` on purpose (a shared number would let strangers switch each other's LEDs); the page and the
+Examples entry say to replace it. The function node is needed because `gpio out` uses Python truthiness, so the text
+`off` would count as on. Compile, layout and syntax checks pass (the examples test covers it). Wiring done: nav, tutorials
+index, "Next" on Blink from your network, the Examples page, `examples/README.md`.
+
 **Tester-ready bar: phases 1-3 (including 2a).** Phases 4-7 are tractable with testers running.
 
 ### Phase 4 -- contradictions (review order item 4)

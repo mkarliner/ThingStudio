@@ -95,8 +95,9 @@ does and doesn't do.
 ## Next
 
 - [http in](../nodes/http-in.md) — routes, methods, timeouts and the server's limits.
-- [mqtt publish](../nodes/mqtt-publish.md) and [mqtt subscribe](../nodes/mqtt-subscribe.md) — the same LED over a
-  broker. `examples/basic-mqtt.flow.json`, in the [examples folder](../examples.md#where-the-folder-is), is a
-  starting flow.
+- [Blink from anywhere](blink-from-anywhere.md) — the next tutorial: the same LED through an MQTT broker.
+- [mqtt publish](../nodes/mqtt-publish.md) and [mqtt subscribe](../nodes/mqtt-subscribe.md) — the nodes behind it.
+  `examples/basic-mqtt.flow.json`, in the [examples folder](../examples.md#where-the-folder-is), publishes and
+  subscribes on one topic.
 - [Connecting over WiFi](../wifi-connection.md) — the board as an editor peer on your network, not just a web
   server.

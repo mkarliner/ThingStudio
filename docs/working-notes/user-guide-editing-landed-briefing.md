@@ -1,9 +1,10 @@
-# User guide editing: phases 0-4 landed, the MQTT tutorial and phase 5 next
+# User guide editing: phases 0-4 landed, the MQTT tutorial written (untested), phase 5 next
 
 Status: continuation brief, filed 2026-11-01. Executes `user-guide-editing-plan.md` against
 `reviews/2026-11-01-user-guide.md`. Phases 0, 1, 2 (with the discussion #5 additions) and 3 are done and committed;
 phase 3's Gap 2 (the MQTT tutorial) has its spec and is its own session. Phase 2a (the Examples page, the compile test)
-and phase 4 (contradictions, the GUI page) landed 2026-11-02 after the commits below. Next: Gap 2, then phases 5-7.
+and phase 4 (contradictions, the GUI page) landed 2026-11-02 after the commits below, and the MQTT tutorial (Gap 2) is
+written but has not run on a board. Next: Mike's board run of Gap 2, then phases 5-7.
 The remaining phases run on Sonnet 5.5 (Mike, 2026-11-02); `user-guide-phase-0-briefing.md`, the GLM-5.3-Flash brief for
 phase 0, is superseded by this work and marked so.
 Read the plan's "done" notes under each phase first, then the review's last two sections ("Phase 0 fact-checks" and
@@ -51,6 +52,10 @@ work-in-progress note (a deliberate hand-added entry). Phase 5 deletes most of t
 - **Phase 4:** `gui-layout.md` is gone, merged into `nodes/gui.md` "Laying out pages" (one model: cell grid, **panel**).
   The `gui modal` bullet and the "Modals in the flow file" section are HTML-commented, not deleted (decision 2); `gui
   navigator` is removed. Anchors other pages use stay: `#laying-out-pages`, `#themes`, `#rotating-the-screen`, `#buttons`.
+- **Gap 2's choices:** a new flow, not tutorial 2's grown (that flow has `http in` and `wifi status`, and the debugging entry
+  says `wifi status` beside MQTT nodes can fail the join). The example's topics carry the placeholder `change-this-number`
+  on purpose: a shared number would let strangers switch each other's LEDs. The function node exists because `gpio out`
+  uses Python truthiness, so the text `off` would count as on.
 - **Refusal wording:** one short attributing clause on troubleshooting pages, none on reference pages (style guide,
   "A refusal says it is deliberate, once").
 - **Tutorials:** every download says "open the file, don't copy it"; the "Next" pointers stay; the index lists three
@@ -64,11 +69,14 @@ work-in-progress note (a deliberate hand-added entry). Phase 5 deletes most of t
 
 ## Next, in order
 
-1. **Gap 2, the MQTT tutorial "Blink from anywhere"** (spec in the plan, "Gap 2 spec"). When it lands: add it to
-   `tutorials/index.md`; point "Next" on `blink-from-your-network.md` at it as well as `examples/basic-mqtt.flow.json`;
-   link `debugging.md#mqtt-broker-unreachable` from "nothing arrives?"; ship its flow in `examples/` with a README line;
-   keep the public-broker caveat (`test.mosquitto.org`, a random topic prefix, anyone can subscribe). It needs a real
-   board run by Mike before it is called done: nothing here can run a flow.
+1. **Gap 2, "Blink from anywhere": Mike runs it on a board.** `tutorials/blink-from-anywhere.md` and
+   `examples/blink-from-anywhere.flow.json` are written, compile, and pass the layout and syntax checks; nothing here can run a
+   flow, so the page is unverified. To test: open the example (set the pin, replace `change-this-number` in both topics, fill the
+   `tutorial wifi` and `test-mosquitto` forms) and deploy; `mosquitto_sub -t 'thingstudio/<n>/#' -v` while clicking the inject's
+   ▶; `mosquitto_pub ... -t thingstudio/<n>/led -m on` and `off`. Then check the build steps by hand against the editor: the
+   MQTT Broker form (name, host, port), the **WiFi** field on an MQTT node, and that the second MQTT node shows the first one's
+   broker. Unknowns: whether a phone on mobile data reaches port 1883 (the page defers to the debugging entry), and whether the
+   subscribe node's dot turns green as the page says. Fix the page from what you see.
 2. **Phase 5** (node pages to layout and voice): each page's findings are its checklist. Requirement added by Mike: every
    Wiring example is copy-pasteable. Include the facts in the review's phase 0 section (`http in`, the missing **WiFi**
    property on both MQTT pages, whose new one-line `## Errors` sections should take their error text).

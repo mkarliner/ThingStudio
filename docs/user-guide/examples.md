@@ -2,7 +2,7 @@
 
 Flows to open with **File → Open…** and make your own. Open the file rather than copying a flow from a page: pick it
 from the examples folder, change what is yours (the pin, the credentials, the board), and deploy. This is a map of
-what each one shows and what to change first; the tutorials walk the first three step by step.
+what each one shows and what to change first; the tutorials walk the first four step by step.
 
 ## Where the folder is
 
@@ -56,6 +56,19 @@ names a WiFi network, `tutorial wifi`. Walked by [Blink from your network](tutor
 - **path** and **port** on [http in](nodes/http-in.md).
 - The reply text in the function's **code** (`'LED on'` and `'LED off'`).
 - **poll interval (ms)** on [wifi status](nodes/wifi-status.md).
+
+### `blink-from-anywhere.flow.json`
+
+The same LED through an MQTT broker. Clicking `inject` publishes `pressed` to a `button` topic, and `mqtt subscribe`
+on an `led` topic feeds a `function` that turns `on`, `1` or `true` into true for `gpio out`; `debug` prints what
+arrives. The file names a WiFi network (`tutorial wifi`) and a broker (`test-mosquitto`). Its topics start
+`thingstudio/change-this-number/`: replace that number in both before you deploy, because the broker is public. Walked
+by [Blink from anywhere](tutorials/blink-from-anywhere.md).
+
+- The number in both **topic** fields, on [mqtt publish](nodes/mqtt-publish.md) and
+  [mqtt subscribe](nodes/mqtt-subscribe.md).
+- **host** and **port** in the broker form, to use a broker on your own network.
+- The [function](nodes/function.md) node's **code**, which decides which messages count as on.
 
 ### `basic-http-request.flow.json`
 
