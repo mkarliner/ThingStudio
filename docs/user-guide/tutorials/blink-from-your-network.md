@@ -36,12 +36,22 @@ On the network the request is the event, so the timer goes and the LED holds the
    **http response**.
 6. Drag a **wifi status** and a **debug** onto the canvas. Tick **full message** on the **debug** node and wire
    **wifi status** → **debug**.
-7. On the **http in** node, click **+** next to **WiFi**. The form asks for a name, the SSID and the password, and
-   saves them on this computer, not in the flow ([The Thingstudio folder](../thingstudio-folder.md#credentials)).
-   A flow has one WiFi network, so the **WiFi** field on **wifi status** shows the same one.
 
-If compile stops with "needs a WiFi network", a **WiFi** field is empty. See
-[Why does compile fail with "needs a WiFi network"?](../faq.md#why-does-compile-fail-with-needs-a-wifi-network).
+## The board joins WiFi
+
+The board joins the network named in the flow — so tell the flow which network. Flow files hold no
+passwords or other secrets: the WiFi details live in the `.thingstudio` folder in your home directory
+(`~/.thingstudio/credentials/`), as **credentials**. Each credential is named, and you can keep
+several — one per network — and pick the right one per flow. See
+[The Thingstudio folder](../thingstudio-folder.md#credentials).
+
+1. On the `http in` node's property panel, click **+** next to the **WiFi** field to make a new credential (✎
+   edits an existing one). Give the credential a name, your network's SSID and its password, and save.
+2. The **WiFi** field on the `http in` node (and on the `wifi status` node) picks that credential — one WiFi
+   network per flow, shared by every WiFi node in it.
+
+Compile stops with a one-line error if the flow's WiFi has no saved network behind it; the FAQ's
+[needs-a-WiFi-network](../faq.md#why-does-compile-fail-with-needs-a-wifi-network) entry is that error.
 
 ## Name the board, then deploy
 
@@ -60,16 +70,17 @@ nothing drives the pin until a request does.
 - **By IP:** the `debug` node prints the whole **wifi status** message, which includes `ip`. The fields are listed
   under [wifi status](../nodes/wifi-status.md#behavior). Open `http://<ip>:9999/toggle`.
 
-`.local` names don't resolve on every network, and never across a VPN. The IP address always works.
+If `.local` names don't resolve on your network (they don't everywhere, and they don't across VPN tunnels at all —
+multicast doesn't pass), the IP address is the dependable one.
 
-Each request flips the LED, and the page answers `LED on` or `LED off`. The first answer after an idle stretch is
-slower, because the board's WiFi wakes on the request (see
+The page answers `LED on` or `LED off`, and the LED does what it says. Expect the first answer after an idle stretch
+to take up to a second: the board's WiFi wakes on the request (see
 [Why do http in requests take a second to answer?](../faq.md#why-do-http-in-requests-take-a-second-to-answer)).
 
 ## How it works
 
-Each request is handled on its own. Between requests the LED holds its level, which the function keeps in
-`context`.
+The request is the only event this flow gets, and each one is handled on its own: between requests the LED holds its
+level, remembered in the `context` toggle from the last tutorial.
 
 The function has two outputs. The first carries the new state to **gpio out**. The second carries `reply` to
 [http response](../nodes/http-response.md), which answers the browser. `return [msg, reply]` routes one message to
