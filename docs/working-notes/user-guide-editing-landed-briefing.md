@@ -12,7 +12,8 @@ the C6 correction). They carry the answers this brief only points at.
 
 ## State
 
-Merged to `main` and pushed on 2026-11-02 (`ebe787e`; later commits are in `git log`). The commits that carry the work:
+Pushed to `main` on 2026-11-02 up to `12787b4`. Phase 4 and the MQTT tutorial are committed locally and not pushed
+(check `git status -sb`). The commits that carry the work:
 
 | Commit | What |
 | --- | --- |
@@ -47,8 +48,8 @@ work-in-progress note (a deliberate hand-added entry). Phase 5 deletes most of t
   installer scripts. `topic` is not required on a message. `http in` takes GET or POST only and never reads a body. The node
   status list includes `ntp`, `adc`, `neopixel`.
 - **Phase 2a:** `examples.md` owns the examples-folder table (Installation details points at it);
-  `editor/test/examples-compile.test.ts` checks every `examples/*.flow.json`. When the MQTT tutorial ships its flow, the
-  test covers it automatically, and it needs an entry on `examples.md`.
+  `editor/test/examples-compile.test.ts` checks every `examples/*.flow.json`, so a new example is covered automatically; it
+  still needs an entry on `examples.md` and a line in `examples/README.md`.
 - **Phase 4:** `gui-layout.md` is gone, merged into `nodes/gui.md` "Laying out pages" (one model: cell grid, **panel**).
   The `gui modal` bullet and the "Modals in the flow file" section are HTML-commented, not deleted (decision 2); `gui
   navigator` is removed. Anchors other pages use stay: `#laying-out-pages`, `#themes`, `#rotating-the-screen`, `#buttons`.
@@ -58,7 +59,7 @@ work-in-progress note (a deliberate hand-added entry). Phase 5 deletes most of t
   uses Python truthiness, so the text `off` would count as on.
 - **Refusal wording:** one short attributing clause on troubleshooting pages, none on reference pages (style guide,
   "A refusal says it is deliberate, once").
-- **Tutorials:** every download says "open the file, don't copy it"; the "Next" pointers stay; the index lists three
+- **Tutorials:** every download says "open the file, don't copy it"; the "Next" pointers stay; the index lists four
   tutorials and no plans.
 - **Mike's own text in the tutorials is settled** (`tutorials-and-examples-landed-briefing.md`; read it before editing any
   tutorial page). Phase 3 cut some of it on the user-guide review's findings and had to restore it: the "An important
