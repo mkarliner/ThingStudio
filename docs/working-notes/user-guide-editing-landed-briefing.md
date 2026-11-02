@@ -61,6 +61,8 @@ work-in-progress note (a deliberate hand-added entry). Phase 5 deletes most of t
   "A refusal says it is deliberate, once").
 - **Tutorials:** every download says "open the file, don't copy it"; the "Next" pointers stay; the index lists four
   tutorials and no plans.
+  "Blink from your network" is titled **Web Blink** (Mike, 2026-11-02); its file is still `blink-from-your-network.md`, so
+  the published URL and the README link keep working. Use the new title in any text that names it.
 - **Mike's own text in the tutorials is settled** (`tutorials-and-examples-landed-briefing.md`; read it before editing any
   tutorial page). Phase 3 cut some of it on the user-guide review's findings and had to restore it: the "An important
   point to understand" box in Two more blinks (`534cde8`), and in Blink from your network the credentials story, the

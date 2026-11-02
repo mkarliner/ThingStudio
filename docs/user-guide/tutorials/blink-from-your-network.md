@@ -1,4 +1,4 @@
-# Blink from your network
+# Web Blink
 
 The same LED, driven from a browser: an `http in` node runs a web server on the board, and each request toggles the
 LED. The tutorial covers telling the board which WiFi network to join, finding it from your computer, and what an

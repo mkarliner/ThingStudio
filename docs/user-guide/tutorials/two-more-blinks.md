@@ -77,7 +77,7 @@ needs a function node.
 
 The next tutorial, the next job, and the node pages behind the code:
 
-- [Blink from your network](blink-from-your-network.md) — the next tutorial: the same LED, driven by an `http in`
+- [Web Blink](blink-from-your-network.md) — the next tutorial: the same LED, driven by an `http in`
   node from anywhere on your WiFi.
 - [A sensor display](../sensor-display.md) — the next job: read a sensor and show it on a screen.
 - [gpio out](../nodes/gpio-out.md) — what else the node that drives the LED can do.

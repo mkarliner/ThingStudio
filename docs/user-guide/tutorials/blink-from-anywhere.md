@@ -4,7 +4,7 @@ The same LED, now reachable through an MQTT broker. A broker passes messages bet
 doesn't have to be on the board's network. The flow has two halves: the board publishes a message when you click a
 button in the editor, and it switches the LED when a message arrives on another topic.
 
-It builds on [Blink from your network](blink-from-your-network.md): the board has to join your WiFi, with a saved
+It builds on [Web Blink](blink-from-your-network.md): the board has to join your WiFi, with a saved
 credential. To start from the finished flow, open
 [blink-from-anywhere.flow.json](https://github.com/mkarliner/ThingStudio/blob/main/examples/blink-from-anywhere.flow.json),
 in the [examples folder](../examples.md#where-the-folder-is), with **File → Open…**. Open the file; don't copy it from
@@ -43,7 +43,7 @@ Start with an empty canvas (**File → New flow**).
 5. Drag a **gpio out** and set **pin** to your LED's GPIO number. Wire **mqtt subscribe** → **function** → **gpio out**.
 6. Drag a **debug** and wire **mqtt subscribe** → **debug**, to see what arrives in the console.
 7. On either MQTT node, pick your WiFi credential in the **WiFi** field: the one from
-   [Blink from your network](blink-from-your-network.md#the-board-joins-wifi), or make one with **+**. A flow has one
+   [Web Blink](blink-from-your-network.md#the-board-joins-wifi), or make one with **+**. A flow has one
    WiFi network, so the other node shows the same one.
 
 ## Deploy

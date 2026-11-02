@@ -77,7 +77,7 @@ nav:
       - Overview: tutorials/index.md
       - Example flows: examples.md
       - Two more blinks: tutorials/two-more-blinks.md
-      - Blink from your network: tutorials/blink-from-your-network.md
+      - Web Blink: tutorials/blink-from-your-network.md
       - Blink from anywhere: tutorials/blink-from-anywhere.md
       - A sensor display: sensor-display.md
   - Building flows:

@@ -11,7 +11,7 @@ first four step by step.
   `context`. Walked by [Two more blinks](https://docs.thingstudio.net/tutorials/two-more-blinks/).
 - `http-blink.flow.json` — the same LED, toggled from a browser over WiFi. Needs a WiFi credential of your own
   (the flow names one; nothing in it). Walked by
-  [Blink from your network](https://docs.thingstudio.net/tutorials/blink-from-your-network/).
+  [Web Blink](https://docs.thingstudio.net/tutorials/blink-from-your-network/).
 - `blink-from-anywhere.flow.json` — the same LED through an MQTT broker: publish from the board, subscribe to switch
   it. The topics start `thingstudio/change-this-number/`; replace the number first, since the broker is public. Walked
   by [Blink from anywhere](https://docs.thingstudio.net/tutorials/blink-from-anywhere/).

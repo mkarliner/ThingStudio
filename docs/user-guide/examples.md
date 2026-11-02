@@ -51,7 +51,7 @@ next level. Walked by [Two more blinks](tutorials/two-more-blinks.md), which als
 
 The same LED, toggled from a browser. An `http in` node serves `/toggle` on port 9999, a `function` flips the LED
 and builds the reply, and `http response` answers the browser. `wifi status` and `debug` show the connection. It
-names a WiFi network, `tutorial wifi`. Walked by [Blink from your network](tutorials/blink-from-your-network.md).
+names a WiFi network, `tutorial wifi`. Walked by [Web Blink](tutorials/blink-from-your-network.md).
 
 - **path** and **port** on [http in](nodes/http-in.md).
 - The reply text in the function's **code** (`'LED on'` and `'LED off'`).
