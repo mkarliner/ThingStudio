@@ -41,9 +41,20 @@ the **Board** menu lists your board's pins.
 
 ## Keep the state in the node
 
-Each message is handled on its own; nothing carries over unless you store it. To remember between messages, use
-`context` (private to this node) or `flow` (shared by the whole flow). See
-[Context, flow and settings](../nodes/function.md#context-flow-and-settings).
+!!! note "An important point to understand"
+
+    A flow is stateless: each event is handled on its own, without regard to what came before. In general this is
+    a good thing:
+
+    - An error shows up with the message that caused it, not in some state built over earlier operations.
+    - Recovery is doing nothing: the next message starts clean. A crashed stateful component needs its data
+      restored to an acceptable earlier version, with nothing to say which that is.
+
+    When a flow does need to remember, Thingstudio's answer is a **context** — state held between messages, either
+    private to one node (`context`) or shared across the whole flow (`flow`). This blink's LED level belongs to one
+    function node, so its private store is the one to use. All three stores, `context` and `flow` among them, are
+    in [Context, flow and settings](../nodes/function.md#context-flow-and-settings); `settings` even survives a
+    reboot.
 
 The pin held the state on the board. The other place is inside the function node itself:
 
