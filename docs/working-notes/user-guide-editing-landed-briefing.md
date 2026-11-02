@@ -43,8 +43,8 @@ note (a deliberate hand-added entry). Phases 4-5 delete most of them.
   "MemoryError or a library that won't load" keeps the recovery steps, because the editor links to that heading.
   Headings the editor links to must not change: `board-wont-connect`, `board-stuck-restarting`,
   `commands-and-the-python-prompt`, `module-missing-on-the-board`, `memoryerror-or-a-library-that-wont-load`.
-- **Example folder paths per install route** are a table in Installation details ("Example flows"), from the installer
-  scripts. `topic` is not required on a message. `http in` takes GET or POST only and never reads a body. The node
+- **Example folder paths per install route** are a table on the Examples page ("Where the folder is"), from the
+  installer scripts. `topic` is not required on a message. `http in` takes GET or POST only and never reads a body. The node
   status list includes `ntp`, `adc`, `neopixel`.
 - **Phase 2a:** `examples.md` owns the examples-folder table (Installation details points at it);
   `editor/test/examples-compile.test.ts` checks every `examples/*.flow.json`. When the MQTT tutorial ships its flow, the
