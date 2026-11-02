@@ -934,6 +934,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Example flows
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../two-more-blinks/" class="md-nav__link">
         
   
@@ -1026,6 +1054,17 @@
     <span class="md-ellipsis">
       
         Build the flow
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-board-joins-wifi" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The board joins WiFi
       
     </span>
   </a>
@@ -3119,6 +3158,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#the-board-joins-wifi" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The board joins WiFi
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#name-the-board-then-deploy" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3200,7 +3250,7 @@ open port on it means.</p>
 <p>It builds on <a href="../two-more-blinks/">Two more blinks</a> and starts from the flow that tutorial ends with: timer, function,
 gpio out. To start from the finished flow instead, open
 <a href="https://github.com/mkarliner/ThingStudio/blob/main/examples/http-blink.flow.json">http-blink.flow.json</a>, in the
-<a href="../../installation-details/#example-flows">examples folder</a>, with <strong>File → Open…</strong>. Open the file; don't copy it
+<a href="../../examples/#where-the-folder-is">examples folder</a>, with <strong>File → Open…</strong>. Open the file; don't copy it
 from this page. It names a WiFi network, <code>tutorial wifi</code>, that your computer doesn't have: the <strong>WiFi</strong> field's ✎
 form says so, and saving it with your network's details creates it. The file's <code>debug</code> node prints only the payload;
 tick <strong>full message</strong> on it to see the IP address.</p>
@@ -3227,12 +3277,21 @@ tick <strong>full message</strong> on it to see the IP address.</p>
    <strong>http response</strong>.</li>
 <li>Drag a <strong>wifi status</strong> and a <strong>debug</strong> onto the canvas. Tick <strong>full message</strong> on the <strong>debug</strong> node and wire
    <strong>wifi status</strong> → <strong>debug</strong>.</li>
-<li>On the <strong>http in</strong> node, click <strong>+</strong> next to <strong>WiFi</strong>. The form asks for a name, the SSID and the password, and
-   saves them on this computer, not in the flow (<a href="../../thingstudio-folder/#credentials">The Thingstudio folder</a>).
-   A flow has one WiFi network, so the <strong>WiFi</strong> field on <strong>wifi status</strong> shows the same one.</li>
 </ol>
-<p>If compile stops with "needs a WiFi network", a <strong>WiFi</strong> field is empty. See
-<a href="../../faq/#why-does-compile-fail-with-needs-a-wifi-network">Why does compile fail with "needs a WiFi network"?</a>.</p>
+<h2 id="the-board-joins-wifi">The board joins WiFi</h2>
+<p>The board joins the network named in the flow — so tell the flow which network. Flow files hold no
+passwords or other secrets: the WiFi details live in the <code>.thingstudio</code> folder in your home directory
+(<code>~/.thingstudio/credentials/</code>), as <strong>credentials</strong>. Each credential is named, and you can keep
+several — one per network — and pick the right one per flow. See
+<a href="../../thingstudio-folder/#credentials">The Thingstudio folder</a>.</p>
+<ol>
+<li>On the <code>http in</code> node's property panel, click <strong>+</strong> next to the <strong>WiFi</strong> field to make a new credential (✎
+   edits an existing one). Give the credential a name, your network's SSID and its password, and save.</li>
+<li>The <strong>WiFi</strong> field on the <code>http in</code> node (and on the <code>wifi status</code> node) picks that credential — one WiFi
+   network per flow, shared by every WiFi node in it.</li>
+</ol>
+<p>Compile stops with a one-line error if the flow's WiFi has no saved network behind it; the FAQ's
+<a href="../../faq/#why-does-compile-fail-with-needs-a-wifi-network">needs-a-WiFi-network</a> entry is that error.</p>
 <h2 id="name-the-board-then-deploy">Name the board, then deploy</h2>
 <ol>
 <li>Connect the board over USB, as in <a href="../../connecting/">Connect your board</a>, and choose <strong>Tools → Board settings…</strong>.
@@ -3249,13 +3308,14 @@ nothing drives the pin until a request does.</p>
 <li><strong>By IP:</strong> the <code>debug</code> node prints the whole <strong>wifi status</strong> message, which includes <code>ip</code>. The fields are listed
   under <a href="../../nodes/wifi-status/#behavior">wifi status</a>. Open <code>http://&lt;ip&gt;:9999/toggle</code>.</li>
 </ul>
-<p><code>.local</code> names don't resolve on every network, and never across a VPN. The IP address always works.</p>
-<p>Each request flips the LED, and the page answers <code>LED on</code> or <code>LED off</code>. The first answer after an idle stretch is
-slower, because the board's WiFi wakes on the request (see
+<p>If <code>.local</code> names don't resolve on your network (they don't everywhere, and they don't across VPN tunnels at all —
+multicast doesn't pass), the IP address is the dependable one.</p>
+<p>The page answers <code>LED on</code> or <code>LED off</code>, and the LED does what it says. Expect the first answer after an idle stretch
+to take up to a second: the board's WiFi wakes on the request (see
 <a href="../../faq/#why-do-http-in-requests-take-a-second-to-answer">Why do http in requests take a second to answer?</a>).</p>
 <h2 id="how-it-works">How it works</h2>
-<p>Each request is handled on its own. Between requests the LED holds its level, which the function keeps in
-<code>context</code>.</p>
+<p>The request is the only event this flow gets, and each one is handled on its own: between requests the LED holds its
+level, remembered in the <code>context</code> toggle from the last tutorial.</p>
 <p>The function has two outputs. The first carries the new state to <strong>gpio out</strong>. The second carries <code>reply</code> to
 <a href="../../nodes/http-response/">http response</a>, which answers the browser. <code>return [msg, reply]</code> routes one message to
 each output, as in Node-RED; see the <a href="../../nodes/function/">function node</a>.</p>
@@ -3267,7 +3327,7 @@ does and doesn't do.</p>
 <ul>
 <li><a href="../../nodes/http-in/">http in</a> — routes, methods, timeouts and the server's limits.</li>
 <li><a href="../../nodes/mqtt-publish/">mqtt publish</a> and <a href="../../nodes/mqtt-subscribe/">mqtt subscribe</a> — the same LED over a
-  broker. <code>examples/basic-mqtt.flow.json</code>, in the <a href="../../installation-details/#example-flows">examples folder</a>, is a
+  broker. <code>examples/basic-mqtt.flow.json</code>, in the <a href="../../examples/#where-the-folder-is">examples folder</a>, is a
   starting flow.</li>
 <li><a href="../../wifi-connection/">Connecting over WiFi</a> — the board as an editor peer on your network, not just a web
   server.</li>

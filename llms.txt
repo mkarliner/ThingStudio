@@ -32,6 +32,7 @@
 ## Tutorials
 
 - [Overview](https://docs.thingstudio.net/tutorials/): Getting started ends with a blinking LED.
+- [Example flows](https://docs.thingstudio.net/examples/): Flows to open with **File → Open…** and make your own.
 - [Two more blinks](https://docs.thingstudio.net/tutorials/two-more-blinks/): You have a blinking LED from Blink an LED: timer, function, gpio out, with the function turning the timer's count into on and off.
 - [Blink from your network](https://docs.thingstudio.net/tutorials/blink-from-your-network/): The same LED, driven from a browser: an http in node runs a web server on the board, and each request toggles the LED.
 - [A sensor display](https://docs.thingstudio.net/sensor-display/): This tutorial is being reworked.

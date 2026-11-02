@@ -13,7 +13,7 @@
         <link rel="canonical" href="https://docs.thingstudio.net/tutorials/two-more-blinks/">
       
       
-        <link rel="prev" href="../">
+        <link rel="prev" href="../../examples/">
       
       
         <link rel="next" href="../blink-from-your-network/">
@@ -914,6 +914,34 @@
     
   
     Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Example flows
   
 
     
@@ -3137,7 +3165,7 @@ turning the timer's count into on and off. Two more ways to produce the same bli
 </ul>
 <p>The flow stays the same; only the function's code changes. To start from the finished flow, open
 <a href="https://github.com/mkarliner/ThingStudio/blob/main/examples/two-more-blinks.flow.json">two-more-blinks.flow.json</a>,
-in the <a href="../../installation-details/#example-flows">examples folder</a>, with <strong>File → Open…</strong>. Open the file; don't copy
+in the <a href="../../examples/#where-the-folder-is">examples folder</a>, with <strong>File → Open…</strong>. Open the file; don't copy
 it from this page. It carries the first of the two blinks: change <code>15</code> in <code>machine.Pin(15)</code> to your LED's GPIO
 number.</p>
 <p>If a step misbehaves on the way, start at <a href="../../debugging/">Debugging &amp; troubleshooting</a>.</p>
@@ -3159,9 +3187,21 @@ output, through to <code>gpio out</code>.</p>
 <code>[NODE_ERROR]</code> in the console. See <a href="../../debugging/#reading-a-node-error">Reading a node error</a>; <strong>Pins…</strong> next to
 the <strong>Board</strong> menu lists your board's pins.</p>
 <h2 id="keep-the-state-in-the-node">Keep the state in the node</h2>
-<p>Each message is handled on its own; nothing carries over unless you store it. To remember between messages, use
-<code>context</code> (private to this node) or <code>flow</code> (shared by the whole flow). See
-<a href="../../nodes/function/#context-flow-and-settings">Context, flow and settings</a>.</p>
+<div class="admonition note">
+<p class="admonition-title">An important point to understand</p>
+<p>A flow is stateless: each event is handled on its own, without regard to what came before. In general this is
+a good thing:</p>
+<ul>
+<li>An error shows up with the message that caused it, not in some state built over earlier operations.</li>
+<li>Recovery is doing nothing: the next message starts clean. A crashed stateful component needs its data
+  restored to an acceptable earlier version, with nothing to say which that is.</li>
+</ul>
+<p>When a flow does need to remember, Thingstudio's answer is a <strong>context</strong> — state held between messages, either
+private to one node (<code>context</code>) or shared across the whole flow (<code>flow</code>). This blink's LED level belongs to one
+function node, so its private store is the one to use. All three stores, <code>context</code> and <code>flow</code> among them, are
+in <a href="../../nodes/function/#context-flow-and-settings">Context, flow and settings</a>; <code>settings</code> even survives a
+reboot.</p>
+</div>
 <p>The pin held the state on the board. The other place is inside the function node itself:</p>
 <div class="highlight"><pre><span></span><code><span class="n">on</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">context</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'on'</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
 <span class="n">context</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">'on'</span><span class="p">,</span> <span class="n">on</span><span class="p">)</span>
