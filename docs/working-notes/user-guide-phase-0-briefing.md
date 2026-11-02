@@ -1,5 +1,13 @@
 # User guide editing, phase 0: open facts + the docs lint
 
+Status: **superseded, 2026-11-02.** Phase 0 was done on `docs/context-diet` by Sonnet 5.5 (`c6cc54c`), together
+with phases 1-3 and the discussion #5 additions: see `user-guide-editing-landed-briefing.md`. Don't run this brief; it
+would recreate files that now exist (`tools/docs_lint.py`, the baseline, the `ci.yml` job, the review's fact-check
+section). The facts it guessed at were checked: the examples folder is under `current/examples`, not the install
+root. The remaining phases run on Sonnet 5.5 (Mike, 2026-11-02). The original brief follows unchanged.
+
+---
+
 Status: brief, 2026-11-02. For one session running **GLM-5.3-Flash** (`opencode-go/glm-5.3-flash`; Mike's call,
 2026-11-02 — the editing plan's strong-model recommendation for phase 0 is deliberately overridden). Executes phase
 0 of `docs/working-notes/user-guide-editing-plan.md` and nothing else. When done, hand back to Mike with the commit

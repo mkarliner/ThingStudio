@@ -3,6 +3,8 @@
 Status: continuation brief, filed 2026-11-01. Executes `user-guide-editing-plan.md` against
 `reviews/2026-11-01-user-guide.md`. Phases 0, 1, 2 (with the discussion #5 additions) and 3 are done and committed;
 phase 3's Gap 2 (the MQTT tutorial) has its spec and is its own session. Next: phase 2a, then Gap 2, then phases 4-7.
+The remaining phases run on Sonnet 5.5 (Mike, 2026-11-02); `user-guide-phase-0-briefing.md`, the GLM-5.3-Flash brief for
+phase 0, is superseded by this work and marked so.
 Read the plan's "done" notes under each phase first, then the review's last two sections ("Phase 0 fact-checks" and
 the C6 correction). They carry the answers this brief only points at.
 
