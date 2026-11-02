@@ -65,6 +65,11 @@ Two tutorials take the flow further:
   hardware, read and written back in code, or kept in the node with `context`.
 - [A sensor display](sensor-display.md) — the next job past blinking: read a sensor and show it on a screen.
 
+## Tell us how it went
+
+Started from a blank board? [Tell us how it went](https://github.com/mkarliner/ThingStudio/discussions/new?category=onboarding-reports):
+where the guide or the tool let you down is the most useful part. To keep it private, email mike@minus1.com.
+
 ## If it doesn't blink
 
 Each symptom below has its own fix:

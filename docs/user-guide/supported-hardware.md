@@ -41,6 +41,8 @@ Any board with one of these processors can be used by picking the processor from
 
 ## Displays
 
+The [GUI nodes](nodes/gui.md) that draw on these displays are provisional.
+
 | Chip | Panel sizes | Node | Tested |
 | --- | --- | --- | --- |
 | ST7789 | 240x240, 135x240, 240x320 | [display spi](nodes/display-spi.md) | Yes, on the CYD |
@@ -48,6 +50,8 @@ Any board with one of these processors can be used by picking the processor from
 | SSD1306 (I2C only) | 128x64, or set width and height | [display i2c](nodes/display-i2c.md) | Untested |
 
 ## Touch panels
+
+Touch in the [GUI nodes](nodes/gui.md) is provisional.
 
 | Chip | Node | Tested |
 | --- | --- | --- |

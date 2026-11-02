@@ -8,6 +8,15 @@ drop out of the backlog. Full reasoning stays at each pointer's target; `git log
 **Last audited 2026-10-24, against `git log` at `84dcbfc`** (see the parent file's header). Split out of the
 working list the same day, per Mike's call.
 
+## Added 2026-11-02 (user guide, from the marketing side)
+
+- **Mark the GUI nodes provisional in the user guide** -- done 2026-11-02: a note at the top of `nodes/gui.md`, a line
+  in the sensor-display note, and a line under Displays and under Touch panels in Supported hardware (its tables have
+  no GUI rows). Whether the GUI stays launch-critical is still a product call (`decisions/launch-scope.md`).
+- **Point testers at the onboarding report form** -- done 2026-11-02: a "Tell us how it went" section in
+  `first-flow.md` linking `discussions/new?category=onboarding-reports`, with the email alternative. Caveat: the link
+  works only if the `onboarding-reports` Discussions category exists; that wasn't checked from the sandbox.
+
 ## Added 2026-10-30 (the priorities re-stage sweep)
 
 The re-stage session's detail-file sweep (all 86 detail files checked against current code) confirmed these

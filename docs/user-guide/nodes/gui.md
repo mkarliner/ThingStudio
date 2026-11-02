@@ -1,5 +1,9 @@
 # GUI nodes
 
+!!! note "Provisional"
+
+    The GUI nodes are provisional: their properties and the page layout may change between releases.
+
 Show readings on a display as pages of labels, numbers, bars and lights. Lay out the pages in the gui screen node's
 property panel: see [Laying out pages](#laying-out-pages).
 
