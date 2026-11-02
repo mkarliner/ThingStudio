@@ -895,10 +895,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#next-pick" class="md-nav__link">
+  <a href="#next" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Next, pick:
+        Next
       
     </span>
   </a>
@@ -3152,10 +3152,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#next-pick" class="md-nav__link">
+  <a href="#next" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Next, pick:
+        Next
       
     </span>
   </a>
@@ -3218,6 +3218,8 @@ longer leg goes towards the GPIO pin.</p>
 </li>
 <li>Wire <strong>timer</strong> → <strong>function</strong> → <strong>gpio out</strong>.</li>
 </ol>
+<p>This flow is <code>examples/blink.flow.json</code>, in the <a href="../installation-details/#example-flows">examples folder</a>. Opened from
+there, it needs only <strong>pin</strong> set to your LED's GPIO number.</p>
 <h2 id="deploy">Deploy</h2>
 <p>Click <strong>Compile → Deploy</strong>. A successful deploy ends like this in the console:</p>
 <div class="highlight"><pre><span></span><code>[deploying "my flow" as 3f2a…]
@@ -3232,11 +3234,8 @@ including the board's free memory.</p>
 <p><strong>gpio out</strong> turns the pin on for any payload that isn't zero. Wired straight to the timer, the LED would switch on
 and stay on.</p>
 <p>The <strong>function</strong> node turns the count into 1, 0, 1, 0 with <code>% 2</code>. That gives on, off, on, off.</p>
-<h2 id="next-pick">Next, pick:</h2>
-<p>Each version the function above could take holds the LED's state somewhere different: in the timer's count, on the
-hardware, or with <code>context</code> in the node (see
-<a href="../nodes/function/#context-flow-and-settings">Context, flow and settings</a>). A flow keeps state only where you put
-it: in a message, on the hardware, or in a node.</p>
+<h2 id="next">Next</h2>
+<p>Two tutorials take the flow further:</p>
 <ul>
 <li><a href="../tutorials/two-more-blinks/">Two more blinks</a> — the blink again, two more ways: the LED's state on the
   hardware, read and written back in code, or kept in the node with <code>context</code>.</li>
@@ -3292,6 +3291,10 @@ it: in a message, on the hardware, or in a node.</p>
     <div class="md-footer-meta__inner md-grid">
       <div class="md-copyright">
   
+    <div class="md-copyright__highlight">
+      Visits are counted with <a href="https://www.goatcounter.com/">GoatCounter</a>, run on my own server: pages viewed, the site you came from, browser, screen size and country. No cookies, and nothing that identifies you.
+    </div>
+  
   
     Made with
     <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
@@ -3317,6 +3320,8 @@ it: in a message, on the hardware, or in a node.</p>
     
     
       <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../js/goatcounter.js"></script>
       
     
   </body>

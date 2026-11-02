@@ -2998,6 +2998,28 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#where-do-i-ask-a-question-or-report-a-problem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Where do I ask a question or report a problem?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-do-i-share-a-flow-when-i-ask-for-help" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How do I share a flow when I ask for help?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#why-does-my-esp32-have-so-little-free-memory" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3031,17 +3053,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#why-doesnt-deploy-clear-the-old-flow-or-retry-when-the-board-runs-out-of-memory" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Why doesn't Deploy clear the old flow or retry when the board runs out of memory?
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#why-isnt-a-soft-restart-enough-after-too-full-to-receive-the-flow" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3057,17 +3068,6 @@
     <span class="md-ellipsis">
       
         Deploy failed a second time. Is the flow too big for my board?
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#why-is-deploy-sending-the-flow-in-pieces" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Why is Deploy sending the flow in pieces?
       
     </span>
   </a>
@@ -3337,6 +3337,28 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#where-do-i-ask-a-question-or-report-a-problem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Where do I ask a question or report a problem?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-do-i-share-a-flow-when-i-ask-for-help" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How do I share a flow when I ask for help?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#why-does-my-esp32-have-so-little-free-memory" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3370,17 +3392,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#why-doesnt-deploy-clear-the-old-flow-or-retry-when-the-board-runs-out-of-memory" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Why doesn't Deploy clear the old flow or retry when the board runs out of memory?
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#why-isnt-a-soft-restart-enough-after-too-full-to-receive-the-flow" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3396,17 +3407,6 @@
     <span class="md-ellipsis">
       
         Deploy failed a second time. Is the flow too big for my board?
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#why-is-deploy-sending-the-flow-in-pieces" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Why is Deploy sending the flow in pieces?
       
     </span>
   </a>
@@ -3654,6 +3654,17 @@
 
 
 <h1 id="faq">FAQ</h1>
+<h2 id="where-do-i-ask-a-question-or-report-a-problem">Where do I ask a question or report a problem?</h2>
+<p>Ask questions, and show what you've built, in <a href="https://github.com/mkarliner/ThingStudio/discussions">GitHub Discussions</a>.
+Report a bug or a missing feature on the <a href="https://github.com/mkarliner/ThingStudio/issues">issue tracker</a>, or with
+<strong>Help → Report a problem</strong>. Include the editor's version (<strong>Help → About Thingstudio</strong>), your board, and the console
+lines around the problem. Share the flow file, not compiled output; see the next question.</p>
+<h2 id="how-do-i-share-a-flow-when-i-ask-for-help">How do I share a flow when I ask for help?</h2>
+<p>Share the flow file: <strong>File → Save</strong>, then attach or paste the <code>.flow.json</code>. It holds the nodes and wiring and no
+passwords: the WiFi and broker logins stay on your computer
+(<a href="../thingstudio-folder/#credentials">The Thingstudio folder</a>). Don't paste the <strong>Compiled source</strong> panel or the
+console's compiled output: it contains the resolved WiFi password and broker login. If you pasted it somewhere
+public, change the password.</p>
 <h2 id="why-does-my-esp32-have-so-little-free-memory">Why does my ESP32 have so little free memory?</h2>
 <p>An ESP32's RAM is shared between MicroPython and the chip's own software: ESP-IDF, its FreeRTOS scheduler, and
 the WiFi stack. About half of a classic ESP32's 520 KB is taken before anything runs, by code that has to run from
@@ -3691,39 +3702,14 @@ level) shows the current figures.</p>
 <p>The Pico W's WiFi chip has its own processor and memory. On an ESP32 the whole WiFi stack runs on the main chip
 and uses its RAM. So a 264 KB Pico W leaves more for your flow than a 400 KB ESP32-C3.</p>
 <h2 id="deploy-failed-with-memoryerror-allocating-38400-bytes-why-when-theres-more-free-memory-than-that">Deploy failed with "MemoryError ... allocating 38400 bytes". Why, when there's more free memory than that?</h2>
-<p>Free memory is in pieces. A big buffer needs one piece that size, and after a while an ESP32 may not have
-one. A 240x320 frame in 16 grays is 38,400 bytes. The <a href="../nodes/gui/">GUI nodes</a> avoid this by drawing the
-screen in strips. If your own <code>function</code> node builds a full frame, draw it in strips too, or restart
-the board before deploying.</p>
-<h2 id="why-doesnt-deploy-clear-the-old-flow-or-retry-when-the-board-runs-out-of-memory">Why doesn't Deploy clear the old flow or retry when the board runs out of memory?</h2>
-<p>Because a repair nobody asked for hides the limit. The editor used to stop the running flow and retry when a
-deploy didn't fit; the retry then failed a step later, and the board was left stopped without anyone deciding
-that. Now a deploy that doesn't fit fails once, with the board's free-memory figure, and the console says what
-to do. The steps are yours to take: <strong>Tools → Remove flow…</strong>, <strong>power cycle the board</strong> (unplug and replug the
-USB cable, or <strong>Tools → Reset board (hard)</strong>), then deploy. See
-<a href="../debugging/#memoryerror-or-a-library-that-wont-load">MemoryError or a library that won't load</a>.</p>
+<p>Free memory is in pieces, and a big buffer needs one piece that size. A 240x320 frame in 16 grays is 38,400 bytes.
+The <a href="../nodes/gui/">GUI nodes</a> draw in strips to avoid this; a <code>function</code> node that builds a full frame should too.
+See <a href="../debugging/#memoryerror-or-a-library-that-wont-load">MemoryError or a library that won't load</a>.</p>
 <h2 id="why-isnt-a-soft-restart-enough-after-too-full-to-receive-the-flow">Why isn't a soft restart enough after "too full to receive the flow"?</h2>
-<p>Because a soft restart reuses the same heap. It restarts the interpreter, so the flow's own objects go away, but
-the heap regions MicroPython took as it grew stay where they were, and memory taken from the chip is not given
-back. A board that couldn't find one big block before the soft restart still can't after it. Only cutting power
-to the chip rebuilds the heap from scratch — hence the power cycle in the recipe above.</p>
+<p>A soft restart reuses the same heap; only a power cycle rebuilds it. See <a href="../debugging/#memoryerror-or-a-library-that-wont-load">MemoryError or a library that won't load</a>.</p>
 <h2 id="deploy-failed-a-second-time-is-the-flow-too-big-for-my-board">Deploy failed a second time. Is the flow too big for my board?</h2>
-<p>Possibly, yes. Work through this in order:</p>
-<ol>
-<li><strong>Tools → Remove flow…</strong>, then <strong>power cycle the board</strong> (unplug and replug the USB cable, or
-   <strong>Tools → Reset board (hard)</strong>), then deploy.</li>
-<li>If it still fails, the flow may be too big for the board. Make it smaller (fewer GUI pages, fewer libraries, a
-   smaller frame), use a board with more memory, or — on a classic ESP32 — run the
-   <a href="../custom-firmware/">custom firmware</a>, which keeps the runtime and the libraries in the firmware.</li>
-</ol>
-<p>Boards with little RAM have a point where a flow simply does not fit. Nothing in the editor can make room the
-board does not have. The console shows how much memory the board had when it failed; see
-<a href="../debugging/#memoryerror-or-a-library-that-wont-load">MemoryError or a library that won't load</a>.</p>
-<h2 id="why-is-deploy-sending-the-flow-in-pieces">Why is Deploy sending the flow in pieces?</h2>
-<p>Some boards (classic ESP32 with no PSRAM) can't take a whole flow in one message once a display flow has run:
-the memory is free but in pieces too small for one message. Deploy sends the flow in 5 KB pieces instead, each
-confirmed before the next. Larger pieces keep a deploy quick; a board that can't take 5 KB has a memory problem
-worth seeing rather than one to work around.</p>
+<p>Possibly. If a deploy still fails after <strong>Tools → Remove flow…</strong> and a power cycle, the flow may be too big for the
+board. See <a href="../debugging/#memoryerror-or-a-library-that-wont-load">MemoryError or a library that won't load</a> for what to do.</p>
 <h2 id="why-does-http-request-fail-with-memoryerror-fetching-a-page">Why does http request fail with "MemoryError" fetching a page?</h2>
 <p>The node reads the whole response body into memory at once. A page larger than the largest free block fails, even
 when the console shows more free memory than the page size. A 56 KB page on an ESP32-C3 failed with
@@ -3738,10 +3724,10 @@ The console then shows megabytes free. Freenove's S3 display boards are an examp
 leaving the chip's own RAM for WiFi. A classic ESP32 or ESP32-C3 without PSRAM can run a display and WiFi, but
 only at lower color depths and with little to spare.</p>
 <h2 id="my-wifi-flow-worked-before-but-now-the-board-crashes-or-wont-join-why">My WiFi flow worked before, but now the board crashes or won't join. Why?</h2>
-<p>On an ESP32, MicroPython's heap grows by taking memory from ESP-IDF when a flow needs more, and keeps it until the
-chip is reset. After a flow that uses a lot of memory, such as a display, WiFi may not have enough left to start.
-The console warns you before you deploy. Use <strong>Tools → Reset board (hard)</strong>: a soft restart doesn't give that
-memory back. See <a href="../debugging/#restarting-the-board">Restarting the board</a>.</p>
+<p>On an ESP32, MicroPython's heap grows by taking memory from ESP-IDF, and keeps it until the chip is reset. After a
+flow that uses a lot of memory, such as a display, WiFi may have too little left to start. Use
+<strong>Tools → Reset board (hard)</strong>: a soft restart doesn't give that memory back. See <a href="../debugging/#memory">Memory</a> and
+<a href="../debugging/#restarting-the-board">Restarting the board</a>.</p>
 <h2 id="why-does-opening-a-flow-ask-save-changes-to-even-though-i-changed-nothing">Why does opening a flow ask "Save changes to …?" even though I changed nothing?</h2>
 <p>That is the browser's file-permission dialog, not the editor. A page may read a file you pick, but to <em>write</em>
 it back (Save) it needs your permission, and the browser asks with that wording: "Save changes to
@@ -3754,13 +3740,13 @@ nothing is written until you press Save.</p>
 runtime can't run flows from the newer editor, so Deploy stops and says so. Use <strong>Tools → Install runtime…</strong>, then
 Connect and deploy again.</p>
 <h2 id="how-do-i-tell-which-version-of-the-editor-im-running">How do I tell which version of the editor I'm running?</h2>
-<p>It's next to <strong>Thingstudio</strong> in the toolbar, and in <strong>Help → About</strong>. A <code>+</code> after it means you built the editor
+<p>It's next to <strong>Thingstudio</strong> in the toolbar, and in <strong>Help → About Thingstudio</strong>. A <code>+</code> after it means you built the editor
 from uncommitted changes.</p>
 <h2 id="my-clock-shows-and-never-the-time-why">My clock shows <code>--</code> and never the time. Why?</h2>
 <p>The ntp node hasn't synced yet. Its status says why: <strong>waiting for WiFi</strong>, or <strong>NTP from <em>server</em> failed</strong> when the
 board can't reach the server. It tries again every 30 seconds. See <a href="../nodes/ntp/#errors">ntp</a>.</p>
 <h2 id="my-gui-toggle-shows-why">My gui toggle shows <code>--</code>. Why?</h2>
-<p>A toggle with its input wired shows <code>--</code> until the input sends a value it recognises. It matches the input against
+<p>A toggle with its input wired shows <code>--</code> until the input sends a value it recognizes. It matches the input against
 its <em>on sends</em> and <em>off sends</em> values, <code>true</code> and <code>false</code> unless you changed them. A Tasmota plug reports <code>ON</code> and
 <code>OFF</code> as text: set the toggle's value type to text. See <a href="../nodes/gui/#a-toggle-that-follows-the-real-device">a toggle that follows the real device</a>.</p>
 <h2 id="why-cant-i-use-a-touch-node-and-a-gui-screen-on-the-same-panel">Why can't I use a touch node and a gui screen on the same panel?</h2>
@@ -3779,12 +3765,10 @@ it needs real credentials: a WiFi config in the flow and a broker. Compile stops
 missing — "needs a WiFi network" or "needs an MQTT broker". Set the node's <strong>WiFi</strong> (or <strong>MQTT Broker</strong>) field;
 every MQTT node in a flow shares that one setting. See <a href="../working-in-the-editor/#config-nodes">Config nodes</a>.</p>
 <h2 id="why-do-http-in-requests-take-a-second-to-answer">Why do http in requests take a second to answer?</h2>
-<p>The flow answers immediately — the wait is the board's WiFi waking up. An idle board's radio sleeps
-(modem-sleep); a new request pays the wake and the connection set-up before anything the flow does. Measured on a
-classic ESP32 (Wemos D1 R32) toggling an LED, through a VPN tunnel: 0.16–1.2 s per request, with the wake part of
-it; a volley of requests answered in 0.15–0.20 s each once the radio was warm. If the board has steady network
-traffic — a flow that talks, or sits connected — the wake cost goes away on its own. See the deferred note on
-modem sleep in <code>working-notes/outstanding-items.md</code>.</p>
+<p>The flow answers immediately; the wait is the board's WiFi waking up. An idle board's radio sleeps (modem-sleep), and
+a new request pays the wake and the connection set-up before anything the flow does. On a classic ESP32 behind a VPN
+tunnel, requests took up to 1.2 s with the radio asleep and 0.15–0.20 s once it was warm. If the board has steady
+network traffic, a flow that talks or sits connected, the wake cost goes away on its own.</p>
 <h2 id="why-is-compile-deploy-grayed-out-after-a-deploy">Why is Compile → Deploy grayed out after a deploy?</h2>
 <p>The board already runs the flow on the canvas. Deploy comes back when you change the flow. See
 <a href="../debugging/#deploy-is-grayed-out">Deploy is grayed out</a>.</p>
@@ -3841,6 +3825,10 @@ have their own installation routes; see <a href="../installing-micropython/">Ins
     <div class="md-footer-meta__inner md-grid">
       <div class="md-copyright">
   
+    <div class="md-copyright__highlight">
+      Visits are counted with <a href="https://www.goatcounter.com/">GoatCounter</a>, run on my own server: pages viewed, the site you came from, browser, screen size and country. No cookies, and nothing that identifies you.
+    </div>
+  
   
     Made with
     <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
@@ -3866,6 +3854,8 @@ have their own installation routes; see <a href="../installing-micropython/">Ins
     
     
       <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../js/goatcounter.js"></script>
       
     
   </body>

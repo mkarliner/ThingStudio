@@ -3194,7 +3194,6 @@
 
 
 <h1 id="editor-in-depth">Editor in depth</h1>
-<p>How the editor's wiring, node labels, presets, config nodes and node status work.</p>
 <h2 id="wiring">Wiring</h2>
 <p>Every port has a type: <code>int</code>, <code>number</code>, <code>bool</code>, <code>string</code>, <code>bytes</code> or <code>any</code>. The editor refuses a wire between
 types that don't fit. What each input type accepts:</p>
@@ -3305,8 +3304,9 @@ doesn't need a <code>wifi status</code> node to use the network.</p>
 </table>
 <p>The dot shows what the board reports, not the editor's guess. It appears once the running flow first reports, and
 clears on every deploy until the new flow reports.</p>
-<p>The nodes with a status are <code>wifi status</code>, <code>mqtt publish</code>, <code>mqtt subscribe</code>, <code>i2c device</code>, <code>bme280</code>, <code>touch</code>, and a
-<code>gui screen</code> with a touch panel.</p>
+<p>These nodes report a status: <code>wifi status</code>, <code>mqtt publish</code>, <code>mqtt subscribe</code>, <code>ntp</code>, <code>i2c device</code>, <code>bme280</code>, <code>touch</code>
+and a <code>gui screen</code> with a touch panel. <code>adc</code> and <code>neopixel</code> report only a failed read or write, as a red dot. A custom
+node reports one if its code does.</p>
 <h2 id="notes">Notes</h2>
 <p>The <strong>Notes</strong> panel on the right is free text about the flow: what it does, what to wire up, how to use it. It's
 saved in the flow file, and opens by itself when you open a flow that has notes. <strong>File → New flow</strong> clears it.</p>
@@ -3344,6 +3344,10 @@ saved in the flow file, and opens by itself when you open a flow that has notes.
     <div class="md-footer-meta__inner md-grid">
       <div class="md-copyright">
   
+    <div class="md-copyright__highlight">
+      Visits are counted with <a href="https://www.goatcounter.com/">GoatCounter</a>, run on my own server: pages viewed, the site you came from, browser, screen size and country. No cookies, and nothing that identifies you.
+    </div>
+  
   
     Made with
     <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
@@ -3369,6 +3373,8 @@ saved in the flow file, and opens by itself when you open a flow that has notes.
     
     
       <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../js/goatcounter.js"></script>
       
     
   </body>

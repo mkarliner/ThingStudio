@@ -3213,12 +3213,16 @@ to several outputs. <code>context.get()</code>/<code>context.set()</code> and <c
 <p>Don't use <code>time.sleep()</code> in a function node. It stops the whole board, not only that node. Use <code>await asyncio.sleep()</code> or a <code>delay</code> node
 instead. See <a href="../../background/event-driven/">event-driven programming</a>.</p>
 <h2 id="messages">Messages</h2>
-<p>Every message needs a <code>topic</code>, even an empty one (<code>''</code>). Ports also have types, such as <code>int</code>, <code>bool</code> and <code>string</code>, and
+<p>A message carries a <code>payload</code> and usually a <code>topic</code>; the built-in nodes that start a flow set <code>topic</code> to an empty
+string. Ports also have types, such as <code>int</code>, <code>bool</code> and <code>string</code>, and
 the editor refuses a wire between types that don't fit. See <a href="../../working-in-the-editor/#wiring">Editor in depth</a>.</p>
 <h2 id="nodes">Nodes</h2>
 <p>The palette is smaller, and made for hardware. <code>timer</code>, <code>interrupt</code>, <code>gpio out</code>, <code>pwm out</code> and the sensor and
-display nodes work with the board directly. <code>inject</code>, <code>debug</code>, <code>function</code>, <code>delay</code>, <code>mqtt</code>, <code>http</code> and <code>udp</code> will
-look familiar. </p>
+display nodes work with the board directly. <code>inject</code>, <code>debug</code>, <code>function</code> and <code>delay</code> will look familiar, and so will
+the network nodes: <code>mqtt publish</code>, <code>mqtt subscribe</code>, <code>http request</code>, <code>http in</code>, <code>http response</code>, <code>udp send</code> and
+<code>udp receive</code>.</p>
+<p>A flow has one MQTT broker and one WiFi network, set on any MQTT or WiFi node and shared by all of them. Node-RED's
+broker per node doesn't carry over. See <a href="../../working-in-the-editor/#config-nodes">Config nodes</a>.</p>
 <p>You add node types by writing a JSON file and a Python file. See
 <a href="../../custom-nodes/">writing custom nodes</a>.</p>
 <h2 id="debugging">Debugging</h2>
@@ -3262,6 +3266,10 @@ boards publishing over MQTT to a Node-RED flow on a server or Raspberry Pi.</p>
     <div class="md-footer-meta__inner md-grid">
       <div class="md-copyright">
   
+    <div class="md-copyright__highlight">
+      Visits are counted with <a href="https://www.goatcounter.com/">GoatCounter</a>, run on my own server: pages viewed, the site you came from, browser, screen size and country. No cookies, and nothing that identifies you.
+    </div>
+  
   
     Made with
     <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
@@ -3287,6 +3295,8 @@ boards publishing over MQTT to a Node-RED flow on a server or Raspberry Pi.</p>
     
     
       <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../js/goatcounter.js"></script>
       
     
   </body>

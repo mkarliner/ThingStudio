@@ -1022,10 +1022,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#first-the-board-joins-wifi" class="md-nav__link">
+  <a href="#build-the-flow" class="md-nav__link">
     <span class="md-ellipsis">
       
-        First: the board joins WiFi
+        Build the flow
       
     </span>
   </a>
@@ -1055,10 +1055,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#the-chain-and-the-reply" class="md-nav__link">
+  <a href="#how-it-works" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The chain, and the reply
+        How it works
       
     </span>
   </a>
@@ -1066,10 +1066,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#one-line-on-the-open-port" class="md-nav__link">
+  <a href="#the-server-is-open" class="md-nav__link">
     <span class="md-ellipsis">
       
-        One line on the open port
+        The server is open
       
     </span>
   </a>
@@ -1077,10 +1077,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#next-pick" class="md-nav__link">
+  <a href="#next" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Next, pick:
+        Next
       
     </span>
   </a>
@@ -3108,10 +3108,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#first-the-board-joins-wifi" class="md-nav__link">
+  <a href="#build-the-flow" class="md-nav__link">
     <span class="md-ellipsis">
       
-        First: the board joins WiFi
+        Build the flow
       
     </span>
   </a>
@@ -3141,10 +3141,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#the-chain-and-the-reply" class="md-nav__link">
+  <a href="#how-it-works" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The chain, and the reply
+        How it works
       
     </span>
   </a>
@@ -3152,10 +3152,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#one-line-on-the-open-port" class="md-nav__link">
+  <a href="#the-server-is-open" class="md-nav__link">
     <span class="md-ellipsis">
       
-        One line on the open port
+        The server is open
       
     </span>
   </a>
@@ -3163,10 +3163,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#next-pick" class="md-nav__link">
+  <a href="#next" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Next, pick:
+        Next
       
     </span>
   </a>
@@ -3194,57 +3194,24 @@
 
 
 <h1 id="blink-from-your-network">Blink from your network</h1>
-<p>The same LED, driven from a browser: an <code>http in</code> node runs a web server on the board, and each request toggles
-it. Along the way: telling the board which WiFi network to join, finding it from your computer, and what an open
-port on it means.</p>
-<p>It builds on <a href="../two-more-blinks/">Two more blinks</a>. If you're starting cold, download
-<a href="https://github.com/mkarliner/ThingStudio/blob/main/examples/http-blink.flow.json">http-blink.flow.json</a>
-and open it with <strong>File → Open…</strong> — it carries the whole tutorial's flow: the web chain (<code>http in</code>, a toggle,
-<code>gpio out</code>, an answer back to the browser) and a <code>wifi status</code> node so the connection is visible. The timer
-chain that made the LED blink is gone from this flow: on the network the request is the event, and the LED
-holds whatever level you last asked it to.</p>
+<p>The same LED, driven from a browser: an <code>http in</code> node runs a web server on the board, and each request toggles the
+LED. The tutorial covers telling the board which WiFi network to join, finding it from your computer, and what an
+open port on it means.</p>
+<p>It builds on <a href="../two-more-blinks/">Two more blinks</a> and starts from the flow that tutorial ends with: timer, function,
+gpio out. To start from the finished flow instead, open
+<a href="https://github.com/mkarliner/ThingStudio/blob/main/examples/http-blink.flow.json">http-blink.flow.json</a>, in the
+<a href="../../installation-details/#example-flows">examples folder</a>, with <strong>File → Open…</strong>. Open the file; don't copy it
+from this page. It names a WiFi network, <code>tutorial wifi</code>, that your computer doesn't have: the <strong>WiFi</strong> field's ✎
+form says so, and saving it with your network's details creates it. The file's <code>debug</code> node prints only the payload;
+tick <strong>full message</strong> on it to see the IP address.</p>
 <p>If a step misbehaves on the way, start at <a href="../../debugging/">Debugging &amp; troubleshooting</a>.</p>
-<h2 id="first-the-board-joins-wifi">First: the board joins WiFi</h2>
-<p>The board joins the network named in the flow — so first, tell the flow which network. Flow files hold no
-passwords or other secrets: the WiFi details live in the <code>.thingstudio</code> folder in your home directory
-(<code>~/.thingstudio/credentials/</code>), as <strong>credentials</strong>. Each credential is named, and you can keep
-several — one per network — and pick the right one per flow. See
-<a href="../../thingstudio-folder/#credentials">The Thingstudio folder</a>.</p>
+<h2 id="build-the-flow">Build the flow</h2>
+<p>On the network the request is the event, so the timer goes and the LED holds the level you last asked for.</p>
 <ol>
-<li>Connect the board over USB, as in <a href="../../connecting/">Connect your board</a>.</li>
-<li>On the <code>http in</code> node's property panel, click <strong>+</strong> next to the <strong>WiFi</strong> field to make a new credential (✎
-   edits an existing one). Give the credential a name, your network's SSID and its password, and save.</li>
-<li>The <strong>WiFi</strong> field on the <code>http in</code> node (and on the <code>wifi status</code> node) picks that credential — one WiFi
-   network per flow, shared by every WiFi node in it.</li>
-</ol>
-<p>Compile stops with a one-line error if the flow's WiFi has no saved network behind it; the FAQ's
-<a href="../../faq/#why-does-compile-fail-with-needs-a-wifi-network">needs-a-WiFi-network</a> entry is that error.</p>
-<h2 id="name-the-board-then-deploy">Name the board, then deploy</h2>
-<ol>
-<li>With the board still on USB, choose <strong>Tools → Board settings…</strong> and give the board a network name, say
-   <code>blink</code>. A name is how your computer finds it later without an IP address.</li>
-<li>Click <strong>Compile → Deploy</strong>. The board swaps in the flow and joins your WiFi.</li>
-</ol>
-<p>A few seconds after the deploy, <code>wifi status</code>'s console line prints <code>true</code>, and its dot on the canvas shows
-connected (see <a href="../../working-in-the-editor/#node-status">node status</a> when the dot is something else). The LED
-itself goes dark: nothing drives the pin until a request does — the blink is over; the switch is yours.</p>
-<h2 id="find-the-board">Find the board</h2>
-<ul>
-<li><strong>By name:</strong> open <code>http://blink.local:9999/toggle</code> in your browser. The name is the one from Board settings,
-  plus <code>.local</code>; port 9999 and path <code>/toggle</code> are the <code>http in</code> node's <strong>port</strong> and <strong>path</strong>.</li>
-<li><strong>By IP:</strong> tick <strong>full message</strong> on the <code>debug</code> node and read the <code>ip</code> from its next console line — the fields
-  are listed under <a href="../../nodes/wifi-status/#behavior">wifi status</a>. Then <code>http://&lt;that ip&gt;:9999/toggle</code>.</li>
-</ul>
-<p>If <code>.local</code> names don't resolve on your network (they don't everywhere, and they don't across VPN tunnels at all —
-multicast doesn't pass), the IP address is the dependable one.</p>
-<p>The page answers <code>LED on</code> or <code>LED off</code>, and the LED does what it says. Expect the first answer after an idle
-stretch to take up to a second: the board's WiFi wakes on the request (see
-<a href="../../faq/#why-do-http-in-requests-take-a-second-to-answer">Why do http in requests take a second to answer?</a>).
-The request is the only event this flow
-gets, and each one is handled on its own: between requests the LED holds its level, remembered in the
-<code>context</code> toggle from the last tutorial.</p>
-<h2 id="the-chain-and-the-reply">The chain, and the reply</h2>
-<p>One chain, two outputs:</p>
+<li>Delete the <strong>timer</strong>.</li>
+<li>Drag an <strong>http in</strong> onto the canvas. Set <strong>port</strong> to <code>9999</code> and <strong>path</strong> to <code>/toggle</code>. Leave <strong>method</strong> as <code>GET</code>.</li>
+<li>
+<p>Select the <strong>function</strong>. Set <strong>outputs</strong> to <code>2</code> and replace its <strong>code</strong> with:</p>
 <div class="highlight"><pre><span></span><code><span class="n">on</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">context</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'on'</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
 <span class="n">context</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">'on'</span><span class="p">,</span> <span class="n">on</span><span class="p">)</span>
 <span class="n">msg</span><span class="p">[</span><span class="s1">'payload'</span><span class="p">]</span> <span class="o">=</span> <span class="n">on</span>
@@ -3252,17 +3219,56 @@ gets, and each one is handled on its own: between requests the LED holds its lev
 <span class="n">reply</span><span class="p">[</span><span class="s1">'payload'</span><span class="p">]</span> <span class="o">=</span> <span class="s1">'LED '</span> <span class="o">+</span> <span class="p">(</span><span class="s1">'on'</span> <span class="k">if</span> <span class="n">on</span> <span class="k">else</span> <span class="s1">'off'</span><span class="p">)</span>
 <span class="k">return</span> <span class="p">[</span><span class="n">msg</span><span class="p">,</span> <span class="n">reply</span><span class="p">]</span>
 </code></pre></div>
-<p>The chain is <code>http in → function → gpio out</code>. The web chain's function has two outputs, and the second one
-carries <code>reply</code> to an <a href="../../nodes/http-response/"><code>http response</code></a> node, so the browser gets an answer.
-<code>return [msg, reply]</code> is the <a href="../../nodes/function/">function node's</a> output-1/output-2 routing, Node-RED style.</p>
-<h2 id="one-line-on-the-open-port">One line on the open port</h2>
-<p><code>http in</code> runs an unauthenticated server on the board: whatever reaches that network can call every path. Keep
-those routes non-sensitive, or keep the board off shared networks. See <a href="../../nodes/http-in/#limitations">http in</a>
-for what the server does and does not do.</p>
-<h2 id="next-pick">Next, pick:</h2>
+</li>
+<li>
+<p>Drag an <strong>http response</strong> onto the canvas.</p>
+</li>
+<li>Wire <strong>http in</strong> → <strong>function</strong>. Wire the function's first output to <strong>gpio out</strong> and its second output to
+   <strong>http response</strong>.</li>
+<li>Drag a <strong>wifi status</strong> and a <strong>debug</strong> onto the canvas. Tick <strong>full message</strong> on the <strong>debug</strong> node and wire
+   <strong>wifi status</strong> → <strong>debug</strong>.</li>
+<li>On the <strong>http in</strong> node, click <strong>+</strong> next to <strong>WiFi</strong>. The form asks for a name, the SSID and the password, and
+   saves them on this computer, not in the flow (<a href="../../thingstudio-folder/#credentials">The Thingstudio folder</a>).
+   A flow has one WiFi network, so the <strong>WiFi</strong> field on <strong>wifi status</strong> shows the same one.</li>
+</ol>
+<p>If compile stops with "needs a WiFi network", a <strong>WiFi</strong> field is empty. See
+<a href="../../faq/#why-does-compile-fail-with-needs-a-wifi-network">Why does compile fail with "needs a WiFi network"?</a>.</p>
+<h2 id="name-the-board-then-deploy">Name the board, then deploy</h2>
+<ol>
+<li>Connect the board over USB, as in <a href="../../connecting/">Connect your board</a>, and choose <strong>Tools → Board settings…</strong>.
+   Give the board a network name, such as <code>blink</code>. A name lets your computer find the board without an IP address.</li>
+<li>Click <strong>Compile → Deploy</strong>. The board swaps in the flow and joins your WiFi.</li>
+</ol>
+<p>A few seconds after the deploy, the console prints the <strong>wifi status</strong> message, with a <code>payload</code> of <code>true</code>, and the
+node's dot shows connected (see <a href="../../working-in-the-editor/#node-status">node status</a> when the dot is something else). The LED is dark:
+nothing drives the pin until a request does.</p>
+<h2 id="find-the-board">Find the board</h2>
 <ul>
-<li><a href="../">Tutorials</a> — what comes after the network: publish and subscribe over MQTT is next to be written.</li>
-<li><a href="../../nodes/http-in/">http in</a> — routes, methods, timeouts, and the server's limits.</li>
+<li><strong>By name:</strong> open <code>http://blink.local:9999/toggle</code> in your browser. The name is the one from Board settings plus
+  <code>.local</code>; port 9999 and path <code>/toggle</code> are the <strong>port</strong> and <strong>path</strong> of the <code>http in</code> node.</li>
+<li><strong>By IP:</strong> the <code>debug</code> node prints the whole <strong>wifi status</strong> message, which includes <code>ip</code>. The fields are listed
+  under <a href="../../nodes/wifi-status/#behavior">wifi status</a>. Open <code>http://&lt;ip&gt;:9999/toggle</code>.</li>
+</ul>
+<p><code>.local</code> names don't resolve on every network, and never across a VPN. The IP address always works.</p>
+<p>Each request flips the LED, and the page answers <code>LED on</code> or <code>LED off</code>. The first answer after an idle stretch is
+slower, because the board's WiFi wakes on the request (see
+<a href="../../faq/#why-do-http-in-requests-take-a-second-to-answer">Why do http in requests take a second to answer?</a>).</p>
+<h2 id="how-it-works">How it works</h2>
+<p>Each request is handled on its own. Between requests the LED holds its level, which the function keeps in
+<code>context</code>.</p>
+<p>The function has two outputs. The first carries the new state to <strong>gpio out</strong>. The second carries <code>reply</code> to
+<a href="../../nodes/http-response/">http response</a>, which answers the browser. <code>return [msg, reply]</code> routes one message to
+each output, as in Node-RED; see the <a href="../../nodes/function/">function node</a>.</p>
+<h2 id="the-server-is-open">The server is open</h2>
+<p><code>http in</code> runs an unauthenticated server on the board: whatever reaches that network can call every path. Keep those
+routes non-sensitive, or keep the board off shared networks. See <a href="../../nodes/http-in/">http in</a> for what the server
+does and doesn't do.</p>
+<h2 id="next">Next</h2>
+<ul>
+<li><a href="../../nodes/http-in/">http in</a> — routes, methods, timeouts and the server's limits.</li>
+<li><a href="../../nodes/mqtt-publish/">mqtt publish</a> and <a href="../../nodes/mqtt-subscribe/">mqtt subscribe</a> — the same LED over a
+  broker. <code>examples/basic-mqtt.flow.json</code>, in the <a href="../../installation-details/#example-flows">examples folder</a>, is a
+  starting flow.</li>
 <li><a href="../../wifi-connection/">Connecting over WiFi</a> — the board as an editor peer on your network, not just a web
   server.</li>
 </ul>
@@ -3300,6 +3306,10 @@ for what the server does and does not do.</p>
     <div class="md-footer-meta__inner md-grid">
       <div class="md-copyright">
   
+    <div class="md-copyright__highlight">
+      Visits are counted with <a href="https://www.goatcounter.com/">GoatCounter</a>, run on my own server: pages viewed, the site you came from, browser, screen size and country. No cookies, and nothing that identifies you.
+    </div>
+  
   
     Made with
     <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
@@ -3325,6 +3335,8 @@ for what the server does and does not do.</p>
     
     
       <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../js/goatcounter.js"></script>
       
     
   </body>

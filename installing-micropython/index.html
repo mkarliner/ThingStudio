@@ -3254,40 +3254,38 @@
 per board.</p>
 <p>A new board usually doesn't have MicroPython. If yours already has it, or you're not sure, go to
 <a href="../connecting/">step 4</a>. If MicroPython is missing, the console says so when you connect, and links back here.</p>
-<p>Thingstudio can install it for you, on the chips it can write. Doing it by hand is at the bottom of this page.</p>
+<p>Thingstudio can install it for you, on the chips it can write.</p>
 <h2 id="install-from-thingstudio">Install from Thingstudio</h2>
 <p>Thingstudio writes the firmware itself: over a serial port for the ESP32 family, and onto a mounted drive for
 RP2040, RP2350 and nRF52 boards.</p>
+<p>For a classic ESP32 with 4 MB of flash and no PSRAM, pick the <a href="../custom-firmware/">Thingstudio custom image</a> as the
+<strong>Firmware</strong> rather than official MicroPython: the runtime and the flow libraries are frozen into flash, where they
+run without taking the RAM the display stack and the flow need. Its <strong>Version</strong> list holds the published releases.
+After flashing it, <strong>Install runtime</strong> writes only the boot script.</p>
 <ol>
-<li>Put the board in its bootloader. Hold <strong>BOOT</strong> and tap <strong>RESET</strong> on an ESP32, or hold <strong>BOOTSEL</strong> while you
-   plug in a Pico.</li>
+<li>Plug the board into USB. A Pico needs <strong>BOOTSEL</strong> held while you plug it in.</li>
 <li>Choose <strong>Tools → Install firmware…</strong>.</li>
 <li>Pick <strong>Serial port</strong> or <strong>Mounted drive</strong>, then the port or drive from the list. USB ports come first, shown as
-   the path and the adapter's name (for example <code>/dev/ttyUSB0 -- CH340</code>). If the board isn't there, put it in
-   download mode (step 1) and click ⟳; the line under the list says how many it found. If it still isn't listed,
-   type the path in the box (on macOS a mounted Pico is <code>/Volumes/RPI-RP2</code>).</li>
-<li>Pick the <strong>chip family</strong> and the <strong>firmware</strong>, then the <strong>build</strong> and <strong>version</strong>. Only the families the editor
-   can write are listed, and only builds whose hash is pinned, so what you flash is what was tested. A board that
-   names its own build is preselected. The build matters for the heap as much as for compatibility: an ESP32 with
-   extra PSRAM wants the <strong>PSRAM (WROVER)</strong> build, a single-core SOLO the <strong>single-core</strong> one.</li>
+   the path and the adapter's name (for example <code>/dev/ttyUSB0 -- CH340</code>). If an ESP32 isn't listed, hold <strong>BOOT</strong>,
+   tap <strong>RESET</strong> and click ⟳; the line under the list says how many it found. If it still isn't listed, type the
+   path in the box (on macOS a mounted Pico is <code>/Volumes/RPI-RP2</code>).</li>
+<li>Pick the <strong>Chip family</strong>, the <strong>Firmware</strong> (<strong>Official MicroPython (micropython.org)</strong> or <strong>Thingstudio custom
+   image</strong>), the <strong>Build</strong> and the <strong>Version</strong>. A board that names its own build is preselected.</li>
+<li>Click <strong>Flash</strong>. <strong>Erase all flash first</strong> is ticked: it clears an old partition table, which is the usual
+   reason a board doesn't boot after a successful install. The dialog shows each line the tool prints; a failure
+   says what to fix.</li>
 </ol>
-<p>For a classic ESP32 with 4 MB of flash and no PSRAM, use the
-   <a href="../custom-firmware/">Thingstudio custom image</a> rather than stock MicroPython: the runtime and the flow libraries
-   are frozen into flash, where they run without taking the RAM the display stack and the flow need. Its
-   <strong>Version</strong> list holds the published releases. After flashing it, <strong>Install runtime</strong> writes only the boot
-   script.
-5. Click <strong>Flash</strong>. <strong>Erase all flash first</strong> is ticked: it clears an old partition table, which is the usual
-   reason a first install "succeeds" and then doesn't boot. The dialog shows each line the tool prints; a failure
-   says what to fix.</p>
+<p>The <strong>Build</strong> matters for the heap as much as for compatibility: an ESP32 with extra PSRAM wants
+<strong>ESP32 with PSRAM (WROVER / SPIRAM)</strong>, and a single-core SOLO wants <strong>ESP32 single-core (SOLO / UNICORE)</strong>. Only the
+chip families the editor can write are listed, and only builds whose hash is pinned, so what you flash is what was
+tested.</p>
 <p>The list covers every build Thingstudio pins, so <strong>Or use your own image file</strong> is only for the rest: a build for a
-board we don't list, or an image you downloaded yourself. Pick the <code>.bin</code> or <code>.uf2</code>; the chip family you choose
-decides the address, and the file's own header usually decides the family.</p>
+board Thingstudio doesn't list, or an image you downloaded yourself. Pick the <code>.bin</code> or <code>.uf2</code>; the chip family you
+choose decides the address, and the file's own header usually decides the family.</p>
 <p>Flashing erases the flow and all settings on the board. Afterwards, <a href="../connecting/">connect</a> it
 and <a href="../installing-runtime/">install the runtime</a>.</p>
-<p>The rest of this page is the same job without the editor, for a chip it can't write or a build it doesn't pin.</p>
 <h2 id="doing-it-yourself">Doing it yourself</h2>
-<p>You don't need any of this for a chip Thingstudio can write with a pinned build — that is the section above. It is
-here for the rest.</p>
+<p>For a chip Thingstudio can't write, or a build it doesn't pin, install MicroPython without the editor.</p>
 <h3 id="get-the-firmware">Get the firmware</h3>
 <p>Download the firmware for your board from <a href="https://micropython.org/download/">micropython.org/download</a>. Pick your
 exact board if it's listed, or the generic build for your chip:</p>
@@ -3423,6 +3421,10 @@ processor definition: see <a href="../supported-hardware/#other-boards">Other bo
     <div class="md-footer-meta__inner md-grid">
       <div class="md-copyright">
   
+    <div class="md-copyright__highlight">
+      Visits are counted with <a href="https://www.goatcounter.com/">GoatCounter</a>, run on my own server: pages viewed, the site you came from, browser, screen size and country. No cookies, and nothing that identifies you.
+    </div>
+  
   
     Made with
     <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
@@ -3448,6 +3450,8 @@ processor definition: see <a href="../supported-hardware/#other-boards">Other bo
     
     
       <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../js/goatcounter.js"></script>
       
     
   </body>

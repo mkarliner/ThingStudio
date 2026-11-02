@@ -3050,6 +3050,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#a-full-runtime-on-a-custom-image-board" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A full runtime on a custom-image board
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#deploy-is-grayed-out" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3090,6 +3101,34 @@
       
     </span>
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mqtt-broker-unreachable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MQTT broker unreachable
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="MQTT broker unreachable">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-board-hasnt-joined-wifi" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The board hasn't joined WiFi
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -3149,10 +3188,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#native-code-tools-native-code" class="md-nav__link">
+  <a href="#deploy-fails-with-an-architecture-or-native-module-error" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Native code (Tools → Native code)
+        Deploy fails with an architecture or native-module error
       
     </span>
   </a>
@@ -3330,6 +3369,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#a-full-runtime-on-a-custom-image-board" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A full runtime on a custom-image board
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#deploy-is-grayed-out" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3370,6 +3420,34 @@
       
     </span>
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mqtt-broker-unreachable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MQTT broker unreachable
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="MQTT broker unreachable">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-board-hasnt-joined-wifi" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The board hasn't joined WiFi
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -3429,10 +3507,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#native-code-tools-native-code" class="md-nav__link">
+  <a href="#deploy-fails-with-an-architecture-or-native-module-error" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Native code (Tools → Native code)
+        Deploy fails with an architecture or native-module error
       
     </span>
   </a>
@@ -3482,7 +3560,6 @@
 
 
 <h1 id="debugging-troubleshooting">Debugging &amp; troubleshooting</h1>
-<p>What the console and compiled source show, and what to do when a board or deploy fails.</p>
 <h2 id="console-and-compiled-source">Console and compiled source</h2>
 <p>The <strong>console</strong> shows what the board and Thingstudio report: deploy results, node errors, and what <code>debug</code> nodes
 and <code>print()</code> send. <strong>Clear</strong> empties it.</p>
@@ -3497,10 +3574,29 @@ and <code>print()</code> send. <strong>Clear</strong> empties it.</p>
 <p>The editor's version is next to its name in the toolbar, and in <strong>Help → About Thingstudio</strong>. A <code>+</code> after it means
 you built it from uncommitted changes. Include the versions when you report a problem.</p>
 <h3 id="memory">Memory</h3>
-<p>With <strong>Show</strong> set to <strong>Info</strong>, a <code>[memory]</code> line after each connect and deploy shows the board's free RAM. On an
-ESP32 it also shows the ESP-IDF heap and its largest free block. WiFi, MQTT and TLS use the ESP-IDF heap, not
-MicroPython's. If WiFi won't join while MicroPython has plenty free, a low ESP-IDF figure is the likely cause. The
-<a href="../faq/">FAQ</a> explains where an ESP32's memory goes.</p>
+<p>With <strong>Show</strong> set to <strong>Info</strong>, the console prints a <code>[memory]</code> line after each connect and deploy. On an ESP32 it
+looks like this:</p>
+<div class="highlight"><pre><span></span><code>[memory] MicroPython 118 KB free · ESP-IDF heap 64 KB free, largest block 31 KB
+</code></pre></div>
+<ul>
+<li><strong>MicroPython … free</strong> is the memory your flow and its libraries run in. It is the total free, not the largest
+  piece.</li>
+<li><strong>ESP-IDF heap … free</strong> is the memory the chip's own software uses, including WiFi, MQTT and TLS. <strong>largest
+  block</strong> is the biggest single piece of it. Only ESP32 boards report this part.</li>
+</ul>
+<p>Which figure matters depends on the failure:</p>
+<ul>
+<li>A deploy or a library failing with <code>MemoryError</code> is about MicroPython's memory. The total can look healthy while
+  no single piece is big enough. See
+  <a href="#memoryerror-or-a-library-that-wont-load">MemoryError or a library that won't load</a>.</li>
+<li>WiFi failing to start on an ESP32 is about the ESP-IDF heap. Below about 30 KB WiFi may not start, and the console
+  warns before a deploy when less is free. <strong>Tools → Reset board (hard)</strong> returns that memory; a soft restart
+  doesn't. See <a href="#restarting-the-board">Restarting the board</a>.</li>
+</ul>
+<p>A real memory failure says <code>MemoryError</code>, <code>memory allocation failed</code> or names memory. A network error with a low
+figure beside it is still a network error: if the board has joined WiFi and the console says it can't reach a
+broker or host, memory isn't the cause. For an MQTT broker, see <a href="#mqtt-broker-unreachable">MQTT broker unreachable</a>.
+The <a href="../faq/">FAQ</a> explains where an ESP32's memory goes.</p>
 <h2 id="commands-and-the-python-prompt">Commands and the Python prompt</h2>
 <p>The command box under the console runs Python on the board. Type a line and press Enter; the result appears in the
 console. The up and down arrows bring back earlier commands.</p>
@@ -3617,10 +3713,10 @@ what the board sent instead, and what to do:</p>
 </tr>
 <tr>
 <td>(no build for this chip — choose a file)</td>
-<td>The catalogue has no pinned image for that family yet. Pick <strong>Image file</strong> and the <code>.bin</code>/<code>.uf2</code> from <a href="https://micropython.org/download/">micropython.org/download</a>.</td>
+<td>The catalog has no pinned image for that chip family. Under <strong>Or use your own image file</strong>, pick the <code>.bin</code> or <code>.uf2</code> from <a href="https://micropython.org/download/">micropython.org/download</a>.</td>
 </tr>
 <tr>
-<td>The chip family list is empty, or the catalogue can't be read</td>
+<td>The chip family list is empty, or the catalog can't be read</td>
 <td>This install's <code>firmware/builds.json</code> is missing or malformed; the dialog says which line. A reinstall replaces it.</td>
 </tr>
 <tr>
@@ -3652,8 +3748,17 @@ what the board sent instead, and what to do:</p>
 <p><strong>Erase all flash first</strong> is on by default: a board that had a different layout (a previous MicroPython, or a
 vendor image) needs it, or the new image can be written and still not boot.</p>
 <p>A flash that finishes but leaves the board silent usually means it is waiting for <strong>Tools → Install runtime…</strong>: a
-stock MicroPython build has no runtime at all, and a Thingstudio image carries one but not the boot script that
+stock MicroPython build has no runtime at all, and the Thingstudio custom image carries one but not the boot script that
 starts it.</p>
+<h2 id="a-full-runtime-on-a-custom-image-board">A full runtime on a custom-image board</h2>
+<p>On the Thingstudio custom image, <strong>Tools → Install runtime…</strong> writes only the boot script, <code>main.py</code>; the runtime
+is already in the firmware. A full copy of the runtime on the board's filesystem can only come from flashing the
+image without <strong>Erase all flash first</strong> over an older install that had one.</p>
+<p>To see what is on the filesystem, type this in the command box:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">os</span><span class="p">;</span> <span class="nb">print</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="s1">'/'</span><span class="p">))</span>
+</code></pre></div>
+<p>A board with only the boot script lists <code>main.py</code> among a few small files. A full runtime adds a long list of its
+own files. Flash the image again with <strong>Erase all flash first</strong> ticked, then install the runtime.</p>
 <h2 id="deploy-is-grayed-out">Deploy is grayed out</h2>
 <p><strong>Compile → Deploy</strong> is grayed out when:</p>
 <ul>
@@ -3674,43 +3779,79 @@ different <a href="https://micropython.org/download/">MicroPython build</a>.</p>
 <p>Thingstudio's own libraries, such as the MQTT client and display drivers, are sent by Deploy. See
 <a href="../flow-lifecycle/#libraries">Libraries</a>.</p>
 <h2 id="memoryerror-or-a-library-that-wont-load">MemoryError or a library that won't load</h2>
-<p>A board can be short of memory while its <code>[memory]</code> line still shows free RAM. The free RAM is in pieces, and a
-flow or a library needs one piece big enough to fit. This is common on boards with little RAM, most of all on an
-ESP32 without PSRAM once a display flow has run.</p>
+<p>The <code>[memory]</code> line can show free RAM while a deploy still fails with <code>MemoryError</code>: the free RAM is in pieces, and
+a flow or a library needs one piece big enough to fit. This is common on ESP32 boards without PSRAM once a display
+flow has run.</p>
 <p>When a deploy fails this way, work through these in order:</p>
 <ol>
 <li><strong>Tools → Remove flow…</strong> — so nothing is resumed at start-up.</li>
 <li><strong>Power cycle the board</strong> — unplug its USB cable and plug it back in, or <strong>Tools → Reset board (hard)</strong>.</li>
 <li>Deploy again.</li>
 </ol>
-<p>Removing the flow alone does not help: the running flow keeps its memory until the chip restarts. A soft restart
-does not help either — it restarts the interpreter over the same heap regions and gives no chip memory back. Only a
-power cycle gives the board a clean heap, which is why it is the step above.</p>
-<p><strong>If it still fails after the power cycle, the flow may be too big for this board.</strong> That is a limit of the board,
-not a fault in the flow. Three things can still work:</p>
+<p>Removing the flow alone doesn't help: the running flow keeps its memory until the chip restarts. A soft restart
+doesn't either: it restarts the interpreter over the same heap regions and returns no chip memory. Only a power
+cycle gives the board a clean heap.</p>
+<p>If it still fails after the power cycle, the flow may be too big for this board. Then do one of these:</p>
 <ul>
-<li><strong>Make the flow smaller.</strong> Fewer pages in the GUI, fewer libraries imported, a smaller frame. The gui screen node
+<li><strong>Make the flow smaller.</strong> Use fewer GUI pages, import fewer libraries, pick a smaller frame. The gui screen node
   sends a frame in strips for this reason; a <code>function</code> node that builds a whole frame at once still needs one big
   block.</li>
-<li><strong>Use a board with more memory.</strong> Boards with PSRAM have room for flows a board without it cannot start.</li>
+<li><strong>Use a board with more memory.</strong> A board with PSRAM can start flows that a board without it cannot.</li>
 <li><strong>Run a firmware image with the libraries built in.</strong> On a classic ESP32 there is a ready-made one:
-  <a href="../custom-firmware/">Custom firmware for classic ESP32</a>. On other boards the same technique works — freeze the
-  runtime and the flow libraries into MicroPython — if you build your own.</li>
+  <a href="../custom-firmware/">Custom firmware for classic ESP32</a>. On other boards, build your own by freezing the runtime
+  and the flow libraries into MicroPython.</li>
 </ul>
-<p>If none of those is possible, the flow does not fit that board. Nothing in the editor can make room that the board
-does not have.</p>
-<p>Deploy does not try to fix this for you: it reports the failure and stops, because freeing or restarting on your
-behalf would leave the board in a state you didn't choose. When the board looks short of memory before a deploy
-starts, the console says so in one line (<code>only 19 KB free on the board, this flow is 10 KB -- it may not fit</code>) and
-deploys anyway. That figure is total free memory, not the largest free block, so it is a hint rather than a verdict.</p>
+<p>Deploy stops here on purpose; freeing or restarting is yours to invoke. When the board looks short of memory before
+a deploy starts, the console says so in one line (<code>only 19 KB free on the board, this flow is 10 KB -- it may not
+fit</code>) and deploys anyway. The figure is total free memory, not the largest block, so it is a hint, not a verdict.</p>
 <h2 id="wifi-internal-state-error-on-deploy">WiFi Internal State Error on deploy</h2>
 <p>On an ESP32, deploying a flow with MQTT nodes can fail with "Wifi Internal State Error". The board is still
 reconnecting to the network the previous flow used, and refuses a new connection until that finishes. The MQTT nodes
 retry up to three times. If it still fails, deploy again.</p>
+<h2 id="mqtt-broker-unreachable">MQTT broker unreachable</h2>
+<p>An <code>mqtt publish</code> or <code>mqtt subscribe</code> node shows a red dot, and the console says:</p>
+<div class="highlight"><pre><span></span><code>mqtt connect to HOST:1883 failed after 3 attempts (… 'Timeout on socket write' …, wifi status 1010)
+</code></pre></div>
+<p>The line ends with the board's WiFi status. <code>wifi status 1010</code> means the board has joined WiFi and has an address
+but can't reach the broker from its network: the cause is the network between the board and the broker, not the
+board's memory. <code>201</code> or <code>202</code> means the board never joined WiFi; see
+<a href="#the-board-hasnt-joined-wifi">The board hasn't joined WiFi</a>.</p>
+<p>With <code>1010</code>, check in order:</p>
+<ul>
+<li>The host and port in the flow's MQTT broker. The board connects to exactly what the flow says.</li>
+<li>That the board's network can reach the broker. Your computer reaching it proves nothing: a laptop can reach a home
+  broker over a VPN the board isn't on, and a board on a phone hotspot isn't on the home network.</li>
+<li>That the network lets port 1883 through. Some mobile networks block it.</li>
+<li>That the broker listens beyond localhost. Mosquitto 2 listens on localhost only, unless its configuration has
+  <code>listener 1883</code> and either <code>allow_anonymous true</code> or a password file.</li>
+</ul>
+<p>Then do one of these:</p>
+<ul>
+<li>Put the board on the broker's network.</li>
+<li>Use the public test broker <code>test.mosquitto.org</code>, port 1883. It is public: anyone can read what you publish, so
+  use a topic nobody else will, such as one with a random number in it (<code>thingstudio/4821937/temperature</code>). A broker
+  on your own network is better if you have one.</li>
+<li>Relay through a computer the board can reach. With Remote Login on, run
+  <code>ssh -g -N -L 0.0.0.0:1883:BROKER:1883 localhost</code> on that computer, and set the flow's broker to that computer's
+  address.</li>
+</ul>
+<h3 id="the-board-hasnt-joined-wifi">The board hasn't joined WiFi</h3>
+<p>On an ESP32, status <code>201</code> means the network wasn't found, and <code>202</code> means joining failed authentication, usually a
+wrong password. Check, in order:</p>
+<ul>
+<li>The network name and password in the flow's WiFi credential: ✎ next to the <strong>WiFi</strong> field.</li>
+<li>Whether the flow has both MQTT nodes and a <code>wifi status</code> node. In a flow with MQTT nodes, MQTT manages the WiFi
+  connection and <code>wifi status</code> only reports on it. If the join fails, remove the <code>wifi status</code> node and deploy
+  again.</li>
+<li>The ESP-IDF figure on the <code>[memory]</code> line. Below about 30 KB WiFi may not start; use
+  <strong>Tools → Reset board (hard)</strong>. See <a href="#memory">Memory</a>.</li>
+</ul>
+<p>The console can also show "Wifi Internal State Error". For that error at deploy time, see
+<a href="#wifi-internal-state-error-on-deploy">WiFi Internal State Error on deploy</a>.</p>
 <h2 id="deploy-resends-a-piece-or-fails-part-way">Deploy resends a piece, or fails part-way</h2>
 <p>Deploy sends the flow, and each library it uses, in pieces, and waits for the board to confirm each one. Over a
 USB-serial chip such as the CYD's, a piece can arrive damaged or its confirmation can get lost. The console then
-shows <code>resending (1/2)</code>, and Deploy carries on. That is normal now and then.</p>
+shows <code>resending (1/2)</code>, and Deploy carries on.</p>
 <p>If a piece still fails after three tries, Deploy stops and says so, and the flow on the board is unchanged. Deploy
 again. If it keeps happening, try another USB cable or port, close anything else using the serial port, or connect
 over WiFi.</p>
@@ -3751,7 +3892,7 @@ to its last state, shows a cross for a moment, and the console shows
 <li>The state is sent in a form the toggle matches. A toggle set to <code>true</code> and <code>false</code> ignores <code>ON</code> and <code>OFF</code>: set its
   <strong>value type</strong> to text.</li>
 </ul>
-<h2 id="native-code-tools-native-code">Native code (Tools → Native code)</h2>
+<h2 id="deploy-fails-with-an-architecture-or-native-module-error">Deploy fails with an architecture or native-module error</h2>
 <p>The <code>gs4</code>, <code>gs2</code> and <code>mono</code> frame formats of <a href="../nodes/display-spi/">display spi</a> compile part of their code to
 native machine code, which needs the right architecture for the board's chip.</p>
 <p><strong>Tools → Native code</strong> defaults to <strong>Arch: Auto</strong>, which uses the processor of the board in the
@@ -3759,21 +3900,19 @@ native machine code, which needs the right architecture for the board's chip.</p
 the list and deploy again.</p>
 <h2 id="restarting-the-board">Restarting the board</h2>
 <p>A board can run short of memory after several deploys, or after a flow that uses a lot of it, such as a display.
-The console suggests a restart when a deploy fails with <code>MemoryError</code>, the board restarts while starting a flow, or
-an ESP32 has too little memory left for WiFi.</p>
+The console suggests a restart when a deploy fails with <code>MemoryError</code>, when the board restarts while starting a flow,
+or when an ESP32 has too little memory left for WiFi.</p>
 <p>The Tools menu has two restarts:</p>
 <ul>
-<li><strong>Tools → Restart board (soft)</strong> restarts MicroPython. The saved flow starts again with a clean interpreter: the
-  flow's own objects are gone, but the heap regions are the same ones and memory MicroPython took from the chip is
-  not returned. USB stays connected.</li>
+<li><strong>Tools → Restart board (soft)</strong> restarts MicroPython. The saved flow starts again with a clean interpreter and the
+  flow's own objects are gone; the heap stays as it was. USB stays connected.</li>
 <li><strong>Tools → Reset board (hard)</strong> resets the whole chip, like its reset button, and frees all memory. A board with
   native USB (Pico, ESP32-S2, S3 and C3) disconnects; click <strong>Connect</strong> when it's back.</li>
 </ul>
-<p>A soft restart is enough to clear a flow's own leftovers, such as a big buffer a faulty node left behind. It is not
-enough for a board that cannot fit a <em>deploy</em>: nothing short of a full power cycle gives the memory back in one
-piece, so that case is Remove flow…, power cycle, deploy (above). When an ESP32 is short of memory for WiFi, only
-the hard reset helps either. The console says which to use. Deploy is off until the board is back, which can take
-several seconds.</p>
+<p>A soft restart clears a flow's own leftovers, such as a big buffer a faulty node left behind. A deploy that doesn't
+fit needs the steps under <a href="#memoryerror-or-a-library-that-wont-load">MemoryError or a library that won't load</a>, and
+an ESP32 short of memory for WiFi needs the hard reset. The console says which. Deploy is off until the board is
+back, which can take several seconds.</p>
 <h2 id="board-stuck-restarting">Board stuck restarting</h2>
 <p>A flow that crashes the board as it starts would crash it on every restart. If the saved flow doesn't stay up for 10
 seconds on three restarts in a row, the board starts without it, and the console shows <strong>[safe mode]</strong>. Fix the flow
@@ -3819,6 +3958,10 @@ and deploy it again, or remove it.</p>
     <div class="md-footer-meta__inner md-grid">
       <div class="md-copyright">
   
+    <div class="md-copyright__highlight">
+      Visits are counted with <a href="https://www.goatcounter.com/">GoatCounter</a>, run on my own server: pages viewed, the site you came from, browser, screen size and country. No cookies, and nothing that identifies you.
+    </div>
+  
   
     Made with
     <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
@@ -3844,6 +3987,8 @@ and deploy it again, or remove it.</p>
     
     
       <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../js/goatcounter.js"></script>
       
     
   </body>

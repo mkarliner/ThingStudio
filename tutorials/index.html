@@ -3017,18 +3017,20 @@
 
 
 <h1 id="tutorials">Tutorials</h1>
-<p>Two tutorials, each one starting from the flow the last one left you with. <a href="../getting-started/">Getting started</a>
-ends with a blinking LED; the first tutorial picks up from that flow.</p>
+<p><a href="../getting-started/">Getting started</a> ends with a blinking LED. The first two tutorials continue from it, each
+starting from the flow the last one ends with. The third is a separate project.</p>
 <ol>
 <li><a href="two-more-blinks/">Two more blinks</a> — the blink again, two more ways: one with the LED's state on the
    hardware, one keeping it in the <code>function</code> node with <code>context</code>.</li>
 <li><a href="blink-from-your-network/">Blink from your network</a> — the same LED, driven by an <code>http in</code> node arriving over
    WiFi: putting the board on your network, finding it again, and what an open port on the board means.</li>
+<li><a href="../sensor-display/">A sensor display</a> — read a sensor and show it on a touch display. It is a work in
+   progress.</li>
 </ol>
-<p>More are coming, in this order: publish and subscribe over MQTT, then pages for whatever the first users got stuck
-on. If you've gone ahead of the tutorials and built something of your own, what worked and what stalled is the most
-useful report you can send: what you tried next, and what happened —
-<a href="https://github.com/mkarliner/ThingStudio/issues">file it on the issue tracker</a>.</p>
+<p>The finished flow for each tutorial is in the <a href="../installation-details/#example-flows">examples folder</a>. Open it
+with <strong>File → Open…</strong> rather than copying it from the page.</p>
+<p>If you've built something past the tutorials, what worked and what stalled is a useful report: what you tried next,
+and what happened. <a href="https://github.com/mkarliner/ThingStudio/issues">File it on the issue tracker</a>.</p>
 
 
 
@@ -3063,6 +3065,10 @@ useful report you can send: what you tried next, and what happened —
     <div class="md-footer-meta__inner md-grid">
       <div class="md-copyright">
   
+    <div class="md-copyright__highlight">
+      Visits are counted with <a href="https://www.goatcounter.com/">GoatCounter</a>, run on my own server: pages viewed, the site you came from, browser, screen size and country. No cookies, and nothing that identifies you.
+    </div>
+  
   
     Made with
     <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
@@ -3088,6 +3094,8 @@ useful report you can send: what you tried next, and what happened —
     
     
       <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../js/goatcounter.js"></script>
       
     
   </body>

@@ -2168,6 +2168,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Errors
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -3087,6 +3098,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Errors
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -3123,6 +3145,9 @@
 connected to a device. It reports its own broker connection state, even when it shares that broker with an
 <code>mqtt subscribe</code> node. The node opens its broker connection only when there's actually something to publish, so the
 dot stays blank until the first message reaches it, even if the flow has been running a while.</p>
+<h2 id="errors">Errors</h2>
+<p>A red dot, with a console line starting <code>mqtt connect to</code> and ending <code>failed after 3 attempts</code>, means the board can't
+reach the broker. See <a href="../../debugging/#mqtt-broker-unreachable">MQTT broker unreachable</a>.</p>
 
 
 
@@ -3157,6 +3182,10 @@ dot stays blank until the first message reaches it, even if the flow has been ru
     <div class="md-footer-meta__inner md-grid">
       <div class="md-copyright">
   
+    <div class="md-copyright__highlight">
+      Visits are counted with <a href="https://www.goatcounter.com/">GoatCounter</a>, run on my own server: pages viewed, the site you came from, browser, screen size and country. No cookies, and nothing that identifies you.
+    </div>
+  
   
     Made with
     <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
@@ -3182,6 +3211,8 @@ dot stays blank until the first message reaches it, even if the flow has been ru
     
     
       <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../js/goatcounter.js"></script>
       
     
   </body>

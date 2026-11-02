@@ -1016,10 +1016,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#next-pick" class="md-nav__link">
+  <a href="#next" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Next, pick:
+        Next
       
     </span>
   </a>
@@ -3097,10 +3097,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#next-pick" class="md-nav__link">
+  <a href="#next" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Next, pick:
+        Next
       
     </span>
   </a>
@@ -3129,16 +3129,17 @@
 
 <h1 id="two-more-blinks">Two more blinks</h1>
 <p>You have a blinking LED from <a href="../../first-flow/">Blink an LED</a>: timer, function, gpio out, with the function
-turning the timer's count into on and off. That works. Two more ways to produce the same blink — and each way
-shows something different about Thingstudio:</p>
+turning the timer's count into on and off. Two more ways to produce the same blink:</p>
 <ul>
-<li><strong>Read the pin, write it back</strong> — the blink's state lives on the board, in the pin, and the <code>function</code> node
-  runs your own MicroPython to reach it.</li>
-<li><strong>Keep the state in the node</strong> — the state lives inside the <code>function</code> node itself, in <code>context</code>.</li>
+<li><strong>Read the pin, write it back:</strong> the blink's state lives on the board, in the pin, and the <code>function</code> node runs
+  your own MicroPython to reach it.</li>
+<li><strong>Keep the state in the node:</strong> the state lives inside the <code>function</code> node itself, in <code>context</code>.</li>
 </ul>
-<p>The flow stays the same; only the function's code changes. Lost it? Download
-<a href="https://github.com/mkarliner/ThingStudio/blob/main/examples/two-more-blinks.flow.json">two-more-blinks.flow.json</a>
-— it carries the first of the two, with <code>machine.Pin(15)</code> as the pin — and open it with <strong>File → Open…</strong>.</p>
+<p>The flow stays the same; only the function's code changes. To start from the finished flow, open
+<a href="https://github.com/mkarliner/ThingStudio/blob/main/examples/two-more-blinks.flow.json">two-more-blinks.flow.json</a>,
+in the <a href="../../installation-details/#example-flows">examples folder</a>, with <strong>File → Open…</strong>. Open the file; don't copy
+it from this page. It carries the first of the two blinks: change <code>15</code> in <code>machine.Pin(15)</code> to your LED's GPIO
+number.</p>
 <p>If a step misbehaves on the way, start at <a href="../../debugging/">Debugging &amp; troubleshooting</a>.</p>
 <h2 id="read-the-pin-write-it-back">Read the pin, write it back</h2>
 <p>Each message so far decides the LED by counting. Let the pin say where it is instead. Replace the function's code
@@ -3148,33 +3149,20 @@ with this, using your LED's GPIO number in place of <code>PIN</code>:</p>
 <span class="k">return</span> <span class="n">msg</span>
 </code></pre></div>
 <p>Deploy. The LED blinks as before, but the reason has changed: each message now reads the pin and writes back the
-opposite of what it found. The state — what the LED is actually showing — lives on the board between messages, so
+opposite of what it found. The state, what the LED is actually showing, lives on the board between messages, so
 the flow can't contradict it.</p>
 <p><code>machine.Pin</code> is MicroPython's own pin API. Constructed with a number and no other settings, it takes the pin as it
 is and <code>.value()</code> reads the level the <code>gpio out</code> node has written. The write itself goes out of the function's
 output, through to <code>gpio out</code>.</p>
-<p>One limit to know: the pin fields on gpio nodes are checked against your board at compile time, but code
-inside a function is not. If <code>PIN</code> isn't a pin number your board has, the compile check passes and the error arrives
-when the flow runs, as a <code>[NODE_ERROR]</code> in the console. See <a href="../../debugging/#reading-a-node-error">Reading a node error</a>;
-<strong>Pins…</strong> next to the <strong>Board</strong> menu lists your board's pins.</p>
+<p>The pin fields on gpio nodes are checked against your board at compile time, but code inside a function isn't. If
+<code>PIN</code> isn't a pin number your board has, the compile check passes and the error arrives when the flow runs, as a
+<code>[NODE_ERROR]</code> in the console. See <a href="../../debugging/#reading-a-node-error">Reading a node error</a>; <strong>Pins…</strong> next to
+the <strong>Board</strong> menu lists your board's pins.</p>
 <h2 id="keep-the-state-in-the-node">Keep the state in the node</h2>
-<div class="admonition note">
-<p class="admonition-title">An important point to understand</p>
-<p>A flow is stateless: each event is handled on its own, without regard to what came before. In general this is
-a good thing:</p>
-<ul>
-<li>An error shows up with the message that caused it, not in some state built over earlier operations.</li>
-<li>Recovery is doing nothing: the next message starts clean. A crashed stateful component needs its data
-  restored to an acceptable earlier version, with nothing to say which that is.</li>
-</ul>
-<p>When a flow does need to remember, Thingstudio's answer is a <strong>context</strong> — state held between messages, either
-private to one node (<code>context</code>) or shared across the whole flow (<code>flow</code>). This blink's LED level belongs to one
-function node, so its private store is the one to use. All three stores, <code>context</code> and <code>flow</code> among them, are
-in <a href="../../nodes/function/#context-flow-and-settings">Context, flow and settings</a>; <code>settings</code> even survives a
-reboot.</p>
-</div>
-<p>The pin was one place for the state — the board holds it, and the messages only read it. The other is inside the
-function node itself:</p>
+<p>Each message is handled on its own; nothing carries over unless you store it. To remember between messages, use
+<code>context</code> (private to this node) or <code>flow</code> (shared by the whole flow). See
+<a href="../../nodes/function/#context-flow-and-settings">Context, flow and settings</a>.</p>
+<p>The pin held the state on the board. The other place is inside the function node itself:</p>
 <div class="highlight"><pre><span></span><code><span class="n">on</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">context</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'on'</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
 <span class="n">context</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">'on'</span><span class="p">,</span> <span class="n">on</span><span class="p">)</span>
 <span class="n">msg</span><span class="p">[</span><span class="s1">'payload'</span><span class="p">]</span> <span class="o">=</span> <span class="n">on</span>
@@ -3184,9 +3172,10 @@ function node itself:</p>
 function node's own memory; <code>context.set('on', on)</code> writes it; the <code>False</code> is what <code>.get</code> answers when nothing is
 stored yet, which is why the first message turns the LED on.</p>
 <p>For state kept without code, the <a href="../../nodes/change/">change</a> node stores a flow variable, the same store a
-<code>function</code>'s <code>flow.get()</code>/<code>flow.set()</code> reads. Making it the opposite of its old value needs the old value read, and
-<code>change</code>'s one rule doesn't do that — so a toggle stays in <code>context</code>.</p>
-<h2 id="next-pick">Next, pick:</h2>
+<code>function</code>'s <code>flow.get()</code>/<code>flow.set()</code> reads. A <code>change</code> node can store a flow variable but can't flip it, so a toggle
+needs a function node.</p>
+<h2 id="next">Next</h2>
+<p>The next tutorial, the next job, and the node pages behind the code:</p>
 <ul>
 <li><a href="../blink-from-your-network/">Blink from your network</a> — the next tutorial: the same LED, driven by an <code>http in</code>
   node from anywhere on your WiFi.</li>
@@ -3228,6 +3217,10 @@ stored yet, which is why the first message turns the LED on.</p>
     <div class="md-footer-meta__inner md-grid">
       <div class="md-copyright">
   
+    <div class="md-copyright__highlight">
+      Visits are counted with <a href="https://www.goatcounter.com/">GoatCounter</a>, run on my own server: pages viewed, the site you came from, browser, screen size and country. No cookies, and nothing that identifies you.
+    </div>
+  
   
     Made with
     <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
@@ -3253,6 +3246,8 @@ stored yet, which is why the first message turns the LED on.</p>
     
     
       <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../js/goatcounter.js"></script>
       
     
   </body>

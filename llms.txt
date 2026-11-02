@@ -22,7 +22,7 @@
 ## Getting started
 
 - [1. Install Thingstudio](https://docs.thingstudio.net/getting-started/): From a new board to a blinking LED, in six steps:
-- [2. Tour the editor](https://docs.thingstudio.net/editor-tour/): A tour of the editor, naming each part of the screen.
+- [2. Tour the editor](https://docs.thingstudio.net/editor-tour/): Start Thingstudio if it isn't running: see step 1.
 - [3. Install MicroPython](https://docs.thingstudio.net/installing-micropython/): Thingstudio runs on top of MicroPython, so the board needs it first.
 - [4. Connect your board](https://docs.thingstudio.net/connecting/): Connect the board over USB so the editor can talk to it.
 - [5. Install the runtime](https://docs.thingstudio.net/installing-runtime/): The runtime is the part of Thingstudio that runs on the board: it receives your flows and runs them.
@@ -31,14 +31,14 @@
 
 ## Tutorials
 
-- [Overview](https://docs.thingstudio.net/tutorials/): Two tutorials, each one starting from the flow the last one left you with.
+- [Overview](https://docs.thingstudio.net/tutorials/): Getting started ends with a blinking LED.
 - [Two more blinks](https://docs.thingstudio.net/tutorials/two-more-blinks/): You have a blinking LED from Blink an LED: timer, function, gpio out, with the function turning the timer's count into on and off.
-- [Blink from your network](https://docs.thingstudio.net/tutorials/blink-from-your-network/): The same LED, driven from a browser: an http in node runs a web server on the board, and each request toggles it.
-- [A sensor display](https://docs.thingstudio.net/sensor-display/): Build a three-page touch display: the room's temperature, humidity and pressure with their recent history, and a clock.
+- [Blink from your network](https://docs.thingstudio.net/tutorials/blink-from-your-network/): The same LED, driven from a browser: an http in node runs a web server on the board, and each request toggles the LED.
+- [A sensor display](https://docs.thingstudio.net/sensor-display/): This tutorial is being reworked.
 
 ## Building flows
 
-- [Editor in depth](https://docs.thingstudio.net/working-in-the-editor/): How the editor's wiring, node labels, presets, config nodes and node status work.
+- [Editor in depth](https://docs.thingstudio.net/working-in-the-editor/): Every port has a type: int, number, bool, string, bytes or any.
 - [Laying out a display](https://docs.thingstudio.net/gui-layout/): How a gui screen turns cells into a picture: a fixed panel, no windows, and a layout worked out when the flow compiles.
 - [Flow lifecycle](https://docs.thingstudio.net/flow-lifecycle/): How a flow is saved, opened, deployed and disconnected.
 - [The Thingstudio folder](https://docs.thingstudio.net/thingstudio-folder/): Thingstudio keeps its own files in one folder on your computer:
@@ -110,5 +110,5 @@
 
 ## Troubleshooting
 
-- [Debugging & troubleshooting](https://docs.thingstudio.net/debugging/): What the console and compiled source show, and what to do when a board or deploy fails.
-- [FAQ](https://docs.thingstudio.net/faq/): An ESP32's RAM is shared between MicroPython and the chip's own software: ESP-IDF, its FreeRTOS scheduler, and the WiFi stack.
+- [Debugging & troubleshooting](https://docs.thingstudio.net/debugging/): The **console** shows what the board and Thingstudio report: deploy results, node errors, and what debug nodes and print() send.
+- [FAQ](https://docs.thingstudio.net/faq/): Ask questions, and show what you've built, in GitHub Discussions.

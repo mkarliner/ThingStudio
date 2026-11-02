@@ -3243,17 +3243,15 @@ of flash and no PSRAM (ESP32-D0WD and similar). This is the image to flash on th
 loads the runtime and the flow into RAM, and the display stack pushes it over — with this image they run from
 flash instead, which is the difference between a GUI flow starting and failing with
 <code>MemoryError allocating 13317 bytes</code>.</p>
-<p>Stock MicroPython is the fallback: <a href="../installing-runtime/">install the runtime</a> onto it as the usual docs route
-describes. The custom image is the recommended one, but a stock build runs flows without the GUI, and it is what
-<a href="../installing-micropython/">Installing MicroPython</a> sets out.</p>
+<p>On stock MicroPython, flows without a GUI run as usual. <a href="#back-to-stock-micropython">Back to stock MicroPython</a> says
+how to return to it.</p>
 <p>The technique is not specific to this image or to this chip: freezing the runtime and the flow libraries into
 MicroPython works on any board. This image exists because a classic ESP32 is the board where it changes the most,
 and because building one needs an ESP-IDF toolchain. <code>firmware/classic-esp32/</code> in the repository is a working
 example to copy for another board.</p>
 <h2 id="what-it-changes">What it changes</h2>
-<p>The runtime and the flow libraries are frozen into the firmware, which means MicroPython runs them from flash instead
-of copying them into RAM. On a classic ESP32 that is the difference between a GUI flow starting and failing with
-<code>MemoryError allocating 13317 bytes</code>.</p>
+<p>The runtime and the flow libraries are frozen into the firmware, so MicroPython runs them from flash instead of
+copying them into RAM.</p>
 <p>Because the libraries are already there, Deploy does not send them. The console says so after connecting:</p>
 <div class="highlight"><pre><span></span><code>[libraries] this flow uses font_body12, … st7796py -- already on the board: font_body12, … st7796py
 </code></pre></div>
@@ -3318,7 +3316,8 @@ running it: it erases the filesystem partition, and its port name comes from <co
 <h2 id="connect-and-deploy">Connect and deploy</h2>
 <p>Connect in the editor as usual. Two things confirm the image is running:</p>
 <ul>
-<li>the console's version line reports the runtime version the image was built with (14.1.0 for the current image)</li>
+<li>the console's version line reports the image's runtime version, as listed under <strong>Version</strong> in the Install
+  firmware dialog</li>
 <li><code>[libraries] … already on the board: …</code> names every library the flow imports</li>
 </ul>
 <p>Then deploy the flow. A GUI flow that failed with <code>MemoryError</code> on stock MicroPython should run.</p>
@@ -3362,19 +3361,11 @@ a GUI flow takes most of what it has. Measured on the CYD (ESP32-D0WD, 4 MB, no 
 <p>Read the third row before leaning on deploys: each deploy over a running flow leaves the heaps more fragmented, and
 the chip's own heap shrinks as MicroPython takes from it. A GUI flow still starts (a 9.5 KB flow needs far less than
 the 27 KB block), but WiFi draws from that shrinking chip heap, and the console warns when it is low.</p>
-<p>Two habits avoid the limits that remain:</p>
-<ul>
-<li>Keep frames small. The gui screen node sends a frame in strips for exactly this reason; a <code>function</code> node that
-  builds a whole frame as one buffer still needs that buffer to be contiguous.</li>
-<li>When a deploy fails with <code>MemoryError</code>, the console says how much memory the board had. If the board cannot make
-  room, <a href="../debugging/#memoryerror-or-a-library-that-wont-load">remove the flow and power cycle</a> before deploying
-  again. A soft restart does not help: it reuses the same heap. A power cycle also returns the chip heap that
-  repeated deploys take.</li>
-</ul>
+<p>Keeping frames small and recovering from a <code>MemoryError</code> are covered in <a href="../debugging/#memory">Memory</a> and
+<a href="../debugging/#memoryerror-or-a-library-that-wont-load">MemoryError or a library that won't load</a>.</p>
 <h2 id="back-to-stock-micropython">Back to stock MicroPython</h2>
-<p>Flash a standard MicroPython build for the board, then <a href="../installing-runtime/">install the runtime</a> again. The stock
-flow of <a href="../installing-micropython/">Installing MicroPython</a> to <a href="../installing-runtime/">Install the runtime</a> covers
-both steps. Flashing erases the board's flows and settings, as above.</p>
+<p><a href="../installing-micropython/">Install MicroPython</a> with a standard build for the board, then
+<a href="../installing-runtime/">install the runtime</a> again. Flashing erases the board's flows and settings, as above.</p>
 <h2 id="reporting-a-problem">Reporting a problem</h2>
 <p>Reports on any classic ESP32 board are welcome, listed or not. Include the board's name and the console's version and
 <code>[memory]</code> lines from a fresh boot.</p>
@@ -3412,6 +3403,10 @@ both steps. Flashing erases the board's flows and settings, as above.</p>
     <div class="md-footer-meta__inner md-grid">
       <div class="md-copyright">
   
+    <div class="md-copyright__highlight">
+      Visits are counted with <a href="https://www.goatcounter.com/">GoatCounter</a>, run on my own server: pages viewed, the site you came from, browser, screen size and country. No cookies, and nothing that identifies you.
+    </div>
+  
   
     Made with
     <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
@@ -3437,6 +3432,8 @@ both steps. Flashing erases the board's flows and settings, as above.</p>
     
     
       <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../js/goatcounter.js"></script>
       
     
   </body>

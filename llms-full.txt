@@ -34,8 +34,8 @@ starts again after a reset or power cycle.
        [custom image](custom-firmware.md).
     4. [Connect your board](connecting.md), then [install the runtime](installing-runtime.md).
     5. [Blink an LED](first-flow.md) — three nodes and deploy. Not in a building mood? Open
-       `examples/blink.flow.json` from your install folder with **File → Open…**, point the pin at your board's
-       own LED, deploy.
+       `examples/blink.flow.json` (the [examples folder](installation-details.md#example-flows)) with
+       **File → Open…**, point the pin at your board's own LED, deploy.
 
     When something doesn't work, [Debugging](debugging.md) and the [FAQ](faq.md) go by what you see on screen.
 
@@ -375,7 +375,6 @@ from where the flow runs: on a microcontroller, not on a server.
 The editor runs on your computer, but the flow runs on the board. Deploy compiles the flow to MicroPython and sends
 it to the board, which then runs on its own. Close the editor, unplug the USB cable, and the flow carries on.
 
-
 ## Function nodes are Python
 
 Function nodes run MicroPython, not JavaScript. A message is a Python dict, so write `msg['payload']`, not
@@ -396,14 +395,19 @@ instead. See [event-driven programming](../background/event-driven.md).
 
 ## Messages
 
-Every message needs a `topic`, even an empty one (`''`). Ports also have types, such as `int`, `bool` and `string`, and
+A message carries a `payload` and usually a `topic`; the built-in nodes that start a flow set `topic` to an empty
+string. Ports also have types, such as `int`, `bool` and `string`, and
 the editor refuses a wire between types that don't fit. See [Editor in depth](../working-in-the-editor.md#wiring).
 
 ## Nodes
 
 The palette is smaller, and made for hardware. `timer`, `interrupt`, `gpio out`, `pwm out` and the sensor and
-display nodes work with the board directly. `inject`, `debug`, `function`, `delay`, `mqtt`, `http` and `udp` will
-look familiar. 
+display nodes work with the board directly. `inject`, `debug`, `function` and `delay` will look familiar, and so will
+the network nodes: `mqtt publish`, `mqtt subscribe`, `http request`, `http in`, `http response`, `udp send` and
+`udp receive`.
+
+A flow has one MQTT broker and one WiFi network, set on any MQTT or WiFi node and shared by all of them. Node-RED's
+broker per node doesn't carry over. See [Config nodes](../working-in-the-editor.md#config-nodes).
 
 You add node types by writing a JSON file and a Python file. See
 [writing custom nodes](../custom-nodes.md).
@@ -576,7 +580,7 @@ if your account isn't in the group, and prints the command to fix it.
 irm https://github.com/mkarliner/ThingStudio/releases/latest/download/install.ps1 | iex
 ```
 
-To install a specific version, upgrade or remove Thingstudio, or build it from source, see
+To upgrade or remove Thingstudio, or build it from source, see
 [Installation details](installation-details.md).
 
 ## Start Thingstudio
@@ -593,6 +597,13 @@ there to stop Thingstudio.
 
 Thingstudio also serves this user guide, so it works offline. **Help → User guide** opens it.
 
+## Getting help
+
+When something goes wrong, [Debugging & troubleshooting](debugging.md) and the [FAQ](faq.md) go by what you see on
+screen. Questions, and what you've built, go in
+[GitHub Discussions](https://github.com/mkarliner/ThingStudio/discussions). Bugs go on the
+[issue tracker](https://github.com/mkarliner/ThingStudio/issues), or use **Help → Report a problem**.
+
 ## Next
 
 Step 2: [tour the editor](editor-tour.md).
@@ -604,8 +615,7 @@ Source: https://docs.thingstudio.net/editor-tour/
 
 # Step 2: Tour the editor
 
-A tour of the editor, naming each part of the screen. Start Thingstudio if it isn't running: see
-[step 1](getting-started.md#start-thingstudio).
+Start Thingstudio if it isn't running: see [step 1](getting-started.md#start-thingstudio).
 
 <figure markdown="span">
   [![The Thingstudio editor with each part labelled](images/editor-parts.png)](images/editor-parts.png)<figcaption>The parts of the editor. Click to see it full size.</figcaption>
@@ -686,47 +696,45 @@ per board.
 A new board usually doesn't have MicroPython. If yours already has it, or you're not sure, go to
 [step 4](connecting.md). If MicroPython is missing, the console says so when you connect, and links back here.
 
-Thingstudio can install it for you, on the chips it can write. Doing it by hand is at the bottom of this page.
+Thingstudio can install it for you, on the chips it can write.
 
 ## Install from Thingstudio
 
 Thingstudio writes the firmware itself: over a serial port for the ESP32 family, and onto a mounted drive for
 RP2040, RP2350 and nRF52 boards.
 
-1. Put the board in its bootloader. Hold **BOOT** and tap **RESET** on an ESP32, or hold **BOOTSEL** while you
-   plug in a Pico.
+For a classic ESP32 with 4 MB of flash and no PSRAM, pick the [Thingstudio custom image](custom-firmware.md) as the
+**Firmware** rather than official MicroPython: the runtime and the flow libraries are frozen into flash, where they
+run without taking the RAM the display stack and the flow need. Its **Version** list holds the published releases.
+After flashing it, **Install runtime** writes only the boot script.
+
+1. Plug the board into USB. A Pico needs **BOOTSEL** held while you plug it in.
 2. Choose **Tools → Install firmware…**.
 3. Pick **Serial port** or **Mounted drive**, then the port or drive from the list. USB ports come first, shown as
-   the path and the adapter's name (for example `/dev/ttyUSB0 -- CH340`). If the board isn't there, put it in
-   download mode (step 1) and click ⟳; the line under the list says how many it found. If it still isn't listed,
-   type the path in the box (on macOS a mounted Pico is `/Volumes/RPI-RP2`).
-4. Pick the **chip family** and the **firmware**, then the **build** and **version**. Only the families the editor
-   can write are listed, and only builds whose hash is pinned, so what you flash is what was tested. A board that
-   names its own build is preselected. The build matters for the heap as much as for compatibility: an ESP32 with
-   extra PSRAM wants the **PSRAM (WROVER)** build, a single-core SOLO the **single-core** one.
-
-   For a classic ESP32 with 4 MB of flash and no PSRAM, use the
-   [Thingstudio custom image](custom-firmware.md) rather than stock MicroPython: the runtime and the flow libraries
-   are frozen into flash, where they run without taking the RAM the display stack and the flow need. Its
-   **Version** list holds the published releases. After flashing it, **Install runtime** writes only the boot
-   script.
+   the path and the adapter's name (for example `/dev/ttyUSB0 -- CH340`). If an ESP32 isn't listed, hold **BOOT**,
+   tap **RESET** and click ⟳; the line under the list says how many it found. If it still isn't listed, type the
+   path in the box (on macOS a mounted Pico is `/Volumes/RPI-RP2`).
+4. Pick the **Chip family**, the **Firmware** (**Official MicroPython (micropython.org)** or **Thingstudio custom
+   image**), the **Build** and the **Version**. A board that names its own build is preselected.
 5. Click **Flash**. **Erase all flash first** is ticked: it clears an old partition table, which is the usual
-   reason a first install "succeeds" and then doesn't boot. The dialog shows each line the tool prints; a failure
+   reason a board doesn't boot after a successful install. The dialog shows each line the tool prints; a failure
    says what to fix.
 
+The **Build** matters for the heap as much as for compatibility: an ESP32 with extra PSRAM wants
+**ESP32 with PSRAM (WROVER / SPIRAM)**, and a single-core SOLO wants **ESP32 single-core (SOLO / UNICORE)**. Only the
+chip families the editor can write are listed, and only builds whose hash is pinned, so what you flash is what was
+tested.
+
 The list covers every build Thingstudio pins, so **Or use your own image file** is only for the rest: a build for a
-board we don't list, or an image you downloaded yourself. Pick the `.bin` or `.uf2`; the chip family you choose
-decides the address, and the file's own header usually decides the family.
+board Thingstudio doesn't list, or an image you downloaded yourself. Pick the `.bin` or `.uf2`; the chip family you
+choose decides the address, and the file's own header usually decides the family.
 
 Flashing erases the flow and all settings on the board. Afterwards, [connect](connecting.md) it
 and [install the runtime](installing-runtime.md).
 
-The rest of this page is the same job without the editor, for a chip it can't write or a build it doesn't pin.
-
 ## Doing it yourself
 
-You don't need any of this for a chip Thingstudio can write with a pinned build — that is the section above. It is
-here for the rest.
+For a chip Thingstudio can't write, or a build it doesn't pin, install MicroPython without the editor.
 
 ### Get the firmware
 
@@ -919,6 +927,9 @@ Don't leave out the resistor. Without it, the LED draws too much current and can
 3. Drag a **gpio out** onto the canvas. Set **pin** to your LED's GPIO number.
 4. Wire **timer** → **function** → **gpio out**.
 
+This flow is `examples/blink.flow.json`, in the [examples folder](installation-details.md#example-flows). Opened from
+there, it needs only **pin** set to your LED's GPIO number.
+
 ## Deploy
 
 Click **Compile → Deploy**. A successful deploy ends like this in the console:
@@ -944,12 +955,9 @@ and stay on.
 
 The **function** node turns the count into 1, 0, 1, 0 with `% 2`. That gives on, off, on, off.
 
-## Next, pick:
+## Next
 
-Each version the function above could take holds the LED's state somewhere different: in the timer's count, on the
-hardware, or with `context` in the node (see
-[Context, flow and settings](nodes/function.md#context-flow-and-settings)). A flow keeps state only where you put
-it: in a message, on the hardware, or in a node.
+Two tutorials take the flow further:
 
 - [Two more blinks](tutorials/two-more-blinks.md) — the blink again, two more ways: the LED's state on the
   hardware, read and written back in code, or kept in the node with `context`.
@@ -998,7 +1006,6 @@ Each [release](https://github.com/mkarliner/ThingStudio/releases/latest) has a p
 `SHA256SUMS` lists each package's checksum. The macOS packages are signed and notarized by Apple. For a version
 other than the latest, open that release from the [releases page](https://github.com/mkarliner/ThingStudio/releases).
 
-
 A package doesn't add a `thingstudio` command; start it from its folder, or by its full path. To upgrade, replace
 the folder with a newer one. To remove it, delete the folder. On Linux, add your account to the `dialout` group
 (`uucp` on Arch) yourself to use USB boards.
@@ -1013,34 +1020,7 @@ Your settings live in `%USERPROFILE%\.thingstudio`.
 
 To upgrade, run the installer script again.
 
-### Install a specific version
-
-The installer script installs the latest release unless `THINGSTUDIO_VERSION` names another one. Use the release's
-tag, with its `v`, as the [releases page](https://github.com/mkarliner/ThingStudio/releases) lists it, and take the
-script from that release too, so the script matches its packages.
-
-On macOS and Linux:
-
-```sh
-curl -fsSL https://github.com/mkarliner/ThingStudio/releases/download/v0.3.0/install.sh | THINGSTUDIO_VERSION=v0.3.0 sh
-```
-
-On Windows, in PowerShell:
-
-```powershell
-$env:THINGSTUDIO_VERSION = 'v0.3.0'
-irm https://github.com/mkarliner/ThingStudio/releases/download/v0.3.0/install.ps1 | iex
-```
-
-`$env:THINGSTUDIO_VERSION` stays set until you close that PowerShell window.
-
-To read the script before running it, download it from the same link and open it in a text editor.
-
-This works for an older version too. The installer keeps the version it replaces, and removes any older ones.
-Running the installer without `THINGSTUDIO_VERSION` goes back to the latest release.
-
-After changing version, the runtime on your board may not match the editor. If it doesn't, Deploy stops and the
-console says so. **Tools → Install runtime…** installs the matching one.
+### Remove
 
 To remove Thingstudio on macOS and Linux:
 
@@ -1054,7 +1034,23 @@ On Windows:
 & ([scriptblock]::Create((irm https://github.com/mkarliner/ThingStudio/releases/latest/download/install.ps1))) -Uninstall
 ```
 
-Upgrading and removing never touch `~/.thingstudio`, or your flows, which are saved wherever you chose.
+Upgrading and removing never touch `~/.thingstudio` (`%USERPROFILE%\.thingstudio` on Windows), or your flows, which
+are saved wherever you chose. To start again as a new user, move that folder aside as well: it holds your credentials,
+presets, custom nodes and board definitions.
+
+## Example flows
+
+Every install has an `examples` folder of flows that **File → Open…** can load, such as `blink.flow.json`. Where it
+is depends on how you installed:
+
+| Install | Examples folder |
+| --- | --- |
+| Installer script, macOS and Linux | `~/.local/share/thingstudio/current/examples` |
+| Installer script, Windows | `%LOCALAPPDATA%\Thingstudio\versions\thingstudio-VERSION-windows-x86_64\examples` |
+| Package | `examples`, inside the folder you unpacked |
+| From source | `examples`, in the repository folder |
+
+The Windows path contains the version, so it changes when you upgrade.
 
 ## From source
 
@@ -1075,18 +1071,21 @@ Source: https://docs.thingstudio.net/tutorials/
 
 # Tutorials
 
-Two tutorials, each one starting from the flow the last one left you with. [Getting started](../getting-started.md)
-ends with a blinking LED; the first tutorial picks up from that flow.
+[Getting started](../getting-started.md) ends with a blinking LED. The first two tutorials continue from it, each
+starting from the flow the last one ends with. The third is a separate project.
 
 1. [Two more blinks](two-more-blinks.md) — the blink again, two more ways: one with the LED's state on the
    hardware, one keeping it in the `function` node with `context`.
 2. [Blink from your network](blink-from-your-network.md) — the same LED, driven by an `http in` node arriving over
    WiFi: putting the board on your network, finding it again, and what an open port on the board means.
+3. [A sensor display](../sensor-display.md) — read a sensor and show it on a touch display. It is a work in
+   progress.
 
-More are coming, in this order: publish and subscribe over MQTT, then pages for whatever the first users got stuck
-on. If you've gone ahead of the tutorials and built something of your own, what worked and what stalled is the most
-useful report you can send: what you tried next, and what happened —
-[file it on the issue tracker](https://github.com/mkarliner/ThingStudio/issues).
+The finished flow for each tutorial is in the [examples folder](../installation-details.md#example-flows). Open it
+with **File → Open…** rather than copying it from the page.
+
+If you've built something past the tutorials, what worked and what stalled is a useful report: what you tried next,
+and what happened. [File it on the issue tracker](https://github.com/mkarliner/ThingStudio/issues).
 
 
 ---
@@ -1096,16 +1095,17 @@ Source: https://docs.thingstudio.net/tutorials/two-more-blinks/
 # Two more blinks
 
 You have a blinking LED from [Blink an LED](../first-flow.md): timer, function, gpio out, with the function
-turning the timer's count into on and off. That works. Two more ways to produce the same blink — and each way
-shows something different about Thingstudio:
+turning the timer's count into on and off. Two more ways to produce the same blink:
 
-- **Read the pin, write it back** — the blink's state lives on the board, in the pin, and the `function` node
-  runs your own MicroPython to reach it.
-- **Keep the state in the node** — the state lives inside the `function` node itself, in `context`.
+- **Read the pin, write it back:** the blink's state lives on the board, in the pin, and the `function` node runs
+  your own MicroPython to reach it.
+- **Keep the state in the node:** the state lives inside the `function` node itself, in `context`.
 
-The flow stays the same; only the function's code changes. Lost it? Download
-[two-more-blinks.flow.json](https://github.com/mkarliner/ThingStudio/blob/main/examples/two-more-blinks.flow.json)
-— it carries the first of the two, with `machine.Pin(15)` as the pin — and open it with **File → Open…**.
+The flow stays the same; only the function's code changes. To start from the finished flow, open
+[two-more-blinks.flow.json](https://github.com/mkarliner/ThingStudio/blob/main/examples/two-more-blinks.flow.json),
+in the [examples folder](../installation-details.md#example-flows), with **File → Open…**. Open the file; don't copy
+it from this page. It carries the first of the two blinks: change `15` in `machine.Pin(15)` to your LED's GPIO
+number.
 
 If a step misbehaves on the way, start at [Debugging & troubleshooting](../debugging.md).
 
@@ -1121,37 +1121,25 @@ return msg
 ```
 
 Deploy. The LED blinks as before, but the reason has changed: each message now reads the pin and writes back the
-opposite of what it found. The state — what the LED is actually showing — lives on the board between messages, so
+opposite of what it found. The state, what the LED is actually showing, lives on the board between messages, so
 the flow can't contradict it.
 
 `machine.Pin` is MicroPython's own pin API. Constructed with a number and no other settings, it takes the pin as it
 is and `.value()` reads the level the `gpio out` node has written. The write itself goes out of the function's
 output, through to `gpio out`.
 
-One limit to know: the pin fields on gpio nodes are checked against your board at compile time, but code
-inside a function is not. If `PIN` isn't a pin number your board has, the compile check passes and the error arrives
-when the flow runs, as a `[NODE_ERROR]` in the console. See [Reading a node error](../debugging.md#reading-a-node-error);
-**Pins…** next to the **Board** menu lists your board's pins.
+The pin fields on gpio nodes are checked against your board at compile time, but code inside a function isn't. If
+`PIN` isn't a pin number your board has, the compile check passes and the error arrives when the flow runs, as a
+`[NODE_ERROR]` in the console. See [Reading a node error](../debugging.md#reading-a-node-error); **Pins…** next to
+the **Board** menu lists your board's pins.
 
 ## Keep the state in the node
 
-!!! note "An important point to understand"
+Each message is handled on its own; nothing carries over unless you store it. To remember between messages, use
+`context` (private to this node) or `flow` (shared by the whole flow). See
+[Context, flow and settings](../nodes/function.md#context-flow-and-settings).
 
-    A flow is stateless: each event is handled on its own, without regard to what came before. In general this is
-    a good thing:
-
-    - An error shows up with the message that caused it, not in some state built over earlier operations.
-    - Recovery is doing nothing: the next message starts clean. A crashed stateful component needs its data
-      restored to an acceptable earlier version, with nothing to say which that is.
-
-    When a flow does need to remember, Thingstudio's answer is a **context** — state held between messages, either
-    private to one node (`context`) or shared across the whole flow (`flow`). This blink's LED level belongs to one
-    function node, so its private store is the one to use. All three stores, `context` and `flow` among them, are
-    in [Context, flow and settings](../nodes/function.md#context-flow-and-settings); `settings` even survives a
-    reboot.
-
-The pin was one place for the state — the board holds it, and the messages only read it. The other is inside the
-function node itself:
+The pin held the state on the board. The other place is inside the function node itself:
 
 ```python
 on = not context.get('on', False)
@@ -1165,10 +1153,12 @@ function node's own memory; `context.set('on', on)` writes it; the `False` is wh
 stored yet, which is why the first message turns the LED on.
 
 For state kept without code, the [change](../nodes/change.md) node stores a flow variable, the same store a
-`function`'s `flow.get()`/`flow.set()` reads. Making it the opposite of its old value needs the old value read, and
-`change`'s one rule doesn't do that — so a toggle stays in `context`.
+`function`'s `flow.get()`/`flow.set()` reads. A `change` node can store a flow variable but can't flip it, so a toggle
+needs a function node.
 
-## Next, pick:
+## Next
+
+The next tutorial, the next job, and the node pages behind the code:
 
 - [Blink from your network](blink-from-your-network.md) — the next tutorial: the same LED, driven by an `http in`
   node from anywhere on your WiFi.
@@ -1183,90 +1173,93 @@ Source: https://docs.thingstudio.net/tutorials/blink-from-your-network/
 
 # Blink from your network
 
-The same LED, driven from a browser: an `http in` node runs a web server on the board, and each request toggles
-it. Along the way: telling the board which WiFi network to join, finding it from your computer, and what an open
-port on it means.
+The same LED, driven from a browser: an `http in` node runs a web server on the board, and each request toggles the
+LED. The tutorial covers telling the board which WiFi network to join, finding it from your computer, and what an
+open port on it means.
 
-It builds on [Two more blinks](two-more-blinks.md). If you're starting cold, download
-[http-blink.flow.json](https://github.com/mkarliner/ThingStudio/blob/main/examples/http-blink.flow.json)
-and open it with **File → Open…** — it carries the whole tutorial's flow: the web chain (`http in`, a toggle,
-`gpio out`, an answer back to the browser) and a `wifi status` node so the connection is visible. The timer
-chain that made the LED blink is gone from this flow: on the network the request is the event, and the LED
-holds whatever level you last asked it to.
+It builds on [Two more blinks](two-more-blinks.md) and starts from the flow that tutorial ends with: timer, function,
+gpio out. To start from the finished flow instead, open
+[http-blink.flow.json](https://github.com/mkarliner/ThingStudio/blob/main/examples/http-blink.flow.json), in the
+[examples folder](../installation-details.md#example-flows), with **File → Open…**. Open the file; don't copy it
+from this page. It names a WiFi network, `tutorial wifi`, that your computer doesn't have: the **WiFi** field's ✎
+form says so, and saving it with your network's details creates it. The file's `debug` node prints only the payload;
+tick **full message** on it to see the IP address.
 
 If a step misbehaves on the way, start at [Debugging & troubleshooting](../debugging.md).
 
-## First: the board joins WiFi
+## Build the flow
 
-The board joins the network named in the flow — so first, tell the flow which network. Flow files hold no
-passwords or other secrets: the WiFi details live in the `.thingstudio` folder in your home directory
-(`~/.thingstudio/credentials/`), as **credentials**. Each credential is named, and you can keep
-several — one per network — and pick the right one per flow. See
-[The Thingstudio folder](../thingstudio-folder.md#credentials).
+On the network the request is the event, so the timer goes and the LED holds the level you last asked for.
 
-1. Connect the board over USB, as in [Connect your board](../connecting.md).
-2. On the `http in` node's property panel, click **+** next to the **WiFi** field to make a new credential (✎
-   edits an existing one). Give the credential a name, your network's SSID and its password, and save.
-3. The **WiFi** field on the `http in` node (and on the `wifi status` node) picks that credential — one WiFi
-   network per flow, shared by every WiFi node in it.
+1. Delete the **timer**.
+2. Drag an **http in** onto the canvas. Set **port** to `9999` and **path** to `/toggle`. Leave **method** as `GET`.
+3. Select the **function**. Set **outputs** to `2` and replace its **code** with:
 
-Compile stops with a one-line error if the flow's WiFi has no saved network behind it; the FAQ's
-[needs-a-WiFi-network](../faq.md#why-does-compile-fail-with-needs-a-wifi-network) entry is that error.
+    ```python
+    on = not context.get('on', False)
+    context.set('on', on)
+    msg['payload'] = on
+    reply = dict(msg)
+    reply['payload'] = 'LED ' + ('on' if on else 'off')
+    return [msg, reply]
+    ```
+
+4. Drag an **http response** onto the canvas.
+5. Wire **http in** → **function**. Wire the function's first output to **gpio out** and its second output to
+   **http response**.
+6. Drag a **wifi status** and a **debug** onto the canvas. Tick **full message** on the **debug** node and wire
+   **wifi status** → **debug**.
+7. On the **http in** node, click **+** next to **WiFi**. The form asks for a name, the SSID and the password, and
+   saves them on this computer, not in the flow ([The Thingstudio folder](../thingstudio-folder.md#credentials)).
+   A flow has one WiFi network, so the **WiFi** field on **wifi status** shows the same one.
+
+If compile stops with "needs a WiFi network", a **WiFi** field is empty. See
+[Why does compile fail with "needs a WiFi network"?](../faq.md#why-does-compile-fail-with-needs-a-wifi-network).
 
 ## Name the board, then deploy
 
-1. With the board still on USB, choose **Tools → Board settings…** and give the board a network name, say
-   `blink`. A name is how your computer finds it later without an IP address.
+1. Connect the board over USB, as in [Connect your board](../connecting.md), and choose **Tools → Board settings…**.
+   Give the board a network name, such as `blink`. A name lets your computer find the board without an IP address.
 2. Click **Compile → Deploy**. The board swaps in the flow and joins your WiFi.
 
-A few seconds after the deploy, `wifi status`'s console line prints `true`, and its dot on the canvas shows
-connected (see [node status](../working-in-the-editor.md#node-status) when the dot is something else). The LED
-itself goes dark: nothing drives the pin until a request does — the blink is over; the switch is yours.
+A few seconds after the deploy, the console prints the **wifi status** message, with a `payload` of `true`, and the
+node's dot shows connected (see [node status](../working-in-the-editor.md#node-status) when the dot is something else). The LED is dark:
+nothing drives the pin until a request does.
 
 ## Find the board
 
-- **By name:** open `http://blink.local:9999/toggle` in your browser. The name is the one from Board settings,
-  plus `.local`; port 9999 and path `/toggle` are the `http in` node's **port** and **path**.
-- **By IP:** tick **full message** on the `debug` node and read the `ip` from its next console line — the fields
-  are listed under [wifi status](../nodes/wifi-status.md#behavior). Then `http://<that ip>:9999/toggle`.
+- **By name:** open `http://blink.local:9999/toggle` in your browser. The name is the one from Board settings plus
+  `.local`; port 9999 and path `/toggle` are the **port** and **path** of the `http in` node.
+- **By IP:** the `debug` node prints the whole **wifi status** message, which includes `ip`. The fields are listed
+  under [wifi status](../nodes/wifi-status.md#behavior). Open `http://<ip>:9999/toggle`.
 
-If `.local` names don't resolve on your network (they don't everywhere, and they don't across VPN tunnels at all —
-multicast doesn't pass), the IP address is the dependable one.
+`.local` names don't resolve on every network, and never across a VPN. The IP address always works.
 
-The page answers `LED on` or `LED off`, and the LED does what it says. Expect the first answer after an idle
-stretch to take up to a second: the board's WiFi wakes on the request (see
+Each request flips the LED, and the page answers `LED on` or `LED off`. The first answer after an idle stretch is
+slower, because the board's WiFi wakes on the request (see
 [Why do http in requests take a second to answer?](../faq.md#why-do-http-in-requests-take-a-second-to-answer)).
-The request is the only event this flow
-gets, and each one is handled on its own: between requests the LED holds its level, remembered in the
-`context` toggle from the last tutorial.
 
-## The chain, and the reply
+## How it works
 
-One chain, two outputs:
+Each request is handled on its own. Between requests the LED holds its level, which the function keeps in
+`context`.
 
-```python
-on = not context.get('on', False)
-context.set('on', on)
-msg['payload'] = on
-reply = dict(msg)
-reply['payload'] = 'LED ' + ('on' if on else 'off')
-return [msg, reply]
-```
+The function has two outputs. The first carries the new state to **gpio out**. The second carries `reply` to
+[http response](../nodes/http-response.md), which answers the browser. `return [msg, reply]` routes one message to
+each output, as in Node-RED; see the [function node](../nodes/function.md).
 
-The chain is `http in → function → gpio out`. The web chain's function has two outputs, and the second one
-carries `reply` to an [`http response`](../nodes/http-response.md) node, so the browser gets an answer.
-`return [msg, reply]` is the [function node's](../nodes/function.md) output-1/output-2 routing, Node-RED style.
+## The server is open
 
-## One line on the open port
+`http in` runs an unauthenticated server on the board: whatever reaches that network can call every path. Keep those
+routes non-sensitive, or keep the board off shared networks. See [http in](../nodes/http-in.md) for what the server
+does and doesn't do.
 
-`http in` runs an unauthenticated server on the board: whatever reaches that network can call every path. Keep
-those routes non-sensitive, or keep the board off shared networks. See [http in](../nodes/http-in.md#limitations)
-for what the server does and does not do.
+## Next
 
-## Next, pick:
-
-- [Tutorials](index.md) — what comes after the network: publish and subscribe over MQTT is next to be written.
-- [http in](../nodes/http-in.md) — routes, methods, timeouts, and the server's limits.
+- [http in](../nodes/http-in.md) — routes, methods, timeouts and the server's limits.
+- [mqtt publish](../nodes/mqtt-publish.md) and [mqtt subscribe](../nodes/mqtt-subscribe.md) — the same LED over a
+  broker. `examples/basic-mqtt.flow.json`, in the [examples folder](../installation-details.md#example-flows), is a
+  starting flow.
 - [Connecting over WiFi](../wifi-connection.md) — the board as an editor peer on your network, not just a web
   server.
 
@@ -1276,6 +1269,10 @@ for what the server does and does not do.
 Source: https://docs.thingstudio.net/sensor-display/
 
 # A sensor display
+
+!!! note "Work in progress"
+
+    This tutorial is being reworked. The example flow runs, but some steps may not match the editor.
 
 Build a three-page touch display: the room's temperature, humidity and pressure with their recent history, and a
 clock. The flow also publishes the readings over MQTT.
@@ -1425,8 +1422,6 @@ Source: https://docs.thingstudio.net/working-in-the-editor/
 
 # Editor in depth
 
-How the editor's wiring, node labels, presets, config nodes and node status work.
-
 ## Wiring
 
 Every port has a type: `int`, `number`, `bool`, `string`, `bytes` or `any`. The editor refuses a wire between
@@ -1510,8 +1505,9 @@ Some nodes show a colored dot and a line of text under the node while the editor
 The dot shows what the board reports, not the editor's guess. It appears once the running flow first reports, and
 clears on every deploy until the new flow reports.
 
-The nodes with a status are `wifi status`, `mqtt publish`, `mqtt subscribe`, `i2c device`, `bme280`, `touch`, and a
-`gui screen` with a touch panel.
+These nodes report a status: `wifi status`, `mqtt publish`, `mqtt subscribe`, `ntp`, `i2c device`, `bme280`, `touch`
+and a `gui screen` with a touch panel. `adc` and `neopixel` report only a failed read or write, as a red dot. A custom
+node reports one if its code does.
 
 ## Notes
 
@@ -2011,9 +2007,8 @@ loads the runtime and the flow into RAM, and the display stack pushes it over �
 flash instead, which is the difference between a GUI flow starting and failing with
 `MemoryError allocating 13317 bytes`.
 
-Stock MicroPython is the fallback: [install the runtime](installing-runtime.md) onto it as the usual docs route
-describes. The custom image is the recommended one, but a stock build runs flows without the GUI, and it is what
-[Installing MicroPython](installing-micropython.md) sets out.
+On stock MicroPython, flows without a GUI run as usual. [Back to stock MicroPython](#back-to-stock-micropython) says
+how to return to it.
 
 The technique is not specific to this image or to this chip: freezing the runtime and the flow libraries into
 MicroPython works on any board. This image exists because a classic ESP32 is the board where it changes the most,
@@ -2022,9 +2017,8 @@ example to copy for another board.
 
 ## What it changes
 
-The runtime and the flow libraries are frozen into the firmware, which means MicroPython runs them from flash instead
-of copying them into RAM. On a classic ESP32 that is the difference between a GUI flow starting and failing with
-`MemoryError allocating 13317 bytes`.
+The runtime and the flow libraries are frozen into the firmware, so MicroPython runs them from flash instead of
+copying them into RAM.
 
 Because the libraries are already there, Deploy does not send them. The console says so after connecting:
 
@@ -2104,7 +2098,8 @@ running it: it erases the filesystem partition, and its port name comes from `PO
 
 Connect in the editor as usual. Two things confirm the image is running:
 
-- the console's version line reports the runtime version the image was built with (14.1.0 for the current image)
+- the console's version line reports the image's runtime version, as listed under **Version** in the Install
+  firmware dialog
 - `[libraries] … already on the board: …` names every library the flow imports
 
 Then deploy the flow. A GUI flow that failed with `MemoryError` on stock MicroPython should run.
@@ -2124,20 +2119,13 @@ Read the third row before leaning on deploys: each deploy over a running flow le
 the chip's own heap shrinks as MicroPython takes from it. A GUI flow still starts (a 9.5 KB flow needs far less than
 the 27 KB block), but WiFi draws from that shrinking chip heap, and the console warns when it is low.
 
-Two habits avoid the limits that remain:
-
-- Keep frames small. The gui screen node sends a frame in strips for exactly this reason; a `function` node that
-  builds a whole frame as one buffer still needs that buffer to be contiguous.
-- When a deploy fails with `MemoryError`, the console says how much memory the board had. If the board cannot make
-  room, [remove the flow and power cycle](debugging.md#memoryerror-or-a-library-that-wont-load) before deploying
-  again. A soft restart does not help: it reuses the same heap. A power cycle also returns the chip heap that
-  repeated deploys take.
+Keeping frames small and recovering from a `MemoryError` are covered in [Memory](debugging.md#memory) and
+[MemoryError or a library that won't load](debugging.md#memoryerror-or-a-library-that-wont-load).
 
 ## Back to stock MicroPython
 
-Flash a standard MicroPython build for the board, then [install the runtime](installing-runtime.md) again. The stock
-flow of [Installing MicroPython](installing-micropython.md) to [Install the runtime](installing-runtime.md) covers
-both steps. Flashing erases the board's flows and settings, as above.
+[Install MicroPython](installing-micropython.md) with a standard build for the board, then
+[install the runtime](installing-runtime.md) again. Flashing erases the board's flows and settings, as above.
 
 ## Reporting a problem
 
@@ -2231,6 +2219,9 @@ for a board you hand to someone else, or one that goes on a network you don't ha
 
 In the flow's WiFi config, set **security** to **Unmanaged** and leave the **credential** blank. See
 [Config nodes](working-in-the-editor.md#config-nodes). Deploy as usual.
+
+A flow with MQTT nodes can't use **Unmanaged**: an MQTT node connects to the network itself, so the network's name
+and password must be in the flow.
 
 ## Entering the network on the board
 
@@ -2869,6 +2860,11 @@ A subscription isn't guaranteed to be fully confirmed before an **mqtt publish**
 
 Shows a connection-status dot on the canvas (see [Editor in depth](../working-in-the-editor.md#node-status)) once connected to a device, same as **mqtt publish**.
 
+## Errors
+
+A red dot, with a console line starting `mqtt connect to` and ending `failed after 3 attempts`, means the board can't
+reach the broker. See [MQTT broker unreachable](../debugging.md#mqtt-broker-unreachable).
+
 
 ---
 
@@ -2996,6 +2992,11 @@ Shows a connection-status dot on the canvas (see [Editor in depth](../working-in
 connected to a device. It reports its own broker connection state, even when it shares that broker with an
 `mqtt subscribe` node. The node opens its broker connection only when there's actually something to publish, so the
 dot stays blank until the first message reaches it, even if the flow has been running a while.
+
+## Errors
+
+A red dot, with a console line starting `mqtt connect to` and ending `failed after 3 attempts`, means the board can't
+reach the broker. See [MQTT broker unreachable](../debugging.md#mqtt-broker-unreachable).
 
 
 ---
@@ -5409,8 +5410,6 @@ Source: https://docs.thingstudio.net/debugging/
 
 # Debugging & troubleshooting
 
-What the console and compiled source show, and what to do when a board or deploy fails.
-
 ## Console and compiled source
 
 The **console** shows what the board and Thingstudio report: deploy results, node errors, and what `debug` nodes
@@ -5431,10 +5430,31 @@ you built it from uncommitted changes. Include the versions when you report a pr
 
 ### Memory
 
-With **Show** set to **Info**, a `[memory]` line after each connect and deploy shows the board's free RAM. On an
-ESP32 it also shows the ESP-IDF heap and its largest free block. WiFi, MQTT and TLS use the ESP-IDF heap, not
-MicroPython's. If WiFi won't join while MicroPython has plenty free, a low ESP-IDF figure is the likely cause. The
-[FAQ](faq.md) explains where an ESP32's memory goes.
+With **Show** set to **Info**, the console prints a `[memory]` line after each connect and deploy. On an ESP32 it
+looks like this:
+
+```text
+[memory] MicroPython 118 KB free · ESP-IDF heap 64 KB free, largest block 31 KB
+```
+
+- **MicroPython … free** is the memory your flow and its libraries run in. It is the total free, not the largest
+  piece.
+- **ESP-IDF heap … free** is the memory the chip's own software uses, including WiFi, MQTT and TLS. **largest
+  block** is the biggest single piece of it. Only ESP32 boards report this part.
+
+Which figure matters depends on the failure:
+
+- A deploy or a library failing with `MemoryError` is about MicroPython's memory. The total can look healthy while
+  no single piece is big enough. See
+  [MemoryError or a library that won't load](#memoryerror-or-a-library-that-wont-load).
+- WiFi failing to start on an ESP32 is about the ESP-IDF heap. Below about 30 KB WiFi may not start, and the console
+  warns before a deploy when less is free. **Tools → Reset board (hard)** returns that memory; a soft restart
+  doesn't. See [Restarting the board](#restarting-the-board).
+
+A real memory failure says `MemoryError`, `memory allocation failed` or names memory. A network error with a low
+figure beside it is still a network error: if the board has joined WiFi and the console says it can't reach a
+broker or host, memory isn't the cause. For an MQTT broker, see [MQTT broker unreachable](#mqtt-broker-unreachable).
+The [FAQ](faq.md) explains where an ESP32's memory goes.
 
 ## Commands and the Python prompt
 
@@ -5511,8 +5531,8 @@ The raw error stays in the message, in brackets. Include it if you report a prob
 | (no serial ports found), or the board's port is missing | Put the board in download mode — hold **BOOT**, tap **RESET**, release **BOOT** — then click ⟳. |
 | (no mounted drives found), or the drive you want isn't listed | Hold **BOOTSEL** while plugging the board in, then click ⟳. If it's mounted somewhere the list doesn't look, type the path in the box under the list — on macOS a Pico shows up as `/Volumes/RPI-RP2`. |
 | A port named `/dev/ttyS0`, `/dev/ttyS1`… | Those are the computer's own serial ports, not the board. USB ports are listed above them, labelled with their path and the adapter's name (`/dev/ttyUSB0 -- CH340`). |
-| (no build for this chip — choose a file) | The catalogue has no pinned image for that family yet. Pick **Image file** and the `.bin`/`.uf2` from [micropython.org/download](https://micropython.org/download/). |
-| The chip family list is empty, or the catalogue can't be read | This install's `firmware/builds.json` is missing or malformed; the dialog says which line. A reinstall replaces it. |
+| (no build for this chip — choose a file) | The catalog has no pinned image for that chip family. Under **Or use your own image file**, pick the `.bin` or `.uf2` from [micropython.org/download](https://micropython.org/download/). |
+| The chip family list is empty, or the catalog can't be read | This install's `firmware/builds.json` is missing or malformed; the dialog says which line. A reinstall replaces it. |
 | … is not a .uf2, or is a .uf2 sent to a serial port | A mounted drive takes the `.uf2` build, a serial port the `.bin`. Pick the matching file. |
 | choose the chip family, so esptool knows which chip and address to use | A file on its own doesn't say which chip it is for. Pick the family; if the image is the reason, the editor reads it out of the file. |
 | The board doesn't start after flashing | The address or the family was wrong: `0x1000` for an ESP32 or ESP32-S2, `0` for an ESP32-S3, C3, C6 or ESP8266. Flash again with the right family; the board is recoverable. |
@@ -5524,8 +5544,23 @@ The raw error stays in the message, in brackets. Include it if you report a prob
 vendor image) needs it, or the new image can be written and still not boot.
 
 A flash that finishes but leaves the board silent usually means it is waiting for **Tools → Install runtime…**: a
-stock MicroPython build has no runtime at all, and a Thingstudio image carries one but not the boot script that
+stock MicroPython build has no runtime at all, and the Thingstudio custom image carries one but not the boot script that
 starts it.
+
+## A full runtime on a custom-image board
+
+On the Thingstudio custom image, **Tools → Install runtime…** writes only the boot script, `main.py`; the runtime
+is already in the firmware. A full copy of the runtime on the board's filesystem can only come from flashing the
+image without **Erase all flash first** over an older install that had one.
+
+To see what is on the filesystem, type this in the command box:
+
+```python
+import os; print(os.listdir('/'))
+```
+
+A board with only the boot script lists `main.py` among a few small files. A full runtime adds a long list of its
+own files. Flash the image again with **Erase all flash first** ticked, then install the runtime.
 
 ## Deploy is grayed out
 
@@ -5554,9 +5589,9 @@ Thingstudio's own libraries, such as the MQTT client and display drivers, are se
 
 ## MemoryError or a library that won't load
 
-A board can be short of memory while its `[memory]` line still shows free RAM. The free RAM is in pieces, and a
-flow or a library needs one piece big enough to fit. This is common on boards with little RAM, most of all on an
-ESP32 without PSRAM once a display flow has run.
+The `[memory]` line can show free RAM while a deploy still fails with `MemoryError`: the free RAM is in pieces, and
+a flow or a library needs one piece big enough to fit. This is common on ESP32 boards without PSRAM once a display
+flow has run.
 
 When a deploy fails this way, work through these in order:
 
@@ -5564,28 +5599,23 @@ When a deploy fails this way, work through these in order:
 2. **Power cycle the board** — unplug its USB cable and plug it back in, or **Tools → Reset board (hard)**.
 3. Deploy again.
 
-Removing the flow alone does not help: the running flow keeps its memory until the chip restarts. A soft restart
-does not help either — it restarts the interpreter over the same heap regions and gives no chip memory back. Only a
-power cycle gives the board a clean heap, which is why it is the step above.
+Removing the flow alone doesn't help: the running flow keeps its memory until the chip restarts. A soft restart
+doesn't either: it restarts the interpreter over the same heap regions and returns no chip memory. Only a power
+cycle gives the board a clean heap.
 
-**If it still fails after the power cycle, the flow may be too big for this board.** That is a limit of the board,
-not a fault in the flow. Three things can still work:
+If it still fails after the power cycle, the flow may be too big for this board. Then do one of these:
 
-- **Make the flow smaller.** Fewer pages in the GUI, fewer libraries imported, a smaller frame. The gui screen node
+- **Make the flow smaller.** Use fewer GUI pages, import fewer libraries, pick a smaller frame. The gui screen node
   sends a frame in strips for this reason; a `function` node that builds a whole frame at once still needs one big
   block.
-- **Use a board with more memory.** Boards with PSRAM have room for flows a board without it cannot start.
+- **Use a board with more memory.** A board with PSRAM can start flows that a board without it cannot.
 - **Run a firmware image with the libraries built in.** On a classic ESP32 there is a ready-made one:
-  [Custom firmware for classic ESP32](custom-firmware.md). On other boards the same technique works — freeze the
-  runtime and the flow libraries into MicroPython — if you build your own.
+  [Custom firmware for classic ESP32](custom-firmware.md). On other boards, build your own by freezing the runtime
+  and the flow libraries into MicroPython.
 
-If none of those is possible, the flow does not fit that board. Nothing in the editor can make room that the board
-does not have.
-
-Deploy does not try to fix this for you: it reports the failure and stops, because freeing or restarting on your
-behalf would leave the board in a state you didn't choose. When the board looks short of memory before a deploy
-starts, the console says so in one line (`only 19 KB free on the board, this flow is 10 KB -- it may not fit`) and
-deploys anyway. That figure is total free memory, not the largest free block, so it is a hint rather than a verdict.
+Deploy stops here on purpose; freeing or restarting is yours to invoke. When the board looks short of memory before
+a deploy starts, the console says so in one line (`only 19 KB free on the board, this flow is 10 KB -- it may not
+fit`) and deploys anyway. The figure is total free memory, not the largest block, so it is a hint, not a verdict.
 
 ## WiFi Internal State Error on deploy
 
@@ -5593,11 +5623,58 @@ On an ESP32, deploying a flow with MQTT nodes can fail with "Wifi Internal State
 reconnecting to the network the previous flow used, and refuses a new connection until that finishes. The MQTT nodes
 retry up to three times. If it still fails, deploy again.
 
+## MQTT broker unreachable
+
+An `mqtt publish` or `mqtt subscribe` node shows a red dot, and the console says:
+
+```text
+mqtt connect to HOST:1883 failed after 3 attempts (… 'Timeout on socket write' …, wifi status 1010)
+```
+
+The line ends with the board's WiFi status. `wifi status 1010` means the board has joined WiFi and has an address
+but can't reach the broker from its network: the cause is the network between the board and the broker, not the
+board's memory. `201` or `202` means the board never joined WiFi; see
+[The board hasn't joined WiFi](#the-board-hasnt-joined-wifi).
+
+With `1010`, check in order:
+
+- The host and port in the flow's MQTT broker. The board connects to exactly what the flow says.
+- That the board's network can reach the broker. Your computer reaching it proves nothing: a laptop can reach a home
+  broker over a VPN the board isn't on, and a board on a phone hotspot isn't on the home network.
+- That the network lets port 1883 through. Some mobile networks block it.
+- That the broker listens beyond localhost. Mosquitto 2 listens on localhost only, unless its configuration has
+  `listener 1883` and either `allow_anonymous true` or a password file.
+
+Then do one of these:
+
+- Put the board on the broker's network.
+- Use the public test broker `test.mosquitto.org`, port 1883. It is public: anyone can read what you publish, so
+  use a topic nobody else will, such as one with a random number in it (`thingstudio/4821937/temperature`). A broker
+  on your own network is better if you have one.
+- Relay through a computer the board can reach. With Remote Login on, run
+  `ssh -g -N -L 0.0.0.0:1883:BROKER:1883 localhost` on that computer, and set the flow's broker to that computer's
+  address.
+
+### The board hasn't joined WiFi
+
+On an ESP32, status `201` means the network wasn't found, and `202` means joining failed authentication, usually a
+wrong password. Check, in order:
+
+- The network name and password in the flow's WiFi credential: ✎ next to the **WiFi** field.
+- Whether the flow has both MQTT nodes and a `wifi status` node. In a flow with MQTT nodes, MQTT manages the WiFi
+  connection and `wifi status` only reports on it. If the join fails, remove the `wifi status` node and deploy
+  again.
+- The ESP-IDF figure on the `[memory]` line. Below about 30 KB WiFi may not start; use
+  **Tools → Reset board (hard)**. See [Memory](#memory).
+
+The console can also show "Wifi Internal State Error". For that error at deploy time, see
+[WiFi Internal State Error on deploy](#wifi-internal-state-error-on-deploy).
+
 ## Deploy resends a piece, or fails part-way
 
 Deploy sends the flow, and each library it uses, in pieces, and waits for the board to confirm each one. Over a
 USB-serial chip such as the CYD's, a piece can arrive damaged or its confirmation can get lost. The console then
-shows `resending (1/2)`, and Deploy carries on. That is normal now and then.
+shows `resending (1/2)`, and Deploy carries on.
 
 If a piece still fails after three tries, Deploy stops and says so, and the flow on the board is unchanged. Deploy
 again. If it keeps happening, try another USB cable or port, close anything else using the serial port, or connect
@@ -5652,7 +5729,7 @@ Check these, in order:
 - The state is sent in a form the toggle matches. A toggle set to `true` and `false` ignores `ON` and `OFF`: set its
   **value type** to text.
 
-## Native code (Tools → Native code)
+## Deploy fails with an architecture or native-module error
 
 The `gs4`, `gs2` and `mono` frame formats of [display spi](nodes/display-spi.md) compile part of their code to
 native machine code, which needs the right architecture for the board's chip.
@@ -5664,22 +5741,20 @@ the list and deploy again.
 ## Restarting the board
 
 A board can run short of memory after several deploys, or after a flow that uses a lot of it, such as a display.
-The console suggests a restart when a deploy fails with `MemoryError`, the board restarts while starting a flow, or
-an ESP32 has too little memory left for WiFi.
+The console suggests a restart when a deploy fails with `MemoryError`, when the board restarts while starting a flow,
+or when an ESP32 has too little memory left for WiFi.
 
 The Tools menu has two restarts:
 
-- **Tools → Restart board (soft)** restarts MicroPython. The saved flow starts again with a clean interpreter: the
-  flow's own objects are gone, but the heap regions are the same ones and memory MicroPython took from the chip is
-  not returned. USB stays connected.
+- **Tools → Restart board (soft)** restarts MicroPython. The saved flow starts again with a clean interpreter and the
+  flow's own objects are gone; the heap stays as it was. USB stays connected.
 - **Tools → Reset board (hard)** resets the whole chip, like its reset button, and frees all memory. A board with
   native USB (Pico, ESP32-S2, S3 and C3) disconnects; click **Connect** when it's back.
 
-A soft restart is enough to clear a flow's own leftovers, such as a big buffer a faulty node left behind. It is not
-enough for a board that cannot fit a *deploy*: nothing short of a full power cycle gives the memory back in one
-piece, so that case is Remove flow…, power cycle, deploy (above). When an ESP32 is short of memory for WiFi, only
-the hard reset helps either. The console says which to use. Deploy is off until the board is back, which can take
-several seconds.
+A soft restart clears a flow's own leftovers, such as a big buffer a faulty node left behind. A deploy that doesn't
+fit needs the steps under [MemoryError or a library that won't load](#memoryerror-or-a-library-that-wont-load), and
+an ESP32 short of memory for WiFi needs the hard reset. The console says which. Deploy is off until the board is
+back, which can take several seconds.
 
 ## Board stuck restarting
 
@@ -5701,6 +5776,21 @@ The board then starts with the runtime only, as after a fresh install. The flow 
 Source: https://docs.thingstudio.net/faq/
 
 # FAQ
+
+## Where do I ask a question or report a problem?
+
+Ask questions, and show what you've built, in [GitHub Discussions](https://github.com/mkarliner/ThingStudio/discussions).
+Report a bug or a missing feature on the [issue tracker](https://github.com/mkarliner/ThingStudio/issues), or with
+**Help → Report a problem**. Include the editor's version (**Help → About Thingstudio**), your board, and the console
+lines around the problem. Share the flow file, not compiled output; see the next question.
+
+## How do I share a flow when I ask for help?
+
+Share the flow file: **File → Save**, then attach or paste the `.flow.json`. It holds the nodes and wiring and no
+passwords: the WiFi and broker logins stay on your computer
+([The Thingstudio folder](thingstudio-folder.md#credentials)). Don't paste the **Compiled source** panel or the
+console's compiled output: it contains the resolved WiFi password and broker login. If you pasted it somewhere
+public, change the password.
 
 ## Why does my ESP32 have so little free memory?
 
@@ -5727,51 +5817,20 @@ and uses its RAM. So a 264 KB Pico W leaves more for your flow than a 400 KB ESP
 
 ## Deploy failed with "MemoryError ... allocating 38400 bytes". Why, when there's more free memory than that?
 
-Free memory is in pieces. A big buffer needs one piece that size, and after a while an ESP32 may not have
-one. A 240x320 frame in 16 grays is 38,400 bytes. The [GUI nodes](nodes/gui.md) avoid this by drawing the
-screen in strips. If your own `function` node builds a full frame, draw it in strips too, or restart
-the board before deploying.
-
-## Why doesn't Deploy clear the old flow or retry when the board runs out of memory?
-
-Because a repair nobody asked for hides the limit. The editor used to stop the running flow and retry when a
-deploy didn't fit; the retry then failed a step later, and the board was left stopped without anyone deciding
-that. Now a deploy that doesn't fit fails once, with the board's free-memory figure, and the console says what
-to do. The steps are yours to take: **Tools → Remove flow…**, **power cycle the board** (unplug and replug the
-USB cable, or **Tools → Reset board (hard)**), then deploy. See
-[MemoryError or a library that won't load](debugging.md#memoryerror-or-a-library-that-wont-load).
+Free memory is in pieces, and a big buffer needs one piece that size. A 240x320 frame in 16 grays is 38,400 bytes.
+The [GUI nodes](nodes/gui.md) draw in strips to avoid this; a `function` node that builds a full frame should too.
+See [MemoryError or a library that won't load](debugging.md#memoryerror-or-a-library-that-wont-load).
 
 ## Why isn't a soft restart enough after "too full to receive the flow"?
 
-Because a soft restart reuses the same heap. It restarts the interpreter, so the flow's own objects go away, but
-the heap regions MicroPython took as it grew stay where they were, and memory taken from the chip is not given
-back. A board that couldn't find one big block before the soft restart still can't after it. Only cutting power
-to the chip rebuilds the heap from scratch — hence the power cycle in the recipe above.
+A soft restart reuses the same heap; only a power cycle rebuilds it. See [MemoryError or a library that won't load](debugging.md#memoryerror-or-a-library-that-wont-load).
 
 ## Deploy failed a second time. Is the flow too big for my board?
 
-Possibly, yes. Work through this in order:
-
-1. **Tools → Remove flow…**, then **power cycle the board** (unplug and replug the USB cable, or
-   **Tools → Reset board (hard)**), then deploy.
-2. If it still fails, the flow may be too big for the board. Make it smaller (fewer GUI pages, fewer libraries, a
-   smaller frame), use a board with more memory, or — on a classic ESP32 — run the
-   [custom firmware](custom-firmware.md), which keeps the runtime and the libraries in the firmware.
-
-Boards with little RAM have a point where a flow simply does not fit. Nothing in the editor can make room the
-board does not have. The console shows how much memory the board had when it failed; see
-[MemoryError or a library that won't load](debugging.md#memoryerror-or-a-library-that-wont-load).
-
-## Why is Deploy sending the flow in pieces?
-
-Some boards (classic ESP32 with no PSRAM) can't take a whole flow in one message once a display flow has run:
-the memory is free but in pieces too small for one message. Deploy sends the flow in 5 KB pieces instead, each
-confirmed before the next. Larger pieces keep a deploy quick; a board that can't take 5 KB has a memory problem
-worth seeing rather than one to work around.
+Possibly. If a deploy still fails after **Tools → Remove flow…** and a power cycle, the flow may be too big for the
+board. See [MemoryError or a library that won't load](debugging.md#memoryerror-or-a-library-that-wont-load) for what to do.
 
 ## Why does http request fail with "MemoryError" fetching a page?
-
-
 
 The node reads the whole response body into memory at once. A page larger than the largest free block fails, even
 when the console shows more free memory than the page size. A 56 KB page on an ESP32-C3 failed with
@@ -5792,10 +5851,10 @@ only at lower color depths and with little to spare.
 
 ## My WiFi flow worked before, but now the board crashes or won't join. Why?
 
-On an ESP32, MicroPython's heap grows by taking memory from ESP-IDF when a flow needs more, and keeps it until the
-chip is reset. After a flow that uses a lot of memory, such as a display, WiFi may not have enough left to start.
-The console warns you before you deploy. Use **Tools → Reset board (hard)**: a soft restart doesn't give that
-memory back. See [Restarting the board](debugging.md#restarting-the-board).
+On an ESP32, MicroPython's heap grows by taking memory from ESP-IDF, and keeps it until the chip is reset. After a
+flow that uses a lot of memory, such as a display, WiFi may have too little left to start. Use
+**Tools → Reset board (hard)**: a soft restart doesn't give that memory back. See [Memory](debugging.md#memory) and
+[Restarting the board](debugging.md#restarting-the-board).
 
 ## Why does opening a flow ask "Save changes to …?" even though I changed nothing?
 
@@ -5814,7 +5873,7 @@ Connect and deploy again.
 
 ## How do I tell which version of the editor I'm running?
 
-It's next to **Thingstudio** in the toolbar, and in **Help → About**. A `+` after it means you built the editor
+It's next to **Thingstudio** in the toolbar, and in **Help → About Thingstudio**. A `+` after it means you built the editor
 from uncommitted changes.
 
 ## My clock shows `--` and never the time. Why?
@@ -5824,7 +5883,7 @@ board can't reach the server. It tries again every 30 seconds. See [ntp](nodes/n
 
 ## My gui toggle shows `--`. Why?
 
-A toggle with its input wired shows `--` until the input sends a value it recognises. It matches the input against
+A toggle with its input wired shows `--` until the input sends a value it recognizes. It matches the input against
 its *on sends* and *off sends* values, `true` and `false` unless you changed them. A Tasmota plug reports `ON` and
 `OFF` as text: set the toggle's value type to text. See [a toggle that follows the real device](nodes/gui.md#a-toggle-that-follows-the-real-device).
 
@@ -5853,12 +5912,10 @@ every MQTT node in a flow shares that one setting. See [Config nodes](working-in
 
 ## Why do http in requests take a second to answer?
 
-The flow answers immediately — the wait is the board's WiFi waking up. An idle board's radio sleeps
-(modem-sleep); a new request pays the wake and the connection set-up before anything the flow does. Measured on a
-classic ESP32 (Wemos D1 R32) toggling an LED, through a VPN tunnel: 0.16–1.2 s per request, with the wake part of
-it; a volley of requests answered in 0.15–0.20 s each once the radio was warm. If the board has steady network
-traffic — a flow that talks, or sits connected — the wake cost goes away on its own. See the deferred note on
-modem sleep in `working-notes/outstanding-items.md`.
+The flow answers immediately; the wait is the board's WiFi waking up. An idle board's radio sleeps (modem-sleep), and
+a new request pays the wake and the connection set-up before anything the flow does. On a classic ESP32 behind a VPN
+tunnel, requests took up to 1.2 s with the radio asleep and 0.15–0.20 s once it was warm. If the board has steady
+network traffic, a flow that talks or sits connected, the wake cost goes away on its own.
 
 ## Why is Compile → Deploy grayed out after a deploy?
 
