@@ -963,6 +963,11 @@ Two tutorials take the flow further:
   hardware, read and written back in code, or kept in the node with `context`.
 - [A sensor display](sensor-display.md) — the next job past blinking: read a sensor and show it on a screen.
 
+## Tell us how it went
+
+Started from a blank board? [Tell us how it went](https://github.com/mkarliner/ThingStudio/discussions/new?category=onboarding-reports):
+where the guide or the tool let you down is the most useful part. To keep it private, email mike@minus1.com.
+
 ## If it doesn't blink
 
 Each symptom below has its own fix:
@@ -1272,7 +1277,8 @@ Source: https://docs.thingstudio.net/sensor-display/
 
 !!! note "Work in progress"
 
-    This tutorial is being reworked. The example flow runs, but some steps may not match the editor.
+    This tutorial is being reworked. The example flow runs, but some steps may not match the editor. The GUI nodes it
+    uses are provisional; see [GUI nodes](nodes/gui.md).
 
 Build a three-page touch display: the room's temperature, humidity and pressure with their recent history, and a
 clock. The flow also publishes the readings over MQTT.
@@ -1755,6 +1761,8 @@ Any board with one of these processors can be used by picking the processor from
 
 ## Displays
 
+The [GUI nodes](nodes/gui.md) that draw on these displays are provisional.
+
 | Chip | Panel sizes | Node | Tested |
 | --- | --- | --- | --- |
 | ST7789 | 240x240, 135x240, 240x320 | [display spi](nodes/display-spi.md) | Yes, on the CYD |
@@ -1762,6 +1770,8 @@ Any board with one of these processors can be used by picking the processor from
 | SSD1306 (I2C only) | 128x64, or set width and height | [display i2c](nodes/display-i2c.md) | Untested |
 
 ## Touch panels
+
+Touch in the [GUI nodes](nodes/gui.md) is provisional.
 
 | Chip | Node | Tested |
 | --- | --- | --- |
@@ -3619,6 +3629,10 @@ For a chip this node doesn't cover, such as GT911 or CST820, read it from a [fun
 Source: https://docs.thingstudio.net/nodes/gui/
 
 # GUI nodes
+
+!!! note "Provisional"
+
+    The GUI nodes are provisional: their properties and the page layout may change between releases.
 
 Show readings on a display as pages of labels, numbers, bars and lights. Lay out the pages in the gui screen node's
 property panel: see [Laying out pages](#laying-out-pages).

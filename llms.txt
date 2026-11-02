@@ -97,7 +97,7 @@
 - [i2c device](https://docs.thingstudio.net/nodes/i2c/): Talks to an I2C device that has no node of its own.
 - [I2C bus](https://docs.thingstudio.net/nodes/i2c-bus/): An I2C bus is shared by one or more devices.
 - [Touch panels](https://docs.thingstudio.net/nodes/touch-panel/): A touch panel is a capacitive touch screen on an I2C bus.
-- [GUI](https://docs.thingstudio.net/nodes/gui/): Show readings on a display as pages of labels, numbers, bars and lights.
+- [GUI](https://docs.thingstudio.net/nodes/gui/): The GUI nodes are provisional: their properties and the page layout may change between releases.
 
 ## Extending and automating
 
