@@ -10,7 +10,7 @@ the C6 correction). They carry the answers this brief only points at.
 
 ## State
 
-Branch `docs/context-diet`, local only (Mike pushes and merges). Seven commits not on the remote, plus the one that filed this brief:
+Merged to `main` and pushed on 2026-11-02 (`ebe787e`; later commits are in `git log`). The commits that carry the work:
 
 | Commit | What |
 | --- | --- |
@@ -49,6 +49,12 @@ note (a deliberate hand-added entry). Phases 4-5 delete most of them.
   "A refusal says it is deliberate, once").
 - **Tutorials:** every download says "open the file, don't copy it"; the "Next" pointers stay; the index lists three
   tutorials and no plans.
+- **Mike's own text in the tutorials is settled** (`tutorials-and-examples-landed-briefing.md`; read it before editing any
+  tutorial page). Phase 3 cut some of it on the user-guide review's findings and had to restore it: the "An important
+  point to understand" box in Two more blinks (`534cde8`), and in Blink from your network the credentials story, the
+  `.local`/VPN line and "up to a second" (the commit after it). The review's Two more blinks finding 2 and Blink from
+  your network findings 3 and 7 are overridden. The voice changes that stayed (dash asides, "Next" headings, "The server
+  is open") came from the review and were not individually checked with Mike.
 
 ## Next, in order
 
@@ -149,6 +155,14 @@ note (a deliberate hand-added entry). Phases 4-5 delete most of them.
   `tmp_obj_*` behind, and any command that takes the index lock twice (a merge) fails with "index.lock: File exists".
   Move a lock aside (`mv`, directly under `.git`) or delete it once permitted, and only a lock the sandbox user made
   moments ago with no git running (check owner and mtime). `.git/HEAD.lock.stale.5` is Mike's older one.
+- Two Macs, different sessions: `~/Src/Thingstudio` (MacBook Air) and `~/Src/ThingStudio` (Mac mini). `get_device_info` says
+  which is connected. Delete permission is per folder and per session; ask again on each. The mini's sandbox has no git
+  identity: commit with `git -c user.name='Michael Karliner' -c user.email='mike@karliner.net' commit ...`. For read-only
+  checks use `git --no-optional-locks status` (plain `status` can leave an `index.lock`).
+- Pushing: the device has no push credentials. Carry the commits in a bundle so the hashes stay the same:
+  `git bundle create .push.bundle <remote-tip>..main` in the repo, `device_stage_files` it, then in a cloud clone
+  (`add_repo` with `access: push`, `git init` + `git fetch --depth=60 origin main`) `git fetch <bundle> main:to-push` and
+  `git push origin to-push:refs/heads/main`. Delete the bundle from the repo afterwards. Pushing `main` deploys the docs.
 - SSH to GitHub fails from the device ("Host key verification failed"). HTTPS works:
   `git fetch https://github.com/mkarliner/thingstudio docs/context-diet`, then `git merge FETCH_HEAD`. `pull.rebase` is
   unset, so a merge. Stage by explicit paths so the `.swp` deletion stays out.
