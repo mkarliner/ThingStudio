@@ -137,3 +137,7 @@ Three decisions on the back of `reviews/2026-11-01-user-guide.md`'s second-pass 
   the public discussion (phase 2; product-side warning in the compiled-source view is Mike's call); the runtime
   `wifi status 202` MQTT variant joins Gap 1's debugging entry (phase 2); the misleading
   `[wifi] ... reachable over WiFi` console line becomes an outstanding item (product wording, not docs).
+- **Places for Mike's own voice (Mike, 2026-11-02):** the neutral-voice rule stays, but some places suit Mike's own
+  voice -- human, slightly humorous, personal. Sessions don't write that voice; they write the neutral version, flag
+  each such place to Mike by page and heading in their summary, and keep the list in the style guide ("Places for
+  Mike's own voice"). Mike removes an entry when he has written it, and what he writes is then settled text.

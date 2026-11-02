@@ -23,6 +23,31 @@ being personal puts people off. "You" is fine for instructions. A tutorial's tit
 - Good: "Reports on any board, listed or not, are welcome."
 - Bad: "Other MicroPython boards should work too, but we can't test everything."
 
+## Places for Mike's own voice
+
+Most of the docs stay neutral (Voice, above). A few places are better in a person's voice: warmer, a little humorous,
+personal. Those are Mike's to write, because the docs are AI-written and an AI being personal puts readers off.
+(Mike, 2026-11-02.)
+
+A session that writes or edits the docs:
+
+- **Flags such a place** when it meets one, and does not write the personal voice itself. It writes the neutral
+  version, so the page is complete, and tells Mike in its summary: the page, the heading, and what the spot is for.
+- **Keeps the list below**, so a place is flagged once. Mike removes an entry when he has written it.
+- **Leaves Mike's words as they are** once he has written them. They are settled text.
+
+What suits it: a welcome, an opening that says why, the moment a first success lands, an invitation to say how it
+went, a tutorial's title or opening. What doesn't: node pages, troubleshooting steps, error text, anything a reader
+follows step by step.
+
+Flagged so far:
+
+- 2026-11-02 `index.md`: the opening paragraphs, which say what Thingstudio is.
+- 2026-11-02 `getting-started.md`: the opening line, and the "Getting help" section.
+- 2026-11-02 `first-flow.md`: the moment the LED blinks (end of "Deploy"), and "Tell us how it went".
+- 2026-11-02 `tutorials/`: each tutorial's opening paragraph, and the titles of Web Blink and Blink from anywhere.
+- 2026-11-02 `background/` and `coming-from/`: the opening of each page, which says why the page is for the reader.
+
 ## A refusal says it is deliberate, once
 
 When Deploy or the editor stops on purpose (a deploy that won't fit, a WiFi config a node won't accept), the

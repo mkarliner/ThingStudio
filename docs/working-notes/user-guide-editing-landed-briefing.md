@@ -57,6 +57,9 @@ work-in-progress note (a deliberate hand-added entry). Phase 5 deletes most of t
   says `wifi status` beside MQTT nodes can fail the join). The example's topics carry the placeholder `change-this-number`
   on purpose: a shared number would let strangers switch each other's LEDs. The function node exists because `gpio out`
   uses Python truthiness, so the text `off` would count as on.
+- **Mike's own voice (2026-11-02):** some places suit his personal, slightly humorous voice. Don't write it: write the
+  neutral version, flag the place to him by page and heading in your summary, and add it to the style guide's "Places for
+  Mike's own voice" list (the first five are there). AGENTS.md and `decisions/documentation-process.md` carry the rule.
 - **Refusal wording:** one short attributing clause on troubleshooting pages, none on reference pages (style guide,
   "A refusal says it is deliberate, once").
 - **Tutorials:** every download says "open the file, don't copy it"; the "Next" pointers stay; the index lists four

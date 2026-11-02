@@ -285,6 +285,10 @@ lists today's violations and only shrinks: fix a violation, then delete its base
 A new lint rule lands in the same change as the page fixes that make it pass. Voice, chattiness and repeated
 ideas are not linted; they stay with editing and review.
 
+Some places in the docs suit Mike's own voice (human, a little humorous, personal). Don't write that voice yourself:
+write the neutral version, flag the place to Mike by page and heading in your summary, and add it to the style guide's
+"Places for Mike's own voice" list.
+
 ## Handoff/briefing note filenames: lead with the topic, not "next-session-picks"
 
 Before naming or writing the handoff file, actually do this, in order:
