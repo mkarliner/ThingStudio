@@ -75,6 +75,7 @@ nav:
       - Installation details: installation-details.md
   - Tutorials:
       - Overview: tutorials/index.md
+      - Example flows: examples.md
       - Two more blinks: tutorials/two-more-blinks.md
       - Blink from your network: tutorials/blink-from-your-network.md
       - A sensor display: sensor-display.md

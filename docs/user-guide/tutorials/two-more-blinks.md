@@ -9,7 +9,7 @@ turning the timer's count into on and off. Two more ways to produce the same bli
 
 The flow stays the same; only the function's code changes. To start from the finished flow, open
 [two-more-blinks.flow.json](https://github.com/mkarliner/ThingStudio/blob/main/examples/two-more-blinks.flow.json),
-in the [examples folder](../installation-details.md#example-flows), with **File → Open…**. Open the file; don't copy
+in the [examples folder](../examples.md#where-the-folder-is), with **File → Open…**. Open the file; don't copy
 it from this page. It carries the first of the two blinks: change `15` in `machine.Pin(15)` to your LED's GPIO
 number.
 

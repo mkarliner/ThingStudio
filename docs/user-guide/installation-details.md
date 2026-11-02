@@ -52,17 +52,7 @@ presets, custom nodes and board definitions.
 
 ## Example flows
 
-Every install has an `examples` folder of flows that **File → Open…** can load, such as `blink.flow.json`. Where it
-is depends on how you installed:
-
-| Install | Examples folder |
-| --- | --- |
-| Installer script, macOS and Linux | `~/.local/share/thingstudio/current/examples` |
-| Installer script, Windows | `%LOCALAPPDATA%\Thingstudio\versions\thingstudio-VERSION-windows-x86_64\examples` |
-| Package | `examples`, inside the folder you unpacked |
-| From source | `examples`, in the repository folder |
-
-The Windows path contains the version, so it changes when you upgrade.
+Every install has an `examples` folder. [Example flows](examples.md#where-the-folder-is) says where it is for each route.
 
 ## From source
 

@@ -118,6 +118,19 @@ referenced from 5 pages, no index, layout-tested but not compile-tested.
   (`compileWithHooks` over one example) to all of them. They get a layout check today; a broken example is a
   silent failure at the scavenger's front door.
 
+Phase 2a done, 2026-11-02. `docs/user-guide/examples.md` ("Example flows", in the nav under Tutorials) leads with
+File -> Open..., has one entry per shipped flow (what it does, what to change first, each pointer landing on a node page),
+and now owns the examples-folder table; Installation details keeps one sentence and a link, and every other link was
+updated. `editor/test/examples-compile.test.ts` runs `checkFlowText` and the editor's mpy-cross syntax check over every
+`examples/*.flow.json` (before it, only `blink` and the GUI flows were compiled). Run in a cloud clone with the docs tests:
+44 passed; a deliberately broken copy of an example fails it. Notes:
+
+- `examples/README.md` was left as it is (it is the folder's own index and ships with the files). It says
+  `basic-http-request` "takes a value out of the answer"; the flow is `inject -> http request -> debug`, and the page says that.
+- `gui-headliner-sensor-freenove-s3-4in.flow.json` contains the hidden `gui navigator` node. The page doesn't mention it
+  (remark 6); phase 4 removes it from the example or the tutorial.
+- The "try changing" pointers were checked against the node pages' property labels, not run on hardware.
+
 ### Phase 3 -- tutorials (review order item 3)
 
 Rewrite `blink-from-your-network.md` with a Build the flow section (facts from the review's item 1, template from

@@ -1,8 +1,9 @@
-# User guide editing: phases 0-3 landed, 2a and the MQTT tutorial next
+# User guide editing: phases 0-3 and 2a landed, the MQTT tutorial next
 
 Status: continuation brief, filed 2026-11-01. Executes `user-guide-editing-plan.md` against
 `reviews/2026-11-01-user-guide.md`. Phases 0, 1, 2 (with the discussion #5 additions) and 3 are done and committed;
-phase 3's Gap 2 (the MQTT tutorial) has its spec and is its own session. Next: phase 2a, then Gap 2, then phases 4-7.
+phase 3's Gap 2 (the MQTT tutorial) has its spec and is its own session. Phase 2a (the Examples page, the compile test)
+landed 2026-11-02 after the commits below. Next: Gap 2, then phases 4-7.
 The remaining phases run on Sonnet 5.5 (Mike, 2026-11-02); `user-guide-phase-0-briefing.md`, the GLM-5.3-Flash brief for
 phase 0, is superseded by this work and marked so.
 Read the plan's "done" notes under each phase first, then the review's last two sections ("Phase 0 fact-checks" and
@@ -45,6 +46,9 @@ note (a deliberate hand-added entry). Phases 4-5 delete most of them.
 - **Example folder paths per install route** are a table in Installation details ("Example flows"), from the installer
   scripts. `topic` is not required on a message. `http in` takes GET or POST only and never reads a body. The node
   status list includes `ntp`, `adc`, `neopixel`.
+- **Phase 2a:** `examples.md` owns the examples-folder table (Installation details points at it);
+  `editor/test/examples-compile.test.ts` checks every `examples/*.flow.json`. When the MQTT tutorial ships its flow, the
+  test covers it automatically, and it needs an entry on `examples.md`.
 - **Refusal wording:** one short attributing clause on troubleshooting pages, none on reference pages (style guide,
   "A refusal says it is deliberate, once").
 - **Tutorials:** every download says "open the file, don't copy it"; the "Next" pointers stay; the index lists three
@@ -58,32 +62,19 @@ note (a deliberate hand-added entry). Phases 4-5 delete most of them.
 
 ## Next, in order
 
-1. **Phase 2a: the Examples page and a CI compile check** (spec in the plan, "Phase 2a"). Things to decide or watch:
-   - Installation details' "Example flows" section is linked from the Home tip, Blink an LED, the tutorials index and
-     both tutorials (`installation-details.md#example-flows`). The plan says the Examples page subsumes Gap 4. Suggested:
-     the Examples page owns the table, Installation details keeps one sentence and a link, and every link above is
-     updated. The link check catches a missed anchor.
-   - `examples/README.md` already describes the same eight flows for the repo. One home for changing facts: keep the
-     README thin and link to the page, or the reverse.
-   - The compile check generalizes `editor/test/gui-trend.test.ts` (`compileWithHooks` over one example) to every
-     `examples/**/*.flow.json`. Wrinkle to check first: `http-blink` and `basic-mqtt` name credentials that don't exist
-     (`tutorial wifi`), so the test needs the credential resolution the existing tests use.
-   - The test needs npm and vitest, which never run on the mount (see below). Mike runs the docs tests:
-     `cd editor && ./node_modules/.bin/vitest run test/docs-llms.test.ts test/cli-check-flow.test.ts test/cli-describe.test.ts`.
-     The new example test needs the same.
-2. **Gap 2, the MQTT tutorial "Blink from anywhere"** (spec in the plan, "Gap 2 spec"). When it lands: add it to
+1. **Gap 2, the MQTT tutorial "Blink from anywhere"** (spec in the plan, "Gap 2 spec"). When it lands: add it to
    `tutorials/index.md`; point "Next" on `blink-from-your-network.md` at it as well as `examples/basic-mqtt.flow.json`;
    link `debugging.md#mqtt-broker-unreachable` from "nothing arrives?"; ship its flow in `examples/` with a README line;
    keep the public-broker caveat (`test.mosquitto.org`, a random topic prefix, anyone can subscribe). It needs a real
    board run by Mike before it is called done: nothing here can run a flow.
-3. **Phase 4** (contradictions): the review's per-page entries for `nodes/gui.md`, `gui-layout.md`, `node-conventions.md`
+2. **Phase 4** (contradictions): the review's per-page entries for `nodes/gui.md`, `gui-layout.md`, `node-conventions.md`
    and `display-spi.md`. Merging `gui-layout.md` means removing its nav line in `mkdocs.yml` and fixing links from the
    FAQ, `nodes/gui.md` and `sensor-display.md`. Comment out the modal section with an HTML comment (the lint skips
    comments). Remove `gui navigator` outright.
-4. **Phase 5** (node pages to layout and voice): each page's findings are its checklist. Requirement added by Mike: every
+3. **Phase 5** (node pages to layout and voice): each page's findings are its checklist. Requirement added by Mike: every
    Wiring example is copy-pasteable. Include the facts in the review's phase 0 section (`http in`, the missing **WiFi**
    property on both MQTT pages, whose new one-line `## Errors` sections should take their error text).
-5. **Phases 6-7** (structure, pictures) as the plan says. Phase 7 needs the screenshot route below.
+4. **Phases 6-7** (structure, pictures) as the plan says. Phase 7 needs the screenshot route below.
 
 ## For Mike (not docs work)
 
@@ -94,6 +85,9 @@ note (a deliberate hand-added entry). Phases 4-5 delete most of them.
   broker login), the misleading `[wifi] … reachable over WiFi` line, and a plainer console line for an unreachable broker.
 - `examples/http-blink.flow.json`'s `debug` node prints only the payload, so the tutorial tells readers to tick
   **full message**. Shipping the example with it ticked would let that sentence go.
+- `examples/README.md` still says `basic-http-request` "takes a value out of the answer"; the flow doesn't (it is
+  `inject -> http request -> debug`). The README duplicates the new Examples page; shorten it to a pointer if you want one home.
+- `gui-headliner-sensor-freenove-s3-4in.flow.json` carries the hidden `gui navigator` node; phase 4 decides example or tutorial.
 - The lint's two departures are in the plan's notes, not `decisions/`. Move them if you want them on that record.
 
 ## Environment facts (every toolchain this run used)
@@ -176,7 +170,11 @@ note (a deliberate hand-added entry). Phases 4-5 delete most of them.
   REST works for issues and pull requests.
 - npm, vitest, vite and tsc never run against the Mac mount. The pattern that works: clone into the container,
   `npm ci --ignore-scripts` in `editor/`, edit and test there, check each target file's SHA-256 on the Mac still matches the
-  clone's base, then copy back with `device_commit_files`. Not needed for docs-only phases; needed for 2a's test.
+  clone's base, then copy back with `device_commit_files`. Not needed for docs-only phases. For 2a it worked like this: in the
+  push clone, `git fetch --depth=1 origin main` and `git checkout -f origin/main`, `npm ci --ignore-scripts` in `editor/` (seconds,
+  with a warm cache), write and run the test there, copy a new file back (its `stagedPath` must be under `/mnt/user-data/outputs/`;
+  compare SHA-256 afterwards). To run the docs tests against docs edits made on the Mac, stage the changed files with
+  `device_stage_files` and copy them into the clone first.
 - Screenshots for phase 7 (`tools/screenshots.py`): the device VM can't download Chromium. Stage `editor/dist`,
   `backend/src`, `tools/screenshots.py` and `docs/screenshots/` into the container, `pip install aiohttp pyserial`, run
   with `PYTHONPATH=backend/src` and `--chromium` pointing at the preinstalled Playwright Chromium, then commit the PNGs back.

@@ -7,7 +7,7 @@ open port on it means.
 It builds on [Two more blinks](two-more-blinks.md) and starts from the flow that tutorial ends with: timer, function,
 gpio out. To start from the finished flow instead, open
 [http-blink.flow.json](https://github.com/mkarliner/ThingStudio/blob/main/examples/http-blink.flow.json), in the
-[examples folder](../installation-details.md#example-flows), with **File → Open…**. Open the file; don't copy it
+[examples folder](../examples.md#where-the-folder-is), with **File → Open…**. Open the file; don't copy it
 from this page. It names a WiFi network, `tutorial wifi`, that your computer doesn't have: the **WiFi** field's ✎
 form says so, and saving it with your network's details creates it. The file's `debug` node prints only the payload;
 tick **full message** on it to see the IP address.
@@ -96,7 +96,7 @@ does and doesn't do.
 
 - [http in](../nodes/http-in.md) — routes, methods, timeouts and the server's limits.
 - [mqtt publish](../nodes/mqtt-publish.md) and [mqtt subscribe](../nodes/mqtt-subscribe.md) — the same LED over a
-  broker. `examples/basic-mqtt.flow.json`, in the [examples folder](../installation-details.md#example-flows), is a
+  broker. `examples/basic-mqtt.flow.json`, in the [examples folder](../examples.md#where-the-folder-is), is a
   starting flow.
 - [Connecting over WiFi](../wifi-connection.md) — the board as an editor peer on your network, not just a web
   server.
