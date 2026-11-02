@@ -18,20 +18,20 @@ property panel: see [Laying out pages](#laying-out-pages).
   line above the number ("Temperature"), which is the card-friendly way to label it.
 - **gui label** — shows `msg.payload` as text.
 - **gui bar** — a bar that fills between *empty at* and *full at*. Its **style** is *solid* (the outline) or
-  *segments*: a row of cells, lit in the accent colour and unlit in the track, with a cell count to set.
+  *segments*: a row of cells, lit in the accent color and unlit in the track, with a cell count to set.
 - **gui histogram** — a moving histogram: a row of bars, oldest on the left, newest on the right. See [Histogram](#histogram).
 - **gui light** — on when `msg.payload` is true, off when false. Its **style** is *light* (the circle) or
   *chip*: a filled pill showing a short word, with the on and off text both editable ("OK"/"Off").
 - **gui button** — a touch button. It has an input, which sets what it shows, and an output, which sends when it is
   tapped. See [Buttons](#buttons).
-- **gui navigator** — changes the page from the flow. Send `next`, `prev`, `back`, `home` or a page name. Sends
-  the new page name when it changes. It isn't in the palette; a *navigate* button does the same from the
-  screen.
+
+<!-- gui modal: left out until the editor can lay a modal out (its layout is written in the flow file).
 - **gui modal** — a full-screen message. Send any payload to open it, `None` to close it. If several are
   open, the highest priority shows and the rest wait. Its output sends how it closed:
   `{topic: <modal's name>, payload: 'ack' | 'timeout' | 'closed'}`. Properties: **screen** (the id of the `gui_screen` it
   belongs to), **priority**, and **timeout** in seconds (`0` never closes by itself). The modal's layout is under its
   screen in the flow file, see [Modals in the flow file](#modals-in-the-flow-file).
+-->
 
 Each widget starts as `--` until a value arrives. With **stale after** set, a value that isn't updated in
 time is dimmed (or underlined, on a black-and-white display), so an old reading never looks current.
@@ -39,22 +39,32 @@ time is dimmed (or underlined, on a black-and-white display), so an old reading 
 On a classic ESP32 without PSRAM, a GUI flow needs the [custom firmware for classic ESP32](../custom-firmware.md):
 stock MicroPython runs out of memory loading the display stack.
 
-## Histogram
+## Laying out pages
 
-Shows what a number can't: which way it is heading. Wire it to the first output of a [journal](journal.md), or to
-any node that sends a list of numbers (a `None` is a gap), such as a spectrum from a function node.
+A display is one fixed panel of a known size, filled by one flow. A page fills it, and its size never changes while
+the flow runs. The layout is worked out when the flow compiles: the compiler turns each element's cells into pixel
+positions and picks the font for each piece of text, and Deploy sends those numbers. Nothing reflows at runtime, and
+the board carries no layout engine. That differs from a web page: nothing responds to a resize or an orientation
+change while the flow runs, and a layout is for one panel. A display of a different size means compiling for that
+display.
 
-Each bar is a row's average, in the theme's accent colour, with a thin line from the row's min to its max in the
-muted colour — so the range reads as context behind the value. A gap is empty. A wider space shows more history: it
-draws as many bars as fit, newest at the right edge.
+Every screen has a **cell grid**: **grid columns** on the gui screen (12 by default) and **grid rows**
+(`0` means "work them out from the display's shape", so cells stay roughly square). A position is a row and a
+column, 0-based; a size is a row span and a column span. Nothing is in pixels, so the same layout works on a
+different panel.
 
-- **bottom at / top at** — the range of the bars. Values outside are cut off at the edge. The range is fixed.
-- **columns, column width, height** — the natural size: it is as wide as columns times column width, plus the border.
-  In a layout it can stretch, and then shows more rows.
-- **stale after** — dims the bars if nothing new arrives in this time.
+Select the gui screen node and open **Properties**: each page lists its elements. **⚙** on an element opens
+**row**, **col**, **rows** and **cols**; tick **panel** to draw a card behind those cells. **+ add…** puts a
+widget, text, page dots or a panel on the page (it starts at row 0, column 0 — set its cells after).
+The same widget can be on several pages of a screen (a navigation button on every page, say), and it must have
+the same span on each. A widget belongs to one screen.
 
-It shows only the rows its journal kept. With fewer rows than the space holds, the bars sit at the right edge and the
-left of the card stays empty; the compiler says how many rows to keep. Raising **rows kept** on the journal fills it.
+Text sizes itself: the compiler picks the largest font that fits the element's cells, and Deploy says which
+element, on which page, when even the smallest does not fit. Two elements on the same cells, a span outside the
+grid, or a panel on top of another panel are also Deploy errors naming the element. The editor doesn't draw the
+page; the outline is a view of the flow file's `"screens"` section, which you can also edit by hand.
+
+To put the page dots in a footer, give them the last grid row. The current page's dot is drawn as a pill.
 
 ## Buttons
 
@@ -98,51 +108,54 @@ reports `ON` and `OFF` as text, so for a Tasmota plug set the value type to text
 
 Unwired, the toggle keeps its own state and starts as set by *starts on*.
 
-## Color
+## Histogram
 
-Set the display's frame format to `rgb565` for full color. White text,
-gray for stale values, and a green accent for bars and lights that are on. Grays use less memory and send faster,
-so use them on boards with little RAM.
+Shows what a number can't: which way it is heading. Wire it to the first output of a [journal](journal.md), or to
+any node that sends a list of numbers (a `None` is a gap), such as a spectrum from a function node.
 
-## Seven-segment digits
+Each bar is a row's average, in the theme's accent color, with a thin line from the row's min to its max in the
+muted color — so the range reads as context behind the value. A gap is empty. A wider space shows more history: it
+draws as many bars as fit, newest at the right edge.
 
-The `seg7` fonts (`font_seg748`, `font_seg764`, `font_seg796`) have only `0-9 : . -` and a space, so they suit the
-`time` and `time_seconds` formats of the [ntp](ntp.md) node. On a 320-pixel-wide screen `font_seg764` fits `14:05`
-(221 px) and `font_seg748` fits `14:05:09` (254 px). `font_seg796` is for wider screens. The font is DSEG by
-Keshikan (SIL Open Font License 1.1); see
-[third-party licenses](https://github.com/mkarliner/ThingStudio/blob/main/docs/third-party-licenses.md).
+- **bottom at / top at** — the range of the bars. Values outside are cut off at the edge. The range is fixed.
+- **columns, column width, height** — the natural size: it is as wide as columns times column width, plus the border.
+  In a layout it can stretch, and then shows more rows.
+- **stale after** — dims the bars if nothing new arrives in this time.
+
+It shows only the rows its journal kept. With fewer rows than the space holds, the bars sit at the right edge and the
+left of the card stays empty; the compiler says how many rows to keep. Raising **rows kept** on the journal fills it.
 
 ## Themes
 
-By default a screen draws in the GUI's own colours. To choose your own, select the gui screen and set **theme**
-(a starting point) and any of the role colours in its Properties: the screen owns its look, and a screen with no
-theme keeps the default colours. An older flow may still use a shared **GUI theme** config; the screen's own
-colours win when both are set.
+By default a screen draws in the GUI's own colors: white text, gray for stale values, and a green accent for bars and
+lights that are on. Full color needs the display's frame format set to `rgb565`; the gray formats use less memory and
+send faster, so use them on boards with little RAM. To choose your own colors, select the gui screen and set **theme**
+(a starting point) and any of the role colors in its Properties: the screen owns its look, and a screen with no theme
+keeps the default colors.
 
 A theme is ten roles, so the widgets stay consistent and one theme works on different panels: **background**, **card**,
 **foreground**, **muted** (stale values), **track** (a bar's empty part), **accent** (bar fill, lights on), **text on
 accent**, **ok**, **warn** and **alarm**. Start from **dark slate**, **light paper** or **vivid** and change any
-colour; the preset is a starting point, not a lock. **Vivid** is the card demo's scheme: a near-black background,
-violet cards and a cyan accent.
+color; the preset is a starting point, not a lock. **Vivid** has a near-black background, violet cards and a
+cyan accent.
 
-Use the **preset** control in the theme's edit form to save your colours by name under
+Use the **preset** control in the theme's edit form to save your colors by name under
 `~/.thingstudio/presets/gui_theme/`, and apply them to another theme later
 ([Presets](../working-in-the-editor.md#presets)). The three starting points are built in, so a flow that names one
 still compiles without a backend.
 
-A panel with fewer colours than that folds the roles onto the ones it has, rather than refusing the theme:
+A panel with fewer colors than that folds the roles onto the ones it has, rather than refusing the theme:
 
-- a **gs4** panel (16 colours) gets every role as its own colour;
-- a **gs2** panel (4 colours) keeps background, foreground, muted and accent — cards fold to the background, the track
+- a **gs4** panel (16 colors) gets every role as its own color;
+- a **gs2** panel (4 colors) keeps background, foreground, muted and accent — cards fold to the background, the track
   to muted, ok/warn/alarm to the foreground;
-- a **mono** panel (2 colours) is ink and paper: text, bars and lights are ink, backgrounds are paper.
+- a **mono** panel (2 colors) is ink and paper: text, bars and lights are ink, backgrounds are paper.
 
-A **card** is a panel behind a group of widgets: tick **card** on a row or column in the layout outline and its
-contents sit on a filled, rounded rectangle in the theme's card colour. It's the cheapest way to make a page read as
-groups rather than one list, and it follows the theme.
+A **panel** is a card behind a group of widgets: tick **panel** on an element in the layout outline and the cells it
+covers sit on a filled, rounded rectangle in the theme's **card** color. It follows the theme.
 
 On an indexed panel (gs4, gs2 or mono) the theme also sets the display's palette while a screen is wired to it — one
-theme is the whole colour scheme, not two lists to keep in step. A palette set on the display itself is ignored while a
+theme is the whole color scheme, not two lists to keep in step. A palette set on the display itself is ignored while a
 themed screen is wired to it, and Deploy says so in the console.
 
 ## Rotating the screen
@@ -158,6 +171,15 @@ can't be combined with a panel offset (`xstart`/`ystart`, or the 135x240 panel).
 A flow that reads touch with a [touch](touch-i2c.md) node instead of a gui screen sets the same angle on the node,
 since there is no display for it to follow.
 
+## Seven-segment digits
+
+The `seg7` fonts (`font_seg748`, `font_seg764`, `font_seg796`) have only `0-9 : . -` and a space, so they suit the
+`time` and `time_seconds` formats of the [ntp](ntp.md) node. On a 320-pixel-wide screen `font_seg764` fits `14:05`
+(221 px) and `font_seg748` fits `14:05:09` (254 px). `font_seg796` is for wider screens. The font is DSEG by
+Keshikan (SIL Open Font License 1.1); see
+[third-party licenses](https://github.com/mkarliner/ThingStudio/blob/main/docs/third-party-licenses.md).
+
+<!-- Left out until the editor can lay a modal out. Kept for when it can.
 ## Modals in the flow file
 
 A modal is laid out like a page, but in the screen's `modals` list, next to `pages`. Each entry names the `gui_modal`
@@ -180,32 +202,4 @@ Send any payload to the modal node to open it; what is drawn is its layout, so w
 layout to the data you want shown (a modal can hold the same widget a page does). Send `None` to close it (a function node
 returning a message whose `payload` is `None`). A navigate button in the layout with target `back` acknowledges it,
 and a **timeout** above `0` closes it on its own. The modal node's output says which of the three happened.
-
-## Laying out pages
-
-A Thingstudio display is one fixed panel, not a window, and its layout is resolved when the flow compiles — there
-is no layout pass on the board and nothing reflows. See [Laying out a display](../gui-layout.md) for the model and
-how it differs from a web page.
-
-Every screen has a **cell grid**: **grid columns** on the gui screen (12 by default) and **grid rows**
-(`0` means "work them out from the display's shape", so cells stay roughly square). A position is a row and a
-column, 0-based; a size is a row span and a column span. Nothing is in pixels, so the same layout works on a
-different panel.
-
-Select the gui screen node and open **Properties**: each page lists its elements. **⚙** on an element opens
-**row**, **col**, **rows** and **cols**; tick **panel** to draw a card behind those cells. **+ add…** puts a
-widget, text, page dots or a panel on the page (it starts at row 0, column 0 — set its cells after).
-The same widget can be on several pages of a screen (a navigation button on every page, say), and it must have
-the same span on each. A widget belongs to one screen.
-
-Text sizes itself: the compiler picks the largest font that fits the element's cells, and Deploy says which
-element, on which page, when even the smallest does not fit. Two elements on the same cells, a span outside the
-grid, or a panel on top of another panel are also Deploy errors naming the element. The editor doesn't draw the
-page; the outline is a view of the flow file's `"screens"` section, which you can also edit by hand.
-
-To put the page dots in a footer, give them the last grid row. The current page's dot is drawn as a pill.
-Pages live in the flow file, under `"screens"`, keyed by the gui screen node's id. A page is a tree of
-`row` and `column` containers holding widgets (`"kind": "widget", "node": "<id>"`), fixed `text`,
-`pagedots` and `spacer`s.
-
-If something doesn't fit, Deploy stops and says which widget, on which page, needs how many pixels.
+-->

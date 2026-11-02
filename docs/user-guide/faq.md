@@ -119,7 +119,7 @@ Use the touch node only when you aren't using the GUI. Deploy stops and names bo
 
 There is nothing to resize to: a page fills a display of one fixed size, and the layout is resolved when the flow
 compiles, not by a browser at runtime. An element's cells, its font and its position are fixed numbers on the
-board. See [Laying out a display](gui-layout.md).
+board. See [Laying out pages](nodes/gui.md#laying-out-pages).
 
 ## Why won't a function node's output wire into pwm out?
 

@@ -17,7 +17,9 @@ load it again on this or another **display spi** node instead of retyping every 
   colors. The gui screen wired to the display uses this format.
 - **palette** — 16 RGB565 colors, used by every indexed format (`gs4` reads all 16, `gs2` only the first 4, `mono`
   only the first 2). Shown as swatches under frame format when an indexed format is picked; click one to change it,
-  or **reset** for the built-in colors. Colors are rounded to the nearest the panel can show.
+  or **reset** for the built-in colors. Colors are rounded to the nearest the panel can show. While a
+  [gui screen](gui.md#themes) with a theme is wired to the display, the theme supplies the palette and this one is
+  ignored.
 - **SPI bus** — which hardware SPI peripheral to use. Default 2.
 - **baudrate** — SPI clock speed. Default 40MHz. On an ESP32, use 27MHz or less unless sck and mosi are the bus's
   fast pins; the compile tells you if the speed is too high for your [board](../boards.md).
@@ -30,8 +32,6 @@ load it again on this or another **display spi** node instead of retyping every 
   to how the panel is mounted (0 to 3), and `xstart`/`ystart` to `-1`. See
   [Rotating the screen](gui.md#rotating-the-screen). A flow that reads touch with a [touch](touch-i2c.md) node
   rather than a gui screen sets the same angle on that node.
-- **palette** — the colours an indexed frame format uses. While a [gui screen](gui.md#themes) with a theme is wired
-  to this display, the theme supplies the palette and this one is ignored.
 - **rotation** — 0–7, the panel controller's orientation code. Default `1`.
 - **color order** — `rgb` or `bgr`, matching your panel's own wiring. Default `bgr`.
 - **invert colors** — on or off. Some panels need this flipped to show true colors instead of their negative.

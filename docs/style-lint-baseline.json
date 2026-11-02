@@ -22,99 +22,9 @@
       "snippet": "on the device — units, a colour scheme — not for"
     },
     {
-      "file": "docs/user-guide/nodes/display-spi.md",
-      "rule": "duplicate-term",
-      "snippet": "palette"
-    },
-    {
-      "file": "docs/user-guide/nodes/display-spi.md",
-      "rule": "uk-spelling",
-      "snippet": "- **palette** — the colours an indexed frame format"
-    },
-    {
       "file": "docs/user-guide/nodes/function.md",
       "rule": "uk-spelling",
       "snippet": "colour scheme. It is namespaced"
-    },
-    {
-      "file": "docs/user-guide/nodes/gui.md",
-      "rule": "uk-spelling",
-      "snippet": "- a **gs2** panel (4 colours) keeps background,"
-    },
-    {
-      "file": "docs/user-guide/nodes/gui.md",
-      "rule": "uk-spelling",
-      "snippet": "- a **gs4** panel (16 colours) gets every role as its"
-    },
-    {
-      "file": "docs/user-guide/nodes/gui.md",
-      "rule": "uk-spelling",
-      "snippet": "- a **mono** panel (2 colours) is ink and paper: text,"
-    },
-    {
-      "file": "docs/user-guide/nodes/gui.md",
-      "rule": "uk-spelling",
-      "snippet": "A panel with fewer colours than that folds the"
-    },
-    {
-      "file": "docs/user-guide/nodes/gui.md",
-      "rule": "uk-spelling",
-      "snippet": "and any of the role colours in its Properties: the"
-    },
-    {
-      "file": "docs/user-guide/nodes/gui.md",
-      "rule": "uk-spelling",
-      "snippet": "cells, lit in the accent colour and unlit in the track,"
-    },
-    {
-      "file": "docs/user-guide/nodes/gui.md",
-      "rule": "uk-spelling",
-      "snippet": "colour; the preset is a"
-    },
-    {
-      "file": "docs/user-guide/nodes/gui.md",
-      "rule": "uk-spelling",
-      "snippet": "colours win when both are set."
-    },
-    {
-      "file": "docs/user-guide/nodes/gui.md",
-      "rule": "uk-spelling",
-      "snippet": "draws in the GUI's own colours. To choose your own,"
-    },
-    {
-      "file": "docs/user-guide/nodes/gui.md",
-      "rule": "uk-spelling",
-      "snippet": "edit form to save your colours by name under"
-    },
-    {
-      "file": "docs/user-guide/nodes/gui.md",
-      "rule": "uk-spelling",
-      "snippet": "every role as its own colour;"
-    },
-    {
-      "file": "docs/user-guide/nodes/gui.md",
-      "rule": "uk-spelling",
-      "snippet": "in the theme's accent colour, with a thin line from"
-    },
-    {
-      "file": "docs/user-guide/nodes/gui.md",
-      "rule": "uk-spelling",
-      "snippet": "in the theme's card colour. It's the cheapest way"
-    },
-    {
-      "file": "docs/user-guide/nodes/gui.md",
-      "rule": "uk-spelling",
-      "snippet": "muted colour — so the range reads as"
-    },
-    {
-      "file": "docs/user-guide/nodes/gui.md",
-      "rule": "uk-spelling",
-      "snippet": "theme is the whole colour scheme, not two lists to"
-    },
-    {
-      "file": "docs/user-guide/nodes/gui.md",
-      "rule": "uk-spelling",
-      "snippet": "theme keeps the default colours. An older flow may still"
     },
     {
       "file": "docs/user-guide/nodes/index.md",

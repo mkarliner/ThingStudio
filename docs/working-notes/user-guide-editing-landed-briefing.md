@@ -1,9 +1,9 @@
-# User guide editing: phases 0-3 and 2a landed, the MQTT tutorial next
+# User guide editing: phases 0-4 landed, the MQTT tutorial and phase 5 next
 
 Status: continuation brief, filed 2026-11-01. Executes `user-guide-editing-plan.md` against
 `reviews/2026-11-01-user-guide.md`. Phases 0, 1, 2 (with the discussion #5 additions) and 3 are done and committed;
 phase 3's Gap 2 (the MQTT tutorial) has its spec and is its own session. Phase 2a (the Examples page, the compile test)
-landed 2026-11-02 after the commits below. Next: Gap 2, then phases 4-7.
+and phase 4 (contradictions, the GUI page) landed 2026-11-02 after the commits below. Next: Gap 2, then phases 5-7.
 The remaining phases run on Sonnet 5.5 (Mike, 2026-11-02); `user-guide-phase-0-briefing.md`, the GLM-5.3-Flash brief for
 phase 0, is superseded by this work and marked so.
 Read the plan's "done" notes under each phase first, then the review's last two sections ("Phase 0 fact-checks" and
@@ -24,10 +24,9 @@ Merged to `main` and pushed on 2026-11-02 (`ebe787e`; later commits are in `git 
 | `30569ec` | Blink from your network: tick **full message** when starting from the example file |
 
 Uncommitted: only the deleted `docs/working-notes/.outstanding-items.md.swp`. It is an editor swap file; leave it out
-of commits. The lint baseline is at 29 entries, all known: `nodes/gui.md` 16 spellings, `nodes/neopixel.md` 4,
-`boards.md` 2 spellings and an opening, `nodes/display-spi.md` a duplicate `palette` and a spelling,
-`nodes/function.md` 1, `custom-nodes.md` 1, `nodes/index.md` an opening, and `sensor-display.md`'s work-in-progress
-note (a deliberate hand-added entry). Phases 4-5 delete most of them.
+of commits. The lint baseline is at 11 entries, all known: `nodes/neopixel.md` 4 spellings, `boards.md` 2 spellings and an
+opening, `nodes/function.md` 1, `custom-nodes.md` 1, `nodes/index.md` an opening, and `sensor-display.md`'s
+work-in-progress note (a deliberate hand-added entry). Phase 5 deletes most of them.
 
 ## Settled, don't re-derive
 
@@ -49,6 +48,9 @@ note (a deliberate hand-added entry). Phases 4-5 delete most of them.
 - **Phase 2a:** `examples.md` owns the examples-folder table (Installation details points at it);
   `editor/test/examples-compile.test.ts` checks every `examples/*.flow.json`. When the MQTT tutorial ships its flow, the
   test covers it automatically, and it needs an entry on `examples.md`.
+- **Phase 4:** `gui-layout.md` is gone, merged into `nodes/gui.md` "Laying out pages" (one model: cell grid, **panel**).
+  The `gui modal` bullet and the "Modals in the flow file" section are HTML-commented, not deleted (decision 2); `gui
+  navigator` is removed. Anchors other pages use stay: `#laying-out-pages`, `#themes`, `#rotating-the-screen`, `#buttons`.
 - **Refusal wording:** one short attributing clause on troubleshooting pages, none on reference pages (style guide,
   "A refusal says it is deliberate, once").
 - **Tutorials:** every download says "open the file, don't copy it"; the "Next" pointers stay; the index lists three
@@ -67,14 +69,10 @@ note (a deliberate hand-added entry). Phases 4-5 delete most of them.
    link `debugging.md#mqtt-broker-unreachable` from "nothing arrives?"; ship its flow in `examples/` with a README line;
    keep the public-broker caveat (`test.mosquitto.org`, a random topic prefix, anyone can subscribe). It needs a real
    board run by Mike before it is called done: nothing here can run a flow.
-2. **Phase 4** (contradictions): the review's per-page entries for `nodes/gui.md`, `gui-layout.md`, `node-conventions.md`
-   and `display-spi.md`. Merging `gui-layout.md` means removing its nav line in `mkdocs.yml` and fixing links from the
-   FAQ, `nodes/gui.md` and `sensor-display.md`. Comment out the modal section with an HTML comment (the lint skips
-   comments). Remove `gui navigator` outright.
-3. **Phase 5** (node pages to layout and voice): each page's findings are its checklist. Requirement added by Mike: every
+2. **Phase 5** (node pages to layout and voice): each page's findings are its checklist. Requirement added by Mike: every
    Wiring example is copy-pasteable. Include the facts in the review's phase 0 section (`http in`, the missing **WiFi**
    property on both MQTT pages, whose new one-line `## Errors` sections should take their error text).
-4. **Phases 6-7** (structure, pictures) as the plan says. Phase 7 needs the screenshot route below.
+3. **Phases 6-7** (structure, pictures) as the plan says. Phase 7 needs the screenshot route below.
 
 ## For Mike (not docs work)
 
@@ -87,7 +85,10 @@ note (a deliberate hand-added entry). Phases 4-5 delete most of them.
   **full message**. Shipping the example with it ticked would let that sentence go.
 - `examples/README.md` still says `basic-http-request` "takes a value out of the answer"; the flow doesn't (it is
   `inject -> http request -> debug`). The README duplicates the new Examples page; shorten it to a pointer if you want one home.
-- `gui-headliner-sensor-freenove-s3-4in.flow.json` carries the hidden `gui navigator` node; phase 4 decides example or tutorial.
+- `gui-headliner-sensor-freenove-s3-4in.flow.json` carries the hidden `gui navigator` node, and `sensor-display.md` still
+  mentions it (remark 6); that tutorial is parked (remark 5), so decide example or tutorial when it is reworked.
+- Phase 4 commented out the `gui modal` bullet as well as its flow-file section. The review also offered one line saying
+  modals aren't laid out in the editor; say if you want that instead.
 - The lint's two departures are in the plan's notes, not `decisions/`. Move them if you want them on that record.
 
 ## Environment facts (every toolchain this run used)

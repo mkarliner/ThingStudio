@@ -168,6 +168,17 @@ copy it. Gap 2 has its brief (the spec above); it is its own session. When it la
 `gui navigator` (remark 6), comment out the modal flow-file section for future inclusion (Mike, 2026-11-01), one
 layout model from phase 0's facts; `display-spi.md`'s double palette entry.
 
+Phase 4 done, 2026-11-02. `node-conventions.md` matches `custom-nodes.md` (ports follow the kind; a source can be
+event-driven or run once; a sink can be two-faced). `nodes/gui.md`: one layout model (the cell grid, **panel**);
+`gui-layout.md` merged into "Laying out pages" and deleted (nav entry and three links updated); `gui navigator` removed;
+the `gui modal` bullet and "Modals in the flow file" commented out; sections in the review's order; Color folded into
+Themes; the history and internal wording and the UK spellings gone. `display-spi.md` has one palette entry. Baseline
+29 -> 11. Notes:
+
+- The `gui modal` bullet is commented out as well as the section (its layout can only be written in the flow file).
+  The review offered "one line saying it isn't laid out in the editor" instead; Mike to confirm which.
+- `sensor-display.md` still mentions `gui navigator` (remark 6); the page is parked (remark 5), so it was left.
+
 ### Phase 5 -- node pages to layout and voice (review order item 5)
 
 C2/C3 passes in the review's batches: network pages, then general, then hardware. Each page's findings are its

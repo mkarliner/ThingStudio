@@ -80,8 +80,8 @@ To test the sensor first, wire the bme280 to a **debug** node and deploy. A read
    function's outputs 1, 2, 3 and 5 to them. In each readout, set **units**, **decimals**, **lowest value** and
    **highest value**.
 5. Lay out the pages: select the gui screen and use the page outline in its properties to add rows of text and
-   readouts. See [Laying out pages](nodes/gui.md#laying-out-pages), and [Laying out a display](gui-layout.md) for
-   why the layout is fixed when the flow compiles.
+   readouts. See [Laying out pages](nodes/gui.md#laying-out-pages), which also says why the layout is fixed when the
+   flow compiles.
 
 Set **stale after** on the readouts and the light. A reading that stops arriving is then dimmed, so a dead sensor
 looks different from a steady room.

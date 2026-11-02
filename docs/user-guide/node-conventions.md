@@ -19,16 +19,18 @@ and the humidity in `msg['humidity']`.
 ## Ports
 
 Port types are `int`, `number`, `bool`, `string`, `bytes` and `any`, the same as built-in nodes, with the same wire
-checks. A declared output type must match what the node puts in `payload`. Use `any` when unsure. A custom node has
-one input and one output: a source has the output, a sink the input.
+checks. A declared output type must match what the node puts in `payload`. Use `any` when unsure. The ports follow
+the kind: a source has one output, a transform one input and one or more outputs, and a sink one input. A sink with
+`eventSource` set also has one output; see [Two-faced nodes](custom-nodes.md#two-faced-nodes).
 
 ## Kind
 
 Every node is one of three kinds:
 
-- **source** — makes its own messages, on the `intervalMs` schedule.
-- **transform** — one message in, one out. Return the message, or `None` to stop it.
-- **sink** — consumes a message and produces nothing.
+- **source** — makes its own messages: on the `intervalMs` schedule, when an event fires (`eventSource`), or once when
+  the flow starts (`runOnce`).
+- **transform** — one message in, one or more out. Return the message, or `None` to stop it.
+- **sink** — consumes a message and produces nothing, unless it is two-faced.
 
 ## Errors
 
@@ -40,7 +42,8 @@ in Writing custom nodes.
 
 A custom node has the following limits:
 
-- A source's `emit` runs on a timer, not on an external event — there are no event-driven custom sources.
+- A polled source's `emit` runs on a timer. To react to an external event, use an event-driven source: see
+  [Event-driven sources](custom-nodes.md#event-driven-sources).
 - Two instances of the same custom node get independent setup, so don't put two on the same physical resource, such
   as the same pin.
 - Your Python runs with the same trust as the `function` node. Read a package before you put it in the folder.
