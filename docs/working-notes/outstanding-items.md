@@ -33,6 +33,15 @@ Product work the launch plan made launch-critical. Order, spec and reasoning: `l
 decisions: `decisions/launch-scope.md`. Marketing-only work (copy, channels, video) lives in the
 ThingStudioMarketing repo, not here.
 
+- **[LAUNCH]** **Mark the GUI nodes provisional in the user guide** (Mike, 2026-10-26, from the marketing
+  side). The landing page and Hackaday.io page no longer mention the GUI, screens or touch. A short note at the top
+  of `nodes/gui.md` and on the sensor-display page, plus the GUI rows in Supported hardware. Whether the GUI stays
+  launch-critical (the items below) is a product call for `decisions/launch-scope.md`.
+- **[LAUNCH]** **Point testers at the onboarding report form** (Mike, 2026-10-26, from the marketing side). At the
+  end of "Blink an LED" (`first-flow.md`): a line asking how it went, linking
+  `https://github.com/mkarliner/ThingStudio/discussions/new?category=onboarding-reports`, with email
+  (mike@minus1.com) for anyone who'd rather not post. Needs Discussions on and the form pushed
+  (`.github/DISCUSSION_TEMPLATE/onboarding-reports.yml`).
 - **[LAUNCH]** **GUI templating system, built properly.** Container/constraint layout (flexbox / X
   Intrinsics), GUI view, `screens` section, unknown/stale value states; widgets limited to label, value,
   button, status. Design: `decisions/gui-layout.md`, `gui-layout-widget-system-scoping.md`.
