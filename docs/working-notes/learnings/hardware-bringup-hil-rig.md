@@ -276,3 +276,5 @@ committed -- if this VM stays in the loop, `install.sh` should grow the same sin
   send scan-done on stop, so the tests catch it. Also seen on that deploy, not chased: the first flow piece arrived
   garbled (`incorrect padding`) and the resend worked, while the old flow was printing a debug line per
   advertisement over the same serial link. Watch for it with chatty flows on the CH340E.
+  Both fixes confirmed on the C5 at 14:28: no red flash on redeploy, and a non-empty scan response (Google,
+  mfr 224, after a `fe9f` advertisement) arrives as its own message with `scanResponse True`, `connectable None`.
