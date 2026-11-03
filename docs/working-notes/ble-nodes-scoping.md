@@ -76,7 +76,8 @@ external-event output would need a new kind, the same gap `ebutton` already note
 **Built 2026-11-03** on branch `ble-phase-2` (`core-packages/ble-characteristic-*.ts`, `ble-uart-*.ts`,
 `ble-shared.ts`; the GATT half of `ts_ble`), with the optional `ble` config node. Differences from the plan above:
 `characteristic out`'s input is `any` (an input socket is typed once, at construction), so its encoding is checked
-on the board; `characteristic in`'s output follows the encoding. Not yet on hardware.
+on the board; `characteristic in`'s output follows the encoding. Checked on the ESP32-C5-340X the same day
+(`learnings/hardware-bringup-hil-rig.md`).
 
 ### Phase 3 — the board as a central (GATT client)
 

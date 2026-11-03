@@ -284,4 +284,5 @@ committed -- if this VM stays in the loop, `install.sh` should grow the same sin
 - **BLE phase 2 on the ESP32-C5-340X (2026-11-03): the GATT characteristic works.** With
   `test-flows/ble-characteristic-counter-c5.flow.json` and nRF Connect: `ts-c5` connects, the custom service and
   characteristic show with read/write/notify, a read gives the count (uint16 LE), notify updates every 2 s, and a
-  phone's write reaches debug as the decoded value. UART echo not yet tried.
+  phone's write reaches debug as the decoded value. The UART echo (`ble-uart-echo-c5.flow.json`) works the same day:
+  a line written to the Nordic UART RX comes back on TX as `echo: <line>`. Phase 2 passes on hardware.
