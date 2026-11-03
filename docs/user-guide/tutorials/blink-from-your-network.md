@@ -1,16 +1,18 @@
 # Web Blink
 
-The same LED, driven from a browser: an `http in` node runs a web server on the board, and each request toggles the
-LED. The tutorial covers telling the board which WiFi network to join, finding it from your computer, and what an
-open port on it means.
+If you've worked through [Two more blinks](two-more-blinks.md), you have a board whose LED blinks on a timer. Here the
+timer goes, and a web browser does the switching. You'll put the board on your WiFi network, find it from your
+computer, and see what it means for a board to have an open port.
 
-It builds on [Two more blinks](two-more-blinks.md) and starts from the flow that tutorial ends with: timer, function,
-gpio out. To start from the finished flow instead, open
+The blink flow was a **timer** → **function** → **gpio out**. The **timer** gives way to an **http in** node, which
+runs a web server on the board, and the **function** gains a second output for the reply that goes back to the
+browser.
+
+You can build the flow step by step, or start from the finished flow,
 [http-blink.flow.json](https://github.com/mkarliner/ThingStudio/blob/main/examples/http-blink.flow.json), in the
-[examples folder](../examples.md#where-the-folder-is), with **File → Open…**. Open the file; don't copy it
-from this page. It names a WiFi network, `tutorial wifi`, that your computer doesn't have: the **WiFi** field's ✎
-form says so, and saving it with your network's details creates it. The file's `debug` node prints only the payload;
-tick **full message** on it to see the IP address.
+[examples folder](../examples.md#where-the-folder-is), with **File → Open…**. Open the file; don't copy it from this
+page. It names a WiFi network, `tutorial wifi`, that your computer doesn't have: the **WiFi** field's ✎ form says so,
+and saving it with your network's details creates it.
 
 If a step misbehaves on the way, start at [Debugging & troubleshooting](../debugging.md).
 
@@ -67,7 +69,8 @@ nothing drives the pin until a request does.
 
 - **By name:** open `http://blink.local:9999/toggle` in your browser. The name is the one from Board settings plus
   `.local`; port 9999 and path `/toggle` are the **port** and **path** of the `http in` node.
-- **By IP:** the `debug` node prints the whole **wifi status** message, which includes `ip`. The fields are listed
+- **By IP:** the `debug` node prints the whole **wifi status** message, which includes `ip`. (In the example file,
+  tick **full message** on the `debug` node first; it prints only the payload otherwise.) The fields are listed
   under [wifi status](../nodes/wifi-status.md#behavior). Open `http://<ip>:9999/toggle`.
 
 If `.local` names don't resolve on your network (they don't everywhere, and they don't across VPN tunnels at all —

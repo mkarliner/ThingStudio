@@ -5,8 +5,12 @@
     This tutorial is being reworked. The example flow runs, but some steps may not match the editor. The GUI nodes it
     uses are provisional; see [GUI nodes](nodes/gui.md).
 
-Build a three-page touch display: the room's temperature, humidity and pressure with their recent history, and a
-clock. The flow also publishes the readings over MQTT.
+If you've followed [Getting started](getting-started.md), you've driven an LED from a flow. This tutorial moves on to
+a sensor and a screen. You'll read temperature, humidity and pressure from an I2C sensor, show them with their recent
+history on a three-page touch display, and publish them over MQTT. It's a separate project from the blink tutorials,
+with its own parts, listed under What you need.
+
+The flow is a **bme280** sensor feeding GUI nodes that draw the readings, with an **mqtt publish** that sends them on.
 
 The finished flow is in the Thingstudio repository:
 [`examples/gui-headliner-sensor-freenove-s3-4in.flow.json`](https://github.com/mkarliner/ThingStudio/blob/main/examples/gui-headliner-sensor-freenove-s3-4in.flow.json).

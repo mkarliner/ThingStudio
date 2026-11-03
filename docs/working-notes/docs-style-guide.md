@@ -45,8 +45,30 @@ Flagged so far:
 - 2026-11-02 `index.md`: the opening paragraphs, which say what Thingstudio is.
 - 2026-11-02 `getting-started.md`: the opening line, and the "Getting help" section.
 - 2026-11-02 `first-flow.md`: the moment the LED blinks (end of "Deploy"), and "Tell us how it went".
-- 2026-11-02 `tutorials/`: each tutorial's opening paragraph, and the titles of Web Blink and Blink from anywhere.
+- 2026-11-02 `tutorials/`: the opening paragraph of Web Blink, Blink from anywhere and A sensor display (Two more
+  blinks is written), and the titles of Web Blink and Blink from anywhere.
 - 2026-11-02 `background/` and `coming-from/`: the opening of each page, which says why the page is for the reader.
+
+## Tutorial openings
+
+A tutorial's opening is a handshake: it tells the reader where they stand and where the page takes them, before any
+step. Derived from Mike's rewrite of the Two more blinks opening (2026-11-02), which replaced a session's draft; that
+page is the worked example. The draft failed by packing mechanism into one sentence. (Mike, 2026-11-02.)
+
+- **Start from what the reader has now,** in the second person: "If you've followed Getting started, you now have a
+  board with a blinking LED." Not from the flow or the feature.
+- **Say what they will learn, as ideas, not mechanism:** "directly access the hardware through MicroPython", not
+  "`% 2` turns the count into 1, 0, 1, 0". The mechanism belongs in the steps.
+- **Recap the previous flow in one line of node names,** bold, in wire order, linked to the page that built it.
+  No explanation of how it works; the reader just built it.
+- **Say once what changes and what stays,** in one sentence: "We'll just be changing the function node."
+- **Offer both routes together:** build it step by step, or open the finished flow. Both in the same paragraph.
+- **One job per paragraph:** situation and goal, recap and scope, variants, then how to get the finished flow.
+- **Speaking voice is fine here:** "you've", "we'll". Still no "this page" or "this section" (the lint enforces it).
+- **Put a hint where it applies.** A tip about one step goes at that step, not in the opening.
+
+Mike writes these openings (Places for Mike's own voice, above); a session that has to write one follows this list
+and flags the place.
 
 ## A refusal says it is deliberate, once
 

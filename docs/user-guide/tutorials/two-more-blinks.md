@@ -1,13 +1,16 @@
 # Two more blinks
 
-You have a blinking LED from [Blink an LED](../first-flow.md): timer, function, gpio out, with the function
-turning the timer's count into on and off. Two more ways to produce the same blink:
+If you've followed the steps in [Getting started](../getting-started.md) you'll now have a board with a blinking LED. This tutorial starts from there and shows you two other methods to get the same effect. In the process you'll directly access the hardware through MicroPython and see how ThingStudio nodes and flows can keep track of past events.
 
-- **Read the pin, write it back:** the blink's state lives on the board, in the pin, and the `function` node runs
-  your own MicroPython to reach it.
-- **Keep the state in the node:** the state lives inside the `function` node itself, in `context`.
+The [Blink an LED](../first-flow.md) flow contained three nodes, a **timer** → **function** → **gpio out**. We'll just be changing the function node in this tutorial.
 
-The flow stays the same; only the function's code changes. To start from the finished flow, open
+The first variant is **Read the pin, write it back**: the blink's state lives on the board, in the pin, and the
+`function` node runs your own MicroPython to reach it.
+
+The second variant is **Keep the state in the node**: the state lives inside the `function` node itself, in
+`context`.
+
+You can build this flow up yourself or start from the finished flow,
 [two-more-blinks.flow.json](https://github.com/mkarliner/ThingStudio/blob/main/examples/two-more-blinks.flow.json),
 in the [examples folder](../examples.md#where-the-folder-is), with **File → Open…**. Open the file; don't copy
 it from this page. It carries the first of the two blinks: change `15` in `machine.Pin(15)` to your LED's GPIO

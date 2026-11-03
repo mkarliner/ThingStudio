@@ -141,3 +141,7 @@ Three decisions on the back of `reviews/2026-11-01-user-guide.md`'s second-pass 
   voice -- human, slightly humorous, personal. Sessions don't write that voice; they write the neutral version, flag
   each such place to Mike by page and heading in their summary, and keep the list in the style guide ("Places for
   Mike's own voice"). Mike removes an entry when he has written it, and what he writes is then settled text.
+- **Tutorial openings (Mike, 2026-11-02):** derived from Mike's rewrite of the Two more blinks opening, which replaced
+  a session's draft. An opening starts from what the reader has now, says what they will learn as ideas, recaps the
+  last flow in one line of node names, says once what changes, offers both routes, and gives each paragraph one job.
+  Rules in the style guide ("Tutorial openings"). Mike writes these openings; a session follows the rules and flags.

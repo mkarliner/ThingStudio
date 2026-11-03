@@ -1,11 +1,15 @@
 # Blink from anywhere
 
-The same LED, now reachable through an MQTT broker. A broker passes messages between clients, so your phone or laptop
-doesn't have to be on the board's network. The flow has two halves: the board publishes a message when you click a
-button in the editor, and it switches the LED when a message arrives on another topic.
+If you've worked through [Web Blink](blink-from-your-network.md), you have a board on your WiFi that switches its LED
+when a browser on your network asks. Here an MQTT broker sits in the middle. A broker passes messages between clients,
+so your phone or laptop doesn't have to be on the board's network. You'll publish a message from the board, switch the
+LED by sending one to it, and see why every topic here carries a number of your own.
 
-It builds on [Web Blink](blink-from-your-network.md): the board has to join your WiFi, with a saved
-credential. To start from the finished flow, open
+This is a new flow, on an empty canvas, with two halves: **inject** → **mqtt publish** sends a message when you click
+the button in the editor, and **mqtt subscribe** → **function** → **gpio out** switches the LED when a message
+arrives on another topic. The board joins your WiFi with the saved credential from Web Blink.
+
+You can build the flow step by step, or start from the finished flow,
 [blink-from-anywhere.flow.json](https://github.com/mkarliner/ThingStudio/blob/main/examples/blink-from-anywhere.flow.json),
 in the [examples folder](../examples.md#where-the-folder-is), with **File → Open…**. Open the file; don't copy it from
 this page. It names a WiFi network, `tutorial wifi`, and a broker, `test-mosquitto`, that your computer doesn't have:

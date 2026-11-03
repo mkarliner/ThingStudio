@@ -5,8 +5,8 @@ node-based editor in your web browser. Nodes are functional blocks, and wires ca
 inspired by [Node-RED](https://nodered.org/).
 
 Thingstudio converts the flow to [MicroPython](https://micropython.org/), a version of Python for microcontrollers,
-compiles it and sends it to your board. The flow is saved on the board. It runs without the editor connected, and
-starts again after a reset or power cycle.
+compiles it, and sends it to your board. The flow is saved on the board. It will then run without the editor connected, and
+will start again after a reset or power cycle.
 
 <figure markdown="span">
   [![The Thingstudio editor, showing a three-node flow: timer, function and gpio out](images/editor.png)](images/editor.png)<figcaption>The editor: nodes to drag in on the left, your flow in the middle, and on the right the selected
@@ -16,7 +16,7 @@ starts again after a reset or power cycle.
 
 !!! tip "For the impatient"
 
-    The whole path to a running flow, reading nothing else:
+    If you read nothing else, read this:
 
     1. [Install Thingstudio](getting-started.md#step-1-install-thingstudio) and start it. The editor
        opens in your browser.
@@ -30,7 +30,7 @@ starts again after a reset or power cycle.
 
     When something doesn't work, [Debugging](debugging.md) and the [FAQ](faq.md) go by what you see on screen.
 
-In practice, that means:
+ThingStudio is designed to be private, and as open and hackable as possible:
 
 - **Local dev.** Development happens locally; there is no cloud service.
 - **Works offline.** Once installed, it needs no internet connection, docs included.
@@ -51,6 +51,12 @@ In practice, that means:
     - [Node-RED](coming-from/node-red.md)
     - [MicroPython](coming-from/micropython.md)
     - [Arduino and C](coming-from/arduino.md)
+
+## Who ThingStudio is for, and who it isn't
+
+ThingStudio is designed for developers with a reasonable amount of programming experience, it doesn't aim to teach programming fundamentals.
+You should also have some level of experience in working with microcontrollers. You don't have to be an EE graduate, but you should be comfortable wiring a breadboard. You should also be able to do basic commands from the terminal or PowerShell.
+
 
 ## What's different about programming with Thingstudio?
 
@@ -93,10 +99,10 @@ in more detail in [flows, nodes and messages](background/flows-and-nodes.md).
 This way of working comes from [Node-RED](background/node-red.md), a popular tool for home automation and IoT. In
 Node-RED, flows run on a server or a Raspberry Pi. In Thingstudio, they run on the microcontroller.
 
-## Your own Python
+## Including your own code
 
-The [node reference](nodes/index.md) lists the built-in nodes. For anything they don't cover, use a
-[function](nodes/function.md) node. It runs your Python on each message that arrives:
+There are a number of ready made functions available built-in [nodes](nodes/index.md) . There is also the 
+[function](nodes/function.md) node, which will take regular MicroPython and runs your it on each message that arrives:
 
 ```python
 # payload arrives in degrees C, leaves in degrees F
@@ -105,21 +111,19 @@ return msg
 ```
 
 `msg` is a dict, with the main value in `msg['payload']`. Return it to pass it on, or return nothing to stop it. A
-function node can also keep state between messages and have more than one output.
+function node can also keep state between messages and have more than one output. The only rule to remember is not to use blocking calls in a function node, that would make the entire flow wait on the operation.
 
 To reuse code across flows, make it a [custom node](custom-nodes.md). A custom node has its own place in the palette
-and its own properties in the property panel. It can transform messages, act on them, or send them on a schedule.
+and its own properties in the property panel. It can access custom hardware, transform messages, act on them, or send them on a schedule.
 
-You can also run Python directly on the board from the editor. See
+You can also stop the flow and run the python REPL directly on the board from the editor for debugging. See
 [Commands and the Python prompt](debugging.md#commands-and-the-python-prompt).
 
 ## Running on the board
+The microcontroller runs a [MicroPython](background/micropython.md) image with a ThingStudio runtime on top. You can flash the image from the editor or use one of your own choosing. The runtime sends the flow to the board and manages running it.  It also sends back status and debugging information. We also provide custom Micropython images with the runtime included, which are more efficient in memory usage.
 
-The board runs [MicroPython](background/micropython.md). You install it once, then Thingstudio adds a runtime of its
-own on top.
-
-When you click **Deploy**, the editor turns your flow into MicroPython code and compiles it. It sends the result to
-the board over USB or WiFi, and the board swaps it in and starts running it. There's no firmware to flash, so
+When you click **Deploy**, the editor converts your flow into MicroPython and compiles it. It sends the compiled flow to
+the board over USB or WiFi, and the board swaps it in, and starts running it. There's no new firmware to flash, so
 changing a flow and trying it again takes seconds. The board keeps the flow and runs it again after a restart.
 
 ## Built on standard parts
@@ -145,5 +149,5 @@ Thingstudio tries not to reinvent the wheel.
 [Getting started](getting-started.md) lists the steps from a new board to a blinking LED, and starts you on the first
 step.
 
-The docs on [docs.thingstudio.net](https://docs.thingstudio.net/) follow the latest code. The docs inside Thingstudio
+The docs on [docs.thingstudio.net](https://docs.thingstudio.net/) follow the latest code. The docs installed with Thingstudio
 (**Help → User guide**) match the version you have installed.
