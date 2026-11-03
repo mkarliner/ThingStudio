@@ -434,11 +434,38 @@ Type `thingstudio/ble_advertise`, kind sink, palette group network.
 - Outputs: none
 - Needs hardware: ble (checked against the board at compile time)
 - Properties (name, type, default):
-    - `name`, string, default `"thingstudio"` — the advertised name; name and payload share 31 bytes
     - `field`, string, default `"manufacturer"` — manufacturer (payload after a 2-byte manufacturer id), service (after a service UUID) or none (name only)
     - `mfrId`, string, default `"0xFFFF"` — manufacturer id, decimal or hex with 0x; 0xFFFF is for testing
     - `serviceUuid`, string, default `"fcd2"` — service UUID for service data: 16-bit (fcd2, BTHome) or 128-bit
     - `advIntervalMs`, number, default `500` — how often the advertisement is sent, 20-10240 ms
+    - `bleConfigId`, string, default `""`, the id of a `thingstudio/config/ble` config — the flow's BLE config, whose name is advertised; name and payload share 31 bytes
+
+### ble characteristic in
+
+Type `thingstudio/ble_characteristic_in`, kind source, palette group network.
+
+- Inputs: none
+- Outputs: msg (bytes)
+- Needs hardware: ble (checked against the board at compile time)
+- Properties (name, type, default):
+    - `serviceUuid`, string, default `""` — the service it belongs to: 16-bit (181a) or 128-bit; nodes for one service's characteristics share it
+    - `charUuid`, string, default `""` — the characteristic a phone writes: 16-bit or 128-bit
+    - `encoding`, string, default `"bytes"` — how the written bytes become payload: bytes, text, int8/uint8/int16/uint16/int32/uint32 or float32 (little-endian); sets the output type
+    - `bleConfigId`, string, default `""`, the id of a `thingstudio/config/ble` config
+
+### ble characteristic out
+
+Type `thingstudio/ble_characteristic_out`, kind sink, palette group network.
+
+- Inputs: msg (any)
+- Outputs: none
+- Needs hardware: ble (checked against the board at compile time)
+- Properties (name, type, default):
+    - `serviceUuid`, string, default `""` — the service it belongs to: 16-bit (181a) or 128-bit
+    - `charUuid`, string, default `""` — the characteristic a phone reads: 16-bit or 128-bit; one out node per characteristic
+    - `encoding`, string, default `"bytes"` — how payload becomes bytes: as for ble_characteristic_in; a value that doesn't fit is reported and dropped
+    - `notify`, boolean, default `true` — also push each value to subscribed phones
+    - `bleConfigId`, string, default `""`, the id of a `thingstudio/config/ble` config
 
 ### ble scan
 
@@ -456,6 +483,28 @@ Type `thingstudio/ble_scan`, kind source, palette group network.
     - `repeatMs`, number, default `1000` — drop an advertisement identical to the same device's last one within this time; 0 sends all
     - `scanIntervalMs`, number, default `320` — how often the radio listens, 2.5-10240 ms; every ble_scan in a flow must agree
     - `scanWindowMs`, number, default `30` — how long each listen lasts, up to the interval; longer misses less and leaves WiFi less time
+
+### ble uart in
+
+Type `thingstudio/ble_uart_in`, kind source, palette group network.
+
+- Inputs: none
+- Outputs: msg (string)
+- Needs hardware: ble (checked against the board at compile time)
+- Properties (name, type, default):
+    - `lines`, boolean, default `true` — one message per line the phone sends (\n ends a line, \r is dropped); off: one per write
+    - `bleConfigId`, string, default `""`, the id of a `thingstudio/config/ble` config
+
+### ble uart out
+
+Type `thingstudio/ble_uart_out`, kind sink, palette group network.
+
+- Inputs: msg (any)
+- Outputs: none
+- Needs hardware: ble (checked against the board at compile time)
+- Properties (name, type, default):
+    - `newline`, boolean, default `true` — add \n after each payload
+    - `bleConfigId`, string, default `""`, the id of a `thingstudio/config/ble` config
 
 ### http in
 
@@ -574,6 +623,14 @@ Type `thingstudio/wifi_status`, kind source, palette group network.
 ## Config nodes
 
 A config node is listed under `configs` in a flow file as `{id, type, properties}`. A node names it by id in a property such as `i2cConfigId`. Credentials are saved by name (`credentialName`), never as secrets in the file.
+
+### BLE
+
+Type `thingstudio/config/ble`, one per flow.
+
+- `name`, text: What phone apps show, up to 26 bytes. Shorter leaves more room in an advertisement.
+
+Defaults: `{"name":"thingstudio"}`
 
 ### GUI theme
 

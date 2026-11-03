@@ -22,6 +22,7 @@
 
 import bluetooth
 import runtime
+import struct
 import time
 from micropython import const
 
@@ -245,6 +246,172 @@ class Scanner:
         return self.queue.pop(0)
 
 
+# -- the GATT server (BLE phase 2) ---------------------------------------------------------------------------------
+
+_IRQ_CENTRAL_CONNECT = const(1)
+_IRQ_CENTRAL_DISCONNECT = const(2)
+_IRQ_GATTS_WRITE = const(3)
+_IRQ_MTU_EXCHANGED = const(21)
+
+FLAG_READ = const(0x0002)
+FLAG_WRITE_NO_RESPONSE = const(0x0004)
+FLAG_WRITE = const(0x0008)
+FLAG_NOTIFY = const(0x0010)
+
+# The Nordic UART Service: what phone terminal apps (nRF Connect, Serial Bluetooth Terminal, Bluefruit) look for.
+NUS_SERVICE = "6e400001-b5a3-f393-e0a9-e50e24dcca9e"
+NUS_RX = "6e400002-b5a3-f393-e0a9-e50e24dcca9e"  # the phone writes here
+NUS_TX = "6e400003-b5a3-f393-e0a9-e50e24dcca9e"  # the board notifies here
+
+_WRITE_BUFFER = 244  # the largest write a phone can make in one go at MTU 247
+_DEFAULT_MTU = 23
+_ADV_DEFAULT_MS = 500
+
+
+class Writes:
+    """One node's queue of writes to one characteristic, as (data, conn) pairs."""
+
+    def __init__(self, node_id):
+        self.node_id = node_id
+        self.queue = []
+        self.dropped = 0
+        self.flag = runtime.asyncio.ThreadSafeFlag()
+
+    def offer(self, data, conn):
+        if len(self.queue) >= QUEUE_LIMIT:
+            self.queue.pop(0)
+            self.dropped += 1
+        self.queue.append((data, conn))
+        self.flag.set()
+
+    async def next(self):
+        while not self.queue:
+            await self.flag.wait()
+        return self.queue.pop(0)
+
+
+class _Gatt:
+    """The registered service table: a handle per (service, characteristic), the nodes listening for writes, the
+    connected centrals and their MTUs. Built once per deploy, by whichever GATT node starts first."""
+
+    def __init__(self, radio, table):
+        self.radio = radio
+        self.handles = {}
+        self.writers = {}  # handle -> [Writes]
+        self.conns = {}  # conn handle -> MTU
+        self.nodes = []  # node ids, for connection status
+        ble = radio.ble
+        services = tuple(
+            (bluetooth.UUID(norm_uuid_for_ble(svc)), tuple((bluetooth.UUID(norm_uuid_for_ble(c)), int(f)) for c, f in chars))
+            for svc, chars in table
+        )
+        try:
+            ble.gap_advertise(None)  # registering resets the GATT database; nothing may be connectable meanwhile
+            registered = ble.gatts_register_services(services)
+        except OSError as e:
+            raise OSError("Bluetooth services could not be registered (%r): %d services; hard-reset the board" % (e, len(services)))
+        for (svc, chars), handles in zip(table, registered):
+            for (char, flags), h in zip(chars, handles):
+                self.handles[(norm_uuid(svc), norm_uuid(char))] = h
+                if flags & (FLAG_WRITE | FLAG_WRITE_NO_RESPONSE):
+                    ble.gatts_set_buffer(h, _WRITE_BUFFER)
+        try:
+            ble.config(mtu=_WRITE_BUFFER + 3)  # the size the board asks for; the phone may agree to less
+        except (OSError, ValueError, TypeError):
+            pass
+
+    def handle(self, svc, char):
+        try:
+            return self.handles[(norm_uuid(svc), norm_uuid(char))]
+        except KeyError:
+            raise OSError("characteristic %s in service %s isn't in the registered table" % (char, svc))
+
+    def on_writes(self, node_id, svc, char):
+        w = Writes(node_id)
+        self.writers.setdefault(self.handle(svc, char), []).append(w)
+        self.attach(node_id)
+        return w
+
+    def attach(self, node_id):
+        """Adds a node to the ones whose status follows the connections."""
+        self._node(node_id)
+
+    def _node(self, node_id):
+        if node_id not in self.nodes:
+            self.nodes.append(node_id)
+        self._status(node_id)
+
+    def _status(self, node_id):
+        if self.conns:
+            runtime.report_status(node_id, "connected", "%d connected" % len(self.conns))
+        else:
+            runtime.report_status(node_id, "disconnected", "advertising, no one connected")
+
+    def payload_room(self):
+        """What one notification carries at the smallest connected MTU."""
+        return (min(self.conns.values()) if self.conns else _DEFAULT_MTU) - 3
+
+    def write(self, node_id, svc, char, data, notify):
+        """Sets the value a phone reads, and notifies every connected phone. Returns how many were notified."""
+        h = self.handle(svc, char)
+        ble = self.radio.ble
+        ble.gatts_write(h, data)
+        self._node(node_id)
+        sent = 0
+        if notify:
+            for conn in list(self.conns):
+                try:
+                    ble.gatts_notify(conn, h)
+                    sent += 1
+                except OSError:
+                    pass  # it disconnected meanwhile; the disconnect event follows
+        return sent
+
+    def send_chunks(self, node_id, svc, char, data):
+        """Notifies `data` to every connected phone in pieces that fit each one's MTU (UART). Returns pieces sent."""
+        h = self.handle(svc, char)
+        ble = self.radio.ble
+        self._node(node_id)
+        sent = 0
+        for conn, mtu in list(self.conns.items()):
+            step = mtu - 3
+            for i in range(0, len(data), step):
+                try:
+                    ble.gatts_notify(conn, h, data[i : i + step])
+                    sent += 1
+                except OSError:
+                    break
+        return sent
+
+    def irq(self, event, data):
+        if event == _IRQ_CENTRAL_CONNECT:
+            conn = data[0]
+            self.conns[conn] = _DEFAULT_MTU
+            for n in self.nodes:
+                self._status(n)
+        elif event == _IRQ_CENTRAL_DISCONNECT:
+            self.conns.pop(data[0], None)
+            for n in self.nodes:
+                self._status(n)
+            self.radio.readvertise()  # the stack stops advertising on a connection
+        elif event == _IRQ_GATTS_WRITE:
+            conn, h = data[0], data[1]
+            writers = self.writers.get(h)
+            if writers:
+                value = bytes(self.radio.ble.gatts_read(h))
+                for w in writers:
+                    w.offer(value, conn)
+        elif event == _IRQ_MTU_EXCHANGED:
+            if data[0] in self.conns:
+                self.conns[data[0]] = data[1]
+
+
+def norm_uuid_for_ble(u):
+    """norm_uuid form -> what bluetooth.UUID() takes: an int for 16-bit, the dashed string for 128-bit."""
+    n = norm_uuid(u)
+    return int(n, 16) if len(n) == 4 else n
+
+
 class _Radio:
     def __init__(self):
         self.ble = bluetooth.BLE()
@@ -255,6 +422,8 @@ class _Radio:
         self.scanners = []
         self.scan_params = None
         self.scanning = False
+        self.gatt_server = None
+        self.adv = None  # (interval_ms, data) the board advertises, kept to restart it
         self.ble.irq(self._irq)
 
     def _irq(self, event, data):
@@ -269,6 +438,8 @@ class _Radio:
                 self.scanning = False
                 for s in self.scanners:
                     runtime.report_status(s.node_id, "error", "scan stopped by the radio")
+        elif self.gatt_server is not None:
+            self.gatt_server.irq(event, data)
 
     def scan(self, node_id, interval_ms, window_ms, active, **filters):
         """Adds a scanner and starts the one shared scan with these settings (the first scanner's; a second with
@@ -285,8 +456,32 @@ class _Radio:
         return s
 
     def advertise(self, node_id, interval_ms, adv):
-        self.ble.gap_advertise(int(interval_ms * 1000), adv_data=adv, connectable=False)
-        runtime.report_status(node_id, "connected", "advertising %d bytes" % len(adv))
+        """Sends `adv`, connectable when the flow has a GATT server, until the next call."""
+        self.adv = (interval_ms, adv)
+        self.readvertise()
+        if node_id is not None:
+            runtime.report_status(node_id, "connected", "advertising %d bytes" % len(adv))
+
+    def readvertise(self):
+        if self.adv is None:
+            return
+        interval_ms, adv = self.adv
+        self.ble.gap_advertise(int(interval_ms * 1000), adv_data=adv, connectable=self.gatt_server is not None)
+
+    def gatt(self, table, name):
+        """The flow's GATT server, registering `table` on first use. Every GATT node passes the same table (the
+        compiler builds it from the whole flow); a different one is a loud error, as for any shared hardware.
+        Without a ble advertise node, the board advertises `name` so phones can find it."""
+
+        def make():
+            g = _Gatt(self, table)
+            self.gatt_server = g
+            if self.adv is None:
+                self.adv = (_ADV_DEFAULT_MS, build_adv(name))
+            self.readvertise()
+            return g
+
+        return runtime.shared("ble_gatt", 0, table, make)
 
     def stop(self):
         try:
@@ -294,6 +489,8 @@ class _Radio:
             # reported as the radio stopping the scan by itself (seen on the ESP32-C5 at every redeploy).
             was_scanning = self.scanning
             self.scanning = False
+            self.gatt_server = None
+            self.adv = None
             if was_scanning:
                 self.ble.gap_scan(None)
             self.ble.gap_advertise(None)
@@ -310,3 +507,59 @@ def radio():
         return r
 
     return runtime.shared("ble", 0, (), make)
+
+
+# -- characteristic values ------------------------------------------------------------------------------------------
+
+_FORMATS = {"int8": "<b", "uint8": "<B", "int16": "<h", "uint16": "<H", "int32": "<i", "uint32": "<I", "float32": "<f"}
+# Checked here, not left to struct: CPython raises struct.error, and MicroPython's struct may just truncate.
+_RANGES = {
+    "int8": (-128, 127),
+    "uint8": (0, 255),
+    "int16": (-32768, 32767),
+    "uint16": (0, 65535),
+    "int32": (-2147483648, 2147483647),
+    "uint32": (0, 4294967295),
+}
+
+
+def encode(encoding, value):
+    """A payload as characteristic bytes. Raises ValueError naming the encoding and the value."""
+    if encoding == "bytes":
+        if isinstance(value, (bytes, bytearray)):
+            return bytes(value)
+        if isinstance(value, str):
+            return value.encode()
+        raise ValueError("payload is %s, not bytes or text" % type(value).__name__)
+    if encoding == "text":
+        return (value if isinstance(value, str) else str(value)).encode()
+    fmt = _FORMATS.get(encoding)
+    if fmt is None:
+        raise ValueError("unknown encoding %r" % (encoding,))
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise ValueError("%r doesn't fit %s: it isn't a number" % (value, encoding))
+    if encoding == "float32":
+        return struct.pack(fmt, float(value))
+    v = int(value)
+    lo, hi = _RANGES[encoding]
+    if v < lo or v > hi:
+        raise ValueError("%r doesn't fit %s: the range is %d to %d" % (value, encoding, lo, hi))
+    return struct.pack(fmt, v)
+
+
+def decode_value(encoding, data):
+    """Characteristic bytes as a payload. Raises ValueError naming the encoding and the length."""
+    if encoding == "bytes":
+        return bytes(data)
+    if encoding == "text":
+        try:
+            return bytes(data).decode()
+        except UnicodeError:
+            raise ValueError("%d bytes that aren't UTF-8 text" % len(data))
+    fmt = _FORMATS.get(encoding)
+    if fmt is None:
+        raise ValueError("unknown encoding %r" % (encoding,))
+    size = struct.calcsize(fmt)
+    if len(data) != size:
+        raise ValueError("%d bytes, but %s is %d" % (len(data), encoding, size))
+    return struct.unpack(fmt, bytes(data))[0]

@@ -57,6 +57,7 @@ const CONFIG_BY_PROPERTY: Record<string, string> = {
   wifiConfigId: "thingstudio/config/wifi",
   brokerConfigId: "thingstudio/config/mqtt-broker",
   touchPanelConfigId: "thingstudio/config/touch-panel",
+  bleConfigId: "thingstudio/config/ble",
 };
 
 function ports(list: PortDefinition[] | undefined, props: Record<string, unknown>): PortInfo[] {
@@ -129,7 +130,16 @@ export const PROPERTY_NOTES: Record<string, string> = {
   "ble_scan.repeatMs": "drop an advertisement identical to the same device's last one within this time; 0 sends all",
   "ble_scan.scanIntervalMs": "how often the radio listens, 2.5-10240 ms; every ble_scan in a flow must agree",
   "ble_scan.scanWindowMs": "how long each listen lasts, up to the interval; longer misses less and leaves WiFi less time",
-  "ble_advertise.name": "the advertised name; name and payload share 31 bytes",
+  "ble_advertise.bleConfigId": "the flow's BLE config, whose name is advertised; name and payload share 31 bytes",
+  "ble_characteristic_in.serviceUuid": "the service it belongs to: 16-bit (181a) or 128-bit; nodes for one service's characteristics share it",
+  "ble_characteristic_in.charUuid": "the characteristic a phone writes: 16-bit or 128-bit",
+  "ble_characteristic_in.encoding": "how the written bytes become payload: bytes, text, int8/uint8/int16/uint16/int32/uint32 or float32 (little-endian); sets the output type",
+  "ble_characteristic_out.serviceUuid": "the service it belongs to: 16-bit (181a) or 128-bit",
+  "ble_characteristic_out.charUuid": "the characteristic a phone reads: 16-bit or 128-bit; one out node per characteristic",
+  "ble_characteristic_out.encoding": "how payload becomes bytes: as for ble_characteristic_in; a value that doesn't fit is reported and dropped",
+  "ble_characteristic_out.notify": "also push each value to subscribed phones",
+  "ble_uart_in.lines": "one message per line the phone sends (\\n ends a line, \\r is dropped); off: one per write",
+  "ble_uart_out.newline": "add \\n after each payload",
   "ble_advertise.field": "manufacturer (payload after a 2-byte manufacturer id), service (after a service UUID) or none (name only)",
   "ble_advertise.mfrId": "manufacturer id, decimal or hex with 0x; 0xFFFF is for testing",
   "ble_advertise.serviceUuid": "service UUID for service data: 16-bit (fcd2, BTHome) or 128-bit",
