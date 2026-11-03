@@ -53,6 +53,7 @@ and **+** makes a new one. The config nodes are:
 - **WiFi:** a saved credential and a security mode: password, open, or [unmanaged](wifi-provisioning.md).
 - **MQTT Broker:** a saved credential holding the host, port and optional username and password. One per flow.
 - **I2C bus:** the bus number, SCL and SDA pins, and frequency. See [I2C bus](nodes/i2c-bus.md).
+- **BLE:** the board's Bluetooth name. Optional; one per flow. See [BLE](nodes/ble.md).
 - **Touch panel:** the touch controller, its I2C bus and address, and its size and orientation. See
   [Touch panels](nodes/touch-panel.md).
 

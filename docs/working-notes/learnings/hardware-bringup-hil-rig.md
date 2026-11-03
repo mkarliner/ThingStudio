@@ -281,3 +281,8 @@ committed -- if this VM stays in the loop, `install.sh` should grow the same sin
   `ble advertise` checked the same day with `test-flows/ble-advertise-count-c5.flow.json`: nRF Connect showed
   `ts-c5` with raw data `0x020106060974732D633505FFFFFF6D00` (flags, name, manufacturer 0xFFFF, counter 0x006D
   little-endian), byte for byte what `ts_ble.build_adv` produces. BLE phase 1 works on hardware.
+- **BLE phase 2 on the ESP32-C5-340X (2026-11-03): the GATT characteristic works.** With
+  `test-flows/ble-characteristic-counter-c5.flow.json` and nRF Connect: `ts-c5` connects, the custom service and
+  characteristic show with read/write/notify, a read gives the count (uint16 LE), notify updates every 2 s, and a
+  phone's write reaches debug as the decoded value. The UART echo (`ble-uart-echo-c5.flow.json`) works the same day:
+  a line written to the Nordic UART RX comes back on TX as `echo: <line>`. Phase 2 passes on hardware.

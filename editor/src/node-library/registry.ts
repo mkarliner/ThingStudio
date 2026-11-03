@@ -36,6 +36,10 @@ import { descriptor as wifiGateCoreDescriptor, python as wifiGateCorePython, com
 import { descriptor as wifiStatusCoreDescriptor, python as wifiStatusCorePython, compileHook as wifiStatusCompileHook } from "./core-packages/wifi-status.js";
 import { descriptor as bleScanCoreDescriptor, python as bleScanCorePython, compileHook as bleScanCompileHook } from "./core-packages/ble-scan.js";
 import { descriptor as bleAdvertiseCoreDescriptor, python as bleAdvertiseCorePython, compileHook as bleAdvertiseCompileHook } from "./core-packages/ble-advertise.js";
+import { descriptor as bleCharInCoreDescriptor, python as bleCharInCorePython, compileHook as bleCharInCompileHook } from "./core-packages/ble-characteristic-in.js";
+import { descriptor as bleCharOutCoreDescriptor, python as bleCharOutCorePython, compileHook as bleCharOutCompileHook } from "./core-packages/ble-characteristic-out.js";
+import { descriptor as bleUartInCoreDescriptor, python as bleUartInCorePython, compileHook as bleUartInCompileHook } from "./core-packages/ble-uart-in.js";
+import { descriptor as bleUartOutCoreDescriptor, python as bleUartOutCorePython, compileHook as bleUartOutCompileHook } from "./core-packages/ble-uart-out.js";
 import { GUI_NODES } from "./gui.js";
 
 /**
@@ -113,6 +117,11 @@ export function buildRegistry(): Map<string, NodeDefinition> {
     // BLE phase 1 (2026-11-03, docs/working-notes/ble-nodes-scoping.md): the radio is ts_ble's.
     corePackage(bleScanCoreDescriptor, bleScanCorePython, bleScanCompileHook),
     corePackage(bleAdvertiseCoreDescriptor, bleAdvertiseCorePython, bleAdvertiseCompileHook),
+    // BLE phase 2: the GATT server and the Nordic UART Service.
+    corePackage(bleCharInCoreDescriptor, bleCharInCorePython, bleCharInCompileHook),
+    corePackage(bleCharOutCoreDescriptor, bleCharOutCorePython, bleCharOutCompileHook),
+    corePackage(bleUartInCoreDescriptor, bleUartInCorePython, bleUartInCompileHook),
+    corePackage(bleUartOutCoreDescriptor, bleUartOutCorePython, bleUartOutCompileHook),
     // A core package (phase 4): descriptor + .node.py, no TypeScript hook. See core-packages/delay.ts.
     corePackage(changeCoreDescriptor, changeCorePython, changeCompileHook),
     buildCoreNodeDefinition(delayCoreDescriptor, delayCorePython),

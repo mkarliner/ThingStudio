@@ -168,6 +168,10 @@ import { descriptor as journalCoreDescriptor } from "../../node-library/core-pac
 import { descriptor as ntpCoreDescriptor } from "../../node-library/core-packages/ntp.js";
 import { descriptor as bleScanCoreDescriptor } from "../../node-library/core-packages/ble-scan.js";
 import { descriptor as bleAdvertiseCoreDescriptor } from "../../node-library/core-packages/ble-advertise.js";
+import { descriptor as bleCharInCoreDescriptor } from "../../node-library/core-packages/ble-characteristic-in.js";
+import { descriptor as bleCharOutCoreDescriptor } from "../../node-library/core-packages/ble-characteristic-out.js";
+import { descriptor as bleUartInCoreDescriptor } from "../../node-library/core-packages/ble-uart-in.js";
+import { descriptor as bleUartOutCoreDescriptor } from "../../node-library/core-packages/ble-uart-out.js";
 import { descriptor as bme280CoreDescriptor } from "../../node-library/core-packages/bme280.js";
 import { descriptor as touchI2cCoreDescriptor } from "../../node-library/core-packages/touch-i2c.js";
 import type { NodeDescriptor } from "../../compiler/node-definition.js";
@@ -459,6 +463,10 @@ export class NtpNode extends buildDescriptorNodeClass(ntpCoreDescriptor) {}
 // BLE phase 1 (node-library/core-packages/ble-scan.ts, ble-advertise.ts): descriptor-driven.
 export class BleScanNode extends buildDescriptorNodeClass(bleScanCoreDescriptor) {}
 export class BleAdvertiseNode extends buildDescriptorNodeClass(bleAdvertiseCoreDescriptor) {}
+export class BleCharacteristicInNode extends buildDescriptorNodeClass(bleCharInCoreDescriptor) {}
+export class BleCharacteristicOutNode extends buildDescriptorNodeClass(bleCharOutCoreDescriptor) {}
+export class BleUartInNode extends buildDescriptorNodeClass(bleUartInCoreDescriptor) {}
+export class BleUartOutNode extends buildDescriptorNodeClass(bleUartOutCoreDescriptor) {}
 
 export class UdpSendNode extends buildDescriptorNodeClass(udpSendCoreDescriptor) {}
 
@@ -602,6 +610,10 @@ export const NODE_FACTORIES: Record<NodeKind, () => AnyThingstudioNode> = {
   ntp: () => new NtpNode(),
   ble_scan: () => new BleScanNode(),
   ble_advertise: () => new BleAdvertiseNode(),
+  ble_characteristic_in: () => new BleCharacteristicInNode(),
+  ble_characteristic_out: () => new BleCharacteristicOutNode(),
+  ble_uart_in: () => new BleUartInNode(),
+  ble_uart_out: () => new BleUartOutNode(),
   gui_led: () => new GuiLedNode(),
   gui_button: () => new GuiButtonNode(),
   gui_navigator: () => new GuiNavigatorNode(),

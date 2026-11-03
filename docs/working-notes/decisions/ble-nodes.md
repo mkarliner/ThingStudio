@@ -34,3 +34,13 @@ maintenance rule. Scoping and reasoning: `../ble-nodes-scoping.md`.
   at compile time across `nodesOfType`; one `ble advertise` per flow, likewise.
 - **2026-11-03 — `ts_ble` is importable by users' custom nodes**, listed in `custom-nodes.md`'s new "Libraries you
   can import", so a user's BLE node shares the radio with the built-ins (`ts_ble.radio()`, not `bluetooth.BLE()`).
+- **2026-11-03 — Phase 2 shape (session calls, on Mike's "in your suggested order").** The GATT service table is
+  built at compile time from the whole flow (`core-packages/ble-shared.ts`) and registered once by the first GATT
+  node to start, so there is no run-time barrier. The board's name moves from `ble advertise` to an optional,
+  one-per-flow `ble` config (`thingstudio/config/ble`); the nodes' field is a plain optional `configRef`, not a
+  singleton reference, because a singleton reference makes a missing config a compile error. With GATT nodes the
+  advertisement is connectable and restarts on disconnect. One `characteristic out` per characteristic; an in and
+  an out on one characteristic must share an encoding. Integer encodings are range-checked in `ts_ble`, not left to
+  `struct` (CPython raises `struct.error`, MicroPython may truncate).
+- **2026-11-03 — Unpaired GATT server is tier Accept** (`security-policy.md` §2 and §3.6), per Mike's earlier call
+  that phase 2 ships unpaired with a documented warning. Every GATT node page says so.
