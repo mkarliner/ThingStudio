@@ -758,6 +758,45 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Start Thingstudio">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#where-it-is-installed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Where it is installed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#if-the-command-isnt-found" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        If the command isn't found
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#remove-thingstudio" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Remove Thingstudio
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -3189,6 +3228,45 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Start Thingstudio">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#where-it-is-installed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Where it is installed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#if-the-command-isnt-found" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        If the command isn't found
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#remove-thingstudio" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Remove Thingstudio
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -3283,14 +3361,66 @@ if your account isn't in the group, and prints the command to fix it.</p>
 <h2 id="start-thingstudio">Start Thingstudio</h2>
 <p>How you start Thingstudio depends on how you installed it:</p>
 <ul>
-<li><strong>Installer script:</strong> run <code>thingstudio</code> in a terminal. If the command isn't found, open a new terminal and try
-  again.</li>
+<li><strong>Installer script:</strong> run <code>thingstudio</code> in a terminal. If the command isn't found, see
+  <a href="#if-the-command-isnt-found">If the command isn't found</a>.</li>
 <li><strong>Package on macOS or Linux:</strong> run <code>./thingstudio</code> in the unpacked folder.</li>
 <li><strong>Package on Windows:</strong> run <code>thingstudio.cmd</code> in the unzipped folder.</li>
 </ul>
 <p>The editor opens in your browser at <code>http://127.0.0.1:8765/</code>. Leave the terminal open while you work. Press Ctrl-C
 there to stop Thingstudio.</p>
 <p>Thingstudio also serves this user guide, so it works offline. <strong>Help → User guide</strong> opens it.</p>
+<h3 id="where-it-is-installed">Where it is installed</h3>
+<ul>
+<li><strong>Installer script, macOS and Linux:</strong> the program is in <code>~/.local/share/thingstudio</code>, and the <code>thingstudio</code>
+  command is <code>~/.local/bin/thingstudio</code>.</li>
+<li><strong>Installer script, Windows:</strong> <code>%LOCALAPPDATA%\Thingstudio</code>. The <code>thingstudio</code> command is in its <code>bin</code> folder.</li>
+<li><strong>Package:</strong> the folder you unpacked it into.</li>
+</ul>
+<p>To see which copy your terminal runs, use <code>command -v thingstudio</code> in a macOS or Linux shell, or
+<code>Get-Command thingstudio</code> in PowerShell.</p>
+<h3 id="if-the-command-isnt-found">If the command isn't found</h3>
+<p>The shell looks for commands in the folders listed in your PATH, and remembers what it found. After an install it can
+be out of date in two ways.</p>
+<p><strong>The command's folder isn't on your PATH.</strong> To check, run <code>echo "$PATH"</code> and look for <code>.local/bin</code>. When it's missing,
+the installer prints the line that adds it to your shell's startup file; it prints nothing when the folder is already
+on your PATH. Run that line, or add the line <code>export PATH="$HOME/.local/bin:$PATH"</code> to the startup file yourself. Then
+make the current terminal read the file, or open a new terminal:</p>
+<table>
+<thead>
+<tr>
+<th>Shell</th>
+<th>Run</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>zsh (macOS default)</td>
+<td><code>source ~/.zshrc</code></td>
+</tr>
+<tr>
+<td>bash on Linux</td>
+<td><code>source ~/.bashrc</code></td>
+</tr>
+<tr>
+<td>bash on macOS</td>
+<td><code>source ~/.bash_profile</code></td>
+</tr>
+<tr>
+<td>PowerShell</td>
+<td>Open a new window.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>The folder is on your PATH, but the shell hasn't noticed the new command.</strong> In zsh, run <code>rehash</code>. In bash, run
+<code>hash -r</code>.</p>
+<p>On Windows, the installer adds the command to the PowerShell window that ran it and to your saved PATH. A PowerShell
+window that was already open doesn't see it. Open a new window, or run this in the old one:</p>
+<div class="highlight"><pre><span></span><code><span class="nv">$env:Path</span> <span class="p">=</span> <span class="no">[Environment]</span><span class="p">::</span><span class="n">GetEnvironmentVariable</span><span class="p">(</span><span class="s1">'Path'</span><span class="p">,</span><span class="s1">'User'</span><span class="p">)</span> <span class="p">+</span> <span class="s1">';'</span> <span class="p">+</span> <span class="no">[Environment]</span><span class="p">::</span><span class="n">GetEnvironmentVariable</span><span class="p">(</span><span class="s1">'Path'</span><span class="p">,</span><span class="s1">'Machine'</span><span class="p">)</span>
+</code></pre></div>
+<p>If the command still isn't found, start Thingstudio by its full path, from the list above.</p>
+<h3 id="remove-thingstudio">Remove Thingstudio</h3>
+<p><a href="../installation-details/#remove">Installation details</a> has the commands for the installer script. To remove a package,
+delete its folder. Removing never touches your flows or your settings in <code>.thingstudio</code>.</p>
 <h2 id="getting-help">Getting help</h2>
 <p>When something goes wrong, <a href="../debugging/">Debugging &amp; troubleshooting</a> and the <a href="../faq/">FAQ</a> go by what you see on
 screen. Questions, and what you've built, go in

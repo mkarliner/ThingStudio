@@ -66,7 +66,6 @@ ThingStudio is designed to be private, and as open and hackable as possible:
 ThingStudio is designed for developers with a reasonable amount of programming experience, it doesn't aim to teach programming fundamentals.
 You should also have some level of experience in working with microcontrollers. You don't have to be an EE graduate, but you should be comfortable wiring a breadboard. You should also be able to do basic commands from the terminal or PowerShell.
 
-
 ## What's different about programming with Thingstudio?
 
 A typical microcontroller program, in Arduino for example, has a `setup()` section that runs once at boot, then a
@@ -110,7 +109,7 @@ Node-RED, flows run on a server or a Raspberry Pi. In Thingstudio, they run on t
 
 ## Including your own code
 
-There are a number of ready made functions available built-in [nodes](nodes/index.md) . There is also the 
+There are a number of ready made functions available built-in [nodes](nodes/index.md) . There is also the
 [function](nodes/function.md) node, which will take regular MicroPython and runs your it on each message that arrives:
 
 ```python
@@ -591,8 +590,8 @@ To upgrade or remove Thingstudio, or build it from source, see
 
 How you start Thingstudio depends on how you installed it:
 
-- **Installer script:** run `thingstudio` in a terminal. If the command isn't found, open a new terminal and try
-  again.
+- **Installer script:** run `thingstudio` in a terminal. If the command isn't found, see
+  [If the command isn't found](#if-the-command-isnt-found).
 - **Package on macOS or Linux:** run `./thingstudio` in the unpacked folder.
 - **Package on Windows:** run `thingstudio.cmd` in the unzipped folder.
 
@@ -600,6 +599,50 @@ The editor opens in your browser at `http://127.0.0.1:8765/`. Leave the terminal
 there to stop Thingstudio.
 
 Thingstudio also serves this user guide, so it works offline. **Help → User guide** opens it.
+
+### Where it is installed
+
+- **Installer script, macOS and Linux:** the program is in `~/.local/share/thingstudio`, and the `thingstudio`
+  command is `~/.local/bin/thingstudio`.
+- **Installer script, Windows:** `%LOCALAPPDATA%\Thingstudio`. The `thingstudio` command is in its `bin` folder.
+- **Package:** the folder you unpacked it into.
+
+To see which copy your terminal runs, use `command -v thingstudio` in a macOS or Linux shell, or
+`Get-Command thingstudio` in PowerShell.
+
+### If the command isn't found
+
+The shell looks for commands in the folders listed in your PATH, and remembers what it found. After an install it can
+be out of date in two ways.
+
+**The command's folder isn't on your PATH.** To check, run `echo "$PATH"` and look for `.local/bin`. When it's missing,
+the installer prints the line that adds it to your shell's startup file; it prints nothing when the folder is already
+on your PATH. Run that line, or add the line `export PATH="$HOME/.local/bin:$PATH"` to the startup file yourself. Then
+make the current terminal read the file, or open a new terminal:
+
+| Shell | Run |
+| --- | --- |
+| zsh (macOS default) | `source ~/.zshrc` |
+| bash on Linux | `source ~/.bashrc` |
+| bash on macOS | `source ~/.bash_profile` |
+| PowerShell | Open a new window. |
+
+**The folder is on your PATH, but the shell hasn't noticed the new command.** In zsh, run `rehash`. In bash, run
+`hash -r`.
+
+On Windows, the installer adds the command to the PowerShell window that ran it and to your saved PATH. A PowerShell
+window that was already open doesn't see it. Open a new window, or run this in the old one:
+
+```powershell
+$env:Path = [Environment]::GetEnvironmentVariable('Path','User') + ';' + [Environment]::GetEnvironmentVariable('Path','Machine')
+```
+
+If the command still isn't found, start Thingstudio by its full path, from the list above.
+
+### Remove Thingstudio
+
+[Installation details](installation-details.md#remove) has the commands for the installer script. To remove a package,
+delete its folder. Removing never touches your flows or your settings in `.thingstudio`.
 
 ## Getting help
 
@@ -1078,6 +1121,11 @@ project.
    hardware, one keeping it in the `function` node with `context`.
 2. [Web Blink](blink-from-your-network.md) — the same LED, driven by an `http in` node arriving over
    WiFi: putting the board on your network, finding it again, and what an open port on the board means.
+
+    !!! info "More tutorials coming"
+
+        Web Blink is the last finished tutorial. The two after it are still being worked on, and more are on the way.
+
 3. [Blink from anywhere](blink-from-anywhere.md) — the same LED through an MQTT broker: publishing from the board,
    subscribing to switch it, and why every topic carries a number of your own.
 4. [A sensor display](../sensor-display.md) — read a sensor and show it on a touch display. It is a work in
@@ -1433,6 +1481,10 @@ does and doesn't do.
 Source: https://docs.thingstudio.net/tutorials/blink-from-anywhere/
 
 # Blink from anywhere
+
+!!! note "Work in progress"
+
+    This tutorial is still being checked on a board. The example flow compiles, but some steps may not match the editor.
 
 If you've worked through [Web Blink](blink-from-your-network.md), you have a board on your WiFi that switches its LED
 when a browser on your network asks. Here an MQTT broker sits in the middle. A broker passes messages between clients,

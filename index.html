@@ -3350,7 +3350,7 @@ in more detail in <a href="background/flows-and-nodes/">flows, nodes and message
 <p>This way of working comes from <a href="background/node-red/">Node-RED</a>, a popular tool for home automation and IoT. In
 Node-RED, flows run on a server or a Raspberry Pi. In Thingstudio, they run on the microcontroller.</p>
 <h2 id="including-your-own-code">Including your own code</h2>
-<p>There are a number of ready made functions available built-in <a href="nodes/">nodes</a> . There is also the 
+<p>There are a number of ready made functions available built-in <a href="nodes/">nodes</a> . There is also the
 <a href="nodes/function/">function</a> node, which will take regular MicroPython and runs your it on each message that arrives:</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># payload arrives in degrees C, leaves in degrees F</span>
 <span class="n">msg</span><span class="p">[</span><span class="s1">'payload'</span><span class="p">]</span> <span class="o">=</span> <span class="n">msg</span><span class="p">[</span><span class="s1">'payload'</span><span class="p">]</span> <span class="o">*</span> <span class="mf">1.8</span> <span class="o">+</span> <span class="mi">32</span>

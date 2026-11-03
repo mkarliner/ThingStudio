@@ -35,7 +35,7 @@
 - [Example flows](https://docs.thingstudio.net/examples/): Flows to open with **File → Open…** and make your own.
 - [Two more blinks](https://docs.thingstudio.net/tutorials/two-more-blinks/): If you've followed the steps in Getting started you'll now have a board with a blinking LED.
 - [Web Blink](https://docs.thingstudio.net/tutorials/blink-from-your-network/): If you've worked through Two more blinks, you have a board whose LED blinks on a timer.
-- [Blink from anywhere](https://docs.thingstudio.net/tutorials/blink-from-anywhere/): If you've worked through Web Blink, you have a board on your WiFi that switches its LED when a browser on your network asks.
+- [Blink from anywhere](https://docs.thingstudio.net/tutorials/blink-from-anywhere/): This tutorial is still being checked on a board.
 - [A sensor display](https://docs.thingstudio.net/sensor-display/): This tutorial is being reworked.
 
 ## Building flows
