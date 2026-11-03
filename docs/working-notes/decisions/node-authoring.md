@@ -974,3 +974,16 @@ only on change. Board-to-board messaging over I2C was split off as a separate PO
   and the future dynamic `mqtt_subscribe` (see `outstanding-items/mqtt-dynamic-subscription.md`). Approved with
   "continue" after the 2026-10-19 review recommended it; additive, saved flows unaffected. **`ntp` flipped the same
   day**, the first two-faced package: `run` pokes the clock, `wait`/`emit` send after a sync, one closure.
+- **2026-11-03 — Build a node from the user manual, as a user would.** Mike: "to make a new node, you should read
+  the user manual; if it doesn't work for you, how would a user get it to work". New node work (first: the BLE
+  nodes) follows `docs/user-guide/custom-nodes.md` and the node pages, not a neighbouring node's code. Where the
+  manual falls short, that is a manual bug, fixed in the same change. Same for board bring-up: the ESP32-C5 install
+  failure was checked against `installing-micropython.md` and `debugging.md` first.
+- **2026-11-03 — `thingstudio-compile` loads custom node packages.** Applying the rule above to the BLE nodes: the
+  CLI's help and `ai-authoring.md` said it "cannot check a custom node package", so a user (or their AI) had no
+  offline check at all. It now loads `~/.thingstudio/custom-nodes/` (or `--custom-nodes <dir>`) through the
+  editor's own loader (`custom-node-loader.ts`) and builds each node as the canvas does (`CustomNode`), so
+  descriptor errors name the file and wires are checked by type. `--arch` now follows `--board`'s processor
+  (a C5 or C3 flow was syntax-checked as Xtensa). Found alongside: the editor's flow loader never re-typed a
+  property-typed output (inject's `payloadType`), so an inject saved as `number` reloaded as `bool` and lost its
+  wire into a number input; `main.ts` now calls `retypeOutputs()` after applying saved properties.

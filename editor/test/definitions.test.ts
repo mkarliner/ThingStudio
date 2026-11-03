@@ -62,8 +62,8 @@ const minimalProcessor = { name: "Test", match: ["TEST1"], nativeArch: "armv6m",
 describe("built-in definitions", () => {
   it("all load with no problems", () => {
     expect(defs.problems).toEqual([]);
-    expect([...defs.processors.keys()].sort()).toEqual(["esp32", "esp32-c3", "esp32-s2", "esp32-s3", "nrf52840", "rp2040", "rp2350", "stm32f405"]);
-    expect([...defs.boards.keys()].sort()).toEqual(["cyd", "freenove-s3-4in", "lolin-s2-mini", "luatos-esp32c3-core", "pico", "pico-2", "pico-w", "pyboard-v10", "wemos-d1-r32", "xiao-nrf52840"]);
+    expect([...defs.processors.keys()].sort()).toEqual(["esp32", "esp32-c3", "esp32-c5", "esp32-s2", "esp32-s3", "nrf52840", "rp2040", "rp2350", "stm32f405"]);
+    expect([...defs.boards.keys()].sort()).toEqual(["cyd", "esp32-c5-340x", "freenove-s3-4in", "lolin-s2-mini", "luatos-esp32c3-core", "pico", "pico-2", "pico-w", "pyboard-v10", "wemos-d1-r32", "xiao-nrf52840"]);
   });
 
   it("FALLBACK_MAX_PIN is the widest range any built-in processor has", () => {
@@ -76,6 +76,7 @@ describe("built-in definitions", () => {
       "esp32-s2": "LOLIN_S2_MINI with ESP32-S2FN4R2",
       "esp32-s3": "Generic ESP32S3 module with ESP32-S3",
       "esp32-c3": "LuatOS-Core-ESP32C3 with ESP32C3",
+      "esp32-c5": "ESP32C5 module with ESP32C5",
       rp2040: "Raspberry Pi Pico W with RP2040",
       rp2350: "Raspberry Pi Pico2 with RP2350",
       stm32f405: "PYBv1.0 with STM32F405RG",
@@ -215,6 +216,8 @@ describe("target resolution from HELLO chipType", () => {
 
   it("prefers the longest processor match (ESP32-S2 over ESP32)", () => {
     expect(detect("Some S2 board with ESP32S2")).toBe("-/esp32-s2");
+    // MicroPython's ESP32_GENERIC_C5 names itself "ESP32C5 module" / "ESP32-C5" (mpconfigboard.h).
+    expect(detect("ESP32C5 module with ESP32-C5")).toBe("-/esp32-c5");
   });
 
   it("returns no target, with a note saying what to do, for an unknown chip or no board", () => {

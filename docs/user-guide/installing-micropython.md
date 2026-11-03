@@ -36,7 +36,7 @@ chip families the editor can write are listed, and only builds whose hash is pin
 tested.
 
 The list covers every build Thingstudio pins, so **Or use your own image file** is only for the rest: a build for a
-board Thingstudio doesn't list, or an image you downloaded yourself. Pick the `.bin` or `.uf2`; the chip family you
+board Thingstudio doesn't list, a chip with no pinned build yet (the ESP32-C5), or an image you downloaded yourself. Pick the `.bin` or `.uf2`; the chip family you
 choose decides the address, and the file's own header usually decides the family.
 
 Flashing erases the flow and all settings on the board. Afterwards, [connect](connecting.md) it
@@ -57,6 +57,7 @@ exact board if it's listed, or the generic build for your chip:
 | ESP32-S2 | `ESP32_GENERIC_S2` | `.bin` |
 | ESP32-S3 | `ESP32_GENERIC_S3` | `.bin` |
 | ESP32-C3 | `ESP32_GENERIC_C3` | `.bin` |
+| ESP32-C5 | `ESP32_GENERIC_C5` | `.bin` |
 | RP2040 (Pico, Pico W) | `RPI_PICO`, `RPI_PICO_W` | `.uf2` |
 | RP2350 (Pico 2, Pico 2 W) | `RPI_PICO2`, `RPI_PICO2_W` | `.uf2` |
 
@@ -94,6 +95,7 @@ esptool.py --port PORT --baud 460800 write_flash ADDRESS firmware.bin
 | --- | --- |
 | ESP32, ESP32-S2 | `0x1000` |
 | ESP32-S3, ESP32-C3 | `0` |
+| ESP32-C5 | `0x2000` |
 
 `PORT` is the board's serial port. On macOS and Linux it starts with `/dev/`, on Windows it's `COM` followed by a
 number. To find it, run `esptool.py flash_id` with no `--port`: esptool searches for the board and prints the port
@@ -112,6 +114,10 @@ a different port afterwards.
 **Tools → Options → Interpreter** and use **Install or update MicroPython**.
 
 When it's done, close Thonny. Like esptool, it needs the board's port to itself.
+
+Thonny can't install MicroPython on an ESP32-C5. It writes the image at `0`, but a C5 needs `0x2000`, and Thonny
+doesn't offer that address. The board then restarts in a loop printing `invalid header`. Use Thingstudio or
+esptool instead.
 
 ### Other microcontrollers
 

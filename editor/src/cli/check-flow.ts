@@ -16,8 +16,10 @@
 // (compile.ts throws one CompileError).
 //
 // Not done here: credentials (WiFi and MQTT configs carry a credential name; the secrets live in the backend, so
-// stand-in values are used and a note says so), custom node packages, and the mpy-cross syntax check (the command
-// line adds that, since it needs a WASM module).
+// stand-in values are used and a note says so), reading custom node packages from disk, and the mpy-cross syntax
+// check (the command line does both: the files and the WASM module are outside a pure function). Packages it read
+// come in through `customNodes` and are built exactly as the editor builds them (2026-11-03: a user writing a custom
+// node had no way to check it).
 
 import { compile } from "../compiler/compile.js";
 import type { GraphConfigNode, GraphData, GraphLink, GraphNode } from "../compiler/graph.js";
@@ -27,11 +29,14 @@ import { BUILTIN_DEFINITION_FILES } from "../definitions/builtin.js";
 import { resolveTarget, type Target } from "../definitions/target.js";
 import { parseFlowFile, FlowFileError, type FlowFile } from "../flow-file/flow-file.js";
 import { buildRegistry } from "../node-library/registry.js";
+import { buildCustomNodeDefinition, mergeCustomNodeRegistry, type CustomNodeDescriptor } from "../node-library/custom-node.js";
+import type { NodeDefinition } from "../compiler/node-definition.js";
+import type { CustomNodeProblem, LoadedCustomNode } from "../app/custom-node-loader.js";
 import { runCompileHooksSync } from "../node-library/compile-hooks.js";
 import { visibleConfigProperties } from "../app/rete/config-types.js";
 import { runHookOnceSync } from "../compile-hook/run-hook.js";
 import { readFileSync } from "node:fs";
-import { NODE_FACTORIES, type DescriptorNode } from "../app/rete/nodes.js";
+import { CustomNode, NODE_FACTORIES, type DescriptorNode } from "../app/rete/nodes.js";
 import { ClassicPreset } from "rete";
 import { type ThingstudioSocket } from "../app/rete/sockets.js";
 import { resolveOutputCount } from "../compiler/node-descriptor.js";
@@ -42,6 +47,22 @@ export interface CheckOptions {
   board?: string;
   /** Also check the layout (left to right, tight, nothing overlapping); problems come back as warnings. */
   layout?: boolean;
+  /** Custom node packages, as custom-node-loader.ts loads them, and where they came from (for messages). */
+  customNodes?: CustomNodes;
+}
+
+export interface CustomNodes {
+  /** The folder searched, as the user would write it. */
+  dir: string;
+  loaded: LoadedCustomNode[];
+  problems: CustomNodeProblem[];
+}
+
+/** The node types one check can see: the built-ins plus that check's custom packages. */
+interface Library {
+  registry: Map<string, NodeDefinition>;
+  custom: Map<string, CustomNodeDescriptor>;
+  customNodes?: CustomNodes;
 }
 
 export interface Problem {
@@ -75,7 +96,32 @@ export function boardChoices(): string[] {
   return [...[...d.boards.keys()].map((id) => `board:${id}`), ...[...d.processors.keys()].map((id) => `processor:${id}`)].sort();
 }
 
-const registry = buildRegistry();
+const builtinRegistry = buildRegistry();
+
+function libraryFor(customNodes?: CustomNodes): Library {
+  if (!customNodes) return { registry: builtinRegistry, custom: new Map() };
+  const defs = customNodes.loaded.map((p) => {
+    const def = buildCustomNodeDefinition(p.descriptor, p.pythonSource);
+    if (p.compileHook !== undefined) def.compileHook = p.compileHook;
+    return def;
+  });
+  return {
+    registry: mergeCustomNodeRegistry(builtinRegistry, defs),
+    custom: new Map(customNodes.loaded.map((p) => [p.descriptor.type, p.descriptor])),
+    customNodes,
+  };
+}
+
+/** Why a type isn't known: a custom package that failed to load names its file (as the editor's console does). */
+function unknownTypeMessage(id: string, type: string, lib: Library): string {
+  const failed = lib.customNodes?.problems.find((p) => p.type === type);
+  if (failed) return `node ${id}: custom node type "${type}" didn't load -- ${failed.file}: ${failed.message}`;
+  if (!type.startsWith("thingstudio/")) {
+    const where = lib.customNodes ? lib.customNodes.dir : "~/.thingstudio/custom-nodes/ (or the folder given with --custom-nodes)";
+    return `node ${id}: no custom node package defines type "${type}" -- its .node.json and .node.py go in ${where}`;
+  }
+  return `node ${id}: unknown node type "${type}"`;
+}
 
 let hookWasm: Uint8Array | null = null;
 function hookWasmBytes(): Uint8Array {
@@ -104,12 +150,17 @@ const syncHookRunner = {
 type ReteNode = ClassicPreset.Node & { properties: Record<string, unknown> };
 
 /** A node as the loader builds it, or null for a type the canvas has no class for. */
-function buildNode(type: string, fileProps: Record<string, unknown>): ReteNode | null {
+function buildNode(type: string, fileProps: Record<string, unknown>, lib: Library): ReteNode | null {
+  const custom = lib.custom.get(type);
   const kind = type.replace(/^thingstudio\//, "");
-  const factory = (NODE_FACTORIES as Record<string, (() => unknown) | undefined>)[kind];
+  const factory = custom
+    ? () => new CustomNode(custom)
+    : (NODE_FACTORIES as Record<string, (() => unknown) | undefined>)[kind];
   if (!factory) return null;
   const node = factory() as ReteNode;
   Object.assign(node.properties, fileProps);
+  // As main.ts's loader: an output typed by a property (inject's payloadType) follows the saved value.
+  (node as unknown as DescriptorNode).retypeOutputs();
   const dynamic = node as unknown as DescriptorNode;
   const dyn = dynamic.descriptor.dynamicOutputs;
   if (dyn) {
@@ -143,12 +194,13 @@ function standIn(config: GraphConfigNode, notes: Set<string>): GraphConfigNode {
 }
 
 export function checkFlowText(text: string, options: CheckOptions = {}): CheckResult {
-  const result = checkFlow(text, options);
+  const lib = libraryFor(options.customNodes);
+  const result = checkFlow(text, options, lib);
   if (options.layout) {
     // Independent of the compile: a flow that fails to compile can still be laid out badly, and the author fixes both.
     try {
       const file = parseFlowFile(text);
-      result.warnings.push(...checkLayout(layoutNodes(file), file.edges, positions(file)));
+      result.warnings.push(...checkLayout(layoutNodes(file, lib), file.edges, positions(file)));
     } catch {
       // Not a flow file: the parse error is already reported.
     }
@@ -156,7 +208,8 @@ export function checkFlowText(text: string, options: CheckOptions = {}): CheckRe
   return result;
 }
 
-function checkFlow(text: string, options: CheckOptions): CheckResult {
+function checkFlow(text: string, options: CheckOptions, lib: Library): CheckResult {
+  const registry = lib.registry;
   const errors: Problem[] = [];
   const notes = new Set<string>();
 
@@ -179,10 +232,10 @@ function checkFlow(text: string, options: CheckOptions): CheckResult {
   const built = new Map<string, ReteNode>();
   for (const n of file.nodes) {
     if (!registry.has(n.type)) {
-      errors.push({ node: n.id, message: `node ${n.id}: unknown node type "${n.type}"` });
+      errors.push({ node: n.id, message: unknownTypeMessage(n.id, n.type, lib) });
       continue;
     }
-    const node = buildNode(n.type, n.properties);
+    const node = buildNode(n.type, n.properties, lib);
     if (node) {
       built.set(n.id, node);
       nodes.push({ id: n.id, type: n.type, properties: node.properties });
@@ -219,8 +272,8 @@ function checkFlow(text: string, options: CheckOptions): CheckResult {
     const out = a.outputs[outKey]!.socket as ThingstudioSocket;
     const inp = b.inputs[inKey]!.socket as ThingstudioSocket;
     if (!inp.isCompatibleWith(out)) {
-      const outT = describePort(file, from, slot, "outputs");
-      const inT = describePort(file, to, toSlot, "inputs");
+      const outT = describePort(file, from, slot, "outputs", registry);
+      const inT = describePort(file, to, toSlot, "inputs", registry);
       errors.push({ node: to, message: `${where}: the editor would refuse this wire (${outT} into ${inT})` });
       return;
     }
@@ -255,9 +308,9 @@ function checkFlow(text: string, options: CheckOptions): CheckResult {
 }
 
 /** Each node with the size the editor draws it at (a node type the canvas has no class for: a custom node's size). */
-function layoutNodes(file: FlowFile): LayoutNode[] {
+function layoutNodes(file: FlowFile, lib: Library): LayoutNode[] {
   return file.nodes.map((n) => {
-    const built = registry.has(n.type) ? buildNode(n.type, n.properties) : null;
+    const built = lib.registry.has(n.type) ? buildNode(n.type, n.properties, lib) : null;
     const b = built as unknown as { width?: number; height?: number } | null;
     return { id: n.id, width: b?.width ?? 128, height: b?.height ?? 34 };
   });
@@ -277,22 +330,27 @@ function positions(file: FlowFile): Record<string, [number, number]> {
  * nodes, wires, configs, screens, panes and any other layout field (a saved size) are kept as they were. Throws a
  * FlowFileError for a file that is not a flow.
  */
-export function relayoutFlowText(text: string): string {
+export function relayoutFlowText(text: string, customNodes?: CustomNodes): string {
   const file = parseFlowFile(text);
   const raw = JSON.parse(text) as Record<string, unknown> & { layout?: Record<string, Record<string, unknown>> };
-  const placed = relayout(layoutNodes(file), file.edges);
+  const placed = relayout(layoutNodes(file, libraryFor(customNodes)), file.edges);
   const layout: Record<string, Record<string, unknown>> = {};
   for (const n of file.nodes) layout[n.id] = { ...(raw.layout?.[n.id] ?? {}), pos: placed[n.id]! };
   raw.layout = layout;
   return JSON.stringify(raw, null, 2) + "\n";
 }
 
-function describePort(file: FlowFile, nodeId: string, slot: number, side: "inputs" | "outputs"): string {
+function describePort(file: FlowFile, nodeId: string, slot: number, side: "inputs" | "outputs", registry: Map<string, NodeDefinition>): string {
   const n = file.nodes.find((x) => x.id === nodeId)!;
   const def = registry.get(n.type)!;
   const ports = def.ports?.[side] ?? [];
   const port = ports[slot] ?? ports[0];
   return port ? `${resolvePortType(port, n.properties)} ${side === "outputs" ? "from" : "to"} ${n.type.replace("thingstudio/", "")}` : "?";
+}
+
+/** The mpy-cross -march a board or processor needs, from its processor definition. Null for an unknown choice. */
+export function nativeArchFor(choice: string): string | null {
+  return resolveTarget(builtinDefinitions(), choice, null).target?.processor.nativeArch ?? null;
 }
 
 /** What a pin check knows about a board or processor, for an author choosing pins. Null for an unknown choice. */

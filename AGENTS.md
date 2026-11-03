@@ -92,6 +92,10 @@ When a question is "how does X work" or "how do I use X", read the user-facing d
 implementation. The docs are the intended picture; the code is the fallback. If they disagree, that is a
 documentation bug — fix the docs in the same change, don't quietly trust the code. Mike, 2026-10-17.
 
+The same goes for making things: build a new node, or bring up a board, by following the user manual as a user
+would. Where it doesn't get you there, a user wouldn't get there either: fix the manual in the same change.
+Mike, 2026-11-03 (`decisions/node-authoring.md`).
+
 ## Console messages: terse
 
 People skim the console, so a long message gets skipped. One line: what happened, then what to do, in fragments if

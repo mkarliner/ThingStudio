@@ -154,6 +154,10 @@ the node is selected:
 A polled `source` node must declare a numeric property named `intervalMs` — it
 sets the poll interval. An `eventSource` or `runOnce` source does not need one.
 
+**`requires`** (optional) — hardware the node needs, as `{ "capabilities": ["ble"] }`. The words are the board
+definitions' capabilities (`wifi`, `ble`, `espnow`, `pio`, see [Boards](boards.md)). On a board without one, the
+palette grays the node out and the compile refuses it, naming the missing capability.
+
 ## The behavior: `<name>.node.py`
 
 Ordinary MicroPython. Define exactly one top-level function, named for
@@ -310,6 +314,27 @@ async def run(msg, properties):
 redeployed flow can leave the old socket open and fail with
 `EADDRINUSE` on the next deploy.
 
+### Libraries you can import
+
+When a node imports one of these, Thingstudio sends it to the board with the flow:
+
+| Library | For |
+| --- | --- |
+| `ts_ble` | the board's Bluetooth LE radio, shared with the ble nodes (below) |
+| `ts_wifi`, `ts_mqtt`, `ts_http_server` | the flow's WiFi, MQTT client and HTTP server, shared with the network nodes |
+| `threadsafe_event` | waking a coroutine from a hardware interrupt (see Event-driven sources) |
+| `events`, `delay_ms`, `encoder`, `aadc` | Peter Hinch's asyncio switch, button, timer, encoder and ADC drivers |
+| `ssd1306`, `st7789py`, `st7796py` | display drivers |
+| `bme280_float`, `ft6336u` | the BME280 sensor and FT6336U touch drivers |
+| `mqtt_as` | Peter Hinch's asyncio MQTT client |
+
+A library of your own can't be sent yet. Code two of your nodes share goes in each `.node.py`.
+
+For Bluetooth, use `ts_ble.radio()`, not `bluetooth.BLE()`: the board has one radio, and the ble nodes use the same
+one. `radio().scan(...)` and `radio().advertise(...)` share it as `ble scan` and `ble advertise` do, and
+`ts_ble.decode(adv)` and `ts_ble.build_adv(...)` read and build advertising data. The radio is turned off on each
+redeploy.
+
 ### Persisting values
 
 `runtime.settings` keeps a value across reboots and redeploys of the same flow. Use it for an application
@@ -462,6 +487,13 @@ a message naming what's wrong: bad `type`, wrong port count, missing
 **Compile time** — a bad property value on a specific node instance
 (e.g. a non-numeric `number` field) errors out naming that node and
 property.
+
+**Without the editor** — the [check command](check-a-flow.md) loads the same folder (or `--custom-nodes <dir>`).
+Check a flow that uses your node and it reports load and compile errors the same way:
+
+```sh
+node dist-cli/thingstudio-compile.mjs --board board:cyd my.flow.json
+```
 
 **Deploy time** — `.node.py` is spliced into the flow as-is;
 Thingstudio doesn't check it. A typo surfaces as a runtime error (e.g.

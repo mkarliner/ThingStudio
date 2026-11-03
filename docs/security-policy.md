@@ -18,6 +18,7 @@ and update it in the same change. If none apply, you do not need to read further
 | touches the board link: serial, WiFi TCP transport, its auth, discovery, board settings | §3.2, §3.3 |
 | touches WiFi provisioning or the board's setup access point | §3.5 |
 | makes a node talk to an outside service, or parse network input on the board | §3.6 |
+| makes a node send or receive over Bluetooth | §3.6 |
 | lets the backend and the editor run on different machines, or exposes the backend beyond loopback | §5 |
 | adds a new place data or code comes from or goes to, not covered above | §1 and §2, then add a row here |
 
@@ -154,6 +155,10 @@ Each entry: what crosses, the rule, status, stance. "Gap" marks something known 
 - Broker and network secrets are baked into the deployed flow as literals.
 - MQTT is plain TCP (MQTTS deferred, `docs/working-notes/outstanding-items/mqtts-tls-deferred.md`); HTTP is plain.
 - Everything received is untrusted input to the flow.
+- Bluetooth LE (2026-11-03, `ble scan`/`ble advertise`): a received advertisement is untrusted input from anyone in
+  range, with any name or address; `ts_ble` parses it without raising on a malformed one. A sent advertisement is
+  public. Nothing connects yet. The planned GATT server (BLE phase 2) ships unpaired, so anyone in range can write
+  to it: it needs its own row here and a tier before it lands (`decisions/ble-nodes.md`).
 
 ### 3.7 Supply chain -- Defend
 

@@ -1,0 +1,63 @@
+{
+  "formatVersion": 1,
+  "flowName": "ble-advertise-count",
+  "notes": "ble advertise on the ESP32-C5-340X: a counter every 2 s as manufacturer data (id 0xFFFF, test). Check with nRF Connect on a phone: a device named ts-c5 whose manufacturer data counts up, 2 bytes little-endian.",
+  "nodes": [
+    {
+      "id": "1",
+      "type": "thingstudio/timer",
+      "properties": {
+        "intervalMs": 2000
+      }
+    },
+    {
+      "id": "2",
+      "type": "thingstudio/function",
+      "properties": {
+        "code": "import struct\nn = context.get('n', 0) + 1\ncontext.set('n', n)\nmsg['payload'] = struct.pack('<H', n)\nreturn msg",
+        "outputCount": 1
+      }
+    },
+    {
+      "id": "3",
+      "type": "thingstudio/ble_advertise",
+      "properties": {
+        "name": "ts-c5"
+      }
+    }
+  ],
+  "edges": [
+    [
+      "1",
+      0,
+      "2",
+      0
+    ],
+    [
+      "2",
+      0,
+      "3",
+      0
+    ]
+  ],
+  "layout": {
+    "1": {
+      "pos": [
+        80,
+        80
+      ]
+    },
+    "2": {
+      "pos": [
+        300,
+        80
+      ]
+    },
+    "3": {
+      "pos": [
+        520,
+        80
+      ]
+    }
+  }
+}

@@ -253,3 +253,31 @@ First flash of the custom classic-ESP32 image onto the CYD, on a VMware guest wi
 
 Firmware side: `firmware/classic-esp32/install.sh`. The one-session provisioner used here is throwaway, not
 committed -- if this VM stays in the loop, `install.sh` should grow the same single-open behaviour.
+- **Thonny can't flash MicroPython onto an ESP32-C5 (2026-11-03).** Its esptool dialog
+  (`thonny/plugins/micropython/esptool_dialog.py`, `_compute_start_address`, master at 99de9cf) writes at 0x1000
+  for esp32/esp32s2 and 0x0 for everything else, and only offers those two addresses. The C5's ROM wants the
+  image at 0x2000 (MicroPython's own `ESP32_GENERIC_C5/board.json`, `flash_offset`), so a Thonny install boot-loops
+  with `invalid header`. Mike hit it on the ESP32-C5-340X. User docs: `installing-micropython.md` (Thonny section),
+  `debugging.md` (no-boot row).
+  Reflashed with esptool at 0x2000 the same day: boots to `MicroPython v1.29.0 on 2026-08-24; ESP32C5 module with
+  ESP32-C5`, after harmless `quad_psram ... continuing without it` lines (the C5-FH4 module has no PSRAM; the
+  generic build enables quad PSRAM). FAQ entry added.
+  BLE checked at the REPL on it the same day: `bluetooth.BLE().active(True)`, `config('mac')` -> `(0, <6 bytes>)`
+  (public address), a 5 s `gap_scan` at 30 ms interval/window saw 12 devices (-31 to -50 dBm). The raw
+  `bluetooth` module works on the C5's generic 1.29.0 build.
+- **BLE phase 1 on the ESP32-C5-340X (2026-11-03): `ble scan` works on hardware.** Active scan, defaults, into
+  debug: phones (random addresses), Apple (mfr 76), Google Fast Pair (`fe9f`), `fcf1` service data, -37 to -82 dBm.
+  Every connectable advertisement was followed ~17 ms later by an empty scan response (adv_type 4) from the same
+  address, which phase 1 sent on as a message with `payload b''` and `connectable False`. Fixed the same day:
+  `ts_ble` drops empty scan responses, and a non-empty one carries `scanResponse True`, `connectable None`.
+  Confirmed on the C5 after the fix (deploy at 14:25): `scanResponse` present, empty responses gone. The same
+  redeploy showed `scan stopped by the radio` for a moment: the radio answers `gap_scan(None)` with a scan-done
+  event, and `stop()` cleared its own flag only after asking. Fixed (flag cleared first); both test stand-ins now
+  send scan-done on stop, so the tests catch it. Also seen on that deploy, not chased: the first flow piece arrived
+  garbled (`incorrect padding`) and the resend worked, while the old flow was printing a debug line per
+  advertisement over the same serial link. Watch for it with chatty flows on the CH340E.
+  Both fixes confirmed on the C5 at 14:28: no red flash on redeploy, and a non-empty scan response (Google,
+  mfr 224, after a `fe9f` advertisement) arrives as its own message with `scanResponse True`, `connectable None`.
+  `ble advertise` checked the same day with `test-flows/ble-advertise-count-c5.flow.json`: nRF Connect showed
+  `ts-c5` with raw data `0x020106060974732D633505FFFFFF6D00` (flags, name, manufacturer 0xFFFF, counter 0x006D
+  little-endian), byte for byte what `ts_ble.build_adv` produces. BLE phase 1 works on hardware.

@@ -68,6 +68,7 @@ In the properties panel, a pin field shows the board's name for that pin, such a
 | Raspberry Pi Pico 2 | RP2350 | GPIO 0–29. LED on GPIO 25. |
 | LOLIN S2 Mini | ESP32-S2 | LED on GPIO 15, button on GPIO 0 |
 | LuatOS ESP32C3-CORE | ESP32-C3 | Pick by hand. LEDs on GPIO 12 and 13, button on GPIO 9. |
+| ESP32-C5-340X (ESP32-C5-KITC-A) | ESP32-C5 | Pick by hand. RGB LED (WS2812) on GPIO 27, button on GPIO 28. Left USB-C is a CH340E on GPIO 11/12, right is native USB on 13/14. If flashing doesn't start: hold BOOT, press RESET, release BOOT. |
 | CYD (ESP32-2432S028, ST7789) | ESP32 | Pick by hand. Display, touch, SD, RGB LED and speaker pins are labelled. |
 | Freenove ESP32-S3 Display 4.0" (FNK0104S, ST7796) | ESP32-S3 | Pick by hand. Display and touch pins are labelled. 320x480, SPI bus 1. Rotation 1 is portrait. For landscape, set the display's `orientation` to 90 (or 270 for the other way up) and keep the screen and display at 320x480. Display and touch (FT6336U) work. |
 | Pyboard v1.0 | STM32F405 | Pins are named `X1`–`X22` and `Y1`–`Y12`. The four onboard LEDs are on `A13`, `A14`, `A15` and `B4` (labelled `LED_RED`–`LED_BLUE`); the user switch `SW` is on `X17`. |
@@ -82,6 +83,7 @@ In the properties panel, a pin field shows the board's name for that pin, such a
 | ESP32-S2 | 0–21, 26–46 (46 input only) | 27–32 (flash) |
 | ESP32-S3 | 0–21, 26–48 | 27–32 (flash) |
 | ESP32-C3 | 0–21 | 12–17 (flash) |
+| ESP32-C5 | 0–28 | 16–22 (flash and PSRAM) |
 | RP2040 | 0–29 | none |
 | RP2350 | 0–47 (0–29 on the RP2350A) | none |
 | STM32F405 | X1–X22, Y1–Y12 (named pins, not numbers) | none |

@@ -34,6 +34,8 @@ import { descriptor as udpSendCoreDescriptor, python as udpSendCorePython, compi
 import { descriptor as ntpCoreDescriptor, python as ntpCorePython, compileHook as ntpCompileHook } from "./core-packages/ntp.js";
 import { descriptor as wifiGateCoreDescriptor, python as wifiGateCorePython, compileHook as wifiGateCompileHook } from "./core-packages/wifi-gate.js";
 import { descriptor as wifiStatusCoreDescriptor, python as wifiStatusCorePython, compileHook as wifiStatusCompileHook } from "./core-packages/wifi-status.js";
+import { descriptor as bleScanCoreDescriptor, python as bleScanCorePython, compileHook as bleScanCompileHook } from "./core-packages/ble-scan.js";
+import { descriptor as bleAdvertiseCoreDescriptor, python as bleAdvertiseCorePython, compileHook as bleAdvertiseCompileHook } from "./core-packages/ble-advertise.js";
 import { GUI_NODES } from "./gui.js";
 
 /**
@@ -108,6 +110,9 @@ export function buildRegistry(): Map<string, NodeDefinition> {
     corePackage(udpSendCoreDescriptor, udpSendCorePython, udpSendCompileHook),
     corePackage(udpReceiveCoreDescriptor, udpReceiveCorePython, udpReceiveCompileHook),
     corePackage(ntpCoreDescriptor, ntpCorePython, ntpCompileHook),
+    // BLE phase 1 (2026-11-03, docs/working-notes/ble-nodes-scoping.md): the radio is ts_ble's.
+    corePackage(bleScanCoreDescriptor, bleScanCorePython, bleScanCompileHook),
+    corePackage(bleAdvertiseCoreDescriptor, bleAdvertiseCorePython, bleAdvertiseCompileHook),
     // A core package (phase 4): descriptor + .node.py, no TypeScript hook. See core-packages/delay.ts.
     corePackage(changeCoreDescriptor, changeCorePython, changeCompileHook),
     buildCoreNodeDefinition(delayCoreDescriptor, delayCorePython),

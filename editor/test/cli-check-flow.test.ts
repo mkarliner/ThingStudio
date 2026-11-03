@@ -3,7 +3,7 @@
 // node, so they cover what an agent or a script really does.
 
 import { execFileSync, spawnSync } from "node:child_process";
-import { existsSync, mkdtempSync, readFileSync, writeFileSync, readdirSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync, readdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -46,6 +46,14 @@ describe("checkFlowText", () => {
     const r = checkFlowText("{ nope");
     expect(r.ok).toBe(false);
     expect(r.errors[0]!.message).toMatch(/not a readable flow file/);
+  });
+
+  it("re-types an output that follows a property (inject's payloadType), as the editor's loader does", () => {
+    const r = checkFlowText(flow(
+      [{ id: "i1", type: "thingstudio/inject", properties: { payloadType: "number", payloadValue: "3" } }, { id: "p1", type: "thingstudio/pwm_out", properties: { pin: 15 } }],
+      [["i1", 0, "p1", 0]],
+    ));
+    expect(r.errors).toEqual([]);
   });
 
   it("names an unknown node type and its node", () => {
@@ -107,7 +115,8 @@ describe("the command", () => {
   let cli: string;
   const dir = mkdtempSync(join(tmpdir(), "thingstudio-cli-"));
   const run = (args: string[]) =>
-    spawnSync("node", [cli, ...args], { encoding: "utf8", env: { ...process.env, THINGSTUDIO_MPY_CROSS_DIR: join(editorDir, "public", "vendor", "mpy-cross") } });
+    // HOME is a fresh folder, so a real ~/.thingstudio/custom-nodes on the machine running the tests is never loaded.
+    spawnSync("node", [cli, ...args], { encoding: "utf8", env: { ...process.env, HOME: dir, USERPROFILE: dir, THINGSTUDIO_MPY_CROSS_DIR: join(editorDir, "public", "vendor", "mpy-cross") } });
   const write = (name: string, content: string) => {
     const p = join(dir, name);
     writeFileSync(p, content);
@@ -186,6 +195,51 @@ describe("the command", () => {
     expect(info.labelledPins).toMatchObject({ TFT_SCK: 12, TOUCH_SDA: 16, TOUCH_SCL: 15 });
     expect(info.gpio).toContain(15);
     expect(run(["--board-info", "board:nope"]).status).toBe(1);
+  });
+
+  it("loads custom node packages from --custom-nodes and checks their wires like the editor", () => {
+    const pkgDir = join(dir, "pkgs");
+    mkdirSync(pkgDir, { recursive: true });
+    writeFileSync(join(pkgDir, "doubler.node.json"), JSON.stringify({
+      type: "examples/doubler", kind: "transform", label: "doubler",
+      ports: { inputs: [{ name: "msg", type: "number" }], outputs: [{ name: "msg", type: "number" }] },
+      properties: [{ name: "factor", label: "factor", kind: "number", default: 2 }],
+    }));
+    writeFileSync(join(pkgDir, "doubler.node.py"), "async def run(msg, properties):\n    msg['payload'] = msg['payload'] * properties['factor']\n    return msg\n");
+    const inject = (type: string) => ({ id: "i1", type: "thingstudio/inject", properties: { payloadType: type, payloadValue: "3" } });
+    const dbl = { id: "d1", type: "examples/doubler", properties: {} };
+    const dbg = { id: "g1", type: "thingstudio/debug", properties: {} };
+    const ok = run(["--custom-nodes", pkgDir, write("cn.json", flow([inject("number"), dbl, dbg], [["i1", 0, "d1", 0], ["d1", 0, "g1", 0]]))]);
+    expect(ok.stdout).toMatch(/^OK /);
+    expect(ok.stdout).toMatch(/1 custom node package loaded/);
+    expect(ok.status).toBe(0);
+    // A bool into the package's number input is refused, as the canvas refuses it.
+    const bad = run(["--custom-nodes", pkgDir, write("cn-bad.json", flow([{ ...inject("bool"), properties: { payloadType: "bool", payloadValue: "true" } }, dbl], [["i1", 0, "d1", 0]]))]);
+    expect(bad.status).toBe(1);
+    expect(bad.stdout).toMatch(/editor would refuse this wire \(bool from inject into number to examples\/doubler\)/);
+    // Without the folder, the type is unknown and the message says where packages go.
+    const none = run([write("cn-none.json", flow([dbl]))]);
+    expect(none.status).toBe(1);
+    expect(none.stdout).toMatch(/no custom node package defines type "examples\/doubler" -- its \.node\.json and \.node\.py go in/);
+  });
+
+  it("names a custom node package that didn't load, and the file, when a flow uses it", () => {
+    const pkgDir = join(dir, "broken");
+    mkdirSync(pkgDir, { recursive: true });
+    writeFileSync(join(pkgDir, "half.node.json"), JSON.stringify({ type: "examples/half", kind: "transformer", label: "half" }));
+    writeFileSync(join(pkgDir, "half.node.py"), "async def run(msg, properties):\n    return msg\n");
+    writeFileSync(join(pkgDir, "lonely.node.json"), JSON.stringify({ type: "examples/lonely", kind: "sink", label: "lonely", ports: { inputs: [{ name: "msg", type: "any" }] } }));
+    const r = run(["--custom-nodes", pkgDir, write("cn-broken.json", flow([{ id: "h1", type: "examples/half", properties: {} }]))]);
+    expect(r.status).toBe(1);
+    expect(r.stdout).toMatch(/custom node .*lonely\.node\.json: lonely\.node\.py is missing/);
+    expect(r.stdout).toMatch(/node h1: custom node type "examples\/half" didn't load -- .*half\.node\.json: .*kind must be one of/);
+  });
+
+  it("takes the syntax-check arch from --board's processor", () => {
+    // A viper function compiles for one arch and not another only in native code; check the arch is the board's by
+    // using a board whose processor is RISC-V and a flow that compiles either way: it must pass, and say nothing.
+    const r = run(["--board", "board:esp32-c5-340x", join(examplesDir, "blink.flow.json")]);
+    expect(r.stdout).not.toMatch(/mpy-cross/);
   });
 
   it("lists the boards", () => {

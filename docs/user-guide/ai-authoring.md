@@ -38,8 +38,9 @@ version matches your editor. Otherwise the check needs Node and the built `thing
    [`device_cli.py`](command-line.md#deploy-and-run-a-flow-without-the-editor) instead, and report what the board
    printed. That result is for that board only.
 
-The check is the same compile the editor runs, so a flow that passes it opens and compiles in the editor. It can't
-check credentials, custom node packages or the hardware. Don't claim a flow works on a board unless you deployed it
+The check is the same compile the editor runs, so a flow that passes it opens and compiles in the editor. It loads
+the user's custom node packages the way the editor does. It can't check credentials, what a custom node's Python does
+on the board, or the hardware. Don't claim a flow works on a board unless you deployed it
 there and saw it run; otherwise say it passes the check.
 
 ## The flow file
@@ -250,8 +251,10 @@ Read [GUI nodes](nodes/gui.md) for the details, and copy from `examples/`:
 
 If no node does the job and a function node is not enough, write a custom node: `<name>.node.json` and
 `<name>.node.py`. [Writing custom nodes](custom-nodes.md) is complete on its own. The two files go in `~/.thingstudio/custom-nodes/` on the
-computer running Thingstudio. The check command can't check them: read them against that page, and test the
-Python body on its own with sample messages.
+computer running Thingstudio. The check command loads that folder (or the one given with `--custom-nodes <dir>`), so
+check a flow that uses the node: a bad descriptor is reported by file, and the node's wires, properties and compile
+hook are checked like a built-in's. What the Python does on the board isn't checked: test its body on its own with
+sample messages.
 
 ## Examples to copy
 

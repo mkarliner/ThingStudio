@@ -1,0 +1,21 @@
+{
+  "name": "ESP32-C5-340X",
+  "processor": "esp32-c5",
+  "wifi": true,
+  "match": [],
+  "pins": { "RGB_LED": 27, "BOOT": 28 },
+  "gpio": ["0-14", "23-28"],
+  "avoid": {
+    "3": "Strapping pin on this board (product manual). Check its level at reset before wiring it.",
+    "26": "Strapping pin on this board (product manual). Check its level at reset before wiring it."
+  },
+  "headerOrder": "down",
+  "usb": "bottom",
+  "header": {
+    "1": "3V3", "2": "EN", "3": 2, "4": 3, "5": 0, "6": 1, "7": 6, "8": 7,
+    "9": 8, "10": 9, "11": 10, "12": 25, "13": 26, "14": "5V", "15": "GND", "16": "NC",
+    "17": "GND", "18": 11, "19": 12, "20": 24, "21": 23, "22": "NC", "23": 27, "24": 4,
+    "25": 5, "26": "NC", "27": 28, "28": "GND", "29": 14, "30": 13, "31": "GND", "32": "NC"
+  },
+  "notes": "Silkscreen ESP32-C5-KITC-A V1.2. Reports itself as a generic ESP32-C5, so pick it by hand in the Board menu. Two USB-C ports: the left (UART) goes through a CH340E to GPIO 11 and 12, the right (USB) is native USB on GPIO 13 and 14. The CH340E's RTS drives EN but not BOOT, so if flashing doesn't start, hold BOOT, press and release RESET, then release BOOT. A WS2812 RGB LED is on GPIO 27, which is also a strapping pin: don't pull it low at reset. BOOT is GPIO 28, low when pressed. The header pin marked NC/IO15 is left out: the maker says not to connect it. The C5-FH4 module has no PSRAM, so the generic C5 build prints PSRAM errors at boot and carries on without it. Install MicroPython at 0x2000 (Thonny writes at 0 and the board won't boot). Pins are from the maker's product manual PS-C5-340X-001 V1.0."
+}

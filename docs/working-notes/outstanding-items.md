@@ -106,6 +106,12 @@ ThingStudioMarketing repo, not here.
 
 ## Network / config nodes
 
+- **[P3]** **BLE nodes -- phase 1 done 2026-11-03, both nodes checked on the ESP32-C5-340X.** `ble scan` and `ble advertise` on
+  `ts_ble` (raw `bluetooth`), tested in CPython (pymock) and on the MicroPython 1.29.0 unix port with a stand-in
+  radio, then on the board (scan into debug; advertise read by nRF Connect). Next: phase 2 (GATT peripheral + Nordic UART,
+  with a `ble` config node and a security-policy tier), then phase 3 (central). `ble-nodes-scoping.md`,
+  `decisions/ble-nodes.md`.
+
 - **Board forgets its WiFi-transport password on a power cycle -- new bug, 2026-09-27 (Mike, Pico W).**
   Password set over USB, WiFi worked; after replugging the board reported no password set. **Not reproduced
   2026-09-30** and code review found no path that loses `/_board.json`. If it comes back: read `/_board.json`
@@ -207,6 +213,10 @@ ThingStudioMarketing repo, not here.
   removal; CYD/ESP32 upgraded from 6.0.0, old root copies gone, MQTT flow). Open: a display flow.
   `decisions/flow-dependencies.md`. This is the answer to the old `deploy_runtime.py` `VENDOR_FILES` scaling
   concern (a display driver is only pushed to a board whose flow uses one).
+- **[P2]** **Dependency catalog can't install packages -- new item, 2026-11-03.** `deps.py` writes flat
+  identifier-named modules into `/lib`, so a package library (`aioble`) needs every file renamed and its imports
+  patched. Mike: fix it soon, other libraries will hit it. Interface change, needs his go-ahead.
+  ([detail](outstanding-items/dependency-catalog-packages.md))
 - **[POST-MVP]** **OTA-capable partition table on the ESP32 build -- still not done.** Build-config only, a
   one-way door (every early field device would need a manual reflash later). **Mike, 2026-09-06: deferred past
   MVP anyway** -- no field devices exist yet and only a handful are expected, so the reflash cost is cheap.

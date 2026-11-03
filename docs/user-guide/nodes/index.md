@@ -42,6 +42,8 @@ See [flows, nodes and messages](../background/flows-and-nodes.md) for how they f
 | call a web API | [http request](http-request.md) |
 | serve a web page or API from the board | [http in](http-in.md) and [http response](http-response.md) |
 | send or receive UDP packets | [udp send](udp-send.md), [udp receive](udp-receive.md) |
+| read BLE beacons and sensors | [ble scan](ble-scan.md) |
+| broadcast a reading over Bluetooth | [ble advertise](ble-advertise.md) |
 | know when WiFi connects or drops | [wifi status](wifi-status.md) |
 | stop messages while WiFi is down | [wifi gate](wifi-gate.md) |
 
@@ -77,6 +79,15 @@ These nodes share the flow's WiFi network. A flow has one, set on any WiFi node'
 | [http response](http-response.md) | sink | Answers a request that arrived through `http in`. |
 | [udp receive](udp-receive.md) | source | Sends a message for each UDP packet received on a port. |
 | [udp send](udp-send.md) | sink | Sends a message's payload as a UDP packet. |
+
+## Bluetooth
+
+These nodes need a board with Bluetooth LE: ESP32, ESP32-S3, ESP32-C3 or ESP32-C5. They share the board's one radio.
+
+| Node | Kind | What it does |
+| --- | --- | --- |
+| [ble scan](ble-scan.md) | source | Sends a message for each Bluetooth LE advertisement nearby. |
+| [ble advertise](ble-advertise.md) | sink | Advertises the board's name and a payload over Bluetooth LE. |
 
 ## Hardware
 

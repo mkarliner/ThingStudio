@@ -166,6 +166,8 @@ import { descriptor as changeCoreDescriptor } from "../../node-library/core-pack
 import { descriptor as filterCoreDescriptor } from "../../node-library/core-packages/filter.js";
 import { descriptor as journalCoreDescriptor } from "../../node-library/core-packages/journal.js";
 import { descriptor as ntpCoreDescriptor } from "../../node-library/core-packages/ntp.js";
+import { descriptor as bleScanCoreDescriptor } from "../../node-library/core-packages/ble-scan.js";
+import { descriptor as bleAdvertiseCoreDescriptor } from "../../node-library/core-packages/ble-advertise.js";
 import { descriptor as bme280CoreDescriptor } from "../../node-library/core-packages/bme280.js";
 import { descriptor as touchI2cCoreDescriptor } from "../../node-library/core-packages/touch-i2c.js";
 import type { NodeDescriptor } from "../../compiler/node-definition.js";
@@ -454,6 +456,9 @@ export class I2cNode extends buildDescriptorNodeClass(i2cCoreDescriptor) {}
 export class Bme280Node extends buildDescriptorNodeClass(bme280CoreDescriptor) {}
 
 export class NtpNode extends buildDescriptorNodeClass(ntpCoreDescriptor) {}
+// BLE phase 1 (node-library/core-packages/ble-scan.ts, ble-advertise.ts): descriptor-driven.
+export class BleScanNode extends buildDescriptorNodeClass(bleScanCoreDescriptor) {}
+export class BleAdvertiseNode extends buildDescriptorNodeClass(bleAdvertiseCoreDescriptor) {}
 
 export class UdpSendNode extends buildDescriptorNodeClass(udpSendCoreDescriptor) {}
 
@@ -595,6 +600,8 @@ export const NODE_FACTORIES: Record<NodeKind, () => AnyThingstudioNode> = {
   gui_trend: () => new GuiTrendNode(),
   journal: () => new JournalNode(),
   ntp: () => new NtpNode(),
+  ble_scan: () => new BleScanNode(),
+  ble_advertise: () => new BleAdvertiseNode(),
   gui_led: () => new GuiLedNode(),
   gui_button: () => new GuiButtonNode(),
   gui_navigator: () => new GuiNavigatorNode(),

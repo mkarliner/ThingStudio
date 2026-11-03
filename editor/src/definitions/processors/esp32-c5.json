@@ -1,0 +1,27 @@
+{
+  "name": "ESP32-C5",
+  "match": ["ESP32C5"],
+  "flash": { "tool": "esptool", "chip": "esp32c5", "address": 8192 },
+  "nativeArch": "rv32imc",
+  "capabilities": ["wifi", "ble", "espnow"],
+  "gpio": ["0-28"],
+  "reserved": {
+    "16-22": "Wired to the flash chip and PSRAM. Using them crashes the board."
+  },
+  "avoid": {
+    "2": "Strapping pin. Its level at reset helps set the boot mode; check the board's wiring before using it.",
+    "7": "Strapping pin. Its level at reset helps set the boot mode; check the board's wiring before using it.",
+    "11-12": "UART0 TX and RX. On boards with a USB-serial chip, these carry the link to Thingstudio.",
+    "13-14": "Native USB D- and D+. On boards that use native USB for serial, using them cuts the link to Thingstudio.",
+    "25": "Strapping pin. Its level at reset helps set the boot mode; check the board's wiring before using it.",
+    "27-28": "Strapping pins. Their level at reset helps set the boot mode; check the board's wiring before using them."
+  },
+  "spi": {
+    "maxHz": 80000000,
+    "buses": {
+      "1": { "fastPins": { "sck": 6, "mosi": 7, "miso": 2 } }
+    }
+  },
+  "i2c": { "buses": { "0": {} } },
+  "notes": "ESP32-C5 (single-core RISC-V, dual-band WiFi 6, Bluetooth LE 5). One SPI bus (1) and one I2C bus (0) for user code. ADC inputs: 1-6, all on ADC1, so WiFi doesn't block them. Images start at 0x2000, not 0."
+}
