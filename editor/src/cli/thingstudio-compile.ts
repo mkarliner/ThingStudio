@@ -8,10 +8,12 @@
 // Exit codes: 0 every flow is valid, 1 a flow has errors (or warnings with --strict), 2 bad usage or a file that
 // could not be read. Build it with `npm run build:cli` in editor/.
 
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { boardChoices, boardInfo, checkFlowText, relayoutFlowText, type CheckResult } from "./check-flow.js";
+import { boardChoices, boardInfo, checkFlowText, nativeArchFor, relayoutFlowText, type CheckResult, type CustomNodes } from "./check-flow.js";
+import { loadAllCustomNodes, type CustomNodeSource } from "../app/custom-node-loader.js";
 import { buildCatalog, findNode, renderMarkdown, renderNode } from "./describe.js";
 
 const USAGE = `thingstudio-compile: compile and check a Thingstudio flow file without the editor.
@@ -25,8 +27,10 @@ Options:
   --strict           Warnings fail the check too
   --layout           Also check the layout: left to right, tight, nothing overlapping (problems are warnings)
   --relayout         Rewrite each file's node positions to follow the layout rules, then check it
+  --custom-nodes <dir>  Load custom node packages from this folder (default ~/.thingstudio/custom-nodes/, if it exists)
+  --no-custom-nodes  Load no custom node packages
   --no-syntax        Skip the MicroPython syntax check of the generated code (mpy-cross)
-  --arch <march>     mpy-cross -march for that check (default xtensawin)
+  --arch <march>     mpy-cross -march for that check (default: the --board's processor, else xtensawin)
   --list-boards      Print the values --board takes
   --board-info <choice>  Print a board's labelled pins, usable pins and the ones to avoid, as JSON
   --describe <node>  Print a node's type, ports and properties with their defaults ("timer" or "thingstudio/timer")
@@ -35,8 +39,9 @@ Options:
 
 Checks: the file parses, every node type exists, every wire is one the editor would accept, the flow compiles
 (pins, properties, GUI layouts), and the generated code is valid MicroPython. With --layout, also that the canvas
-reads left to right and is kept tight. It cannot check WiFi or MQTT
-credentials (the secrets live in the backend) or a custom node package.`;
+reads left to right and is kept tight. Custom node packages load the way the editor loads them, so a broken
+.node.json is reported by file. It cannot check WiFi or MQTT credentials (the secrets live in the backend), or
+what a custom node's Python does on the board.`;
 
 interface Args {
   files: string[];
@@ -49,13 +54,15 @@ interface Args {
   boardInfo?: string;
   describeAll: boolean;
   markdown: boolean;
-  arch: string;
+  arch?: string;
   layout: boolean;
   relayout: boolean;
+  customNodesDir?: string;
+  noCustomNodes: boolean;
 }
 
 function parseArgs(argv: string[]): Args | string {
-  const a: Args = { files: [], json: false, strict: false, syntax: true, describeAll: false, markdown: false, arch: "xtensawin", layout: false, relayout: false };
+  const a: Args = { files: [], json: false, strict: false, syntax: true, describeAll: false, markdown: false, layout: false, relayout: false, noCustomNodes: false };
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i]!;
     const value = (): string | undefined => {
@@ -74,6 +81,8 @@ function parseArgs(argv: string[]): Args | string {
       case "--markdown": a.markdown = true; break;
       case "--describe": { const v = value(); if (!v) return "--describe needs a node name, e.g. timer"; a.describe = v; break; }
       case "--no-syntax": a.syntax = false; break;
+      case "--custom-nodes": { const v = value(); if (!v) return "--custom-nodes needs a folder"; a.customNodesDir = v; break; }
+      case "--no-custom-nodes": a.noCustomNodes = true; break;
       case "--board": { const v = value(); if (!v) return "--board needs a value (see --list-boards)"; a.board = v; break; }
       case "--out": { const v = value(); if (!v) return "--out needs a file name"; a.out = v; break; }
       case "--arch": { const v = value(); if (!v) return "--arch needs a value, e.g. xtensawin"; a.arch = v; break; }
@@ -135,6 +144,39 @@ function printText(file: string, r: CheckResult): void {
   for (const n of r.notes) console.log(`  note: ${n}`);
 }
 
+/** custom-node-loader.ts's source, over a folder on disk: `<name>.node.json` + `<name>.node.py` (+ `<name>.compile.py`). */
+function folderSource(dir: string, shown: string): CustomNodeSource {
+  return {
+    async list() {
+      const names = readdirSync(dir).filter((f) => f.endsWith(".node.json")).map((f) => f.slice(0, -".node.json".length)).sort();
+      return { names, packages: names.map((name) => ({ name, file: join(shown, `${name}.node.json`) })) };
+    },
+    async read(name) {
+      const descriptor = readFileSync(join(dir, `${name}.node.json`), "utf8");
+      let implementation: string;
+      try {
+        implementation = readFileSync(join(dir, `${name}.node.py`), "utf8");
+      } catch {
+        throw new Error(`${name}.node.py is missing: a package needs both files`);
+      }
+      const hookPath = join(dir, `${name}.compile.py`);
+      return { descriptor, implementation, compile: existsSync(hookPath) ? readFileSync(hookPath, "utf8") : null };
+    },
+  };
+}
+
+/** The packages to check against: the folder given, else the user's own folder when it exists, else none. */
+async function loadCustomNodes(args: Args): Promise<CustomNodes | undefined | string> {
+  if (args.noCustomNodes) return undefined;
+  const userDir = join(homedir(), ".thingstudio", "custom-nodes");
+  const dir = args.customNodesDir ? resolve(args.customNodesDir) : existsSync(userDir) ? userDir : null;
+  if (!dir) return undefined;
+  if (!existsSync(dir)) return `--custom-nodes: no folder ${args.customNodesDir}`;
+  const shown = args.customNodesDir ?? "~/.thingstudio/custom-nodes";
+  const { loaded, problems } = await loadAllCustomNodes(folderSource(dir, shown));
+  return { dir: shown, loaded, problems };
+}
+
 async function main(): Promise<number> {
   const args = parseArgs(process.argv.slice(2));
   if (args === "help") { console.log(USAGE); return 0; }
@@ -159,6 +201,12 @@ async function main(): Promise<number> {
     return 0;
   }
 
+  const customNodes = await loadCustomNodes(args);
+  if (typeof customNodes === "string") { console.error(`thingstudio-compile: ${customNodes}`); return 2; }
+  // A package that didn't load is named once, up front; a flow that uses its type also fails, naming the file.
+  if (customNodes && !args.json) for (const p of customNodes.problems) console.log(`custom node ${p.file}: ${p.message}`);
+  const arch = args.arch ?? (args.board ? nativeArchFor(args.board) : null) ?? "xtensawin";
+
   const mpy = args.syntax ? await loadMpyCross() : null;
   const results: { file: string; result: CheckResult }[] = [];
   let code = 0;
@@ -172,7 +220,7 @@ async function main(): Promise<number> {
     }
     if (args.relayout) {
       try {
-        text = relayoutFlowText(text);
+        text = relayoutFlowText(text, customNodes);
         writeFileSync(resolve(file), text);
         if (!args.json) console.log(`relaid out ${file}`);
       } catch (err) {
@@ -180,10 +228,14 @@ async function main(): Promise<number> {
         return 2;
       }
     }
-    const result = checkFlowText(text, { board: args.board, layout: args.layout });
+    const result = checkFlowText(text, { board: args.board, layout: args.layout, customNodes });
+    if (customNodes && args.json) for (const p of customNodes.problems) result.notes.push(`custom node ${p.file}: ${p.message}`);
+    if (customNodes && customNodes.loaded.length > 0) {
+      result.notes.push(`${customNodes.loaded.length} custom node package${customNodes.loaded.length === 1 ? "" : "s"} loaded from ${customNodes.dir}.`);
+    }
     if (result.ok && mpy) {
       if (typeof mpy === "function") {
-        const problem = mpy(result.source!, args.arch);
+        const problem = mpy(result.source!, arch);
         if (problem) {
           result.ok = false;
           result.errors.push({ message: `the generated MicroPython does not compile (mpy-cross): ${problem}` });

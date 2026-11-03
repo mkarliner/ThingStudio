@@ -262,3 +262,6 @@ committed -- if this VM stays in the loop, `install.sh` should grow the same sin
   Reflashed with esptool at 0x2000 the same day: boots to `MicroPython v1.29.0 on 2026-08-24; ESP32C5 module with
   ESP32-C5`, after harmless `quad_psram ... continuing without it` lines (the C5-FH4 module has no PSRAM; the
   generic build enables quad PSRAM). FAQ entry added.
+  BLE checked at the REPL on it the same day: `bluetooth.BLE().active(True)`, `config('mac')` -> `(0, <6 bytes>)`
+  (public address), a 5 s `gap_scan` at 30 ms interval/window saw 12 devices (-31 to -50 dBm). The raw
+  `bluetooth` module works on the C5's generic 1.29.0 build.

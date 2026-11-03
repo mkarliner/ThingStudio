@@ -600,6 +600,10 @@ async function applyFlowFile(file: FlowFile): Promise<void> {
     node.id = n.id;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     Object.assign(node.properties as any, n.properties);
+    // An output whose type follows a property (inject/startup's payloadType) was built from the defaults; re-resolve
+    // it from the saved properties, or an inject saved as "number" reloads as bool and its wire into a number input
+    // is refused below (found 2026-11-03 by the CLI, which builds nodes the same way).
+    node.retypeOutputs();
     // Rebuild a loaded dynamic-output node's real output ports to match its saved count (the function
     // node's `outputCount`: multi-output-port support, outstanding-items/connection-state-gate-router-
     // nodes.md, 2026-09-12) -- the factory() call above just built a fresh node with the DEFAULT count

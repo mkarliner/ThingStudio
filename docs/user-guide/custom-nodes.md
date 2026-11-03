@@ -154,6 +154,10 @@ the node is selected:
 A polled `source` node must declare a numeric property named `intervalMs` — it
 sets the poll interval. An `eventSource` or `runOnce` source does not need one.
 
+**`requires`** (optional) — hardware the node needs, as `{ "capabilities": ["ble"] }`. The words are the board
+definitions' capabilities (`wifi`, `ble`, `espnow`, `pio`, see [Boards](boards.md)). On a board without one, the
+palette grays the node out and the compile refuses it, naming the missing capability.
+
 ## The behavior: `<name>.node.py`
 
 Ordinary MicroPython. Define exactly one top-level function, named for
@@ -462,6 +466,13 @@ a message naming what's wrong: bad `type`, wrong port count, missing
 **Compile time** — a bad property value on a specific node instance
 (e.g. a non-numeric `number` field) errors out naming that node and
 property.
+
+**Without the editor** — the [check command](ai-authoring.md#the-loop) loads the same folder (or `--custom-nodes <dir>`).
+Check a flow that uses your node and it reports load and compile errors the same way:
+
+```sh
+node dist-cli/thingstudio-compile.mjs --board board:cyd my.flow.json
+```
 
 **Deploy time** — `.node.py` is spliced into the flow as-is;
 Thingstudio doesn't check it. A typo surfaces as a runtime error (e.g.
