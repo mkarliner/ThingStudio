@@ -113,6 +113,9 @@ nav:
           - http response: nodes/http-response.md
           - udp send: nodes/udp-send.md
           - mqtt publish: nodes/mqtt-publish.md
+      - Bluetooth:
+          - ble scan: nodes/ble-scan.md
+          - ble advertise: nodes/ble-advertise.md
       - Hardware:
           - interrupt: nodes/interrupt.md
           - eswitch: nodes/eswitch.md

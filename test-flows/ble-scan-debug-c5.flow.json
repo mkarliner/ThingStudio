@@ -1,0 +1,43 @@
+{
+  "formatVersion": 1,
+  "flowName": "ble-scan-debug",
+  "notes": "ble scan into debug, on the ESP32-C5-340X. Prints every advertisement nearby (active scan, so names show). Check: the console shows DEBUG lines with addr, rssi and name; your phone's, if Bluetooth is on.",
+  "nodes": [
+    {
+      "id": "1",
+      "type": "thingstudio/ble_scan",
+      "properties": {
+        "active": true
+      }
+    },
+    {
+      "id": "2",
+      "type": "thingstudio/debug",
+      "properties": {
+        "fullMessage": true
+      }
+    }
+  ],
+  "edges": [
+    [
+      "1",
+      0,
+      "2",
+      0
+    ]
+  ],
+  "layout": {
+    "1": {
+      "pos": [
+        80,
+        80
+      ]
+    },
+    "2": {
+      "pos": [
+        300,
+        80
+      ]
+    }
+  }
+}

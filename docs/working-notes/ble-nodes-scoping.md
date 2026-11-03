@@ -42,9 +42,14 @@ Names are palette names. Every message keeps the `payload`/`topic` envelope; `to
 
 | Node | Kind | What it does |
 |---|---|---|
-| `ble` (config) | config | Device name, and later TX power and address type. One per flow (`singleton: true`, like WiFi). |
 | `ble scan` | event source | Scans; one message per advertisement that passes the filters. `payload`: raw advertising data (`bytes`). Fields: `addr`, `addrType`, `rssi`, `name`, `mfr` (manufacturer data, bytes), `svcData`. Properties: name/address/service-UUID/manufacturer-ID filter, active vs passive, interval/window, a dedupe window. |
 | `ble advertise` | sink | Sets what the board advertises. Each input message updates the manufacturer data or service data from `payload` (bytes). Properties: interval, connectable (off in phase 1), the field to set. |
+
+**Built 2026-11-03** (`core-packages/ble-scan.ts`, `ble-advertise.ts`, `vendor/thingstudio_ble/ts_ble.py`). No `ble`
+config node in phase 1: config types are hard-wired into the editor core (`app/rete/config-types.ts`, `main.ts`,
+`cli/describe.ts`, `cli/check-flow.ts`), and the only shared setting, the device name, belongs to the one
+`ble advertise` a flow may have. It comes in phase 2, when the GATT server needs a name and the peripheral nodes
+share it. Not yet run on hardware.
 
 These cover the common cases: reading off-the-shelf sensors (BTHome, Ruuvi, Xiaomi-style beacons) and broadcasting
 a reading with no pairing. Decoders for particular beacon formats are transforms; ship one (BTHome v2), leave the

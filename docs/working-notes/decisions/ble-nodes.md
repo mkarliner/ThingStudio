@@ -28,3 +28,9 @@ maintenance rule. Scoping and reasoning: `../ble-nodes-scoping.md`.
   "ESP32-C5-340X" (silkscreen ESP32-C5-KITC-A V1.2, Huizhou Youshide). Board file `esp32-c5-340x` added the
   same day from the maker's manual PS-C5-340X-001 V1.0: CH340E on UART0 (left USB-C), native USB (right), WS2812
   on GPIO 27, BOOT on 28, and 3 and 26 also strapping per the manual (ESP-IDF's GPIO docs don't list them).
+- **2026-11-03 — Phase 1 built without a `ble` config node (session call, not Mike's).** Config types are wired into
+  the editor core in four places, and phase 1's one shared setting (the device name) lives on the flow's single
+  `ble advertise`. Revisit in phase 2. Scan settings are shared through a second singleton (`ble_scan`) and checked
+  at compile time across `nodesOfType`; one `ble advertise` per flow, likewise.
+- **2026-11-03 — `ts_ble` is importable by users' custom nodes**, listed in `custom-nodes.md`'s new "Libraries you
+  can import", so a user's BLE node shares the radio with the built-ins (`ts_ble.radio()`, not `bluetooth.BLE()`).

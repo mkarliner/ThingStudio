@@ -106,6 +106,12 @@ ThingStudioMarketing repo, not here.
 
 ## Network / config nodes
 
+- **[P3]** **BLE nodes -- phase 1 built 2026-11-03, not yet on hardware.** `ble scan` and `ble advertise` on
+  `ts_ble` (raw `bluetooth`), tested in CPython (pymock) and on the MicroPython 1.29.0 unix port with a stand-in
+  radio. Next: run both on the ESP32-C5-340X against nRF Connect, then phase 2 (GATT peripheral + Nordic UART,
+  with a `ble` config node and a security-policy tier), then phase 3 (central). `ble-nodes-scoping.md`,
+  `decisions/ble-nodes.md`.
+
 - **Board forgets its WiFi-transport password on a power cycle -- new bug, 2026-09-27 (Mike, Pico W).**
   Password set over USB, WiFi worked; after replugging the board reported no password set. **Not reproduced
   2026-09-30** and code review found no path that loses `/_board.json`. If it comes back: read `/_board.json`

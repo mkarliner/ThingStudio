@@ -118,6 +118,8 @@ export type NodeKind =
   | "gui_trend"
   | "journal"
   | "ntp"
+  | "ble_scan"
+  | "ble_advertise"
   | "gui_led"
   | "gui_button"
   | "gui_navigator"

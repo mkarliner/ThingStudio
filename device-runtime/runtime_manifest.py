@@ -71,6 +71,9 @@ DEPENDENCIES: list[dict] = [
     # Thingstudio's shared HTTP server (2026-10-20): one server per port for the http_in package, with per-node
     # queues and the compile-time route table.
     {"name": "ts_http_server", "files": [("thingstudio_http/ts_http_server.py", "ts_http_server.py")], "requires": []},
+    # Thingstudio's shared Bluetooth LE radio (2026-11-03): one radio per deploy on MicroPython's `bluetooth`
+    # module, shared scanning with per-node filters and queues, and advertising, for the ble_* packages.
+    {"name": "ts_ble", "files": [("thingstudio_ble/ts_ble.py", "ts_ble.py")], "requires": []},
     # FT6336U capacitive touch controller (Thingstudio's own small driver).
     {"name": "ft6336u", "files": [("ft6336u/ft6336u.py", "ft6336u.py")], "requires": []},
     # Thingstudio's own GUI subsystem (gui-layout-widget-system-scoping.md, phase 4): a library, not part of the

@@ -426,6 +426,37 @@ Type `thingstudio/touch_i2c`, kind source, palette group hardware.
 
 ## network
 
+### ble advertise
+
+Type `thingstudio/ble_advertise`, kind sink, palette group network.
+
+- Inputs: msg (any)
+- Outputs: none
+- Needs hardware: ble (checked against the board at compile time)
+- Properties (name, type, default):
+    - `name`, string, default `"thingstudio"` — the advertised name; name and payload share 31 bytes
+    - `field`, string, default `"manufacturer"` — manufacturer (payload after a 2-byte manufacturer id), service (after a service UUID) or none (name only)
+    - `mfrId`, string, default `"0xFFFF"` — manufacturer id, decimal or hex with 0x; 0xFFFF is for testing
+    - `serviceUuid`, string, default `"fcd2"` — service UUID for service data: 16-bit (fcd2, BTHome) or 128-bit
+    - `advIntervalMs`, number, default `500` — how often the advertisement is sent, 20-10240 ms
+
+### ble scan
+
+Type `thingstudio/ble_scan`, kind source, palette group network.
+
+- Inputs: none
+- Outputs: msg (bytes)
+- Needs hardware: ble (checked against the board at compile time)
+- Properties (name, type, default):
+    - `namePrefix`, string, default `""` — only devices whose advertised name starts with this; many send a name only to an active scan
+    - `addr`, string, default `""` — only this device, aa:bb:cc:dd:ee:ff
+    - `mfrId`, string, default `""` — only this manufacturer id, decimal or hex with 0x (0x0499 Ruuvi)
+    - `serviceUuid`, string, default `""` — only advertisements listing this service or carrying its data: 16-bit (fcd2, BTHome) or 128-bit
+    - `active`, boolean, default `false` — also request each device's scan response (usually its name)
+    - `repeatMs`, number, default `1000` — drop an advertisement identical to the same device's last one within this time; 0 sends all
+    - `scanIntervalMs`, number, default `320` — how often the radio listens, 2.5-10240 ms; every ble_scan in a flow must agree
+    - `scanWindowMs`, number, default `30` — how long each listen lasts, up to the interval; longer misses less and leaves WiFi less time
+
 ### http in
 
 Type `thingstudio/http_in`, kind source, palette group network.

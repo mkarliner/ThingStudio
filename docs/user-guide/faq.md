@@ -178,3 +178,20 @@ to A3 (CS) and GPIO 32 to A4 (RST), then set those pins in the display node.
 No, for boards Thingstudio can flash: the ESP32 family over a serial port, and a board whose bootloader mounts as a
 drive (RP2040, RP2350, nRF52). Put the board in its bootloader and use **Tools → Install firmware…**. Other chips
 have their own installation routes; see [Install MicroPython](installing-micropython.md).
+
+## Why are the ble nodes grayed out?
+
+The chosen board has no Bluetooth LE that MicroPython's `bluetooth` module drives. The ESP32, S3, C3 and C5 have it.
+The ESP32-S2 has no Bluetooth, and an nRF52840's MicroPython reaches its radio through a different module
+(`ubluepy`), which these nodes don't use yet. Pick your board in the **Board** menu; see [boards](boards.md).
+
+## Why doesn't ble scan show my device's name?
+
+Many devices put their name only in the scan response, which a passive scan doesn't ask for. Turn on **active
+scan**. Some never advertise a name: filter them by address or manufacturer id instead.
+
+## Why did WiFi get slower when I added a ble scan?
+
+On an ESP32 the WiFi and Bluetooth share one radio, taking turns. The longer the **scan window** against the **scan
+interval**, the less time WiFi gets. The default listens 30 ms in every 320 ms; lower the window, or raise the
+interval, if MQTT or HTTP become slow. See [ble scan](nodes/ble-scan.md).

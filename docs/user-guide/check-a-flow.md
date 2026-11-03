@@ -53,7 +53,10 @@ The exit code is 0 for a valid flow, 1 for a flow with errors, and 2 for a bad c
 - `--describe timer` prints a node's type, ports and properties with their defaults. `--describe-all` prints every
   node and config node (add `--json` for JSON). The same list is on the [node catalog](nodes-catalog.md) page,
   generated from the code.
-- `--no-syntax` skips the MicroPython syntax check. `--arch` sets its `-march` (default `xtensawin`).
+- `--custom-nodes ~/my-nodes` loads custom node packages from that folder. Without it, the check loads
+  `~/.thingstudio/custom-nodes/` when it exists, as the editor does. `--no-custom-nodes` loads none.
+- `--no-syntax` skips the MicroPython syntax check. `--arch` sets its `-march`; the default is the `--board`'s
+  processor (`rv32imc` for an ESP32-C3 or C5), or `xtensawin` without a board.
 
 ## What it checks
 
@@ -61,6 +64,8 @@ The exit code is 0 for a valid flow, 1 for a flow with errors, and 2 for a bad c
 - Every wire joins real ports, and is one the editor would accept. The editor drops a wire it refuses when it opens the file.
 - A property the file leaves out gets the editor's default, as when you open the file in the editor.
 - The flow compiles: pins, properties, GUI layouts, nodes with nothing wired to them.
+- Custom node packages load as they do in the editor. A package that doesn't load is named with its file and the
+  reason, and its nodes' wires and properties are checked like a built-in node's.
 - The generated code is valid MicroPython. This uses the same `mpy-cross` the editor deploys with, and catches a
   typo in a function node's code before you deploy.
 
@@ -68,7 +73,8 @@ The exit code is 0 for a valid flow, 1 for a flow with errors, and 2 for a bad c
 
 - **WiFi and MQTT credentials.** The secrets are in the backend, so the check uses stand-in values and says so in a
   note. A missing credential shows up when you open the flow in the editor.
-- **Custom node packages.** A flow that uses one fails with "unknown node type".
+- **What a custom node's Python does.** It is checked for syntax, not run. Test its body on its own with sample
+  messages.
 - **A real board.** It can't tell you the display is wired right, or that the memory is enough. Deploy does that;
   [Command line](command-line.md#deploy-and-run-a-flow-without-the-editor) can deploy and run a flow without the
   editor.
