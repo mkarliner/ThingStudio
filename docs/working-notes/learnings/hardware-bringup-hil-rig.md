@@ -253,3 +253,9 @@ First flash of the custom classic-ESP32 image onto the CYD, on a VMware guest wi
 
 Firmware side: `firmware/classic-esp32/install.sh`. The one-session provisioner used here is throwaway, not
 committed -- if this VM stays in the loop, `install.sh` should grow the same single-open behaviour.
+- **Thonny can't flash MicroPython onto an ESP32-C5 (2026-11-03).** Its esptool dialog
+  (`thonny/plugins/micropython/esptool_dialog.py`, `_compute_start_address`, master at 99de9cf) writes at 0x1000
+  for esp32/esp32s2 and 0x0 for everything else, and only offers those two addresses. The C5's ROM wants the
+  image at 0x2000 (MicroPython's own `ESP32_GENERIC_C5/board.json`, `flash_offset`), so a Thonny install boot-loops
+  with `invalid header`. Mike hit it on the ESP32-C5-340X. User docs: `installing-micropython.md` (Thonny section),
+  `debugging.md` (no-boot row).
