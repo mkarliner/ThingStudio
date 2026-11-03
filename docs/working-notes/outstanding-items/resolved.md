@@ -8,6 +8,13 @@ drop out of the backlog. Full reasoning stays at each pointer's target; `git log
 **Last audited 2026-10-24, against `git log` at `84dcbfc`** (see the parent file's header). Split out of the
 working list the same day, per Mike's call.
 
+## Added 2026-11-03 (BLE work)
+
+- **Dependency catalog can't install packages** -- done 2026-11-03, PR #7 (runtime 15.0.0): a board file name may
+  sit in plain-named folders (`aioble/core.py`), and `deps.py`, the backend, the editor, `stage.py` and CI follow.
+  `decisions/flow-dependencies.md`; detail: `dependency-catalog-packages.md`. Caveat: the published classic-ESP32
+  image (runtime 14.1.0) needs a rebuild before an editor on 15 deploys to it.
+
 ## Added 2026-11-02 (user guide, from the marketing side)
 
 - **Mark the GUI nodes provisional in the user guide** -- done 2026-11-02: a note at the top of `nodes/gui.md`, a line

@@ -213,10 +213,6 @@ ThingStudioMarketing repo, not here.
   removal; CYD/ESP32 upgraded from 6.0.0, old root copies gone, MQTT flow). Open: a display flow.
   `decisions/flow-dependencies.md`. This is the answer to the old `deploy_runtime.py` `VENDOR_FILES` scaling
   concern (a display driver is only pushed to a board whose flow uses one).
-- **[P2]** **Dependency catalog can't install packages -- new item, 2026-11-03.** `deps.py` writes flat
-  identifier-named modules into `/lib`, so a package library (`aioble`) needs every file renamed and its imports
-  patched. Mike: fix it soon, other libraries will hit it. Interface change, needs his go-ahead.
-  ([detail](outstanding-items/dependency-catalog-packages.md))
 - **[POST-MVP]** **OTA-capable partition table on the ESP32 build -- still not done.** Build-config only, a
   one-way door (every early field device would need a manual reflash later). **Mike, 2026-09-06: deferred past
   MVP anyway** -- no field devices exist yet and only a handful are expected, so the reflash cost is cheap.

@@ -1,6 +1,9 @@
 # Dependency catalog: install packages, not only flat modules
 
-Status: open, 2026-11-03. Raised by the BLE scoping (`../ble-nodes-scoping.md`, call 1); Mike: "we'll get the same
+Status: resolved, 2026-11-03 -- built in PR #7 (runtime 15.0.0) with Mike's go-ahead; the record is
+`../decisions/flow-dependencies.md`. Below is the scoping as it was.
+
+Raised 2026-11-03. Raised by the BLE scoping (`../ble-nodes-scoping.md`, call 1); Mike: "we'll get the same
 problems with something else, so we'll have to address that sooner rather than later".
 
 ## The limit
