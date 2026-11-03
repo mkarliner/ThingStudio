@@ -2399,6 +2399,146 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="ble-characteristic-in/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ble characteristic in
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="ble-characteristic-out/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ble characteristic out
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="ble-uart-in/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ble uart in
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="ble-uart-out/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ble uart out
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="ble/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    BLE config
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -3541,6 +3681,14 @@ all, grouped as in the editor's palette: General, Network and Hardware.</p>
 <td><a href="ble-advertise/">ble advertise</a></td>
 </tr>
 <tr>
+<td>let a phone read or set a value</td>
+<td><a href="ble-characteristic-out/">ble characteristic out</a>, <a href="ble-characteristic-in/">ble characteristic in</a></td>
+</tr>
+<tr>
+<td>send and receive text with a phone terminal app</td>
+<td><a href="ble-uart-in/">ble uart in</a>, <a href="ble-uart-out/">ble uart out</a></td>
+</tr>
+<tr>
 <td>know when WiFi connects or drops</td>
 <td><a href="wifi-status/">wifi status</a></td>
 </tr>
@@ -3692,8 +3840,29 @@ all, grouped as in the editor's palette: General, Network and Hardware.</p>
 <td>sink</td>
 <td>Advertises the board's name and a payload over Bluetooth LE.</td>
 </tr>
+<tr>
+<td><a href="ble-characteristic-in/">ble characteristic in</a></td>
+<td>source</td>
+<td>Sends a message when a phone writes a characteristic.</td>
+</tr>
+<tr>
+<td><a href="ble-characteristic-out/">ble characteristic out</a></td>
+<td>sink</td>
+<td>Sets a characteristic a phone can read, and notifies it.</td>
+</tr>
+<tr>
+<td><a href="ble-uart-in/">ble uart in</a></td>
+<td>source</td>
+<td>Receives text lines from a phone terminal app.</td>
+</tr>
+<tr>
+<td><a href="ble-uart-out/">ble uart out</a></td>
+<td>sink</td>
+<td>Sends text to a phone terminal app.</td>
+</tr>
 </tbody>
 </table>
+<p>The board's Bluetooth name is set once, in the <a href="ble/">BLE config</a>.</p>
 <h2 id="hardware">Hardware</h2>
 <p>Pin numbers are checked against your board before a deploy. See <a href="../boards/">boards and processors</a>.</p>
 <table>
@@ -3780,6 +3949,7 @@ stops and names both.</p>
 <li><strong>WiFi network</strong> and <strong>MQTT broker</strong>: config nodes, with the real passwords kept outside the flow file. See
   <a href="../working-in-the-editor/#config-nodes">config nodes</a>.</li>
 <li><strong>I2C bus</strong>: the pins and clock for a bus, shared by every I2C node on it. See <a href="i2c-bus/">I2C bus</a>.</li>
+<li><strong>BLE</strong>: the board's Bluetooth name, shared by the ble nodes. See <a href="ble/">BLE</a>.</li>
 <li><strong>Touch panel</strong>: the controller, bus and size of a touch screen, used by a gui screen or a touch node. See
   <a href="touch-panel/">touch panels</a>.</li>
 </ul>

@@ -1818,6 +1818,7 @@ and **+** makes a new one. The config nodes are:
 - **WiFi:** a saved credential and a security mode: password, open, or [unmanaged](wifi-provisioning.md).
 - **MQTT Broker:** a saved credential holding the host, port and optional username and password. One per flow.
 - **I2C bus:** the bus number, SCL and SDA pins, and frequency. See [I2C bus](nodes/i2c-bus.md).
+- **BLE:** the board's Bluetooth name. Optional; one per flow. See [BLE](nodes/ble.md).
 - **Touch panel:** the touch controller, its I2C bus and address, and its size and orientation. See
   [Touch panels](nodes/touch-panel.md).
 
@@ -2016,7 +2017,7 @@ been deployed and run on that hardware. Pin details for boards and processors ar
 | Raspberry Pi Pico 2 | RP2350 | Yes |
 | LOLIN S2 Mini | ESP32-S2 | Yes |
 | LuatOS ESP32C3-CORE | ESP32-C3 | Yes, with the adc and neopixel nodes |
-| ESP32-C5-340X (ESP32-C5-KITC-A) | ESP32-C5 | Yes, with the ble scan and ble advertise nodes |
+| ESP32-C5-340X (ESP32-C5-KITC-A) | ESP32-C5 | Yes, with the ble nodes (scan, advertise, characteristics, UART) |
 | CYD (ESP32-2432S028, ST7789) | ESP32 | Yes, display only. |
 | Freenove ESP32-S3 Display 4.0" (FNK0104S) | ESP32-S3 | Yes, with the display and touch |
 | Pyboard v1.0 | STM32F405 | Untested |
@@ -2617,6 +2618,8 @@ See [flows, nodes and messages](../background/flows-and-nodes.md) for how they f
 | send or receive UDP packets | [udp send](udp-send.md), [udp receive](udp-receive.md) |
 | read BLE beacons and sensors | [ble scan](ble-scan.md) |
 | broadcast a reading over Bluetooth | [ble advertise](ble-advertise.md) |
+| let a phone read or set a value | [ble characteristic out](ble-characteristic-out.md), [ble characteristic in](ble-characteristic-in.md) |
+| send and receive text with a phone terminal app | [ble uart in](ble-uart-in.md), [ble uart out](ble-uart-out.md) |
 | know when WiFi connects or drops | [wifi status](wifi-status.md) |
 | stop messages while WiFi is down | [wifi gate](wifi-gate.md) |
 
@@ -2661,6 +2664,12 @@ These nodes need a board with Bluetooth LE: ESP32, ESP32-S3, ESP32-C3 or ESP32-C
 | --- | --- | --- |
 | [ble scan](ble-scan.md) | source | Sends a message for each Bluetooth LE advertisement nearby. |
 | [ble advertise](ble-advertise.md) | sink | Advertises the board's name and a payload over Bluetooth LE. |
+| [ble characteristic in](ble-characteristic-in.md) | source | Sends a message when a phone writes a characteristic. |
+| [ble characteristic out](ble-characteristic-out.md) | sink | Sets a characteristic a phone can read, and notifies it. |
+| [ble uart in](ble-uart-in.md) | source | Receives text lines from a phone terminal app. |
+| [ble uart out](ble-uart-out.md) | sink | Sends text to a phone terminal app. |
+
+The board's Bluetooth name is set once, in the [BLE config](ble.md).
 
 ## Hardware
 
@@ -2698,6 +2707,7 @@ Some settings are set once and shared by the nodes that use them:
 - **WiFi network** and **MQTT broker**: config nodes, with the real passwords kept outside the flow file. See
   [config nodes](../working-in-the-editor.md#config-nodes).
 - **I2C bus**: the pins and clock for a bus, shared by every I2C node on it. See [I2C bus](i2c-bus.md).
+- **BLE**: the board's Bluetooth name, shared by the ble nodes. See [BLE](ble.md).
 - **Touch panel**: the controller, bus and size of a touch screen, used by a gui screen or a touch node. See
   [touch panels](touch-panel.md).
 
@@ -3383,13 +3393,13 @@ Advertises over Bluetooth LE: the board's name, and each message's payload as ma
 
 ## Properties
 
-- **name** — what phone apps show. Default `thingstudio`.
 - **payload goes in** — **manufacturer data**, **service data**, or **nothing (name only)**.
 - **manufacturer id** — for manufacturer data, in decimal or hex. Default `0xFFFF`, which is reserved for testing;
   a product uses its maker's id from the Bluetooth SIG.
 - **service UUID** — for service data: 16-bit (`fcd2` is BTHome) or 128-bit.
 - **interval (ms)** — how often the advertisement is sent, 20 to 10240. Default 500. Shorter is found faster and
   uses more power.
+- **BLE** — the flow's [BLE config](ble.md), whose name is advertised. Without one, the name is `thingstudio`.
 
 ## Wiring
 
@@ -3403,7 +3413,8 @@ The node needs no input: unwired, it advertises the name only.
 
 The board advertises the name from the moment the flow starts. Each message replaces the data, and the board sends
 the new advertisement until the next one. Phones (nRF Connect, for example) and other boards with a
-[ble scan](ble-scan.md) node see it without connecting. It doesn't accept connections.
+[ble scan](ble-scan.md) node see it without connecting. When the flow also has characteristic or UART nodes, the
+advertisement accepts connections, so phones can connect to them.
 
 An advertisement holds 31 bytes. The flags take 3, the name its length plus 2, and the data's header 4 (manufacturer
 or 16-bit service) or 18 (128-bit service). The node's status says how many are left for the payload.
@@ -3417,6 +3428,171 @@ stops the compile. A payload that isn't bytes or text, or that doesn't fit, is r
 size, and the board keeps sending the last advertisement.
 
 Anyone nearby can read an advertisement. Don't put anything private in it.
+
+
+---
+
+Source: https://docs.thingstudio.net/nodes/ble-characteristic-in/
+
+# ble characteristic in
+
+Sends a message each time a connected phone writes a Bluetooth LE characteristic.
+
+## Properties
+
+- **service UUID** — the service the characteristic belongs to: 16-bit (`181a`) or 128-bit. Use the same service on
+  the nodes for its other characteristics.
+- **characteristic UUID** — 16-bit (`2a6e`) or 128-bit.
+- **encoding** — how the bytes a phone writes become `payload`: **bytes**, **text** (UTF-8), **int8**, **uint8**,
+  **int16**, **uint16**, **int32**, **uint32** or **float32**, little-endian. It also sets the output's type, so a
+  number encoding can wire into a number input.
+- **BLE** — the flow's [BLE config](ble.md), for the board's name.
+
+For your own service, pick a random 128-bit UUID (an online UUID generator, or `python3 -c "import uuid;
+print(uuid.uuid4())"`). 16-bit UUIDs belong to services the Bluetooth SIG has defined.
+
+## Wiring
+
+- **Output** — `payload` is the value. The message also carries `conn`, the connection's number, and `uuid`, the
+  characteristic.
+
+## Behavior
+
+The board becomes a GATT server when a flow has any characteristic or UART node. It advertises its name, accepts
+connections, and starts advertising again when a phone disconnects. All the flow's characteristics are registered
+once, when the flow starts. Pair a [ble characteristic out](ble-characteristic-out.md) with the same UUIDs to make
+one characteristic a phone can read, write and subscribe to.
+
+A phone can write up to 244 bytes at a time. A node keeps up to 20 writes waiting; if they come faster than the
+flow handles them, the oldest are dropped.
+
+The node's status shows **advertising, no one connected** or **1 connected**.
+
+## Errors
+
+A missing or malformed UUID, or two nodes using one characteristic with different encodings, stops the compile.
+A write that doesn't decode (2 bytes sent to an `int32`, text that isn't UTF-8) is reported on the console with its
+size and dropped.
+
+Anyone in range can connect and write: there's no pairing yet. Treat what arrives as untrusted input.
+
+
+---
+
+Source: https://docs.thingstudio.net/nodes/ble-characteristic-out/
+
+# ble characteristic out
+
+Sets a Bluetooth LE characteristic to each message's payload, for a phone to read, and notifies the phones that
+subscribed.
+
+## Properties
+
+- **service UUID** / **characteristic UUID** — as for [ble characteristic in](ble-characteristic-in.md).
+- **encoding** — how `payload` becomes bytes: the same choices. A number must fit: `70000` doesn't fit an
+  **int16**.
+- **notify** — also push each new value to the phones subscribed to it. On by default.
+- **BLE** — the flow's [BLE config](ble.md).
+
+## Wiring
+
+- **Input** — `payload` is the new value. Unwired, the characteristic exists but stays empty.
+
+## Behavior
+
+Each message replaces the value. A phone that reads gets the whole value; a notification carries up to 20 bytes
+unless the phone has agreed a larger MTU (most do, up to 244). Only phones connected at the time are notified.
+
+One characteristic out node per characteristic: two would fight over its value. A
+[ble characteristic in](ble-characteristic-in.md) on the same UUIDs makes it writable too.
+
+## Errors
+
+A missing or malformed UUID, or two out nodes on one characteristic, stops the compile. A payload that doesn't fit
+the encoding is reported on the console and dropped, and the last value stays.
+
+Anyone in range can connect and read: don't put anything private in a characteristic.
+
+
+---
+
+Source: https://docs.thingstudio.net/nodes/ble-uart-in/
+
+# ble uart in
+
+Receives text from a phone over Bluetooth LE, through the Nordic UART Service that terminal apps use.
+
+## Properties
+
+- **one message per line** — on by default: text is gathered until a newline, and the line is sent without its
+  line ending. Off: one message per write the phone makes.
+- **BLE** — the flow's [BLE config](ble.md).
+
+## Wiring
+
+- **Output** — `payload` is the text. The message also carries `conn`, the connection's number.
+
+## Behavior
+
+Any UART node adds the Nordic UART Service to the board's GATT server. Phone apps that speak it, such as
+nRF Connect, Serial Bluetooth Terminal and Adafruit Bluefruit, find the board by its name and connect. Pair it with
+[ble uart out](ble-uart-out.md) to answer.
+
+A line over 512 bytes is sent as it is, so a phone that never sends a newline still gets through.
+
+## Errors
+
+Bytes that aren't UTF-8 text are reported on the console and dropped. Anyone in range can connect and send: there's
+no pairing yet.
+
+
+---
+
+Source: https://docs.thingstudio.net/nodes/ble-uart-out/
+
+# ble uart out
+
+Sends text to the phones connected over Bluetooth LE, through the Nordic UART Service.
+
+## Properties
+
+- **end with a newline** — add `\n` after each payload. On by default.
+- **BLE** — the flow's [BLE config](ble.md).
+
+## Wiring
+
+- **Input** — `payload` as text. Bytes are sent as they are; anything else is sent as `str(payload)`.
+
+## Behavior
+
+The text goes to every connected phone, split into pieces that fit each connection: 20 bytes until the phone agrees
+a larger MTU. With no phone connected, nothing is sent and nothing is kept.
+
+## Errors
+
+None at run time. Anyone in range can connect and read what's sent: there's no pairing yet.
+
+
+---
+
+Source: https://docs.thingstudio.net/nodes/ble/
+
+# BLE
+
+The board's Bluetooth name, shared by every ble node in a flow. Optional: without it, the board is called
+`thingstudio`.
+
+Each ble node has a **BLE** field. Pick the flow's BLE config, or add one with **+**. A flow has one, since a board
+has one radio.
+
+## Settings
+
+- **name** — what phone apps show, up to 26 bytes. A [ble advertise](ble-advertise.md) node shares the 31 bytes of
+  an advertisement between the name and its payload, so a shorter name leaves more room.
+
+## Errors
+
+A name over 26 bytes, or two BLE configs in a flow, stops the compile.
 
 
 ---
@@ -5691,11 +5867,38 @@ Type `thingstudio/ble_advertise`, kind sink, palette group network.
 - Outputs: none
 - Needs hardware: ble (checked against the board at compile time)
 - Properties (name, type, default):
-    - `name`, string, default `"thingstudio"` — the advertised name; name and payload share 31 bytes
     - `field`, string, default `"manufacturer"` — manufacturer (payload after a 2-byte manufacturer id), service (after a service UUID) or none (name only)
     - `mfrId`, string, default `"0xFFFF"` — manufacturer id, decimal or hex with 0x; 0xFFFF is for testing
     - `serviceUuid`, string, default `"fcd2"` — service UUID for service data: 16-bit (fcd2, BTHome) or 128-bit
     - `advIntervalMs`, number, default `500` — how often the advertisement is sent, 20-10240 ms
+    - `bleConfigId`, string, default `""`, the id of a `thingstudio/config/ble` config — the flow's BLE config, whose name is advertised; name and payload share 31 bytes
+
+### ble characteristic in
+
+Type `thingstudio/ble_characteristic_in`, kind source, palette group network.
+
+- Inputs: none
+- Outputs: msg (bytes)
+- Needs hardware: ble (checked against the board at compile time)
+- Properties (name, type, default):
+    - `serviceUuid`, string, default `""` — the service it belongs to: 16-bit (181a) or 128-bit; nodes for one service's characteristics share it
+    - `charUuid`, string, default `""` — the characteristic a phone writes: 16-bit or 128-bit
+    - `encoding`, string, default `"bytes"` — how the written bytes become payload: bytes, text, int8/uint8/int16/uint16/int32/uint32 or float32 (little-endian); sets the output type
+    - `bleConfigId`, string, default `""`, the id of a `thingstudio/config/ble` config
+
+### ble characteristic out
+
+Type `thingstudio/ble_characteristic_out`, kind sink, palette group network.
+
+- Inputs: msg (any)
+- Outputs: none
+- Needs hardware: ble (checked against the board at compile time)
+- Properties (name, type, default):
+    - `serviceUuid`, string, default `""` — the service it belongs to: 16-bit (181a) or 128-bit
+    - `charUuid`, string, default `""` — the characteristic a phone reads: 16-bit or 128-bit; one out node per characteristic
+    - `encoding`, string, default `"bytes"` — how payload becomes bytes: as for ble_characteristic_in; a value that doesn't fit is reported and dropped
+    - `notify`, boolean, default `true` — also push each value to subscribed phones
+    - `bleConfigId`, string, default `""`, the id of a `thingstudio/config/ble` config
 
 ### ble scan
 
@@ -5713,6 +5916,28 @@ Type `thingstudio/ble_scan`, kind source, palette group network.
     - `repeatMs`, number, default `1000` — drop an advertisement identical to the same device's last one within this time; 0 sends all
     - `scanIntervalMs`, number, default `320` — how often the radio listens, 2.5-10240 ms; every ble_scan in a flow must agree
     - `scanWindowMs`, number, default `30` — how long each listen lasts, up to the interval; longer misses less and leaves WiFi less time
+
+### ble uart in
+
+Type `thingstudio/ble_uart_in`, kind source, palette group network.
+
+- Inputs: none
+- Outputs: msg (string)
+- Needs hardware: ble (checked against the board at compile time)
+- Properties (name, type, default):
+    - `lines`, boolean, default `true` — one message per line the phone sends (\n ends a line, \r is dropped); off: one per write
+    - `bleConfigId`, string, default `""`, the id of a `thingstudio/config/ble` config
+
+### ble uart out
+
+Type `thingstudio/ble_uart_out`, kind sink, palette group network.
+
+- Inputs: msg (any)
+- Outputs: none
+- Needs hardware: ble (checked against the board at compile time)
+- Properties (name, type, default):
+    - `newline`, boolean, default `true` — add \n after each payload
+    - `bleConfigId`, string, default `""`, the id of a `thingstudio/config/ble` config
 
 ### http in
 
@@ -5831,6 +6056,14 @@ Type `thingstudio/wifi_status`, kind source, palette group network.
 ## Config nodes
 
 A config node is listed under `configs` in a flow file as `{id, type, properties}`. A node names it by id in a property such as `i2cConfigId`. Credentials are saved by name (`credentialName`), never as secrets in the file.
+
+### BLE
+
+Type `thingstudio/config/ble`, one per flow.
+
+- `name`, text: What phone apps show, up to 26 bytes. Shorter leaves more room in an advertisement.
+
+Defaults: `{"name":"thingstudio"}`
 
 ### GUI theme
 
@@ -6465,3 +6698,15 @@ scan**. Some never advertise a name: filter them by address or manufacturer id i
 On an ESP32 the WiFi and Bluetooth share one radio, taking turns. The longer the **scan window** against the **scan
 interval**, the less time WiFi gets. The default listens 30 ms in every 320 ms; lower the window, or raise the
 interval, if MQTT or HTTP become slow. See [ble scan](nodes/ble-scan.md).
+
+## My phone still shows the old characteristics after I changed the flow. Why?
+
+Phones remember a device's services between connections. After a deploy that changes the characteristics, turn the
+phone's Bluetooth off and on, or forget the device in its Bluetooth settings, then connect again. In nRF Connect,
+**Refresh services** in the device's menu does it too.
+
+## A phone connects, but no new values arrive. Why?
+
+Reading shows the value once; to get each new one, the phone has to subscribe. In nRF Connect, tap the
+characteristic's arrow icon (notify). The [ble characteristic out](nodes/ble-characteristic-out.md) node's
+**notify** must be on.

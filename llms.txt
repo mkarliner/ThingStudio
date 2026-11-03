@@ -85,6 +85,11 @@
 
 - [ble scan](https://docs.thingstudio.net/nodes/ble-scan/): Listens for Bluetooth LE advertisements, such as beacons and BLE sensors, and sends one message per advertisement.
 - [ble advertise](https://docs.thingstudio.net/nodes/ble-advertise/): Advertises over Bluetooth LE: the board's name, and each message's payload as manufacturer or service data.
+- [ble characteristic in](https://docs.thingstudio.net/nodes/ble-characteristic-in/): Sends a message each time a connected phone writes a Bluetooth LE characteristic.
+- [ble characteristic out](https://docs.thingstudio.net/nodes/ble-characteristic-out/): Sets a Bluetooth LE characteristic to each message's payload, for a phone to read, and notifies the phones that subscribed.
+- [ble uart in](https://docs.thingstudio.net/nodes/ble-uart-in/): Receives text from a phone over Bluetooth LE, through the Nordic UART Service that terminal apps use.
+- [ble uart out](https://docs.thingstudio.net/nodes/ble-uart-out/): Sends text to the phones connected over Bluetooth LE, through the Nordic UART Service.
+- [BLE config](https://docs.thingstudio.net/nodes/ble/): The board's Bluetooth name, shared by every ble node in a flow.
 
 ## Hardware
 

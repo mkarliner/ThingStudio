@@ -2245,6 +2245,146 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/ble-characteristic-in/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ble characteristic in
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/ble-characteristic-out/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ble characteristic out
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/ble-uart-in/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ble uart in
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/ble-uart-out/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ble uart out
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/ble/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    BLE config
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -3441,10 +3581,54 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#ble-characteristic-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ble characteristic in
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ble-characteristic-out" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ble characteristic out
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#ble-scan" class="md-nav__link">
     <span class="md-ellipsis">
       
         ble scan
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ble-uart-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ble uart in
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ble-uart-out" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ble uart out
       
     </span>
   </a>
@@ -3577,6 +3761,17 @@
   
     <nav class="md-nav" aria-label="Config nodes">
       <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ble" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BLE
+      
+    </span>
+  </a>
+  
+</li>
         
           <li class="md-nav__item">
   <a href="#gui-theme" class="md-nav__link">
@@ -4211,10 +4406,54 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#ble-characteristic-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ble characteristic in
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ble-characteristic-out" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ble characteristic out
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#ble-scan" class="md-nav__link">
     <span class="md-ellipsis">
       
         ble scan
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ble-uart-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ble uart in
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ble-uart-out" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ble uart out
       
     </span>
   </a>
@@ -4347,6 +4586,17 @@
   
     <nav class="md-nav" aria-label="Config nodes">
       <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ble" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BLE
+      
+    </span>
+  </a>
+  
+</li>
         
           <li class="md-nav__item">
   <a href="#gui-theme" class="md-nav__link">
@@ -4887,11 +5137,40 @@ checked when the flow is compiled, and the error says what is allowed. See <a hr
 <li>Outputs: none</li>
 <li>Needs hardware: ble (checked against the board at compile time)</li>
 <li>Properties (name, type, default):<ul>
-<li><code>name</code>, string, default <code>"thingstudio"</code> — the advertised name; name and payload share 31 bytes</li>
 <li><code>field</code>, string, default <code>"manufacturer"</code> — manufacturer (payload after a 2-byte manufacturer id), service (after a service UUID) or none (name only)</li>
 <li><code>mfrId</code>, string, default <code>"0xFFFF"</code> — manufacturer id, decimal or hex with 0x; 0xFFFF is for testing</li>
 <li><code>serviceUuid</code>, string, default <code>"fcd2"</code> — service UUID for service data: 16-bit (fcd2, BTHome) or 128-bit</li>
 <li><code>advIntervalMs</code>, number, default <code>500</code> — how often the advertisement is sent, 20-10240 ms</li>
+<li><code>bleConfigId</code>, string, default <code>""</code>, the id of a <code>thingstudio/config/ble</code> config — the flow's BLE config, whose name is advertised; name and payload share 31 bytes</li>
+</ul>
+</li>
+</ul>
+<h3 id="ble-characteristic-in">ble characteristic in</h3>
+<p>Type <code>thingstudio/ble_characteristic_in</code>, kind source, palette group network.</p>
+<ul>
+<li>Inputs: none</li>
+<li>Outputs: msg (bytes)</li>
+<li>Needs hardware: ble (checked against the board at compile time)</li>
+<li>Properties (name, type, default):<ul>
+<li><code>serviceUuid</code>, string, default <code>""</code> — the service it belongs to: 16-bit (181a) or 128-bit; nodes for one service's characteristics share it</li>
+<li><code>charUuid</code>, string, default <code>""</code> — the characteristic a phone writes: 16-bit or 128-bit</li>
+<li><code>encoding</code>, string, default <code>"bytes"</code> — how the written bytes become payload: bytes, text, int8/uint8/int16/uint16/int32/uint32 or float32 (little-endian); sets the output type</li>
+<li><code>bleConfigId</code>, string, default <code>""</code>, the id of a <code>thingstudio/config/ble</code> config</li>
+</ul>
+</li>
+</ul>
+<h3 id="ble-characteristic-out">ble characteristic out</h3>
+<p>Type <code>thingstudio/ble_characteristic_out</code>, kind sink, palette group network.</p>
+<ul>
+<li>Inputs: msg (any)</li>
+<li>Outputs: none</li>
+<li>Needs hardware: ble (checked against the board at compile time)</li>
+<li>Properties (name, type, default):<ul>
+<li><code>serviceUuid</code>, string, default <code>""</code> — the service it belongs to: 16-bit (181a) or 128-bit</li>
+<li><code>charUuid</code>, string, default <code>""</code> — the characteristic a phone reads: 16-bit or 128-bit; one out node per characteristic</li>
+<li><code>encoding</code>, string, default <code>"bytes"</code> — how payload becomes bytes: as for ble_characteristic_in; a value that doesn't fit is reported and dropped</li>
+<li><code>notify</code>, boolean, default <code>true</code> — also push each value to subscribed phones</li>
+<li><code>bleConfigId</code>, string, default <code>""</code>, the id of a <code>thingstudio/config/ble</code> config</li>
 </ul>
 </li>
 </ul>
@@ -4910,6 +5189,30 @@ checked when the flow is compiled, and the error says what is allowed. See <a hr
 <li><code>repeatMs</code>, number, default <code>1000</code> — drop an advertisement identical to the same device's last one within this time; 0 sends all</li>
 <li><code>scanIntervalMs</code>, number, default <code>320</code> — how often the radio listens, 2.5-10240 ms; every ble_scan in a flow must agree</li>
 <li><code>scanWindowMs</code>, number, default <code>30</code> — how long each listen lasts, up to the interval; longer misses less and leaves WiFi less time</li>
+</ul>
+</li>
+</ul>
+<h3 id="ble-uart-in">ble uart in</h3>
+<p>Type <code>thingstudio/ble_uart_in</code>, kind source, palette group network.</p>
+<ul>
+<li>Inputs: none</li>
+<li>Outputs: msg (string)</li>
+<li>Needs hardware: ble (checked against the board at compile time)</li>
+<li>Properties (name, type, default):<ul>
+<li><code>lines</code>, boolean, default <code>true</code> — one message per line the phone sends (\n ends a line, \r is dropped); off: one per write</li>
+<li><code>bleConfigId</code>, string, default <code>""</code>, the id of a <code>thingstudio/config/ble</code> config</li>
+</ul>
+</li>
+</ul>
+<h3 id="ble-uart-out">ble uart out</h3>
+<p>Type <code>thingstudio/ble_uart_out</code>, kind sink, palette group network.</p>
+<ul>
+<li>Inputs: msg (any)</li>
+<li>Outputs: none</li>
+<li>Needs hardware: ble (checked against the board at compile time)</li>
+<li>Properties (name, type, default):<ul>
+<li><code>newline</code>, boolean, default <code>true</code> — add \n after each payload</li>
+<li><code>bleConfigId</code>, string, default <code>""</code>, the id of a <code>thingstudio/config/ble</code> config</li>
 </ul>
 </li>
 </ul>
@@ -5037,6 +5340,12 @@ checked when the flow is compiled, and the error says what is allowed. See <a hr
 </ul>
 <h2 id="config-nodes">Config nodes</h2>
 <p>A config node is listed under <code>configs</code> in a flow file as <code>{id, type, properties}</code>. A node names it by id in a property such as <code>i2cConfigId</code>. Credentials are saved by name (<code>credentialName</code>), never as secrets in the file.</p>
+<h3 id="ble">BLE</h3>
+<p>Type <code>thingstudio/config/ble</code>, one per flow.</p>
+<ul>
+<li><code>name</code>, text: What phone apps show, up to 26 bytes. Shorter leaves more room in an advertisement.</li>
+</ul>
+<p>Defaults: <code>{"name":"thingstudio"}</code></p>
 <h3 id="gui-theme">GUI theme</h3>
 <p>Type <code>thingstudio/config/gui-theme</code>.</p>
 <ul>

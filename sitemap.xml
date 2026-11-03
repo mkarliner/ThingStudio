@@ -145,7 +145,27 @@
          <lastmod>2026-11-03</lastmod>
     </url>
     <url>
+         <loc>https://docs.thingstudio.net/nodes/ble-characteristic-in/</loc>
+         <lastmod>2026-11-03</lastmod>
+    </url>
+    <url>
+         <loc>https://docs.thingstudio.net/nodes/ble-characteristic-out/</loc>
+         <lastmod>2026-11-03</lastmod>
+    </url>
+    <url>
          <loc>https://docs.thingstudio.net/nodes/ble-scan/</loc>
+         <lastmod>2026-11-03</lastmod>
+    </url>
+    <url>
+         <loc>https://docs.thingstudio.net/nodes/ble-uart-in/</loc>
+         <lastmod>2026-11-03</lastmod>
+    </url>
+    <url>
+         <loc>https://docs.thingstudio.net/nodes/ble-uart-out/</loc>
+         <lastmod>2026-11-03</lastmod>
+    </url>
+    <url>
+         <loc>https://docs.thingstudio.net/nodes/ble/</loc>
          <lastmod>2026-11-03</lastmod>
     </url>
     <url>

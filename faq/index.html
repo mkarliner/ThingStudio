@@ -2243,6 +2243,146 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/ble-characteristic-in/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ble characteristic in
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/ble-characteristic-out/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ble characteristic out
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/ble-uart-in/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ble uart in
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/ble-uart-out/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ble uart out
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/ble/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    BLE config
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -3479,6 +3619,28 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#my-phone-still-shows-the-old-characteristics-after-i-changed-the-flow-why" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        My phone still shows the old characteristics after I changed the flow. Why?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#a-phone-connects-but-no-new-values-arrive-why" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A phone connects, but no new values arrive. Why?
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -3862,6 +4024,28 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#my-phone-still-shows-the-old-characteristics-after-i-changed-the-flow-why" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        My phone still shows the old characteristics after I changed the flow. Why?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#a-phone-connects-but-no-new-values-arrive-why" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A phone connects, but no new values arrive. Why?
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -4034,6 +4218,14 @@ scan</strong>. Some never advertise a name: filter them by address or manufactur
 <p>On an ESP32 the WiFi and Bluetooth share one radio, taking turns. The longer the <strong>scan window</strong> against the <strong>scan
 interval</strong>, the less time WiFi gets. The default listens 30 ms in every 320 ms; lower the window, or raise the
 interval, if MQTT or HTTP become slow. See <a href="../nodes/ble-scan/">ble scan</a>.</p>
+<h2 id="my-phone-still-shows-the-old-characteristics-after-i-changed-the-flow-why">My phone still shows the old characteristics after I changed the flow. Why?</h2>
+<p>Phones remember a device's services between connections. After a deploy that changes the characteristics, turn the
+phone's Bluetooth off and on, or forget the device in its Bluetooth settings, then connect again. In nRF Connect,
+<strong>Refresh services</strong> in the device's menu does it too.</p>
+<h2 id="a-phone-connects-but-no-new-values-arrive-why">A phone connects, but no new values arrive. Why?</h2>
+<p>Reading shows the value once; to get each new one, the phone has to subscribe. In nRF Connect, tap the
+characteristic's arrow icon (notify). The <a href="../nodes/ble-characteristic-out/">ble characteristic out</a> node's
+<strong>notify</strong> must be on.</p>
 
 
 

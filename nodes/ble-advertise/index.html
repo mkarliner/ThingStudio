@@ -16,7 +16,7 @@
         <link rel="prev" href="../ble-scan/">
       
       
-        <link rel="next" href="../interrupt/">
+        <link rel="next" href="../ble-characteristic-in/">
       
       
         
@@ -2340,6 +2340,146 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ble-characteristic-in/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ble characteristic in
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ble-characteristic-out/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ble characteristic out
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ble-uart-in/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ble uart in
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ble-uart-out/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ble uart out
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ble/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    BLE config
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -3296,13 +3436,13 @@
 <p>Advertises over Bluetooth LE: the board's name, and each message's payload as manufacturer or service data.</p>
 <h2 id="properties">Properties</h2>
 <ul>
-<li><strong>name</strong> — what phone apps show. Default <code>thingstudio</code>.</li>
 <li><strong>payload goes in</strong> — <strong>manufacturer data</strong>, <strong>service data</strong>, or <strong>nothing (name only)</strong>.</li>
 <li><strong>manufacturer id</strong> — for manufacturer data, in decimal or hex. Default <code>0xFFFF</code>, which is reserved for testing;
   a product uses its maker's id from the Bluetooth SIG.</li>
 <li><strong>service UUID</strong> — for service data: 16-bit (<code>fcd2</code> is BTHome) or 128-bit.</li>
 <li><strong>interval (ms)</strong> — how often the advertisement is sent, 20 to 10240. Default 500. Shorter is found faster and
   uses more power.</li>
+<li><strong>BLE</strong> — the flow's <a href="../ble/">BLE config</a>, whose name is advertised. Without one, the name is <code>thingstudio</code>.</li>
 </ul>
 <h2 id="wiring">Wiring</h2>
 <ul>
@@ -3314,7 +3454,8 @@
 <h2 id="behavior">Behavior</h2>
 <p>The board advertises the name from the moment the flow starts. Each message replaces the data, and the board sends
 the new advertisement until the next one. Phones (nRF Connect, for example) and other boards with a
-<a href="../ble-scan/">ble scan</a> node see it without connecting. It doesn't accept connections.</p>
+<a href="../ble-scan/">ble scan</a> node see it without connecting. When the flow also has characteristic or UART nodes, the
+advertisement accepts connections, so phones can connect to them.</p>
 <p>An advertisement holds 31 bytes. The flags take 3, the name its length plus 2, and the data's header 4 (manufacturer
 or 16-bit service) or 18 (128-bit service). The node's status says how many are left for the payload.</p>
 <p>A flow has one ble advertise node. Needs a board with Bluetooth LE: ESP32, ESP32-S3, ESP32-C3 or ESP32-C5.</p>
