@@ -81,10 +81,48 @@ on the board; `characteristic in`'s output follows the encoding. Checked on the 
 
 ### Phase 3 — the board as a central (GATT client)
 
-`ble connect` (config: a peer by address or advertised name), `ble read`, `ble write`, `ble notify` (source).
-Connection loss, reconnect and service discovery make this the largest piece. One deterministic path: connect,
-discover, subscribe, and each step is a named state with one failure line. The node reports `disconnected` and
-retries on a fixed interval. It does not hunt for a different peer.
+Scoped 2026-11-03, after phases 1–2 merged (PRs #6, #8/#9). Proposal, not agreed.
+
+**Nodes.**
+
+| Node | Kind | What it does |
+|---|---|---|
+| `ble peer` (config) | config | The device to connect to: an address (`aa:bb:..`) or a name prefix, plus a connect timeout. One per peer; a flow may have several. |
+| `ble read` | transform | A message in reads a characteristic of the peer; the value goes out, decoded by an encoding (the phase 2 encodings). |
+| `ble write` | sink | Writes `payload` to a characteristic of the peer, with or without response. |
+| `ble notify` | event source | Subscribes to a characteristic's notifications and sends one message per value. |
+
+Each names the `ble peer` config, a service UUID and a characteristic UUID.
+
+**One path per peer, each step a named state** (AGENTS.md, "fail well"). `ts_ble` owns one connection per peer:
+**finding** (scan for the address or name, bounded) → **connecting** (`gap_connect`, bounded by the config's
+timeout) → **discovering** (services, then characteristics, then the notify descriptor; bounded) → **connected**.
+A failed step reports one line naming the peer and the step ("ts-c5: no service 6e400010-… on aa:bb:.."). A lost
+connection goes back to **finding** after a fixed wait (10 s), reported as **disconnected**: a bounded, named
+retry, like MQTT's reconnect, never a search for a different peer. A read or write while not connected is reported
+and dropped, not queued. Every node on a peer shows that peer's state.
+
+**Radio sharing.** The central side shares the radio with phase 1's scan and phase 2's server: one IRQ handler
+(`ts_ble`), one scan (a peer search uses the flow's scan when there is one, else a short scan of its own). ESP32
+NimBLE allows a few connections at once; the compile refuses more peers than the board's limit (to confirm on the
+C5).
+
+**Library (call A).** Phase 1's decision deferred `aioble` to here; PR #7 now lets it be vendored unchanged.
+But `aioble/core.py` creates the radio and claims its IRQ handler at import (`ble = bluetooth.BLE();
+ble.irq(ble_irq)`), so it can't sit beside `ts_ble`: whichever is imported last owns every event, and a flow
+mixing a scan or a GATT server with a central node would break. The two clean options:
+- **(a) Extend `ts_ble` with a GATT client on the raw `bluetooth` module** (recommended). One owner for the radio,
+  as in phases 1–2; nothing vendored; the client is `gap_connect`, `gattc_discover_*`, `gattc_read/write` and the
+  notify descriptor write, with a bounded wait per step: a few hundred lines, tested like `ts_ble` today.
+- **(b) Move all of `ts_ble` onto `aioble`.** Its client is proven, but phases 1–2 would be rebuilt on it, every BLE
+  flow would carry it (~71 KB of source), and it needs Mike's approval to vendor (security-policy §3.7).
+
+**Testing (call B).** A central needs a peripheral to talk to. Options: a second board running phase 2's
+`ble-characteristic-counter-c5` flow (the CYD, a Pico W isn't BLE-enabled here yet), Android nRF Connect's GATT
+server, or a real sensor. A two-board test is the most repeatable.
+
+**Security.** A central connects out to a device the flow names; what comes back is untrusted input (§3.6). No new
+tier: the board accepts nothing it didn't ask for.
 
 ## Cross-cutting
 
