@@ -66,7 +66,7 @@ export interface NativeArchOption {
  * in the same order the brief lists them. */
 export const NATIVE_ARCH_OPTIONS: readonly NativeArchOption[] = [
   { value: "xtensawin", label: "xtensawin — ESP32 / ESP32-S3 (Xtensa)" },
-  { value: "rv32imc", label: "rv32imc — ESP32-C3 (RISC-V)" },
+  { value: "rv32imc", label: "rv32imc — ESP32-C3 / C5 / C6 (RISC-V)" },
   { value: "armv6m", label: "armv6m — RP2040 (Cortex-M0+)" },
   { value: "armv7emsp", label: "armv7emsp — STM32F4 (Cortex-M4F); RP2350 (Cortex-M33, FPU), not hardware-verified" },
   { value: "armv7m", label: "armv7m — RP2350, no-FPU fallback" },
@@ -90,7 +90,8 @@ export function inferNativeArch(chipType: string): NativeArchGuess {
   const s = chipType.toLowerCase();
   // Checked before the plain "esp32" fallback below -- see this file's
   // header for why C3/C6 can't share the Xtensa family's default.
-  if (s.includes("esp32c3") || s.includes("esp32-c3") || s.includes("esp32c6") || s.includes("esp32-c6")) {
+  // C5 added 2026-11-03 (RISC-V too; without it a C5 with no processor file fell through to Xtensa).
+  if (/esp32-?c[356]/.test(s)) {
     return { arch: "rv32imc", confirmed: true };
   }
   if (s.includes("esp32")) {

@@ -25,6 +25,11 @@ describe("inferNativeArch", () => {
     expect(inferNativeArch("ESP32 module (spiram) with ESP32")).toEqual({ arch: "xtensawin", confirmed: true });
   });
 
+  it("maps ESP32-C5 to rv32imc (RISC-V), not the Xtensa fallback", () => {
+    expect(inferNativeArch("ESP32C5 module with ESP32C5")).toEqual({ arch: "rv32imc", confirmed: true });
+    expect(inferNativeArch("board with ESP32-C5")).toEqual({ arch: "rv32imc", confirmed: true });
+  });
+
   it("maps ESP32-S3 to xtensawin, confirmed -- and is not mistaken for the C3/C6 RISC-V case", () => {
     expect(inferNativeArch("board with ESP32S3")).toEqual({ arch: "xtensawin", confirmed: true });
   });

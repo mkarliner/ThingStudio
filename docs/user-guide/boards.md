@@ -82,6 +82,7 @@ In the properties panel, a pin field shows the board's name for that pin, such a
 | ESP32-S2 | 0–21, 26–46 (46 input only) | 27–32 (flash) |
 | ESP32-S3 | 0–21, 26–48 | 27–32 (flash) |
 | ESP32-C3 | 0–21 | 12–17 (flash) |
+| ESP32-C5 | 0–28 | 16–22 (flash and PSRAM) |
 | RP2040 | 0–29 | none |
 | RP2350 | 0–47 (0–29 on the RP2350A) | none |
 | STM32F405 | X1–X22, Y1–Y12 (named pins, not numbers) | none |

@@ -20,3 +20,9 @@ maintenance rule. Scoping and reasoning: `../ble-nodes-scoping.md`.
 - **2026-11-03 — ESP32-C5 is a phase 1 test board.** MicroPython 1.29.0 has `ESP32_GENERIC_C5` with NimBLE on.
   It needs an `esp32-c5` processor file (without one, the C5 resolves to the classic ESP32, the C6 bug in
   `outstanding-items.md`) and a `firmware/builds.json` entry. Mike.
+- **2026-11-03 — `esp32-c5` processor file added.** From ESP-IDF v5.5.1 (`soc_caps.h`, `spi_pins.h`,
+  `uart_pins.h`, `io_mux_reg.h`, the GPIO docs' `esp32c5.inc`) and MicroPython's esp32 port (`machine_adc.c`,
+  `mpconfigport.h`): GPIO 0-28, flash/PSRAM 16-22, strapping 2/7/25/27/28, USB 13/14, UART0 11/12, ADC1 only on
+  1-6, one SPI bus (IO_MUX 6/7/2) and one I2C bus, images at 0x2000. No `builds.json` entry yet: its SHA-256 has
+  to come from micropython.org, which this session could not reach. Mike's board reports as an
+  "ESP32-C5-340X" (likely a CH340X USB-serial chip); a board file waits for its schematic.

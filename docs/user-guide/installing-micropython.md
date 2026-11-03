@@ -57,6 +57,7 @@ exact board if it's listed, or the generic build for your chip:
 | ESP32-S2 | `ESP32_GENERIC_S2` | `.bin` |
 | ESP32-S3 | `ESP32_GENERIC_S3` | `.bin` |
 | ESP32-C3 | `ESP32_GENERIC_C3` | `.bin` |
+| ESP32-C5 | `ESP32_GENERIC_C5` | `.bin` |
 | RP2040 (Pico, Pico W) | `RPI_PICO`, `RPI_PICO_W` | `.uf2` |
 | RP2350 (Pico 2, Pico 2 W) | `RPI_PICO2`, `RPI_PICO2_W` | `.uf2` |
 
@@ -94,6 +95,7 @@ esptool.py --port PORT --baud 460800 write_flash ADDRESS firmware.bin
 | --- | --- |
 | ESP32, ESP32-S2 | `0x1000` |
 | ESP32-S3, ESP32-C3 | `0` |
+| ESP32-C5 | `0x2000` |
 
 `PORT` is the board's serial port. On macOS and Linux it starts with `/dev/`, on Windows it's `COM` followed by a
 number. To find it, run `esptool.py flash_id` with no `--port`: esptool searches for the board and prints the port
