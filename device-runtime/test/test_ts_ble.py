@@ -42,6 +42,35 @@ class _FakeBLE:
     def gap_advertise(self, interval_us, adv_data=None, connectable=True):
         self.calls.append(("gap_advertise", interval_us, adv_data, connectable))
 
+    def gatts_register_services(self, services):
+        self.calls.append(("register", services))
+        self.values = {}
+        out = []
+        h = 1
+        for _svc, chars in services:
+            hs = []
+            for _c in chars:
+                h += 2
+                hs.append(h)
+                self.values[h] = b""
+            out.append(tuple(hs))
+        return tuple(out)
+
+    def gatts_set_buffer(self, handle, size, append=False):
+        pass
+
+    def gatts_write(self, handle, data):
+        self.values[handle] = bytes(data)
+
+    def gatts_read(self, handle):
+        return self.values[handle]
+
+    def gatts_notify(self, conn, handle, data=None):
+        self.calls.append(("notify", conn, handle, self.values[handle] if data is None else bytes(data)))
+
+    def config(self, *args, **kwargs):
+        return None
+
     def deliver(self, addr, adv, rssi=-50, adv_type=0):
         a = bytearray(addr)
         d = bytearray(adv)
@@ -55,7 +84,14 @@ class _FakeBLE:
 _BLE = _FakeBLE()
 
 
+class _UUID:
+    def __init__(self, value):
+        self.value = value
+
+
 class _BluetoothModule:
+    UUID = _UUID
+
     @staticmethod
     def BLE():
         return _BLE
@@ -154,6 +190,48 @@ def test_different_scan_settings_refused():
     assert False, "no error"
 
 
+def test_encode_and_decode_values():
+    assert ts_ble.encode("int16", -5) == b"\xfb\xff"
+    assert ts_ble.decode_value("int16", b"\xfb\xff") == -5
+    assert ts_ble.encode("uint8", 255) == b"\xff"
+    assert ts_ble.encode("text", 21.5) == b"21.5"
+    assert abs(ts_ble.decode_value("float32", ts_ble.encode("float32", 21.5)) - 21.5) < 1e-6
+    assert ts_ble.decode_value("text", b"hi") == "hi"
+    for enc, bad in (("int16", 70000), ("uint8", -1), ("int8", "abc"), ("uint32", True)):
+        try:
+            ts_ble.encode(enc, bad)
+        except ValueError:
+            continue
+        assert False, "no error for %s %r" % (enc, bad)
+    for enc, data in (("int16", b"\x01"), ("text", b"\xff\xfe")):
+        try:
+            ts_ble.decode_value(enc, data)
+        except ValueError:
+            continue
+        assert False, "no error for %s %r" % (enc, data)
+
+
+def test_gatt_registers_once_and_routes_writes():
+    svc = "6e400010-b5a3-f393-e0a9-e50e24dcca9e"
+    char = "6e400011-b5a3-f393-e0a9-e50e24dcca9e"
+    table = [[svc, [[char, 0x1E]]], [ts_ble.NUS_SERVICE, [[ts_ble.NUS_RX, 0x0C], [ts_ble.NUS_TX, 0x10]]]]
+    r = ts_ble.radio()
+    g = r.gatt(table, "ts")
+    assert r.gatt(table, "ts") is g
+    assert len([c for c in _BLE.calls if c[0] == "register"]) == 1
+    w = g.on_writes("n1", svc, char)
+    h = g.handle(svc, char)
+    _BLE.handler(1, (5, 1, memoryview(bytearray(6))))
+    _BLE.values[h] = b"\x01\x02"
+    _BLE.handler(3, (5, h))
+    assert w.queue == [(b"\x01\x02", 5)], w.queue
+    assert g.write("n2", svc, char, b"\x09", True) == 1
+    assert g.send_chunks("n3", ts_ble.NUS_SERVICE, ts_ble.NUS_TX, b"x" * 45) == 3
+    _BLE.handler(2, (5, 1, memoryview(bytearray(6))))
+    assert g.conns == {}
+    _redeploy()
+
+
 def test_redeploy_turns_the_radio_off_and_the_next_deploy_starts_fresh():
     r = ts_ble.radio()
     r.scan("n1", 320, 30, False, name_prefix="", addr="", mfr_id=None, svc_uuid="", repeat_ms=0)
@@ -182,6 +260,8 @@ minitest.run(
         test_empty_scan_response_dropped,
         test_repeat_window_uses_ticks,
         test_different_scan_settings_refused,
+        test_encode_and_decode_values,
+        test_gatt_registers_once_and_routes_writes,
         test_redeploy_turns_the_radio_off_and_the_next_deploy_starts_fresh,
     ]
 )

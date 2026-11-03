@@ -73,6 +73,7 @@ under-builds.
 | Content the user chooses to load: a flow file, a package, AI-written code | Defend the host; accept on the board | opening is safe, deploying is trusting (§3.4) |
 | Someone on the board's network | Mitigate | the board password guards deploys (§3.3); the setup AP doesn't reopen by itself (§3.5) |
 | Eavesdropping on the board's WiFi | Accept | the network's encryption is the control (assumption 1) |
+| Someone in Bluetooth range of a board running ble nodes | Accept | advertisements are public; a flow's characteristic and UART nodes accept anyone, unpaired (Mike, 2026-11-03), and the node docs say so. They reach only what the flow exposes, never the board link or deploy (§3.6) |
 | Someone on the backend's network | Defend, when reachable | does not apply today (loopback); posture 2 (§5) |
 | Another local user on the host machine | *open decision 1* | credential files are owner-only, but loopback is reachable by every local user |
 | A compromised upstream we can't pin away (MicroPython itself, GitHub, PyPI) | Mitigate | pinning, hashes, reproducible builds narrow it; the remainder is accepted |
@@ -155,10 +156,13 @@ Each entry: what crosses, the rule, status, stance. "Gap" marks something known 
 - Broker and network secrets are baked into the deployed flow as literals.
 - MQTT is plain TCP (MQTTS deferred, `docs/working-notes/outstanding-items/mqtts-tls-deferred.md`); HTTP is plain.
 - Everything received is untrusted input to the flow.
-- Bluetooth LE (2026-11-03, `ble scan`/`ble advertise`): a received advertisement is untrusted input from anyone in
-  range, with any name or address; `ts_ble` parses it without raising on a malformed one. A sent advertisement is
-  public. Nothing connects yet. The planned GATT server (BLE phase 2) ships unpaired, so anyone in range can write
-  to it: it needs its own row here and a tier before it lands (`decisions/ble-nodes.md`).
+- Bluetooth LE (2026-11-03): a received advertisement (`ble scan`) is untrusted input from anyone in range, with any
+  name or address; `ts_ble` parses it without raising on a malformed one. A sent advertisement is public.
+- The GATT server (BLE phase 2: `ble characteristic in/out`, `ble uart in/out`) is **unpaired**: anyone in range can
+  connect, read every characteristic and write the writable ones -- tier **Accept** in §2, Mike's call. Writes are
+  untrusted input to the flow; `ts_ble` copies and bounds them (244 bytes a write, 20 queued per node, a malformed
+  value reported and dropped). It exposes only the characteristics the flow declares: the board link, deploy and
+  the runtime are not reachable over Bluetooth. Pairing and bonding are a later item (`decisions/ble-nodes.md`).
 
 ### 3.7 Supply chain -- Defend
 

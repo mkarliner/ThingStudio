@@ -209,6 +209,18 @@ export const CONFIG_TYPES: Record<string, ConfigTypeDescriptor> = {
       return `bus ${String(p.bus ?? 0)}: ${pins}`;
     },
   },
+  // BLE (2026-11-03, BLE phase 2): the board's Bluetooth name, one per flow (a board has one radio). Optional: without
+  // one the board is called "thingstudio". Read by the ble_* packages' hooks (core-packages/ble-shared.ts).
+  "thingstudio/config/ble": {
+    type: "thingstudio/config/ble",
+    label: "BLE",
+    singleton: true,
+    fields: [
+      { name: "name", label: "name", kind: "text", help: "What phone apps show, up to 26 bytes. Shorter leaves more room in an advertisement." },
+    ],
+    defaults: { name: "thingstudio" },
+    summarize: (p) => String(p.name ?? ""),
+  },
   // Touch panel (2026-10-09, button rework): the controller, its I2C bus and the panel's geometry, set once. A gui
   // screen names one and polls it itself; a touch_i2c node can name one for raw {x, y}. Using one panel from two
   // places is a compile error (node-library/touch-panel-shared.ts).

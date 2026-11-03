@@ -33,6 +33,9 @@ library (working name `ts_ble`, a flow dependency like `ts_mqtt`) that:
 - registers a cleanup that deactivates the radio on redeploy, since module state survives `cancel_running`.
 
 The ordering point (register every service, then advertise) is the main design risk. Spike it first.
+**Settled 2026-11-03 (phase 2):** the compiler builds the whole flow's table (every GATT node's hook sees
+`ctx.flow.nodes`), every GATT node gets the same sorted table, and the first to start registers it through
+`runtime.shared('ble_gatt', 0, table, ...)`. No runtime barrier, no ordering race.
 
 ## Proposed nodes
 
@@ -69,6 +72,12 @@ it, as two MQTT nodes share a client. An encoding property (`bytes`, `utf8`, `in
 
 The `in`/`out` split follows the existing source/transform/sink model. A single node with an input and an
 external-event output would need a new kind, the same gap `ebutton` already notes for multi-event sources.
+
+**Built 2026-11-03** on branch `ble-phase-2` (`core-packages/ble-characteristic-*.ts`, `ble-uart-*.ts`,
+`ble-shared.ts`; the GATT half of `ts_ble`), with the optional `ble` config node. Differences from the plan above:
+`characteristic out`'s input is `any` (an input socket is typed once, at construction), so its encoding is checked
+on the board; `characteristic in`'s output follows the encoding. Checked on the ESP32-C5-340X the same day
+(`learnings/hardware-bringup-hil-rig.md`).
 
 ### Phase 3 — the board as a central (GATT client)
 

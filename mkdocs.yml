@@ -116,6 +116,11 @@ nav:
       - Bluetooth:
           - ble scan: nodes/ble-scan.md
           - ble advertise: nodes/ble-advertise.md
+          - ble characteristic in: nodes/ble-characteristic-in.md
+          - ble characteristic out: nodes/ble-characteristic-out.md
+          - ble uart in: nodes/ble-uart-in.md
+          - ble uart out: nodes/ble-uart-out.md
+          - BLE config: nodes/ble.md
       - Hardware:
           - interrupt: nodes/interrupt.md
           - eswitch: nodes/eswitch.md

@@ -1,0 +1,89 @@
+{
+  "formatVersion": 1,
+  "flowName": "ble-uart-echo",
+  "notes": "Nordic UART echo on the ESP32-C5-340X. Check: in nRF Connect (or Serial Bluetooth Terminal) connect to ts-c5, open the UART, send a line ending in a newline; the board answers 'echo: <line>', and debug shows the line.",
+  "nodes": [
+    {
+      "id": "1",
+      "type": "thingstudio/ble_uart_in",
+      "properties": {
+        "bleConfigId": "ble1"
+      }
+    },
+    {
+      "id": "2",
+      "type": "thingstudio/function",
+      "properties": {
+        "code": "msg['payload'] = 'echo: ' + msg['payload']\nreturn msg",
+        "outputCount": 1
+      }
+    },
+    {
+      "id": "3",
+      "type": "thingstudio/ble_uart_out",
+      "properties": {
+        "bleConfigId": "ble1"
+      }
+    },
+    {
+      "id": "4",
+      "type": "thingstudio/debug",
+      "properties": {}
+    }
+  ],
+  "edges": [
+    [
+      "1",
+      0,
+      "2",
+      0
+    ],
+    [
+      "2",
+      0,
+      "3",
+      0
+    ],
+    [
+      "1",
+      0,
+      "4",
+      0
+    ]
+  ],
+  "configs": [
+    {
+      "id": "ble1",
+      "type": "thingstudio/config/ble",
+      "properties": {
+        "name": "ts-c5"
+      }
+    }
+  ],
+  "layout": {
+    "1": {
+      "pos": [
+        80,
+        80
+      ]
+    },
+    "2": {
+      "pos": [
+        300,
+        80
+      ]
+    },
+    "3": {
+      "pos": [
+        520,
+        80
+      ]
+    },
+    "4": {
+      "pos": [
+        300,
+        150
+      ]
+    }
+  }
+}

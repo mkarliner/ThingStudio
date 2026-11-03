@@ -3,13 +3,15 @@
 //
 // ble_advertise as a core package (2026-11-03, BLE phase 1: docs/working-notes/ble-nodes-scoping.md). A sink: the
 // board advertises its name from flow start, and each message replaces the manufacturer or service data with
-// msg.payload. Not connectable in phase 1 (phase 2 adds the GATT server). The radio is ts_ble's.
+// msg.payload. The name is the flow's BLE config (phase 2; ble-shared.ts). The advertisement is connectable when the
+// flow has GATT nodes (ts_ble's radio decides). The radio is ts_ble's.
 //
 // The hook checks what is known before deploy: one ble_advertise per flow (the radio sends one advertisement), and
 // that the name and the field's header fit in 31 bytes. The payload's own size is only known at run time; an
 // over-long one is reported naming both sizes and dropped, never raised (a raising sink would end its source's loop).
 
 import type { NodeDescriptor } from "../../compiler/node-descriptor.js";
+import { BLE_CONFIG_FIELD, BLE_NAME_DERIVATION } from "./ble-shared.js";
 
 export const descriptor: NodeDescriptor = {
   type: "thingstudio/ble_advertise",
@@ -31,7 +33,6 @@ export const descriptor: NodeDescriptor = {
     inputs: [{ name: "msg", type: "any" }],
   },
   properties: [
-    { name: "name", label: "name", kind: "text", default: "thingstudio", help: "What phone apps show. Every byte of it is a byte less for the payload." },
     {
       name: "field",
       label: "payload goes in",
@@ -46,23 +47,13 @@ export const descriptor: NodeDescriptor = {
     { name: "mfrId", label: "manufacturer id", kind: "text", default: "0xFFFF", help: "Hex with 0x, or decimal. 0xFFFF is reserved for testing; a product uses its maker's Bluetooth SIG id.", visibleWhen: { field: "field", equals: "manufacturer" } },
     { name: "serviceUuid", label: "service UUID", kind: "text", default: "fcd2", help: "16-bit (fcd2 is BTHome) or 128-bit.", visibleWhen: { field: "field", equals: "service" } },
     { name: "advIntervalMs", label: "interval (ms)", kind: "number", default: 500, min: 20, max: 10240, help: "How often the advertisement is sent. Shorter is found faster and uses more power." },
+    { ...BLE_CONFIG_FIELD, help: "The board's Bluetooth name, which phone apps show. Every byte of it is a byte less for the payload. Without one, the board is called thingstudio." },
     { name: "nodeId", label: "node id", kind: "nodeId", default: "" },
   ],
 };
 
-export const compileHook = `import re
-
+export const compileHook = `${BLE_NAME_DERIVATION}
 _LIMIT = 31
-
-
-def _uuid(text):
-    t = str(text).strip().lower()
-    if t.startswith('0x'):
-        t = t[2:]
-    hexs = t.replace('-', '')
-    if len(hexs) not in (4, 32) or re.match('^[0-9a-f]+$', hexs) is None:
-        return None
-    return hexs
 
 
 def compile(ctx, properties):
@@ -71,11 +62,13 @@ def compile(ctx, properties):
     if others:
         errors.append('only one ble_advertise per flow: the board sends one advertisement (also: ' + ', '.join(others) + ')')
 
-    name = str(properties.get('name') or '')
+    name, err = _ble_name(ctx)
+    if err:
+        return {'errors': [err]}
     field = properties.get('field', 'manufacturer')
     if field not in ('manufacturer', 'service', 'none'):
         errors.append('ble_advertise "payload goes in" must be manufacturer, service or none')
-    out = {'name': name, 'field': field, 'mfrId': None, 'serviceUuid': None}
+    out = {'bleName': name, 'field': field, 'mfrId': None, 'serviceUuid': None}
 
     header = 0
     if field == 'manufacturer':
@@ -90,7 +83,7 @@ def compile(ctx, properties):
         header = 4
     elif field == 'service':
         raw = str(properties.get('serviceUuid') or '').strip()
-        u = _uuid(raw)
+        u = _ble_uuid(raw)
         if u is None:
             errors.append('ble_advertise service UUID "' + raw + '" must be 16-bit (fcd2) or 128-bit hex')
             return {'errors': errors}
@@ -100,8 +93,8 @@ def compile(ctx, properties):
     used = 3 + (2 + len(name.encode()) if name else 0) + header
     if used > _LIMIT:
         errors.append(
-            'ble_advertise name "' + name + '" leaves no room: ' + str(used) + ' of ' + str(_LIMIT) +
-            ' bytes before any payload. Shorten the name')
+            'ble_advertise: the BLE name "' + name + '" leaves no room: ' + str(used) + ' of ' + str(_LIMIT) +
+            ' bytes before any payload. Shorten the name in the BLE config')
     out['payloadRoom'] = _LIMIT - used
 
     try:
@@ -121,7 +114,7 @@ export const python = `import ts_ble
 
 _radio = ts_ble.radio()
 _node_id = properties['nodeId']
-_name = properties['name']
+_name = properties['bleName']
 _field = properties['field']
 _mfr_id = properties['mfrId']
 _svc_uuid = properties['serviceUuid']

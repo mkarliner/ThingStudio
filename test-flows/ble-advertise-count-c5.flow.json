@@ -21,9 +21,7 @@
     {
       "id": "3",
       "type": "thingstudio/ble_advertise",
-      "properties": {
-        "name": "ts-c5"
-      }
+      "properties": {}
     }
   ],
   "edges": [
@@ -59,5 +57,14 @@
         80
       ]
     }
-  }
+  },
+  "configs": [
+    {
+      "id": "ble1",
+      "type": "thingstudio/config/ble",
+      "properties": {
+        "name": "ts-c5"
+      }
+    }
+  ]
 }

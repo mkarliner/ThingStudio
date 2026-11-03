@@ -1,0 +1,88 @@
+{
+  "formatVersion": 1,
+  "flowName": "ble-characteristic-counter",
+  "notes": "A GATT characteristic on the ESP32-C5-340X: a count every 2 s a phone can read and subscribe to (uint16), and write back. Check in nRF Connect: connect to ts-c5, find service 6e400010-b5a3-f393-e0a9-e50e24dcca9e, subscribe to 6e400011-b5a3-f393-e0a9-e50e24dcca9e and watch it count; write a uint16 to it and debug shows the value.",
+  "nodes": [
+    {
+      "id": "1",
+      "type": "thingstudio/timer",
+      "properties": {
+        "intervalMs": 2000
+      }
+    },
+    {
+      "id": "2",
+      "type": "thingstudio/ble_characteristic_out",
+      "properties": {
+        "serviceUuid": "6e400010-b5a3-f393-e0a9-e50e24dcca9e",
+        "charUuid": "6e400011-b5a3-f393-e0a9-e50e24dcca9e",
+        "encoding": "uint16",
+        "bleConfigId": "ble1"
+      }
+    },
+    {
+      "id": "3",
+      "type": "thingstudio/ble_characteristic_in",
+      "properties": {
+        "serviceUuid": "6e400010-b5a3-f393-e0a9-e50e24dcca9e",
+        "charUuid": "6e400011-b5a3-f393-e0a9-e50e24dcca9e",
+        "encoding": "uint16",
+        "bleConfigId": "ble1"
+      }
+    },
+    {
+      "id": "4",
+      "type": "thingstudio/debug",
+      "properties": {}
+    }
+  ],
+  "edges": [
+    [
+      "1",
+      0,
+      "2",
+      0
+    ],
+    [
+      "3",
+      0,
+      "4",
+      0
+    ]
+  ],
+  "configs": [
+    {
+      "id": "ble1",
+      "type": "thingstudio/config/ble",
+      "properties": {
+        "name": "ts-c5"
+      }
+    }
+  ],
+  "layout": {
+    "1": {
+      "pos": [
+        80,
+        80
+      ]
+    },
+    "2": {
+      "pos": [
+        300,
+        80
+      ]
+    },
+    "3": {
+      "pos": [
+        80,
+        180
+      ]
+    },
+    "4": {
+      "pos": [
+        300,
+        180
+      ]
+    }
+  }
+}

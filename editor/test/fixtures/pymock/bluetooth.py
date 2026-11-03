@@ -7,6 +7,20 @@
 FAIL_ACTIVE = None  # set to an OSError to make active(True) fail, as a board out of memory does
 
 
+class UUID:
+    def __init__(self, value):
+        self.value = value
+
+    def __eq__(self, other):
+        return isinstance(other, UUID) and self.value == other.value
+
+    def __hash__(self):
+        return hash(self.value)
+
+    def __repr__(self):
+        return "UUID(%r)" % (self.value,)
+
+
 class BLE:
     _instance = None
 
@@ -22,6 +36,12 @@ class BLE:
         self.is_active = False
         self.scanning = False
         self.advertising = None
+        self.adv_connectable = None
+        self.services = None
+        self.values = {}  # handle -> bytes
+        self.buffers = {}  # handle -> size
+        self.notified = []  # (conn, handle, bytes)
+        self.mtu = None
 
     def active(self, flag=None):
         if flag is None:
@@ -41,6 +61,9 @@ class BLE:
         self.handler = handler
 
     def config(self, *args, **kwargs):
+        if "mtu" in kwargs:
+            self.mtu = kwargs["mtu"]
+            return None
         if args == ("mac",):
             return (0, b"\xd0\xcf\x13\xf9\xb7\xb2")
         return None
@@ -59,6 +82,35 @@ class BLE:
             raise OSError(19)
         self.calls.append(("gap_advertise", interval_us, None if adv_data is None else bytes(adv_data), connectable))
         self.advertising = None if interval_us is None else bytes(adv_data or b"")
+        self.adv_connectable = None if interval_us is None else connectable
+
+    def gatts_register_services(self, services):
+        if not self.is_active:
+            raise OSError(19)
+        self.calls.append(("gatts_register_services", services))
+        self.services = services
+        out = []
+        h = 1
+        for _svc, chars in services:
+            hs = []
+            for _uuid, _flags in chars:
+                h += 2  # a value handle, then room for its descriptor, as the stack numbers them
+                hs.append(h)
+                self.values[h] = b""
+            out.append(tuple(hs))
+        return tuple(out)
+
+    def gatts_set_buffer(self, handle, size, append=False):
+        self.buffers[handle] = size
+
+    def gatts_write(self, handle, data):
+        self.values[handle] = bytes(data)
+
+    def gatts_read(self, handle):
+        return self.values[handle]
+
+    def gatts_notify(self, conn, handle, data=None):
+        self.notified.append((conn, handle, self.values[handle] if data is None else bytes(data)))
 
     # -- test helpers --
 
@@ -73,6 +125,22 @@ class BLE:
             buf_addr[i] = 0xEE
         for i in range(len(buf_adv)):
             buf_adv[i] = 0xEE
+
+    def connect(self, conn=1, addr=b"\x11\x22\x33\x44\x55\x66"):
+        """A phone connects (event 1); the stack stops advertising."""
+        self.advertising = None
+        self.handler(1, (conn, 1, memoryview(bytearray(addr))))
+
+    def disconnect(self, conn=1, addr=b"\x11\x22\x33\x44\x55\x66"):
+        self.handler(2, (conn, 1, memoryview(bytearray(addr))))
+
+    def phone_write(self, handle, data, conn=1):
+        """A phone writes a characteristic (event 3): the stack stores the value, then tells the handler."""
+        self.values[handle] = bytes(data)
+        self.handler(3, (conn, handle))
+
+    def mtu_exchanged(self, mtu, conn=1):
+        self.handler(21, (conn, mtu))
 
     def scan_done(self):
         if self.handler is not None:

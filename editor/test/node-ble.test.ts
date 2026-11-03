@@ -15,20 +15,21 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const C5 = "board:esp32-c5-340x";
 
 type N = { id: string; type: string; properties: Record<string, unknown> };
-function flow(nodes: N[], edges: [string, number, string, number][] = []): string {
-  return JSON.stringify({ formatVersion: 1, flowName: "t", nodes, edges, layout: {}, configs: [] });
+function flow(nodes: N[], edges: [string, number, string, number][] = [], configs: unknown[] = []): string {
+  return JSON.stringify({ formatVersion: 1, flowName: "t", nodes, edges, layout: {}, configs });
 }
+const bleName = (name: string) => [{ id: "b", type: "thingstudio/config/ble", properties: { name } }];
 const scan = (id: string, properties: Record<string, unknown> = {}): N => ({ id, type: "thingstudio/ble_scan", properties });
 const adv = (id: string, properties: Record<string, unknown> = {}): N => ({ id, type: "thingstudio/ble_advertise", properties });
 const debug: N = { id: "d", type: "thingstudio/debug", properties: { fullMessage: true } };
 
-function errorsOf(nodes: N[], board = C5, edges: [string, number, string, number][] = []): string[] {
-  return checkFlowText(flow(nodes, edges), { board }).errors.map((e) => e.message);
+function errorsOf(nodes: N[], board = C5, edges: [string, number, string, number][] = [], configs: unknown[] = []): string[] {
+  return checkFlowText(flow(nodes, edges, configs), { board }).errors.map((e) => e.message);
 }
 
 /** Compiles, drops the spawn line, and runs `driver` (Python) after the flow's setup. Returns stdout. */
-function runFlow(nodes: N[], edges: [string, number, string, number][], driver: string): string {
-  const r = checkFlowText(flow(nodes, edges), { board: C5 });
+function runFlow(nodes: N[], edges: [string, number, string, number][], driver: string, configs: unknown[] = []): string {
+  const r = checkFlowText(flow(nodes, edges, configs), { board: C5 });
   expect(r.errors).toEqual([]);
   const source = r.source!.split("\n").filter((l) => !l.startsWith("runtime.spawn(")).join("\n");
   const dir = mkdtempSync(join(tmpdir(), "thingstudio-ble-"));
@@ -65,7 +66,7 @@ describe("ble_scan / ble_advertise compile checks", () => {
 
   it("refuse a second ble_advertise, a name with no room left, and bad ids", () => {
     expect(errorsOf([adv("a1"), adv("a2")])[0]).toMatch(/only one ble_advertise per flow/);
-    expect(errorsOf([adv("a", { name: "a-very-long-device-name-for-ble" })])[0]).toMatch(/leaves no room: 40 of 31 bytes before any payload/);
+    expect(errorsOf([adv("a")], C5, [], bleName("a-very-long-device-name-xx"))[0]).toMatch(/the BLE name "a-very-long-device-name-xx" leaves no room: 35 of 31 bytes before any payload/);
     expect(errorsOf([adv("a", { mfrId: "nope" })])[0]).toMatch(/manufacturer id "nope" must be 0-65535/);
     expect(errorsOf([adv("a", { field: "service", serviceUuid: "xyz" })])).toEqual([expect.stringMatching(/service UUID "xyz" must be 16-bit/)]);
   });
@@ -95,7 +96,7 @@ asyncio.run(main())
 describe("ble_advertise on the board", () => {
   const injectAdv: N[] = [
     { id: "t", type: "thingstudio/inject", properties: { payloadType: "string", payloadValue: "hi" } },
-    adv("a", { name: "ts-c5" }),
+    adv("a"),
   ];
   it("advertises its name from flow start, then each payload as manufacturer data", () => {
     const out = runFlow(injectAdv, [["t", 0, "a", 0]], `
@@ -106,7 +107,7 @@ async def main():
 asyncio.run(main())
 import ts_ble
 print('LAST', ts_ble.decode(B.advertising)['mfr'], ts_ble.decode(B.advertising)['mfrId'], ts_ble.decode(B.advertising)['name'])
-`);
+`, bleName("ts-c5"));
     expect(out).toContain("START [('gap_advertise', 500000, b'\\x02\\x01\\x06\\x06\\tts-c5\\x03\\xff\\xff\\xff', False)]");
     expect(out).toContain("text=advertising, 17 bytes free for the payload");
     expect(out).toContain("LAST b'hi' 65535 ts-c5");
@@ -120,7 +121,7 @@ async def main():
     await _custom_thingstudio_ble_advertise_call({'payload': b'x' * 30, 'topic': ''})
     print('STILL', B.advertising.endswith(b'ok'))
 asyncio.run(main())
-`);
+`, bleName("ts-c5"));
     expect(out).toMatch(/payload is int, not bytes or text; pack a number first \(struct\.pack in a function node\)/);
     expect(out).toMatch(/advertising data is 44 bytes, the limit is 31: shorten the name \(5 bytes\) or the payload \(30 bytes\)/);
     expect(out).toContain("STILL True");
