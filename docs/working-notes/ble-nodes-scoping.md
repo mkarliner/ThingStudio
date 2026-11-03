@@ -1,7 +1,6 @@
 # BLE nodes — scoping
 
-Status: partly decided, 2026-11-03. Calls 2-5 agreed with Mike (`decisions/ble-nodes.md`); call 1, the library,
-is open. Branch: `ble-nodes`.
+Status: decision, 2026-11-03. All five calls agreed with Mike (`decisions/ble-nodes.md`). Branch: `ble-nodes`.
 
 Scope: flow nodes that use the board's Bluetooth Low Energy radio. Not in scope: BLE as a board transport (the
 editor ⇄ board link over Web Bluetooth), which stays the separate v2 item in design doc §10 and
@@ -97,14 +96,15 @@ retries on a fixed interval. It does not hunt for a different peer.
   Re-check if `ts_ble` needs a runtime hook (e.g. for redeploy cleanup ordering).
 - **Tests:** a `bluetooth` mock in `editor/test/fixtures/pymock/` for codegen tests. The unix MicroPython port has
   no `bluetooth`, so the real-MicroPython suite covers only the pure parts (advertising-data encode/decode).
-  Hardware checks: ESP32-S3 and ESP32-C3 against a phone running nRF Connect, plus a Pico W if call 3 says yes.
+  Hardware checks: ESP32-S3, ESP32-C3 and ESP32-C5 against a phone running nRF Connect. The C5 needs a processor
+  file and a firmware entry first (`decisions/ble-nodes.md`).
 - **Docs:** a page per node, the nodes index, `PROPERTY_NOTES`, the regenerated catalog, FAQ entries (BLE + WiFi
   memory; "my phone doesn't see the board"; phones caching GATT tables after a redeploy), and one tutorial.
 
 ## Calls for Mike
 
-1. **Library: open.** Own `ts_ble` on the raw `bluetooth` module, flattened `aioble`, or a catalog change to carry
-   packages.
+1. **Library: own `ts_ble`** on the raw `bluetooth` module for phases 1–2; `aioble` reconsidered at phase 3. The
+   catalog's package limit is fixed separately and soon (`outstanding-items/dependency-catalog-packages.md`).
 2. **Phasing: agreed.** Phase 1 (scan + advertise) ships on its own, then phase 2, then phase 3.
 3. **Pico W: not yet.** ESP32 family only in this work.
 4. **Unpaired GATT server: agreed** for phase 2, with a documented warning; pairing deferred.

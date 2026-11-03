@@ -337,5 +337,5 @@ runtime change touches `ts_wifi` anyway (Mike, 2026-11-01, having hit the idle-b
 ## BLE nodes
 
 BLE flow nodes ship in phases: broadcast first (scan, advertise), then the board as a GATT peripheral (unpaired,
-with a documented warning), then central. ESP32 family only for now; Pico W later. Library choice still open
-(2026-11-03). 1 entry: `docs/working-notes/decisions/ble-nodes.md`.
+with a documented warning), then central. ESP32 family (C5 included) only for now; Pico W later. Own `ts_ble` on the raw `bluetooth`
+module, not `aioble` (2026-11-03). 1 entry: `docs/working-notes/decisions/ble-nodes.md`.
