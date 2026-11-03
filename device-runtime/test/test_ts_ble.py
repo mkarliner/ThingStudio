@@ -40,10 +40,10 @@ class _FakeBLE:
     def gap_advertise(self, interval_us, adv_data=None, connectable=True):
         self.calls.append(("gap_advertise", interval_us, adv_data, connectable))
 
-    def deliver(self, addr, adv, rssi=-50):
+    def deliver(self, addr, adv, rssi=-50, adv_type=0):
         a = bytearray(addr)
         d = bytearray(adv)
-        self.handler(5, (0, memoryview(a), 0, rssi, memoryview(d)))
+        self.handler(5, (0, memoryview(a), adv_type, rssi, memoryview(d)))
         for i in range(len(a)):
             a[i] = 0xEE
         for i in range(len(d)):
@@ -118,6 +118,17 @@ def test_scan_copies_filters_and_queues():
     _redeploy()
 
 
+def test_empty_scan_response_dropped():
+    r = ts_ble.radio()
+    s = r.scan("n1", 320, 30, True, name_prefix="", addr="", mfr_id=None, svc_uuid="", repeat_ms=0)
+    _BLE.deliver(MAC, ts_ble.build_adv("x"), adv_type=0)
+    _BLE.deliver(MAC, b"", adv_type=4)
+    _BLE.deliver(MAC, ts_ble.build_adv("rsp"), adv_type=4)
+    assert len(s.queue) == 2, len(s.queue)
+    assert s.queue[1]["scanResponse"] is True and s.queue[1]["connectable"] is None, s.queue[1]
+    _redeploy()
+
+
 def test_repeat_window_uses_ticks():
     r = ts_ble.radio()
     s = r.scan("n1", 320, 30, False, name_prefix="", addr="", mfr_id=None, svc_uuid="", repeat_ms=60000)
@@ -158,6 +169,7 @@ minitest.run(
         test_over_limit_names_the_sizes,
         test_malformed_advertising_data_never_raises,
         test_scan_copies_filters_and_queues,
+        test_empty_scan_response_dropped,
         test_repeat_window_uses_ticks,
         test_different_scan_settings_refused,
         test_redeploy_turns_the_radio_off_and_the_next_deploy_starts_fresh,

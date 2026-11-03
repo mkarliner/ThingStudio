@@ -18,6 +18,10 @@ Listens for Bluetooth LE advertisements, such as beacons and BLE sensors, and se
 
 The filters combine: an advertisement must pass every one that is set.
 
+With **active scan** on, a device's scan response arrives as a second message, usually a few milliseconds after its
+advertisement, with `scanResponse` set. That's where most devices put their name. Empty scan responses are
+dropped.
+
 ## Wiring
 
 - **Output** — `payload` is the advertising data as bytes. The message also carries:
@@ -27,7 +31,8 @@ The filters combine: an advertisement must pass every one that is set.
 | `addr` | the sender's address, `aa:bb:cc:dd:ee:ff` |
 | `addrType` | `public` or `random` (phones use random addresses that change) |
 | `rssi` | signal strength in dBm, such as `-60` |
-| `connectable` | whether the device accepts connections |
+| `connectable` | whether the device accepts connections; `None` for a scan response |
+| `scanResponse` | `True` for a device's reply to an active scan, sent as its own message |
 | `name` | the advertised name, or `''` |
 | `mfrId`, `mfr` | the manufacturer id and the bytes after it, or `None` and `b''` |
 | `svcData` | service data, by UUID: `{'fcd2': b'...'}` |

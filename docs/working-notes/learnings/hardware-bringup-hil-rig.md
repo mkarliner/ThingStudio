@@ -265,3 +265,8 @@ committed -- if this VM stays in the loop, `install.sh` should grow the same sin
   BLE checked at the REPL on it the same day: `bluetooth.BLE().active(True)`, `config('mac')` -> `(0, <6 bytes>)`
   (public address), a 5 s `gap_scan` at 30 ms interval/window saw 12 devices (-31 to -50 dBm). The raw
   `bluetooth` module works on the C5's generic 1.29.0 build.
+- **BLE phase 1 on the ESP32-C5-340X (2026-11-03): `ble scan` works on hardware.** Active scan, defaults, into
+  debug: phones (random addresses), Apple (mfr 76), Google Fast Pair (`fe9f`), `fcf1` service data, -37 to -82 dBm.
+  Every connectable advertisement was followed ~17 ms later by an empty scan response (adv_type 4) from the same
+  address, which phase 1 sent on as a message with `payload b''` and `connectable False`. Fixed the same day:
+  `ts_ble` drops empty scan responses, and a non-empty one carries `scanResponse True`, `connectable None`.

@@ -28,6 +28,10 @@ from micropython import const
 _IRQ_SCAN_RESULT = const(5)
 _IRQ_SCAN_DONE = const(6)
 
+# Advertising event types in a scan result: 0 ADV_IND and 1 ADV_DIRECT_IND accept connections, 2 ADV_SCAN_IND and
+# 3 ADV_NONCONN_IND don't, 4 SCAN_RSP is a reply to an active scan's request.
+_SCAN_RSP = const(4)
+
 # Advertising data types (Bluetooth Core Spec Supplement, part A).
 _ADV_FLAGS = const(0x01)
 _ADV_UUID16_SOME = const(0x02)
@@ -193,6 +197,10 @@ class Scanner:
         self.flag = runtime.asyncio.ThreadSafeFlag()
 
     def offer(self, addr_type, addr, adv_type, rssi, adv):
+        # An empty scan response carries nothing a flow can use; many devices send one to every active scan
+        # (seen on the ESP32-C5, 2026-11-03: one after each connectable advertisement, ~17 ms later).
+        if adv_type == _SCAN_RSP and not adv:
+            return
         a = addr_str(addr)
         if self.addr and a != self.addr:
             return
@@ -216,7 +224,9 @@ class Scanner:
             "addr": a,
             "addrType": "public" if addr_type == 0 else "random",
             "rssi": rssi,
-            "connectable": adv_type in (0, 1),
+            # A scan response doesn't say whether the device accepts connections; its advertisement did.
+            "connectable": None if adv_type == _SCAN_RSP else adv_type in (0, 1),
+            "scanResponse": adv_type == _SCAN_RSP,
             "name": d["name"],
             "mfrId": d["mfrId"],
             "mfr": d["mfr"],

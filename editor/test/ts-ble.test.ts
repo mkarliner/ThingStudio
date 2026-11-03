@@ -111,6 +111,22 @@ print('ADDR', byaddr.queue[0]['addr'], 'SVC', bysvc.queue[0]['svcData'])
     expect(out).toContain("ADDR a4:c1:38:00:00:01 SVC {'fcd2': b'@'}");
   });
 
+  it("drops an empty scan response, and marks a non-empty one (connectable unknown)", () => {
+    const out = run(`
+r = ts_ble.radio()
+s = r.scan('n1', 320, 30, True, name_prefix='', addr='', mfr_id=None, svc_uuid='', repeat_ms=0)
+B.deliver(MAC, ts_ble.build_adv('', mfr_id=76, mfr=b'\\x10'), adv_type=0)
+B.deliver(MAC, b'', adv_type=4)
+B.deliver(MAC, ts_ble.build_adv('watch'), adv_type=4)
+print('LEN', len(s.queue))
+print('FIRST', s.queue[0]['scanResponse'], s.queue[0]['connectable'])
+print('RSP', s.queue[1]['scanResponse'], s.queue[1]['connectable'], s.queue[1]['name'])
+`);
+    expect(out).toContain("LEN 2");
+    expect(out).toContain("FIRST False True");
+    expect(out).toContain("RSP True None watch");
+  });
+
   it("drops a repeat of the same advertisement inside the repeat window, but not a changed one", () => {
     const out = run(`
 r = ts_ble.radio()

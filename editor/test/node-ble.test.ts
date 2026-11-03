@@ -87,7 +87,7 @@ asyncio.run(main())
 `);
     expect(out).toContain("SCAN [('gap_scan', 0, 320000, 30000, False)]");
     expect(out).toContain("NODE_STATUS node=s state=connected text=scanning");
-    expect(out).toMatch(/DEBUG node=d msg=\{'payload': b'[^']*', 'topic': '', 'addr': 'd0:cf:13:f9:b7:b2', 'addrType': 'public', 'rssi': -48, 'connectable': True, 'name': 'ruuvi', 'mfrId': 1177, 'mfr': b'\\x05\\x01'/);
+    expect(out).toMatch(/DEBUG node=d msg=\{'payload': b'[^']*', 'topic': '', 'addr': 'd0:cf:13:f9:b7:b2', 'addrType': 'public', 'rssi': -48, 'connectable': True, 'scanResponse': False, 'name': 'ruuvi', 'mfrId': 1177, 'mfr': b'\\x05\\x01'/);
     expect(out).not.toContain("phone");
   });
 });
