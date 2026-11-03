@@ -25,4 +25,6 @@ maintenance rule. Scoping and reasoning: `../ble-nodes-scoping.md`.
   `mpconfigport.h`): GPIO 0-28, flash/PSRAM 16-22, strapping 2/7/25/27/28, USB 13/14, UART0 11/12, ADC1 only on
   1-6, one SPI bus (IO_MUX 6/7/2) and one I2C bus, images at 0x2000. No `builds.json` entry yet: its SHA-256 has
   to come from micropython.org, which this session could not reach. Mike's board reports as an
-  "ESP32-C5-340X" (likely a CH340X USB-serial chip); a board file waits for its schematic.
+  "ESP32-C5-340X" (silkscreen ESP32-C5-KITC-A V1.2, Huizhou Youshide). Board file `esp32-c5-340x` added the
+  same day from the maker's manual PS-C5-340X-001 V1.0: CH340E on UART0 (left USB-C), native USB (right), WS2812
+  on GPIO 27, BOOT on 28, and 3 and 26 also strapping per the manual (ESP-IDF's GPIO docs don't list them).
