@@ -995,7 +995,35 @@
   <span class="md-ellipsis">
     
   
-    Blink from your network
+    Web Blink
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/blink-from-anywhere/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Blink from anywhere
   
 
     
@@ -1111,34 +1139,6 @@
     
   
     Editor in depth
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../gui-layout/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Laying out a display
   
 
     
@@ -3215,14 +3215,16 @@ format itself is in <a href="../custom-nodes/">Writing custom nodes</a>.</p>
 and the humidity in <code>msg['humidity']</code>.</p>
 <h2 id="ports">Ports</h2>
 <p>Port types are <code>int</code>, <code>number</code>, <code>bool</code>, <code>string</code>, <code>bytes</code> and <code>any</code>, the same as built-in nodes, with the same wire
-checks. A declared output type must match what the node puts in <code>payload</code>. Use <code>any</code> when unsure. A custom node has
-one input and one output: a source has the output, a sink the input.</p>
+checks. A declared output type must match what the node puts in <code>payload</code>. Use <code>any</code> when unsure. The ports follow
+the kind: a source has one output, a transform one input and one or more outputs, and a sink one input. A sink with
+<code>eventSource</code> set also has one output; see <a href="../custom-nodes/#two-faced-nodes">Two-faced nodes</a>.</p>
 <h2 id="kind">Kind</h2>
 <p>Every node is one of three kinds:</p>
 <ul>
-<li><strong>source</strong> — makes its own messages, on the <code>intervalMs</code> schedule.</li>
-<li><strong>transform</strong> — one message in, one out. Return the message, or <code>None</code> to stop it.</li>
-<li><strong>sink</strong> — consumes a message and produces nothing.</li>
+<li><strong>source</strong> — makes its own messages: on the <code>intervalMs</code> schedule, when an event fires (<code>eventSource</code>), or once when
+  the flow starts (<code>runOnce</code>).</li>
+<li><strong>transform</strong> — one message in, one or more out. Return the message, or <code>None</code> to stop it.</li>
+<li><strong>sink</strong> — consumes a message and produces nothing, unless it is two-faced.</li>
 </ul>
 <h2 id="errors">Errors</h2>
 <p>A runtime error in your Python is reported from the board, attributed to your node. A <code>transform</code> that returns
@@ -3231,7 +3233,8 @@ in Writing custom nodes.</p>
 <h2 id="limits">Limits</h2>
 <p>A custom node has the following limits:</p>
 <ul>
-<li>A source's <code>emit</code> runs on a timer, not on an external event — there are no event-driven custom sources.</li>
+<li>A polled source's <code>emit</code> runs on a timer. To react to an external event, use an event-driven source: see
+  <a href="../custom-nodes/#event-driven-sources">Event-driven sources</a>.</li>
 <li>Two instances of the same custom node get independent setup, so don't put two on the same physical resource, such
   as the same pin.</li>
 <li>Your Python runs with the same trust as the <code>function</code> node. Read a package before you put it in the folder.</li>

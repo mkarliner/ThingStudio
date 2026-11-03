@@ -33,14 +33,14 @@
 
 - [Overview](https://docs.thingstudio.net/tutorials/): Getting started ends with a blinking LED.
 - [Example flows](https://docs.thingstudio.net/examples/): Flows to open with **File → Open…** and make your own.
-- [Two more blinks](https://docs.thingstudio.net/tutorials/two-more-blinks/): You have a blinking LED from Blink an LED: timer, function, gpio out, with the function turning the timer's count into on and off.
-- [Blink from your network](https://docs.thingstudio.net/tutorials/blink-from-your-network/): The same LED, driven from a browser: an http in node runs a web server on the board, and each request toggles the LED.
+- [Two more blinks](https://docs.thingstudio.net/tutorials/two-more-blinks/): If you've followed the steps in Getting started you'll now have a board with a blinking LED.
+- [Web Blink](https://docs.thingstudio.net/tutorials/blink-from-your-network/): If you've worked through Two more blinks, you have a board whose LED blinks on a timer.
+- [Blink from anywhere](https://docs.thingstudio.net/tutorials/blink-from-anywhere/): If you've worked through Web Blink, you have a board on your WiFi that switches its LED when a browser on your network asks.
 - [A sensor display](https://docs.thingstudio.net/sensor-display/): This tutorial is being reworked.
 
 ## Building flows
 
 - [Editor in depth](https://docs.thingstudio.net/working-in-the-editor/): Every port has a type: int, number, bool, string, bytes or any.
-- [Laying out a display](https://docs.thingstudio.net/gui-layout/): How a gui screen turns cells into a picture: a fixed panel, no windows, and a layout worked out when the flow compiles.
 - [Flow lifecycle](https://docs.thingstudio.net/flow-lifecycle/): How a flow is saved, opened, deployed and disconnected.
 - [The Thingstudio folder](https://docs.thingstudio.net/thingstudio-folder/): Thingstudio keeps its own files in one folder on your computer:
 

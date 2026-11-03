@@ -1061,6 +1061,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#blink-from-anywhereflowjson" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        blink-from-anywhere.flow.json
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#basic-http-requestflowjson" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1182,7 +1193,35 @@
   <span class="md-ellipsis">
     
   
-    Blink from your network
+    Web Blink
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/blink-from-anywhere/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Blink from anywhere
   
 
     
@@ -1298,34 +1337,6 @@
     
   
     Editor in depth
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../gui-layout/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Laying out a display
   
 
     
@@ -3275,6 +3286,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#blink-from-anywhereflowjson" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        blink-from-anywhere.flow.json
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#basic-http-requestflowjson" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3368,7 +3390,7 @@
 <h1 id="example-flows">Example flows</h1>
 <p>Flows to open with <strong>File → Open…</strong> and make your own. Open the file rather than copying a flow from a page: pick it
 from the examples folder, change what is yours (the pin, the credentials, the board), and deploy. This is a map of
-what each one shows and what to change first; the tutorials walk the first three step by step.</p>
+what each one shows and what to change first; the tutorials walk the first four step by step.</p>
 <h2 id="where-the-folder-is">Where the folder is</h2>
 <p>Every install has an <code>examples</code> folder. Where it is depends on how you installed:</p>
 <table>
@@ -3427,11 +3449,23 @@ next level. Walked by <a href="../tutorials/two-more-blinks/">Two more blinks</a
 <h3 id="http-blinkflowjson"><code>http-blink.flow.json</code></h3>
 <p>The same LED, toggled from a browser. An <code>http in</code> node serves <code>/toggle</code> on port 9999, a <code>function</code> flips the LED
 and builds the reply, and <code>http response</code> answers the browser. <code>wifi status</code> and <code>debug</code> show the connection. It
-names a WiFi network, <code>tutorial wifi</code>. Walked by <a href="../tutorials/blink-from-your-network/">Blink from your network</a>.</p>
+names a WiFi network, <code>tutorial wifi</code>. Walked by <a href="../tutorials/blink-from-your-network/">Web Blink</a>.</p>
 <ul>
 <li><strong>path</strong> and <strong>port</strong> on <a href="../nodes/http-in/">http in</a>.</li>
 <li>The reply text in the function's <strong>code</strong> (<code>'LED on'</code> and <code>'LED off'</code>).</li>
 <li><strong>poll interval (ms)</strong> on <a href="../nodes/wifi-status/">wifi status</a>.</li>
+</ul>
+<h3 id="blink-from-anywhereflowjson"><code>blink-from-anywhere.flow.json</code></h3>
+<p>The same LED through an MQTT broker. Clicking <code>inject</code> publishes <code>pressed</code> to a <code>button</code> topic, and <code>mqtt subscribe</code>
+on an <code>led</code> topic feeds a <code>function</code> that turns <code>on</code>, <code>1</code> or <code>true</code> into true for <code>gpio out</code>; <code>debug</code> prints what
+arrives. The file names a WiFi network (<code>tutorial wifi</code>) and a broker (<code>test-mosquitto</code>). Its topics start
+<code>thingstudio/change-this-number/</code>: replace that number in both before you deploy, because the broker is public. Walked
+by <a href="../tutorials/blink-from-anywhere/">Blink from anywhere</a>.</p>
+<ul>
+<li>The number in both <strong>topic</strong> fields, on <a href="../nodes/mqtt-publish/">mqtt publish</a> and
+  <a href="../nodes/mqtt-subscribe/">mqtt subscribe</a>.</li>
+<li><strong>host</strong> and <strong>port</strong> in the broker form, to use a broker on your own network.</li>
+<li>The <a href="../nodes/function/">function</a> node's <strong>code</strong>, which decides which messages count as on.</li>
 </ul>
 <h3 id="basic-http-requestflowjson"><code>basic-http-request.flow.json</code></h3>
 <p>Fetches a web page from the board: clicking the <code>inject</code> node makes <code>http request</code> GET the URL, and <code>debug</code> prints

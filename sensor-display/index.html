@@ -13,7 +13,7 @@
         <link rel="canonical" href="https://docs.thingstudio.net/sensor-display/">
       
       
-        <link rel="prev" href="../tutorials/blink-from-your-network/">
+        <link rel="prev" href="../tutorials/blink-from-anywhere/">
       
       
         <link rel="next" href="../working-in-the-editor/">
@@ -997,7 +997,35 @@
   <span class="md-ellipsis">
     
   
-    Blink from your network
+    Web Blink
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/blink-from-anywhere/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Blink from anywhere
   
 
     
@@ -1259,34 +1287,6 @@
     
   
     Editor in depth
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../gui-layout/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Laying out a display
   
 
     
@@ -3293,8 +3293,11 @@
 <p>This tutorial is being reworked. The example flow runs, but some steps may not match the editor. The GUI nodes it
 uses are provisional; see <a href="../nodes/gui/">GUI nodes</a>.</p>
 </div>
-<p>Build a three-page touch display: the room's temperature, humidity and pressure with their recent history, and a
-clock. The flow also publishes the readings over MQTT.</p>
+<p>If you've followed <a href="../getting-started/">Getting started</a>, you've driven an LED from a flow. This tutorial moves on to
+a sensor and a screen. You'll read temperature, humidity and pressure from an I2C sensor, show them with their recent
+history on a three-page touch display, and publish them over MQTT. It's a separate project from the blink tutorials,
+with its own parts, listed under What you need.</p>
+<p>The flow is a <strong>bme280</strong> sensor feeding GUI nodes that draw the readings, with an <strong>mqtt publish</strong> that sends them on.</p>
 <p>The finished flow is in the Thingstudio repository:
 <a href="https://github.com/mkarliner/ThingStudio/blob/main/examples/gui-headliner-sensor-freenove-s3-4in.flow.json"><code>examples/gui-headliner-sensor-freenove-s3-4in.flow.json</code></a>.
 Open it in one of two ways:</p>
@@ -3407,8 +3410,8 @@ the pressure, for its journal. Output 5 says the sensor is alive.</p>
    function's outputs 1, 2, 3 and 5 to them. In each readout, set <strong>units</strong>, <strong>decimals</strong>, <strong>lowest value</strong> and
    <strong>highest value</strong>.
 5. Lay out the pages: select the gui screen and use the page outline in its properties to add rows of text and
-   readouts. See <a href="../nodes/gui/#laying-out-pages">Laying out pages</a>, and <a href="../gui-layout/">Laying out a display</a> for
-   why the layout is fixed when the flow compiles.</p>
+   readouts. See <a href="../nodes/gui/#laying-out-pages">Laying out pages</a>, which also says why the layout is fixed when the
+   flow compiles.</p>
 </li>
 </ol>
 <p>Set <strong>stale after</strong> on the readouts and the light. A reading that stops arriving is then dimmed, so a dead sensor

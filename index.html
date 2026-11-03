@@ -314,6 +314,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#who-thingstudio-is-for-and-who-it-isnt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Who ThingStudio is for, and who it isn't
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#whats-different-about-programming-with-thingstudio" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -336,10 +347,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#your-own-python" class="md-nav__link">
+  <a href="#including-your-own-code" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Your own Python
+        Including your own code
       
     </span>
   </a>
@@ -1117,7 +1128,35 @@
   <span class="md-ellipsis">
     
   
-    Blink from your network
+    Web Blink
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="tutorials/blink-from-anywhere/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Blink from anywhere
   
 
     
@@ -1233,34 +1272,6 @@
     
   
     Editor in depth
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="gui-layout/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Laying out a display
   
 
     
@@ -3143,6 +3154,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#who-thingstudio-is-for-and-who-it-isnt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Who ThingStudio is for, and who it isn't
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#whats-different-about-programming-with-thingstudio" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3165,10 +3187,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#your-own-python" class="md-nav__link">
+  <a href="#including-your-own-code" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Your own Python
+        Including your own code
       
     </span>
   </a>
@@ -3244,8 +3266,8 @@
 node-based editor in your web browser. Nodes are functional blocks, and wires carry data between them. The design is
 inspired by <a href="https://nodered.org/">Node-RED</a>.</p>
 <p>Thingstudio converts the flow to <a href="https://micropython.org/">MicroPython</a>, a version of Python for microcontrollers,
-compiles it and sends it to your board. The flow is saved on the board. It runs without the editor connected, and
-starts again after a reset or power cycle.</p>
+compiles it, and sends it to your board. The flow is saved on the board. It will then run without the editor connected, and
+will start again after a reset or power cycle.</p>
 <figure>
   <a href="images/editor.png"><img alt="The Thingstudio editor, showing a three-node flow: timer, function and gpio out" src="images/editor.png" /></a><figcaption>The editor: nodes to drag in on the left, your flow in the middle, and on the right the selected
   node's settings and the board's console. Click to see it full size. <a href="editor-tour/">Tour the editor</a> labels every
@@ -3253,7 +3275,7 @@ starts again after a reset or power cycle.</p>
 </figure>
 <div class="admonition tip">
 <p class="admonition-title">For the impatient</p>
-<p>The whole path to a running flow, reading nothing else:</p>
+<p>If you read nothing else, read this:</p>
 <ol>
 <li><a href="getting-started/#step-1-install-thingstudio">Install Thingstudio</a> and start it. The editor
    opens in your browser.</li>
@@ -3267,7 +3289,7 @@ starts again after a reset or power cycle.</p>
 </ol>
 <p>When something doesn't work, <a href="debugging/">Debugging</a> and the <a href="faq/">FAQ</a> go by what you see on screen.</p>
 </div>
-<p>In practice, that means:</p>
+<p>ThingStudio is designed to be private, and as open and hackable as possible:</p>
 <ul>
 <li><strong>Local dev.</strong> Development happens locally; there is no cloud service.</li>
 <li><strong>Works offline.</strong> Once installed, it needs no internet connection, docs included.</li>
@@ -3291,6 +3313,9 @@ starts again after a reset or power cycle.</p>
 <li><a href="coming-from/arduino/">Arduino and C</a></li>
 </ul>
 </div>
+<h2 id="who-thingstudio-is-for-and-who-it-isnt">Who ThingStudio is for, and who it isn't</h2>
+<p>ThingStudio is designed for developers with a reasonable amount of programming experience, it doesn't aim to teach programming fundamentals.
+You should also have some level of experience in working with microcontrollers. You don't have to be an EE graduate, but you should be comfortable wiring a breadboard. You should also be able to do basic commands from the terminal or PowerShell.</p>
 <h2 id="whats-different-about-programming-with-thingstudio">What's different about programming with Thingstudio?</h2>
 <p>A typical microcontroller program, in Arduino for example, has a <code>setup()</code> section that runs once at boot, then a
 main loop that runs forever. The loop might:</p>
@@ -3324,24 +3349,23 @@ hold any number of chains, each starting at a source.</p>
 in more detail in <a href="background/flows-and-nodes/">flows, nodes and messages</a>.</p>
 <p>This way of working comes from <a href="background/node-red/">Node-RED</a>, a popular tool for home automation and IoT. In
 Node-RED, flows run on a server or a Raspberry Pi. In Thingstudio, they run on the microcontroller.</p>
-<h2 id="your-own-python">Your own Python</h2>
-<p>The <a href="nodes/">node reference</a> lists the built-in nodes. For anything they don't cover, use a
-<a href="nodes/function/">function</a> node. It runs your Python on each message that arrives:</p>
+<h2 id="including-your-own-code">Including your own code</h2>
+<p>There are a number of ready made functions available built-in <a href="nodes/">nodes</a> . There is also the 
+<a href="nodes/function/">function</a> node, which will take regular MicroPython and runs your it on each message that arrives:</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># payload arrives in degrees C, leaves in degrees F</span>
 <span class="n">msg</span><span class="p">[</span><span class="s1">'payload'</span><span class="p">]</span> <span class="o">=</span> <span class="n">msg</span><span class="p">[</span><span class="s1">'payload'</span><span class="p">]</span> <span class="o">*</span> <span class="mf">1.8</span> <span class="o">+</span> <span class="mi">32</span>
 <span class="k">return</span> <span class="n">msg</span>
 </code></pre></div>
 <p><code>msg</code> is a dict, with the main value in <code>msg['payload']</code>. Return it to pass it on, or return nothing to stop it. A
-function node can also keep state between messages and have more than one output.</p>
+function node can also keep state between messages and have more than one output. The only rule to remember is not to use blocking calls in a function node, that would make the entire flow wait on the operation.</p>
 <p>To reuse code across flows, make it a <a href="custom-nodes/">custom node</a>. A custom node has its own place in the palette
-and its own properties in the property panel. It can transform messages, act on them, or send them on a schedule.</p>
-<p>You can also run Python directly on the board from the editor. See
+and its own properties in the property panel. It can access custom hardware, transform messages, act on them, or send them on a schedule.</p>
+<p>You can also stop the flow and run the python REPL directly on the board from the editor for debugging. See
 <a href="debugging/#commands-and-the-python-prompt">Commands and the Python prompt</a>.</p>
 <h2 id="running-on-the-board">Running on the board</h2>
-<p>The board runs <a href="background/micropython/">MicroPython</a>. You install it once, then Thingstudio adds a runtime of its
-own on top.</p>
-<p>When you click <strong>Deploy</strong>, the editor turns your flow into MicroPython code and compiles it. It sends the result to
-the board over USB or WiFi, and the board swaps it in and starts running it. There's no firmware to flash, so
+<p>The microcontroller runs a <a href="background/micropython/">MicroPython</a> image with a ThingStudio runtime on top. You can flash the image from the editor or use one of your own choosing. The runtime sends the flow to the board and manages running it.  It also sends back status and debugging information. We also provide custom Micropython images with the runtime included, which are more efficient in memory usage.</p>
+<p>When you click <strong>Deploy</strong>, the editor converts your flow into MicroPython and compiles it. It sends the compiled flow to
+the board over USB or WiFi, and the board swaps it in, and starts running it. There's no new firmware to flash, so
 changing a flow and trying it again takes seconds. The board keeps the flow and runs it again after a restart.</p>
 <h2 id="built-on-standard-parts">Built on standard parts</h2>
 <p>Thingstudio tries not to reinvent the wheel.</p>
@@ -3363,7 +3387,7 @@ changing a flow and trying it again takes seconds. The board keeps the flow and 
 <h2 id="next">Next</h2>
 <p><a href="getting-started/">Getting started</a> lists the steps from a new board to a blinking LED, and starts you on the first
 step.</p>
-<p>The docs on <a href="https://docs.thingstudio.net/">docs.thingstudio.net</a> follow the latest code. The docs inside Thingstudio
+<p>The docs on <a href="https://docs.thingstudio.net/">docs.thingstudio.net</a> follow the latest code. The docs installed with Thingstudio
 (<strong>Help → User guide</strong>) match the version you have installed.</p>
 
 

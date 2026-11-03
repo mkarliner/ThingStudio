@@ -1077,7 +1077,35 @@
   <span class="md-ellipsis">
     
   
-    Blink from your network
+    Web Blink
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../blink-from-anywhere/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Blink from anywhere
   
 
     
@@ -1193,34 +1221,6 @@
     
   
     Editor in depth
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../gui-layout/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Laying out a display
   
 
     
@@ -3156,14 +3156,13 @@
 
 
 <h1 id="two-more-blinks">Two more blinks</h1>
-<p>You have a blinking LED from <a href="../../first-flow/">Blink an LED</a>: timer, function, gpio out, with the function
-turning the timer's count into on and off. Two more ways to produce the same blink:</p>
-<ul>
-<li><strong>Read the pin, write it back:</strong> the blink's state lives on the board, in the pin, and the <code>function</code> node runs
-  your own MicroPython to reach it.</li>
-<li><strong>Keep the state in the node:</strong> the state lives inside the <code>function</code> node itself, in <code>context</code>.</li>
-</ul>
-<p>The flow stays the same; only the function's code changes. To start from the finished flow, open
+<p>If you've followed the steps in <a href="../../getting-started/">Getting started</a> you'll now have a board with a blinking LED. This tutorial starts from there and shows you two other methods to get the same effect. In the process you'll directly access the hardware through MicroPython and see how ThingStudio nodes and flows can keep track of past events.</p>
+<p>The <a href="../../first-flow/">Blink an LED</a> flow contained three nodes, a <strong>timer</strong> → <strong>function</strong> → <strong>gpio out</strong>. We'll just be changing the function node in this tutorial.</p>
+<p>The first variant is <strong>Read the pin, write it back</strong>: the blink's state lives on the board, in the pin, and the
+<code>function</code> node runs your own MicroPython to reach it.</p>
+<p>The second variant is <strong>Keep the state in the node</strong>: the state lives inside the <code>function</code> node itself, in
+<code>context</code>.</p>
+<p>You can build this flow up yourself or start from the finished flow,
 <a href="https://github.com/mkarliner/ThingStudio/blob/main/examples/two-more-blinks.flow.json">two-more-blinks.flow.json</a>,
 in the <a href="../../examples/#where-the-folder-is">examples folder</a>, with <strong>File → Open…</strong>. Open the file; don't copy
 it from this page. It carries the first of the two blinks: change <code>15</code> in <code>machine.Pin(15)</code> to your LED's GPIO
@@ -3217,7 +3216,7 @@ needs a function node.</p>
 <h2 id="next">Next</h2>
 <p>The next tutorial, the next job, and the node pages behind the code:</p>
 <ul>
-<li><a href="../blink-from-your-network/">Blink from your network</a> — the next tutorial: the same LED, driven by an <code>http in</code>
+<li><a href="../blink-from-your-network/">Web Blink</a> — the next tutorial: the same LED, driven by an <code>http in</code>
   node from anywhere on your WiFi.</li>
 <li><a href="../../sensor-display/">A sensor display</a> — the next job: read a sensor and show it on a screen.</li>
 <li><a href="../../nodes/gpio-out/">gpio out</a> — what else the node that drives the LED can do.</li>

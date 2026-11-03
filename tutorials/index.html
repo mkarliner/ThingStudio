@@ -1007,7 +1007,35 @@
   <span class="md-ellipsis">
     
   
-    Blink from your network
+    Web Blink
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="blink-from-anywhere/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Blink from anywhere
   
 
     
@@ -1123,34 +1151,6 @@
     
   
     Editor in depth
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../gui-layout/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Laying out a display
   
 
     
@@ -3046,12 +3046,15 @@
 
 <h1 id="tutorials">Tutorials</h1>
 <p><a href="../getting-started/">Getting started</a> ends with a blinking LED. The first two tutorials continue from it, each
-starting from the flow the last one ends with. The third is a separate project.</p>
+starting from the flow the last one ends with. The MQTT tutorial starts a new flow, and the sensor display is a separate
+project.</p>
 <ol>
 <li><a href="two-more-blinks/">Two more blinks</a> — the blink again, two more ways: one with the LED's state on the
    hardware, one keeping it in the <code>function</code> node with <code>context</code>.</li>
-<li><a href="blink-from-your-network/">Blink from your network</a> — the same LED, driven by an <code>http in</code> node arriving over
+<li><a href="blink-from-your-network/">Web Blink</a> — the same LED, driven by an <code>http in</code> node arriving over
    WiFi: putting the board on your network, finding it again, and what an open port on the board means.</li>
+<li><a href="blink-from-anywhere/">Blink from anywhere</a> — the same LED through an MQTT broker: publishing from the board,
+   subscribing to switch it, and why every topic carries a number of your own.</li>
 <li><a href="../sensor-display/">A sensor display</a> — read a sensor and show it on a touch display. It is a work in
    progress.</li>
 </ol>

@@ -995,7 +995,35 @@
   <span class="md-ellipsis">
     
   
-    Blink from your network
+    Web Blink
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials/blink-from-anywhere/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Blink from anywhere
   
 
     
@@ -1111,34 +1139,6 @@
     
   
     Editor in depth
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../gui-layout/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Laying out a display
   
 
     
@@ -3229,7 +3229,9 @@ load it again on this or another <strong>display spi</strong> node instead of re
   colors. The gui screen wired to the display uses this format.</li>
 <li><strong>palette</strong> — 16 RGB565 colors, used by every indexed format (<code>gs4</code> reads all 16, <code>gs2</code> only the first 4, <code>mono</code>
   only the first 2). Shown as swatches under frame format when an indexed format is picked; click one to change it,
-  or <strong>reset</strong> for the built-in colors. Colors are rounded to the nearest the panel can show.</li>
+  or <strong>reset</strong> for the built-in colors. Colors are rounded to the nearest the panel can show. While a
+  <a href="../gui/#themes">gui screen</a> with a theme is wired to the display, the theme supplies the palette and this one is
+  ignored.</li>
 <li><strong>SPI bus</strong> — which hardware SPI peripheral to use. Default 2.</li>
 <li><strong>baudrate</strong> — SPI clock speed. Default 40MHz. On an ESP32, use 27MHz or less unless sck and mosi are the bus's
   fast pins; the compile tells you if the speed is too high for your <a href="../../boards/">board</a>.</li>
@@ -3242,8 +3244,6 @@ load it again on this or another <strong>display spi</strong> node instead of re
   to how the panel is mounted (0 to 3), and <code>xstart</code>/<code>ystart</code> to <code>-1</code>. See
   <a href="../gui/#rotating-the-screen">Rotating the screen</a>. A flow that reads touch with a <a href="../touch-i2c/">touch</a> node
   rather than a gui screen sets the same angle on that node.</li>
-<li><strong>palette</strong> — the colours an indexed frame format uses. While a <a href="../gui/#themes">gui screen</a> with a theme is wired
-  to this display, the theme supplies the palette and this one is ignored.</li>
 <li><strong>rotation</strong> — 0–7, the panel controller's orientation code. Default <code>1</code>.</li>
 <li><strong>color order</strong> — <code>rgb</code> or <code>bgr</code>, matching your panel's own wiring. Default <code>bgr</code>.</li>
 <li><strong>invert colors</strong> — on or off. Some panels need this flipped to show true colors instead of their negative.</li>

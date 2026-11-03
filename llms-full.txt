@@ -14,8 +14,8 @@ node-based editor in your web browser. Nodes are functional blocks, and wires ca
 inspired by [Node-RED](https://nodered.org/).
 
 Thingstudio converts the flow to [MicroPython](https://micropython.org/), a version of Python for microcontrollers,
-compiles it and sends it to your board. The flow is saved on the board. It runs without the editor connected, and
-starts again after a reset or power cycle.
+compiles it, and sends it to your board. The flow is saved on the board. It will then run without the editor connected, and
+will start again after a reset or power cycle.
 
 <figure markdown="span">
   [![The Thingstudio editor, showing a three-node flow: timer, function and gpio out](images/editor.png)](images/editor.png)<figcaption>The editor: nodes to drag in on the left, your flow in the middle, and on the right the selected
@@ -25,7 +25,7 @@ starts again after a reset or power cycle.
 
 !!! tip "For the impatient"
 
-    The whole path to a running flow, reading nothing else:
+    If you read nothing else, read this:
 
     1. [Install Thingstudio](getting-started.md#step-1-install-thingstudio) and start it. The editor
        opens in your browser.
@@ -39,7 +39,7 @@ starts again after a reset or power cycle.
 
     When something doesn't work, [Debugging](debugging.md) and the [FAQ](faq.md) go by what you see on screen.
 
-In practice, that means:
+ThingStudio is designed to be private, and as open and hackable as possible:
 
 - **Local dev.** Development happens locally; there is no cloud service.
 - **Works offline.** Once installed, it needs no internet connection, docs included.
@@ -60,6 +60,12 @@ In practice, that means:
     - [Node-RED](coming-from/node-red.md)
     - [MicroPython](coming-from/micropython.md)
     - [Arduino and C](coming-from/arduino.md)
+
+## Who ThingStudio is for, and who it isn't
+
+ThingStudio is designed for developers with a reasonable amount of programming experience, it doesn't aim to teach programming fundamentals.
+You should also have some level of experience in working with microcontrollers. You don't have to be an EE graduate, but you should be comfortable wiring a breadboard. You should also be able to do basic commands from the terminal or PowerShell.
+
 
 ## What's different about programming with Thingstudio?
 
@@ -102,10 +108,10 @@ in more detail in [flows, nodes and messages](background/flows-and-nodes.md).
 This way of working comes from [Node-RED](background/node-red.md), a popular tool for home automation and IoT. In
 Node-RED, flows run on a server or a Raspberry Pi. In Thingstudio, they run on the microcontroller.
 
-## Your own Python
+## Including your own code
 
-The [node reference](nodes/index.md) lists the built-in nodes. For anything they don't cover, use a
-[function](nodes/function.md) node. It runs your Python on each message that arrives:
+There are a number of ready made functions available built-in [nodes](nodes/index.md) . There is also the 
+[function](nodes/function.md) node, which will take regular MicroPython and runs your it on each message that arrives:
 
 ```python
 # payload arrives in degrees C, leaves in degrees F
@@ -114,21 +120,19 @@ return msg
 ```
 
 `msg` is a dict, with the main value in `msg['payload']`. Return it to pass it on, or return nothing to stop it. A
-function node can also keep state between messages and have more than one output.
+function node can also keep state between messages and have more than one output. The only rule to remember is not to use blocking calls in a function node, that would make the entire flow wait on the operation.
 
 To reuse code across flows, make it a [custom node](custom-nodes.md). A custom node has its own place in the palette
-and its own properties in the property panel. It can transform messages, act on them, or send them on a schedule.
+and its own properties in the property panel. It can access custom hardware, transform messages, act on them, or send them on a schedule.
 
-You can also run Python directly on the board from the editor. See
+You can also stop the flow and run the python REPL directly on the board from the editor for debugging. See
 [Commands and the Python prompt](debugging.md#commands-and-the-python-prompt).
 
 ## Running on the board
+The microcontroller runs a [MicroPython](background/micropython.md) image with a ThingStudio runtime on top. You can flash the image from the editor or use one of your own choosing. The runtime sends the flow to the board and manages running it.  It also sends back status and debugging information. We also provide custom Micropython images with the runtime included, which are more efficient in memory usage.
 
-The board runs [MicroPython](background/micropython.md). You install it once, then Thingstudio adds a runtime of its
-own on top.
-
-When you click **Deploy**, the editor turns your flow into MicroPython code and compiles it. It sends the result to
-the board over USB or WiFi, and the board swaps it in and starts running it. There's no firmware to flash, so
+When you click **Deploy**, the editor converts your flow into MicroPython and compiles it. It sends the compiled flow to
+the board over USB or WiFi, and the board swaps it in, and starts running it. There's no new firmware to flash, so
 changing a flow and trying it again takes seconds. The board keeps the flow and runs it again after a restart.
 
 ## Built on standard parts
@@ -154,7 +158,7 @@ Thingstudio tries not to reinvent the wheel.
 [Getting started](getting-started.md) lists the steps from a new board to a blinking LED, and starts you on the first
 step.
 
-The docs on [docs.thingstudio.net](https://docs.thingstudio.net/) follow the latest code. The docs inside Thingstudio
+The docs on [docs.thingstudio.net](https://docs.thingstudio.net/) follow the latest code. The docs installed with Thingstudio
 (**Help → User guide**) match the version you have installed.
 
 
@@ -1067,13 +1071,16 @@ Source: https://docs.thingstudio.net/tutorials/
 # Tutorials
 
 [Getting started](../getting-started.md) ends with a blinking LED. The first two tutorials continue from it, each
-starting from the flow the last one ends with. The third is a separate project.
+starting from the flow the last one ends with. The MQTT tutorial starts a new flow, and the sensor display is a separate
+project.
 
 1. [Two more blinks](two-more-blinks.md) — the blink again, two more ways: one with the LED's state on the
    hardware, one keeping it in the `function` node with `context`.
-2. [Blink from your network](blink-from-your-network.md) — the same LED, driven by an `http in` node arriving over
+2. [Web Blink](blink-from-your-network.md) — the same LED, driven by an `http in` node arriving over
    WiFi: putting the board on your network, finding it again, and what an open port on the board means.
-3. [A sensor display](../sensor-display.md) — read a sensor and show it on a touch display. It is a work in
+3. [Blink from anywhere](blink-from-anywhere.md) — the same LED through an MQTT broker: publishing from the board,
+   subscribing to switch it, and why every topic carries a number of your own.
+4. [A sensor display](../sensor-display.md) — read a sensor and show it on a touch display. It is a work in
    progress.
 
 The finished flow for each tutorial is in the [examples folder](../examples.md#where-the-folder-is). Open it
@@ -1091,7 +1098,7 @@ Source: https://docs.thingstudio.net/examples/
 
 Flows to open with **File → Open…** and make your own. Open the file rather than copying a flow from a page: pick it
 from the examples folder, change what is yours (the pin, the credentials, the board), and deploy. This is a map of
-what each one shows and what to change first; the tutorials walk the first three step by step.
+what each one shows and what to change first; the tutorials walk the first four step by step.
 
 ## Where the folder is
 
@@ -1140,11 +1147,24 @@ next level. Walked by [Two more blinks](tutorials/two-more-blinks.md), which als
 
 The same LED, toggled from a browser. An `http in` node serves `/toggle` on port 9999, a `function` flips the LED
 and builds the reply, and `http response` answers the browser. `wifi status` and `debug` show the connection. It
-names a WiFi network, `tutorial wifi`. Walked by [Blink from your network](tutorials/blink-from-your-network.md).
+names a WiFi network, `tutorial wifi`. Walked by [Web Blink](tutorials/blink-from-your-network.md).
 
 - **path** and **port** on [http in](nodes/http-in.md).
 - The reply text in the function's **code** (`'LED on'` and `'LED off'`).
 - **poll interval (ms)** on [wifi status](nodes/wifi-status.md).
+
+### `blink-from-anywhere.flow.json`
+
+The same LED through an MQTT broker. Clicking `inject` publishes `pressed` to a `button` topic, and `mqtt subscribe`
+on an `led` topic feeds a `function` that turns `on`, `1` or `true` into true for `gpio out`; `debug` prints what
+arrives. The file names a WiFi network (`tutorial wifi`) and a broker (`test-mosquitto`). Its topics start
+`thingstudio/change-this-number/`: replace that number in both before you deploy, because the broker is public. Walked
+by [Blink from anywhere](tutorials/blink-from-anywhere.md).
+
+- The number in both **topic** fields, on [mqtt publish](nodes/mqtt-publish.md) and
+  [mqtt subscribe](nodes/mqtt-subscribe.md).
+- **host** and **port** in the broker form, to use a broker on your own network.
+- The [function](nodes/function.md) node's **code**, which decides which messages count as on.
 
 ### `basic-http-request.flow.json`
 
@@ -1209,14 +1229,17 @@ Source: https://docs.thingstudio.net/tutorials/two-more-blinks/
 
 # Two more blinks
 
-You have a blinking LED from [Blink an LED](../first-flow.md): timer, function, gpio out, with the function
-turning the timer's count into on and off. Two more ways to produce the same blink:
+If you've followed the steps in [Getting started](../getting-started.md) you'll now have a board with a blinking LED. This tutorial starts from there and shows you two other methods to get the same effect. In the process you'll directly access the hardware through MicroPython and see how ThingStudio nodes and flows can keep track of past events.
 
-- **Read the pin, write it back:** the blink's state lives on the board, in the pin, and the `function` node runs
-  your own MicroPython to reach it.
-- **Keep the state in the node:** the state lives inside the `function` node itself, in `context`.
+The [Blink an LED](../first-flow.md) flow contained three nodes, a **timer** → **function** → **gpio out**. We'll just be changing the function node in this tutorial.
 
-The flow stays the same; only the function's code changes. To start from the finished flow, open
+The first variant is **Read the pin, write it back**: the blink's state lives on the board, in the pin, and the
+`function` node runs your own MicroPython to reach it.
+
+The second variant is **Keep the state in the node**: the state lives inside the `function` node itself, in
+`context`.
+
+You can build this flow up yourself or start from the finished flow,
 [two-more-blinks.flow.json](https://github.com/mkarliner/ThingStudio/blob/main/examples/two-more-blinks.flow.json),
 in the [examples folder](../examples.md#where-the-folder-is), with **File → Open…**. Open the file; don't copy
 it from this page. It carries the first of the two blinks: change `15` in `machine.Pin(15)` to your LED's GPIO
@@ -1286,7 +1309,7 @@ needs a function node.
 
 The next tutorial, the next job, and the node pages behind the code:
 
-- [Blink from your network](blink-from-your-network.md) — the next tutorial: the same LED, driven by an `http in`
+- [Web Blink](blink-from-your-network.md) — the next tutorial: the same LED, driven by an `http in`
   node from anywhere on your WiFi.
 - [A sensor display](../sensor-display.md) — the next job: read a sensor and show it on a screen.
 - [gpio out](../nodes/gpio-out.md) — what else the node that drives the LED can do.
@@ -1297,19 +1320,21 @@ The next tutorial, the next job, and the node pages behind the code:
 
 Source: https://docs.thingstudio.net/tutorials/blink-from-your-network/
 
-# Blink from your network
+# Web Blink
 
-The same LED, driven from a browser: an `http in` node runs a web server on the board, and each request toggles the
-LED. The tutorial covers telling the board which WiFi network to join, finding it from your computer, and what an
-open port on it means.
+If you've worked through [Two more blinks](two-more-blinks.md), you have a board whose LED blinks on a timer. Here the
+timer goes, and a web browser does the switching. You'll put the board on your WiFi network, find it from your
+computer, and see what it means for a board to have an open port.
 
-It builds on [Two more blinks](two-more-blinks.md) and starts from the flow that tutorial ends with: timer, function,
-gpio out. To start from the finished flow instead, open
+The blink flow was a **timer** → **function** → **gpio out**. The **timer** gives way to an **http in** node, which
+runs a web server on the board, and the **function** gains a second output for the reply that goes back to the
+browser.
+
+You can build the flow step by step, or start from the finished flow,
 [http-blink.flow.json](https://github.com/mkarliner/ThingStudio/blob/main/examples/http-blink.flow.json), in the
-[examples folder](../examples.md#where-the-folder-is), with **File → Open…**. Open the file; don't copy it
-from this page. It names a WiFi network, `tutorial wifi`, that your computer doesn't have: the **WiFi** field's ✎
-form says so, and saving it with your network's details creates it. The file's `debug` node prints only the payload;
-tick **full message** on it to see the IP address.
+[examples folder](../examples.md#where-the-folder-is), with **File → Open…**. Open the file; don't copy it from this
+page. It names a WiFi network, `tutorial wifi`, that your computer doesn't have: the **WiFi** field's ✎ form says so,
+and saving it with your network's details creates it.
 
 If a step misbehaves on the way, start at [Debugging & troubleshooting](../debugging.md).
 
@@ -1366,7 +1391,8 @@ nothing drives the pin until a request does.
 
 - **By name:** open `http://blink.local:9999/toggle` in your browser. The name is the one from Board settings plus
   `.local`; port 9999 and path `/toggle` are the **port** and **path** of the `http in` node.
-- **By IP:** the `debug` node prints the whole **wifi status** message, which includes `ip`. The fields are listed
+- **By IP:** the `debug` node prints the whole **wifi status** message, which includes `ip`. (In the example file,
+  tick **full message** on the `debug` node first; it prints only the payload otherwise.) The fields are listed
   under [wifi status](../nodes/wifi-status.md#behavior). Open `http://<ip>:9999/toggle`.
 
 If `.local` names don't resolve on your network (they don't everywhere, and they don't across VPN tunnels at all —
@@ -1394,11 +1420,128 @@ does and doesn't do.
 ## Next
 
 - [http in](../nodes/http-in.md) — routes, methods, timeouts and the server's limits.
-- [mqtt publish](../nodes/mqtt-publish.md) and [mqtt subscribe](../nodes/mqtt-subscribe.md) — the same LED over a
-  broker. `examples/basic-mqtt.flow.json`, in the [examples folder](../examples.md#where-the-folder-is), is a
-  starting flow.
+- [Blink from anywhere](blink-from-anywhere.md) — the next tutorial: the same LED through an MQTT broker.
+- [mqtt publish](../nodes/mqtt-publish.md) and [mqtt subscribe](../nodes/mqtt-subscribe.md) — the nodes behind it.
+  `examples/basic-mqtt.flow.json`, in the [examples folder](../examples.md#where-the-folder-is), publishes and
+  subscribes on one topic.
 - [Connecting over WiFi](../wifi-connection.md) — the board as an editor peer on your network, not just a web
   server.
+
+
+---
+
+Source: https://docs.thingstudio.net/tutorials/blink-from-anywhere/
+
+# Blink from anywhere
+
+If you've worked through [Web Blink](blink-from-your-network.md), you have a board on your WiFi that switches its LED
+when a browser on your network asks. Here an MQTT broker sits in the middle. A broker passes messages between clients,
+so your phone or laptop doesn't have to be on the board's network. You'll publish a message from the board, switch the
+LED by sending one to it, and see why every topic here carries a number of your own.
+
+This is a new flow, on an empty canvas, with two halves: **inject** → **mqtt publish** sends a message when you click
+the button in the editor, and **mqtt subscribe** → **function** → **gpio out** switches the LED when a message
+arrives on another topic. The board joins your WiFi with the saved credential from Web Blink.
+
+You can build the flow step by step, or start from the finished flow,
+[blink-from-anywhere.flow.json](https://github.com/mkarliner/ThingStudio/blob/main/examples/blink-from-anywhere.flow.json),
+in the [examples folder](../examples.md#where-the-folder-is), with **File → Open…**. Open the file; don't copy it from
+this page. It names a WiFi network, `tutorial wifi`, and a broker, `test-mosquitto`, that your computer doesn't have:
+each field's ✎ form says so, and saving it with your details creates it. Before you deploy, replace
+`change-this-number` in both topics (see below).
+
+If a step misbehaves on the way, start at [Debugging & troubleshooting](../debugging.md).
+
+## Pick a topic prefix
+
+This tutorial uses `test.mosquitto.org`, a public broker. Anyone who knows or guesses a topic can read it and publish
+to it, so every topic starts with a number nobody else will pick: a random one of six or seven digits. Here it is
+written `4821937`; use your own.
+
+- `thingstudio/4821937/button` is where the board publishes.
+- `thingstudio/4821937/led` is where the board listens.
+
+## Build the flow
+
+Start with an empty canvas (**File → New flow**).
+
+1. Drag an **inject** onto the canvas. Set **payload type** to `string` and **value** to `pressed`.
+2. Drag an **mqtt publish**. Set **topic** to `thingstudio/4821937/button`. Click **+** next to **MQTT Broker**: the
+   form asks for a name, a host, a port and an optional username and password. Name it `test-mosquitto`, set the host to
+   `test.mosquitto.org` and the port to `1883`, and leave the rest blank. Wire **inject** → **mqtt publish**.
+3. Drag an **mqtt subscribe**. Set **topic** to `thingstudio/4821937/led`. Its **MQTT Broker** field already shows the
+   broker from step 2, because a flow has one.
+4. Drag a **function** and replace its **code** with:
+
+    ```python
+    msg['payload'] = str(msg['payload']).lower() in ('on', '1', 'true')
+    return msg
+    ```
+
+5. Drag a **gpio out** and set **pin** to your LED's GPIO number. Wire **mqtt subscribe** → **function** → **gpio out**.
+6. Drag a **debug** and wire **mqtt subscribe** → **debug**, to see what arrives in the console.
+7. On either MQTT node, pick your WiFi credential in the **WiFi** field: the one from
+   [Web Blink](blink-from-your-network.md#the-board-joins-wifi), or make one with **+**. A flow has one
+   WiFi network, so the other node shows the same one.
+
+## Deploy
+
+With the board connected, click **Compile → Deploy**. When **mqtt subscribe**'s dot turns green, the board is connected
+to the broker. **mqtt publish**'s dot stays blank until its first message.
+
+## Board to world
+
+On your computer, subscribe to everything under your prefix:
+
+```sh
+mosquitto_sub -h test.mosquitto.org -t 'thingstudio/4821937/#' -v
+```
+
+Click the ▶ on the **inject** node. The terminal prints the topic and `pressed`. A phone does the same with any MQTT
+client app: connect to `test.mosquitto.org` on port `1883` and subscribe to the same topic.
+
+## World to board
+
+Publish to the LED topic from the same terminal, or from the phone:
+
+```sh
+mosquitto_pub -h test.mosquitto.org -t 'thingstudio/4821937/led' -m on
+mosquitto_pub -h test.mosquitto.org -t 'thingstudio/4821937/led' -m off
+```
+
+The LED follows, and the editor's console shows each message from the **debug** node. The function node is there because
+`gpio out` treats any non-empty text as true, so `off` would switch the LED on. It turns `on`, `1` and `true` into true
+and every other message into false.
+
+## Nothing arrives?
+
+- Check that the number in the topics matches everywhere, and that the last part is `button` on the publisher and `led`
+  on the subscriber.
+- A red dot on an MQTT node, or a console line starting `mqtt connect to`, means the board can't reach the broker. See
+  [MQTT broker unreachable](../debugging.md#mqtt-broker-unreachable), which also covers networks that block port 1883.
+- If compile stops with "needs a WiFi network", a **WiFi** field is empty. See
+  [Why does compile fail with "needs a WiFi network"?](../faq.md#why-does-compile-fail-with-needs-a-wifi-network).
+
+## How it works
+
+A topic is a label on a message. **mqtt publish** sends each message that reaches it to its topic, and **mqtt
+subscribe** emits each message that arrives on its topic, with the text as `payload` and the topic it came in on as
+`topic`. The broker sits between them and between any other clients.
+
+Both nodes use the flow's one broker, which is why the second node showed the first one's settings.
+
+## The broker is public
+
+Anyone who knows your topic can switch your LED, which is why the topic carries a number and why the messages here
+carry nothing private. For anything that matters, use a broker on your own network with a password: set its address in
+the broker form instead. The nodes work the same way.
+
+## Next
+
+- [mqtt publish](../nodes/mqtt-publish.md) and [mqtt subscribe](../nodes/mqtt-subscribe.md) — every property, including
+  QoS and retain.
+- [Example flows](../examples.md) — `basic-mqtt.flow.json` publishes and subscribes on one topic, with nothing wired to the board.
+- [Tutorials](index.md) — the other tutorials.
 
 
 ---
@@ -1412,8 +1555,12 @@ Source: https://docs.thingstudio.net/sensor-display/
     This tutorial is being reworked. The example flow runs, but some steps may not match the editor. The GUI nodes it
     uses are provisional; see [GUI nodes](nodes/gui.md).
 
-Build a three-page touch display: the room's temperature, humidity and pressure with their recent history, and a
-clock. The flow also publishes the readings over MQTT.
+If you've followed [Getting started](getting-started.md), you've driven an LED from a flow. This tutorial moves on to
+a sensor and a screen. You'll read temperature, humidity and pressure from an I2C sensor, show them with their recent
+history on a three-page touch display, and publish them over MQTT. It's a separate project from the blink tutorials,
+with its own parts, listed under What you need.
+
+The flow is a **bme280** sensor feeding GUI nodes that draw the readings, with an **mqtt publish** that sends them on.
 
 The finished flow is in the Thingstudio repository:
 [`examples/gui-headliner-sensor-freenove-s3-4in.flow.json`](https://github.com/mkarliner/ThingStudio/blob/main/examples/gui-headliner-sensor-freenove-s3-4in.flow.json).
@@ -1487,8 +1634,8 @@ To test the sensor first, wire the bme280 to a **debug** node and deploy. A read
    function's outputs 1, 2, 3 and 5 to them. In each readout, set **units**, **decimals**, **lowest value** and
    **highest value**.
 5. Lay out the pages: select the gui screen and use the page outline in its properties to add rows of text and
-   readouts. See [Laying out pages](nodes/gui.md#laying-out-pages), and [Laying out a display](gui-layout.md) for
-   why the layout is fixed when the flow compiles.
+   readouts. See [Laying out pages](nodes/gui.md#laying-out-pages), which also says why the layout is fixed when the
+   flow compiles.
 
 Set **stale after** on the readouts and the light. A reading that stops arriving is then dimmed, so a dead sensor
 looks different from a steady room.
@@ -1651,60 +1798,6 @@ node reports one if its code does.
 
 The **Notes** panel on the right is free text about the flow: what it does, what to wire up, how to use it. It's
 saved in the flow file, and opens by itself when you open a flow that has notes. **File → New flow** clears it.
-
-
----
-
-Source: https://docs.thingstudio.net/gui-layout/
-
-# Laying out a display
-
-How a gui screen turns cells into a picture: a fixed panel, no windows, and a layout worked out when the flow
-compiles.
-
-## A panel, not a window
-
-A Thingstudio display is one panel of a known size, filled by one flow. There is no window system and no windows:
-a page fills the display, and the display's size never changes while the flow runs. Nothing on the board moves
-anything because the size changed, because the size never changes.
-
-Pages don't resize either. Turning to another page or setting a widget to a longer value draws in a place that was
-decided earlier; it never asks for room.
-
-## The layout is resolved at compile time
-
-When you compile, the compiler turns each element's cells into pixel positions, picks the font each piece of text
-needs, and fixes the gutters between them. Deploy sends those numbers, and the board paints them. No layout pass
-runs on the board and nothing reflows at runtime.
-
-That is what keeps a GUI flow affordable on a microcontroller: the board carries no layout engine, no font
-metrics and no page model, only the numbers needed to draw.
-
-## Compared with a web framework
-
-A web page is laid out by a browser, in a window someone can resize: CSS resolves sizes at runtime, media queries
-answer the window, and text reflows when content changes. On a board none of that applies.
-
-- There is no browser and no layout engine in the flow.
-- The panel's size is fixed, so nothing responds to a resize or to an orientation change at runtime.
-- Text doesn't reflow. An element gets the largest font that fits its cells, chosen at compile time; text that
-  doesn't fit is a Deploy error naming the element and the space it needs.
-- A layout is for one panel. A display of a different size means compiling for that display, not a reflow.
-
-The cell grid looks like CSS grid because it is a grid of cells and spans, but it is resolved once, when the flow
-compiles, rather than by a browser at runtime.
-
-## What that means when you build a page
-
-- The gui screen takes its width and height from the [display spi](nodes/display-spi.md) node it is wired to, so
-  set the panel's size there.
-- Set **grid columns** on the screen and give each element a row, a column, a row span and a column span. Nothing
-  is in pixels, so the same layout works across panels of a similar shape — but not across panels so different
-  that elements stop fitting.
-- Orientation is a display setting. The screen wired to it turns its layout to match when the flow compiles.
-
-The cells, the outline and the errors to expect are on [GUI nodes](nodes/gui.md#laying-out-pages). A worked example
-is in [A sensor display](sensor-display.md).
 
 
 ---
@@ -3416,7 +3509,9 @@ load it again on this or another **display spi** node instead of retyping every 
   colors. The gui screen wired to the display uses this format.
 - **palette** — 16 RGB565 colors, used by every indexed format (`gs4` reads all 16, `gs2` only the first 4, `mono`
   only the first 2). Shown as swatches under frame format when an indexed format is picked; click one to change it,
-  or **reset** for the built-in colors. Colors are rounded to the nearest the panel can show.
+  or **reset** for the built-in colors. Colors are rounded to the nearest the panel can show. While a
+  [gui screen](gui.md#themes) with a theme is wired to the display, the theme supplies the palette and this one is
+  ignored.
 - **SPI bus** — which hardware SPI peripheral to use. Default 2.
 - **baudrate** — SPI clock speed. Default 40MHz. On an ESP32, use 27MHz or less unless sck and mosi are the bus's
   fast pins; the compile tells you if the speed is too high for your [board](../boards.md).
@@ -3429,8 +3524,6 @@ load it again on this or another **display spi** node instead of retyping every 
   to how the panel is mounted (0 to 3), and `xstart`/`ystart` to `-1`. See
   [Rotating the screen](gui.md#rotating-the-screen). A flow that reads touch with a [touch](touch-i2c.md) node
   rather than a gui screen sets the same angle on that node.
-- **palette** — the colours an indexed frame format uses. While a [gui screen](gui.md#themes) with a theme is wired
-  to this display, the theme supplies the palette and this one is ignored.
 - **rotation** — 0–7, the panel controller's orientation code. Default `1`.
 - **color order** — `rgb` or `bgr`, matching your panel's own wiring. Default `bgr`.
 - **invert colors** — on or off. Some panels need this flipped to show true colors instead of their negative.
@@ -3780,20 +3873,20 @@ property panel: see [Laying out pages](#laying-out-pages).
   line above the number ("Temperature"), which is the card-friendly way to label it.
 - **gui label** — shows `msg.payload` as text.
 - **gui bar** — a bar that fills between *empty at* and *full at*. Its **style** is *solid* (the outline) or
-  *segments*: a row of cells, lit in the accent colour and unlit in the track, with a cell count to set.
+  *segments*: a row of cells, lit in the accent color and unlit in the track, with a cell count to set.
 - **gui histogram** — a moving histogram: a row of bars, oldest on the left, newest on the right. See [Histogram](#histogram).
 - **gui light** — on when `msg.payload` is true, off when false. Its **style** is *light* (the circle) or
   *chip*: a filled pill showing a short word, with the on and off text both editable ("OK"/"Off").
 - **gui button** — a touch button. It has an input, which sets what it shows, and an output, which sends when it is
   tapped. See [Buttons](#buttons).
-- **gui navigator** — changes the page from the flow. Send `next`, `prev`, `back`, `home` or a page name. Sends
-  the new page name when it changes. It isn't in the palette; a *navigate* button does the same from the
-  screen.
+
+<!-- gui modal: left out until the editor can lay a modal out (its layout is written in the flow file).
 - **gui modal** — a full-screen message. Send any payload to open it, `None` to close it. If several are
   open, the highest priority shows and the rest wait. Its output sends how it closed:
   `{topic: <modal's name>, payload: 'ack' | 'timeout' | 'closed'}`. Properties: **screen** (the id of the `gui_screen` it
   belongs to), **priority**, and **timeout** in seconds (`0` never closes by itself). The modal's layout is under its
   screen in the flow file, see [Modals in the flow file](#modals-in-the-flow-file).
+-->
 
 Each widget starts as `--` until a value arrives. With **stale after** set, a value that isn't updated in
 time is dimmed (or underlined, on a black-and-white display), so an old reading never looks current.
@@ -3801,22 +3894,32 @@ time is dimmed (or underlined, on a black-and-white display), so an old reading 
 On a classic ESP32 without PSRAM, a GUI flow needs the [custom firmware for classic ESP32](../custom-firmware.md):
 stock MicroPython runs out of memory loading the display stack.
 
-## Histogram
+## Laying out pages
 
-Shows what a number can't: which way it is heading. Wire it to the first output of a [journal](journal.md), or to
-any node that sends a list of numbers (a `None` is a gap), such as a spectrum from a function node.
+A display is one fixed panel of a known size, filled by one flow. A page fills it, and its size never changes while
+the flow runs. The layout is worked out when the flow compiles: the compiler turns each element's cells into pixel
+positions and picks the font for each piece of text, and Deploy sends those numbers. Nothing reflows at runtime, and
+the board carries no layout engine. That differs from a web page: nothing responds to a resize or an orientation
+change while the flow runs, and a layout is for one panel. A display of a different size means compiling for that
+display.
 
-Each bar is a row's average, in the theme's accent colour, with a thin line from the row's min to its max in the
-muted colour — so the range reads as context behind the value. A gap is empty. A wider space shows more history: it
-draws as many bars as fit, newest at the right edge.
+Every screen has a **cell grid**: **grid columns** on the gui screen (12 by default) and **grid rows**
+(`0` means "work them out from the display's shape", so cells stay roughly square). A position is a row and a
+column, 0-based; a size is a row span and a column span. Nothing is in pixels, so the same layout works on a
+different panel.
 
-- **bottom at / top at** — the range of the bars. Values outside are cut off at the edge. The range is fixed.
-- **columns, column width, height** — the natural size: it is as wide as columns times column width, plus the border.
-  In a layout it can stretch, and then shows more rows.
-- **stale after** — dims the bars if nothing new arrives in this time.
+Select the gui screen node and open **Properties**: each page lists its elements. **⚙** on an element opens
+**row**, **col**, **rows** and **cols**; tick **panel** to draw a card behind those cells. **+ add…** puts a
+widget, text, page dots or a panel on the page (it starts at row 0, column 0 — set its cells after).
+The same widget can be on several pages of a screen (a navigation button on every page, say), and it must have
+the same span on each. A widget belongs to one screen.
 
-It shows only the rows its journal kept. With fewer rows than the space holds, the bars sit at the right edge and the
-left of the card stays empty; the compiler says how many rows to keep. Raising **rows kept** on the journal fills it.
+Text sizes itself: the compiler picks the largest font that fits the element's cells, and Deploy says which
+element, on which page, when even the smallest does not fit. Two elements on the same cells, a span outside the
+grid, or a panel on top of another panel are also Deploy errors naming the element. The editor doesn't draw the
+page; the outline is a view of the flow file's `"screens"` section, which you can also edit by hand.
+
+To put the page dots in a footer, give them the last grid row. The current page's dot is drawn as a pill.
 
 ## Buttons
 
@@ -3860,51 +3963,54 @@ reports `ON` and `OFF` as text, so for a Tasmota plug set the value type to text
 
 Unwired, the toggle keeps its own state and starts as set by *starts on*.
 
-## Color
+## Histogram
 
-Set the display's frame format to `rgb565` for full color. White text,
-gray for stale values, and a green accent for bars and lights that are on. Grays use less memory and send faster,
-so use them on boards with little RAM.
+Shows what a number can't: which way it is heading. Wire it to the first output of a [journal](journal.md), or to
+any node that sends a list of numbers (a `None` is a gap), such as a spectrum from a function node.
 
-## Seven-segment digits
+Each bar is a row's average, in the theme's accent color, with a thin line from the row's min to its max in the
+muted color — so the range reads as context behind the value. A gap is empty. A wider space shows more history: it
+draws as many bars as fit, newest at the right edge.
 
-The `seg7` fonts (`font_seg748`, `font_seg764`, `font_seg796`) have only `0-9 : . -` and a space, so they suit the
-`time` and `time_seconds` formats of the [ntp](ntp.md) node. On a 320-pixel-wide screen `font_seg764` fits `14:05`
-(221 px) and `font_seg748` fits `14:05:09` (254 px). `font_seg796` is for wider screens. The font is DSEG by
-Keshikan (SIL Open Font License 1.1); see
-[third-party licenses](https://github.com/mkarliner/ThingStudio/blob/main/docs/third-party-licenses.md).
+- **bottom at / top at** — the range of the bars. Values outside are cut off at the edge. The range is fixed.
+- **columns, column width, height** — the natural size: it is as wide as columns times column width, plus the border.
+  In a layout it can stretch, and then shows more rows.
+- **stale after** — dims the bars if nothing new arrives in this time.
+
+It shows only the rows its journal kept. With fewer rows than the space holds, the bars sit at the right edge and the
+left of the card stays empty; the compiler says how many rows to keep. Raising **rows kept** on the journal fills it.
 
 ## Themes
 
-By default a screen draws in the GUI's own colours. To choose your own, select the gui screen and set **theme**
-(a starting point) and any of the role colours in its Properties: the screen owns its look, and a screen with no
-theme keeps the default colours. An older flow may still use a shared **GUI theme** config; the screen's own
-colours win when both are set.
+By default a screen draws in the GUI's own colors: white text, gray for stale values, and a green accent for bars and
+lights that are on. Full color needs the display's frame format set to `rgb565`; the gray formats use less memory and
+send faster, so use them on boards with little RAM. To choose your own colors, select the gui screen and set **theme**
+(a starting point) and any of the role colors in its Properties: the screen owns its look, and a screen with no theme
+keeps the default colors.
 
 A theme is ten roles, so the widgets stay consistent and one theme works on different panels: **background**, **card**,
 **foreground**, **muted** (stale values), **track** (a bar's empty part), **accent** (bar fill, lights on), **text on
 accent**, **ok**, **warn** and **alarm**. Start from **dark slate**, **light paper** or **vivid** and change any
-colour; the preset is a starting point, not a lock. **Vivid** is the card demo's scheme: a near-black background,
-violet cards and a cyan accent.
+color; the preset is a starting point, not a lock. **Vivid** has a near-black background, violet cards and a
+cyan accent.
 
-Use the **preset** control in the theme's edit form to save your colours by name under
+Use the **preset** control in the theme's edit form to save your colors by name under
 `~/.thingstudio/presets/gui_theme/`, and apply them to another theme later
 ([Presets](../working-in-the-editor.md#presets)). The three starting points are built in, so a flow that names one
 still compiles without a backend.
 
-A panel with fewer colours than that folds the roles onto the ones it has, rather than refusing the theme:
+A panel with fewer colors than that folds the roles onto the ones it has, rather than refusing the theme:
 
-- a **gs4** panel (16 colours) gets every role as its own colour;
-- a **gs2** panel (4 colours) keeps background, foreground, muted and accent — cards fold to the background, the track
+- a **gs4** panel (16 colors) gets every role as its own color;
+- a **gs2** panel (4 colors) keeps background, foreground, muted and accent — cards fold to the background, the track
   to muted, ok/warn/alarm to the foreground;
-- a **mono** panel (2 colours) is ink and paper: text, bars and lights are ink, backgrounds are paper.
+- a **mono** panel (2 colors) is ink and paper: text, bars and lights are ink, backgrounds are paper.
 
-A **card** is a panel behind a group of widgets: tick **card** on a row or column in the layout outline and its
-contents sit on a filled, rounded rectangle in the theme's card colour. It's the cheapest way to make a page read as
-groups rather than one list, and it follows the theme.
+A **panel** is a card behind a group of widgets: tick **panel** on an element in the layout outline and the cells it
+covers sit on a filled, rounded rectangle in the theme's **card** color. It follows the theme.
 
 On an indexed panel (gs4, gs2 or mono) the theme also sets the display's palette while a screen is wired to it — one
-theme is the whole colour scheme, not two lists to keep in step. A palette set on the display itself is ignored while a
+theme is the whole color scheme, not two lists to keep in step. A palette set on the display itself is ignored while a
 themed screen is wired to it, and Deploy says so in the console.
 
 ## Rotating the screen
@@ -3920,6 +4026,15 @@ can't be combined with a panel offset (`xstart`/`ystart`, or the 135x240 panel).
 A flow that reads touch with a [touch](touch-i2c.md) node instead of a gui screen sets the same angle on the node,
 since there is no display for it to follow.
 
+## Seven-segment digits
+
+The `seg7` fonts (`font_seg748`, `font_seg764`, `font_seg796`) have only `0-9 : . -` and a space, so they suit the
+`time` and `time_seconds` formats of the [ntp](ntp.md) node. On a 320-pixel-wide screen `font_seg764` fits `14:05`
+(221 px) and `font_seg748` fits `14:05:09` (254 px). `font_seg796` is for wider screens. The font is DSEG by
+Keshikan (SIL Open Font License 1.1); see
+[third-party licenses](https://github.com/mkarliner/ThingStudio/blob/main/docs/third-party-licenses.md).
+
+<!-- Left out until the editor can lay a modal out. Kept for when it can.
 ## Modals in the flow file
 
 A modal is laid out like a page, but in the screen's `modals` list, next to `pages`. Each entry names the `gui_modal`
@@ -3942,35 +4057,7 @@ Send any payload to the modal node to open it; what is drawn is its layout, so w
 layout to the data you want shown (a modal can hold the same widget a page does). Send `None` to close it (a function node
 returning a message whose `payload` is `None`). A navigate button in the layout with target `back` acknowledges it,
 and a **timeout** above `0` closes it on its own. The modal node's output says which of the three happened.
-
-## Laying out pages
-
-A Thingstudio display is one fixed panel, not a window, and its layout is resolved when the flow compiles — there
-is no layout pass on the board and nothing reflows. See [Laying out a display](../gui-layout.md) for the model and
-how it differs from a web page.
-
-Every screen has a **cell grid**: **grid columns** on the gui screen (12 by default) and **grid rows**
-(`0` means "work them out from the display's shape", so cells stay roughly square). A position is a row and a
-column, 0-based; a size is a row span and a column span. Nothing is in pixels, so the same layout works on a
-different panel.
-
-Select the gui screen node and open **Properties**: each page lists its elements. **⚙** on an element opens
-**row**, **col**, **rows** and **cols**; tick **panel** to draw a card behind those cells. **+ add…** puts a
-widget, text, page dots or a panel on the page (it starts at row 0, column 0 — set its cells after).
-The same widget can be on several pages of a screen (a navigation button on every page, say), and it must have
-the same span on each. A widget belongs to one screen.
-
-Text sizes itself: the compiler picks the largest font that fits the element's cells, and Deploy says which
-element, on which page, when even the smallest does not fit. Two elements on the same cells, a span outside the
-grid, or a panel on top of another panel are also Deploy errors naming the element. The editor doesn't draw the
-page; the outline is a view of the flow file's `"screens"` section, which you can also edit by hand.
-
-To put the page dots in a footer, give them the last grid row. The current page's dot is drawn as a pill.
-Pages live in the flow file, under `"screens"`, keyed by the gui screen node's id. A page is a tree of
-`row` and `column` containers holding widgets (`"kind": "widget", "node": "<id>"`), fixed `text`,
-`pagedots` and `spacer`s.
-
-If something doesn't fit, Deploy stops and says which widget, on which page, needs how many pixels.
+-->
 
 
 ---
@@ -3998,16 +4085,18 @@ and the humidity in `msg['humidity']`.
 ## Ports
 
 Port types are `int`, `number`, `bool`, `string`, `bytes` and `any`, the same as built-in nodes, with the same wire
-checks. A declared output type must match what the node puts in `payload`. Use `any` when unsure. A custom node has
-one input and one output: a source has the output, a sink the input.
+checks. A declared output type must match what the node puts in `payload`. Use `any` when unsure. The ports follow
+the kind: a source has one output, a transform one input and one or more outputs, and a sink one input. A sink with
+`eventSource` set also has one output; see [Two-faced nodes](custom-nodes.md#two-faced-nodes).
 
 ## Kind
 
 Every node is one of three kinds:
 
-- **source** — makes its own messages, on the `intervalMs` schedule.
-- **transform** — one message in, one out. Return the message, or `None` to stop it.
-- **sink** — consumes a message and produces nothing.
+- **source** — makes its own messages: on the `intervalMs` schedule, when an event fires (`eventSource`), or once when
+  the flow starts (`runOnce`).
+- **transform** — one message in, one or more out. Return the message, or `None` to stop it.
+- **sink** — consumes a message and produces nothing, unless it is two-faced.
 
 ## Errors
 
@@ -4019,7 +4108,8 @@ in Writing custom nodes.
 
 A custom node has the following limits:
 
-- A source's `emit` runs on a timer, not on an external event — there are no event-driven custom sources.
+- A polled source's `emit` runs on a timer. To react to an external event, use an event-driven source: see
+  [Event-driven sources](custom-nodes.md#event-driven-sources).
 - Two instances of the same custom node get independent setup, so don't put two on the same physical resource, such
   as the same pin.
 - Your Python runs with the same trust as the `function` node. Read a package before you put it in the folder.
@@ -6042,7 +6132,7 @@ Use the touch node only when you aren't using the GUI. Deploy stops and names bo
 
 There is nothing to resize to: a page fills a display of one fixed size, and the layout is resolved when the flow
 compiles, not by a browser at runtime. An element's cells, its font and its position are fixed numbers on the
-board. See [Laying out a display](gui-layout.md).
+board. See [Laying out pages](nodes/gui.md#laying-out-pages).
 
 ## Why won't a function node's output wire into pwm out?
 
