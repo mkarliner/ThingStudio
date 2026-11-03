@@ -54,3 +54,13 @@ Detail: `../flow-dependencies-scoping.md`.
 - **2026-10-07 — Low ESP-IDF memory needs a hard reset (CYD, Mike).** A soft reset left the ESP-IDF heap low; only
   a hard reset recovered it. The console now advises **Reset board (hard)** when an ESP32 is short of ESP-IDF memory
   before a networking deploy, and keeps **Restart board (soft)** for a `MemoryError`. Still manual, not automatic.
+- **2026-11-03 — A flow library may be a package (runtime 15.0.0, Mike's go-ahead).** A board file name may sit in
+  plain-named folders (`aioble/core.py`), each part an identifier, never absolute or `..`; `aioble/core.py` is the
+  module `aioble.core`, `aioble/__init__.py` the package `aioble`. Every file of a library is its name's module or
+  sits in its name's folder (the backend refuses anything else), so an `import x` still maps to library `x`.
+  `deps.py` creates the folders, removes empty ones, and drops a package's modules on redeploy; the backend,
+  the editor (`topModuleOfBoardFile`), `stage.py`, the HIL tools and CI's frozen-set check follow. Specs changed:
+  runtime-api §3 (the catalog) and protocol §7.2 (which `file` names are `BadName`); message shapes are unchanged.
+  Major bump (15.0.0): a 14.x board would refuse a package as `BadName` mid-deploy. The published classic-ESP32
+  image (14.1.0) needs a rebuild before an editor on 15 deploys to it. Raised by the BLE scoping (`aioble` is a
+  package); `outstanding-items/dependency-catalog-packages.md` on the `ble-nodes` branch closes with this.

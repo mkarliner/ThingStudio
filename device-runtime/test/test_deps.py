@@ -22,13 +22,25 @@ except AttributeError:
 import deps  # noqa: E402
 
 
-def _fresh():
+def _rm_tree(path):
     try:
-        for name in os.listdir(_DIR):
-            os.remove(_DIR + "/" + name)
-        os.rmdir(_DIR)
+        names = os.listdir(path)
+    except OSError:
+        return
+    for name in names:
+        p = path + "/" + name
+        try:
+            os.remove(p)
+        except OSError:
+            _rm_tree(p)
+    try:
+        os.rmdir(path)
     except OSError:
         pass
+
+
+def _fresh():
+    _rm_tree(_DIR)
 
 
 def _ls():
@@ -92,12 +104,47 @@ def test_bad_names_rejected_before_anything_is_written():
     _fresh()
     _raises("BadName", deps.put, "../evil", "h", [("x.mpy", b"")])
     _raises("BadName", deps.put, "ok", "h", [("../x.mpy", b"")])
-    _raises("BadName", deps.put, "ok", "h", [("sub/x.mpy", b"")])
+    _raises("BadName", deps.put, "ok", "h", [("/x.mpy", b"")])
+    _raises("BadName", deps.put, "ok", "h", [("pkg/../x.mpy", b"")])
+    _raises("BadName", deps.put, "ok", "h", [("a-b/x.mpy", b"")])
+    _raises("BadName", deps.put, "ok", "h", [("__init__.mpy", b"")])  # a package needs its folder
+    _raises("BadName", deps.put, "ok", "h", [("listener/x.mpy", b"")])  # a runtime module's name, as a package
     _raises("BadName", deps.put, "ok", "h", [("x.txt", b"")])
     _raises("BadName", deps.put, "ok", "h", [("runtime.mpy", b"")])  # the runtime's own module
     _raises("BadName", deps.put, "ok", "", [("x.mpy", b"")])
     _raises("BadName", deps.put, "ok", "h", [])
     assert _ls() == [], _ls()
+
+
+def test_a_package_installs_into_its_folder_and_imports():
+    """A library may be a package (runtime 15.0.0, 2026-11-03): files in plain-named folders under LIB_DIR."""
+    _fresh()
+    deps.put("pkgx", "h1", [("pkgx/__init__.py", b"from .core import hello\n"), ("pkgx/core.py", b"def hello():\n    return 'hi'\n")])
+    assert _ls() == ["_deps.json", "pkgx"], _ls()
+    assert sorted(os.listdir(_DIR + "/pkgx")) == ["__init__.py", "core.py"], os.listdir(_DIR + "/pkgx")
+    assert deps.read_index()["pkgx"]["files"] == ["pkgx/__init__.py", "pkgx/core.py"]
+    assert deps.missing({"pkgx": "h1"}) == []
+    sys.path.insert(0, _DIR)
+    try:
+        import pkgx  # noqa: F401 -- the point is that it imports
+
+        assert pkgx.hello() == "hi"
+        assert "pkgx" in sys.modules and "pkgx.core" in sys.modules
+        deps.forget_modules()
+        assert "pkgx" not in sys.modules and "pkgx.core" not in sys.modules, [k for k in sys.modules if k.startswith("pkgx")]
+    finally:
+        sys.path.remove(_DIR)
+    _fresh()
+
+
+def test_a_package_update_drops_stale_files_and_empty_folders():
+    _fresh()
+    deps.put("pkgy", "h1", [("pkgy/__init__.mpy", b"A"), ("pkgy/sub/old.mpy", b"B")])
+    deps.put("pkgy", "h2", [("pkgy/__init__.mpy", b"C")])
+    assert sorted(os.listdir(_DIR + "/pkgy")) == ["__init__.mpy"], os.listdir(_DIR + "/pkgy")
+    deps.remove_unused({})
+    assert _ls() == ["_deps.json"], _ls()
+    _fresh()
 
 
 def test_pieces_then_commit():
@@ -304,6 +351,8 @@ minitest.run(
         test_put_removes_stale_other_format_copy,
         test_put_leaves_no_tmp_files,
         test_bad_names_rejected_before_anything_is_written,
+        test_a_package_installs_into_its_folder_and_imports,
+        test_a_package_update_drops_stale_files_and_empty_folders,
         test_pieces_then_commit,
         test_out_of_order_piece_is_refused,
         test_resent_piece_is_accepted,

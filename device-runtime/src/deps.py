@@ -83,11 +83,32 @@ def _is_identifier(s):
 
 
 def _module_of(file_name):
-    """"mqtt_as.mpy" -> "mqtt_as"; None if not a .py/.mpy file name."""
+    """The module a board file provides: "mqtt_as.mpy" -> "mqtt_as", "aioble/core.mpy" -> "aioble.core",
+    "aioble/__init__.mpy" -> "aioble" (a package, 2026-11-03). None if not a .py/.mpy file name, or if a part of
+    the path isn't a plain identifier."""
     for ext in (".mpy", ".py"):
         if file_name.endswith(ext):
-            return file_name[: -len(ext)]
+            parts = file_name[: -len(ext)].split("/")
+            if not all(_is_identifier(p) for p in parts):
+                return None
+            if len(parts) > 1 and parts[-1] == "__init__":
+                parts = parts[:-1]
+            elif parts[-1] == "__init__":
+                return None  # a bare __init__ at the top of /lib is no module
+            return ".".join(parts)
     return None
+
+
+def _top_of(file_name):
+    """The top-level module a board file belongs to: "aioble/core.mpy" -> "aioble"."""
+    mod = _module_of(file_name)
+    return None if mod is None else mod.split(".")[0]
+
+
+def _dirs_of(file_name):
+    """The folders under LIB_DIR a file sits in, outermost first: "a/b/c.mpy" -> ["a", "a/b"]."""
+    parts = file_name.split("/")[:-1]
+    return ["/".join(parts[: i + 1]) for i in range(len(parts))]
 
 
 def check_name(dep_name):
@@ -96,10 +117,16 @@ def check_name(dep_name):
 
 
 def check_file_name(dep_name, file_name):
-    mod = _module_of(file_name)
-    if mod is None or not _is_identifier(mod):
-        raise DepError("BadName", "%s: file name %r must be a plain name ending .py or .mpy" % (dep_name, file_name))
-    if mod in _RESERVED:
+    """A plain name ending .py/.mpy, optionally in folders whose names are plain identifiers ("aioble/core.mpy",
+    runtime 9.0.0): never an absolute path, "..", or a name the runtime's own modules use."""
+    mod = _module_of(file_name) if isinstance(file_name, str) else None
+    if mod is None:
+        raise DepError(
+            "BadName",
+            "%s: file name %r must be a plain name ending .py or .mpy, optionally in plain-named folders (pkg/mod.mpy)"
+            % (dep_name, file_name),
+        )
+    if _top_of(file_name) in _RESERVED:
         raise DepError("BadName", "%s: file name %r is one of the runtime's own modules" % (dep_name, file_name))
 
 
@@ -119,11 +146,25 @@ def ensure_on_path():
     sys.path.insert(0, LIB_DIR)
 
 
-def _ensure_dir():
-    try:
-        os.mkdir(LIB_DIR)
-    except OSError:
-        pass  # already there (the ordinary case); a real failure shows up on the first write
+def _ensure_dir(file_name=""):
+    """LIB_DIR, and the folders `file_name` sits in."""
+    for d in [LIB_DIR] + [_path(sub) for sub in _dirs_of(file_name)]:
+        try:
+            os.mkdir(d)
+        except OSError:
+            pass  # already there (the ordinary case); a real failure shows up on the first write
+
+
+def _remove_empty_dirs(file_names):
+    """After files are removed: their folders, innermost first, if nothing is left in them."""
+    dirs = set()
+    for f in file_names:
+        dirs.update(_dirs_of(f))
+    for d in sorted(dirs, key=len, reverse=True):
+        try:
+            os.rmdir(_path(d))
+        except OSError:
+            pass  # not empty, or already gone
 
 
 def _entries(data):
@@ -203,7 +244,7 @@ def put_chunk(dep_name, file_name, offset, total, data):
     stream = _streams.get(key)
     if stream is None:
         def before_start(total, dep_name=dep_name, file_name=file_name):
-            _ensure_dir()
+            _ensure_dir(file_name)
             free = _free_bytes()
             if free is not None and total + _SPACE_MARGIN > free:
                 raise statemachine.Failure("NoSpace", "no space for %s: %s needs %d bytes, %d free" % (dep_name, file_name, total, free))
@@ -267,16 +308,19 @@ def _commit(dep_name, dep_hash, files):
     old = index.get(dep_name)
     try:
         for file_name in files:
-            mod = _module_of(file_name)
             # MicroPython imports x.py before x.mpy, so a stale copy in the other format would win.
-            other = mod + (".py" if file_name.endswith(".mpy") else ".mpy")
+            if file_name.endswith(".mpy"):
+                other = file_name[: -len(".mpy")] + ".py"
+            else:
+                other = file_name[: -len(".py")] + ".mpy"
             _remove(_path(other))
             _replace(_path(file_name + ".tmp"), _path(file_name))
         new_names = sorted(files)
         if old is not None:
-            for stale in old["files"]:
-                if stale not in new_names:
-                    _remove(_path(stale))
+            stale_files = [stale for stale in old["files"] if stale not in new_names]
+            for stale in stale_files:
+                _remove(_path(stale))
+            _remove_empty_dirs(stale_files)
         index[dep_name] = {"hash": dep_hash, "files": new_names}
         _write_index(index)
     except OSError as e:
@@ -341,6 +385,9 @@ def forget_modules():
             mod = _module_of(file_name)
             if mod is not None and mod in sys.modules:
                 del sys.modules[mod]
+            top = _top_of(file_name)
+            if top is not None and top != mod and top in sys.modules:
+                del sys.modules[top]  # a package's own module, even if its __init__ isn't one of the files
 
 
 def remove_unused(required):
@@ -373,6 +420,7 @@ def remove_unused(required):
                 if not (e.args and e.args[0] == 2):  # ENOENT: already gone, fine
                     ok = False
                     print("DEPS_WARN could not remove %s: %r" % (file_name, e))
+        _remove_empty_dirs(index[name]["files"])
         if ok:
             del index[name]
             removed.append(name)

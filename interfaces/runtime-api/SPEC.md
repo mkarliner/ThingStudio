@@ -72,13 +72,15 @@ Each `DEPENDENCIES` entry describes one library a flow can import:
 
 | Field | Meaning |
 |---|---|
-| `name` | What the board's index and the `DEP_PUT`/`DEPLOY` messages call it. Equal to the module name, so the editor maps an `import x` straight to it. |
-| `files` | `(path under `device-runtime/src/vendor/`, file name on the board)`. Every file name minus `.py` is a module the library provides. |
+| `name` | What the board's index and the `DEP_PUT`/`DEPLOY` messages call it. Equal to the top-level module name, so the editor maps an `import x` (or `from x.y import z`) straight to it. |
+| `files` | `(path under `device-runtime/src/vendor/`, file name on the board)`. A file name is a plain name ending `.py`, optionally in folders (`aioble/core.py`); every part is a Python identifier. Each file is a module the library provides: `mqtt_as.py` is `mqtt_as`, `aioble/core.py` is `aioble.core`, `aioble/__init__.py` is the package `aioble`. A library's files share one top-level name. |
 | `requires` | Other libraries this one imports; the editor installs those too. |
 
 The editor fetches this catalog from the backend at `/api/dependencies`, which validates it (names, files present,
 `requires` known, no cycles). On deploy the editor installs the libraries the flow actually imports into the board's
-`/lib` and removes ones no flow needs; `device-runtime/src/deps.py` owns the on-device file management.
+`/lib` and removes ones no flow needs; `device-runtime/src/deps.py` owns the on-device file management. A package's
+folders are created under `/lib` as its files arrive and removed when they are empty. Packages need runtime 15.0.0
+(2026-11-03); before it, a board file name with a folder was refused as `BadName`.
 
 ## 4. Versioning
 

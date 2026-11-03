@@ -25,8 +25,24 @@ class DependencyListError(Exception):
 
 @dataclass(frozen=True)
 class DependencyFile:
-    board_name: str  # e.g. "mqtt_as.py"
+    board_name: str  # e.g. "mqtt_as.py", or "aioble/core.py" in a package (runtime 15.0.0)
     source: str
+
+
+def module_of(board_name: str) -> str | None:
+    """The module a board file provides, as deps.py maps it on the board: "mqtt_as.py" -> "mqtt_as",
+    "aioble/core.py" -> "aioble.core", "aioble/__init__.py" -> "aioble". None for anything else: an absolute path,
+    "..", a part that isn't a plain identifier, or a bare top-level __init__."""
+    if not board_name.endswith(".py"):
+        return None
+    parts = board_name[:-3].split("/")
+    if not all(p.isidentifier() for p in parts):
+        return None
+    if parts[-1] == "__init__":
+        if len(parts) == 1:
+            return None
+        parts = parts[:-1]
+    return ".".join(parts)
 
 
 @dataclass(frozen=True)
@@ -37,7 +53,7 @@ class Dependency:
 
     @property
     def modules(self) -> tuple[str, ...]:
-        return tuple(f.board_name[:-3] for f in self.files)
+        return tuple(m for m in (module_of(f.board_name) for f in self.files) if m is not None)
 
 
 def _is_identifier(s: object) -> bool:
@@ -88,8 +104,16 @@ def load_dependencies(runtime_src_dir: Path | None = None) -> list[Dependency]:
             if not (isinstance(pair, (tuple, list)) and len(pair) == 2 and all(isinstance(p, str) for p in pair)):
                 raise DependencyListError(f"{label}: each file must be (vendor path, board file name)")
             vendor_rel, board_name = pair
-            if not board_name.endswith(".py") or not board_name[:-3].isidentifier():
-                raise DependencyListError(f"{label}: board file name {board_name!r} must be a plain name ending .py")
+            if module_of(board_name) is None:
+                raise DependencyListError(
+                    f"{label}: board file name {board_name!r} must be a plain name ending .py, "
+                    "optionally in plain-named folders (pkg/mod.py)"
+                )
+            if module_of(board_name).split(".")[0] != name:
+                raise DependencyListError(
+                    f"{label}: board file {board_name!r} isn't part of {name!r} -- every file of a library is the module "
+                    f"{name!r} or sits in the folder {name}/, so the editor can map an import to it"
+                )
             if board_name in seen_files:
                 raise DependencyListError(f"{label}: {board_name} is also a file of {seen_files[board_name]!r}")
             seen_files[board_name] = name

@@ -181,7 +181,8 @@ def needed_dependencies(source):
     by_module = {}
     for d in by_name.values():
         for _src, board_name in d["files"]:
-            by_module[board_name[:-3]] = d["name"]
+            # Top-level module, as the editor maps it (flow-dependencies.ts): "aioble/core.py" -> "aioble".
+            by_module[board_name[:-3].split("/")[0]] = d["name"]
     todo = [by_module[m] for m in sorted(imported_modules(source)) if m in by_module]
     out = []
     while todo:

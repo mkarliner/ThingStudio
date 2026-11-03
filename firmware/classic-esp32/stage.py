@@ -45,7 +45,9 @@ def main(argv):
         for src_name, dest_name in dep["files"]:
             if dest_name in staged:
                 raise SystemExit("stage: %s staged twice (dependency %s)" % (dest_name, dep["name"]))
-            shutil.copyfile(os.path.join(VENDOR, src_name), os.path.join(out, dest_name))
+            dest = os.path.join(out, dest_name)
+            os.makedirs(os.path.dirname(dest), exist_ok=True)  # a package library: aioble/core.py (runtime 15.0.0)
+            shutil.copyfile(os.path.join(VENDOR, src_name), dest)
             staged.add(dest_name)
 
     print("staged %d modules in %s" % (len(staged), out))

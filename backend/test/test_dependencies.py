@@ -42,6 +42,14 @@ def test_loads_entries_with_sources(tmp_path: Path) -> None:
     }
 
 
+def test_a_package_library_maps_files_to_dotted_modules(tmp_path: Path) -> None:
+    """A library may be a package (runtime 15.0.0): files in folders named after it."""
+    src = _tree(tmp_path, "[{'name': 'pkg', 'files': [('a/a.py', 'pkg/__init__.py'), ('b/b.py', 'pkg/core.py')]}]")
+    deps = load_dependencies(src)
+    assert deps[0].modules == ("pkg", "pkg.core")
+    assert [f["name"] for f in dependencies_json(deps)["dependencies"][0]["files"]] == ["pkg/__init__.py", "pkg/core.py"]
+
+
 @pytest.mark.parametrize(
     "literal, fragment",
     [
@@ -49,9 +57,15 @@ def test_loads_entries_with_sources(tmp_path: Path) -> None:
         ("[{'name': 'a', 'files': [('a/a.py', 'a.py')]}, {'name': 'a', 'files': [('b/b.py', 'b.py')]}]", "listed twice"),
         ("[{'name': 'a', 'files': []}]", "non-empty list"),
         ("[{'name': 'a', 'files': [('a/a.py', '../a.py')]}]", "plain name ending .py"),
+        ("[{'name': 'a', 'files': [('a/a.py', '/a.py')]}]", "plain name ending .py"),
+        ("[{'name': 'a', 'files': [('a/a.py', 'a-b/a.py')]}]", "plain name ending .py"),
+        ("[{'name': 'a', 'files': [('a/a.py', '__init__.py')]}]", "plain name ending .py"),
+        ("[{'name': 'a', 'files': [('a/a.py', 'b.py')]}]", "isn't part of 'a'"),
+        ("[{'name': 'a', 'files': [('a/a.py', 'b/a.py')]}]", "isn't part of 'a'"),
         ("[{'name': 'a', 'files': [('a/missing.py', 'a.py')]}]", "can't read"),
         ("[{'name': 'a', 'files': [('a/a.py', 'a.py')], 'requires': ['nope']}]", "isn't in the list"),
-        ("[{'name': 'a', 'files': [('a/a.py', 'a.py')]}, {'name': 'b', 'files': [('b/b.py', 'a.py')]}]", "also a file of"),
+        # Another library's file: caught by the ownership rule (runtime 15.0.0) before the duplicate check.
+        ("[{'name': 'a', 'files': [('a/a.py', 'a.py')]}, {'name': 'b', 'files': [('b/b.py', 'a.py')]}]", "isn't part of 'b'"),
         ("[{'name': 'a', 'files': [('a/a.py', 'a.py')], 'requires': ['b']},"
          " {'name': 'b', 'files': [('b/b.py', 'b.py')], 'requires': ['a']}]", "loop"),
     ],

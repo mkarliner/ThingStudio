@@ -8,6 +8,7 @@ import {
   librariesToSend,
   libraryMessages,
   resolveDependencies,
+  topModuleOfBoardFile,
   type DependencyInfo,
 } from "../src/compiler/flow-dependencies.js";
 import { compile } from "../src/compiler/compile.js";
@@ -44,6 +45,14 @@ describe("findImportedModules", () => {
 });
 
 describe("resolveDependencies", () => {
+  it("maps an import to a package library by its top-level name (runtime 15.0.0)", () => {
+    const pkg = { name: "aioble", requires: [], files: [{ name: "aioble/__init__.py", source: "" }, { name: "aioble/core.py", source: "" }] };
+    expect(resolveDependencies(findImportedModules("from aioble.core import ble\nimport aioble"), [pkg]).map((d) => d.name)).toEqual(["aioble"]);
+    expect(topModuleOfBoardFile("aioble/core.py")).toBe("aioble");
+    expect(topModuleOfBoardFile("mqtt_as.py")).toBe("mqtt_as");
+  });
+
+
   it("maps modules to libraries, adds what they require, ignores firmware modules", () => {
     const got = resolveDependencies(["machine", "events", "runtime"], LIST).map((d) => d.name);
     expect(got).toEqual(["events", "delay_ms"]);
