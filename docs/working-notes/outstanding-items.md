@@ -106,9 +106,9 @@ ThingStudioMarketing repo, not here.
 
 ## Network / config nodes
 
-- **[P3]** **BLE nodes -- phase 1 built 2026-11-03; `ble scan` checked on the ESP32-C5-340X (incl. scan responses and redeploy), `ble advertise` not yet.** `ble scan` and `ble advertise` on
+- **[P3]** **BLE nodes -- phase 1 done 2026-11-03, both nodes checked on the ESP32-C5-340X.** `ble scan` and `ble advertise` on
   `ts_ble` (raw `bluetooth`), tested in CPython (pymock) and on the MicroPython 1.29.0 unix port with a stand-in
-  radio. Next: `ble advertise` on the C5 against nRF Connect, then phase 2 (GATT peripheral + Nordic UART,
+  radio, then on the board (scan into debug; advertise read by nRF Connect). Next: phase 2 (GATT peripheral + Nordic UART,
   with a `ble` config node and a security-policy tier), then phase 3 (central). `ble-nodes-scoping.md`,
   `decisions/ble-nodes.md`.
 

@@ -278,3 +278,6 @@ committed -- if this VM stays in the loop, `install.sh` should grow the same sin
   advertisement over the same serial link. Watch for it with chatty flows on the CH340E.
   Both fixes confirmed on the C5 at 14:28: no red flash on redeploy, and a non-empty scan response (Google,
   mfr 224, after a `fe9f` advertisement) arrives as its own message with `scanResponse True`, `connectable None`.
+  `ble advertise` checked the same day with `test-flows/ble-advertise-count-c5.flow.json`: nRF Connect showed
+  `ts-c5` with raw data `0x020106060974732D633505FFFFFF6D00` (flags, name, manufacturer 0xFFFF, counter 0x006D
+  little-endian), byte for byte what `ts_ble.build_adv` produces. BLE phase 1 works on hardware.

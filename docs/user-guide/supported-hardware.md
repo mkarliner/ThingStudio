@@ -13,7 +13,7 @@ been deployed and run on that hardware. Pin details for boards and processors ar
 | Raspberry Pi Pico 2 | RP2350 | Yes |
 | LOLIN S2 Mini | ESP32-S2 | Yes |
 | LuatOS ESP32C3-CORE | ESP32-C3 | Yes, with the adc and neopixel nodes |
-| ESP32-C5-340X (ESP32-C5-KITC-A) | ESP32-C5 | MicroPython 1.29.0 boots; Thingstudio not yet |
+| ESP32-C5-340X (ESP32-C5-KITC-A) | ESP32-C5 | Yes, with the ble scan and ble advertise nodes |
 | CYD (ESP32-2432S028, ST7789) | ESP32 | Yes, display only. |
 | Freenove ESP32-S3 Display 4.0" (FNK0104S) | ESP32-S3 | Yes, with the display and touch |
 | Pyboard v1.0 | STM32F405 | Untested |
@@ -37,7 +37,7 @@ Any board with one of these processors can be used by picking the processor from
 | ESP32-S2 | Yes, on the LOLIN S2 Mini |
 | ESP32-S3 | Yes, on the Freenove board |
 | ESP32-C3 | Yes, on a generic ESP32-C3 board, over USB and WiFi |
-| ESP32-C5 | Not yet |
+| ESP32-C5 | Yes, on the ESP32-C5-340X, over USB |
 | RP2040 | Yes, on the Pico and Pico W |
 | RP2350 | Yes, on the Pico 2 |
 

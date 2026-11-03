@@ -49,7 +49,7 @@ Names are palette names. Every message keeps the `payload`/`topic` envelope; `to
 config node in phase 1: config types are hard-wired into the editor core (`app/rete/config-types.ts`, `main.ts`,
 `cli/describe.ts`, `cli/check-flow.ts`), and the only shared setting, the device name, belongs to the one
 `ble advertise` a flow may have. It comes in phase 2, when the GATT server needs a name and the peripheral nodes
-share it. Not yet run on hardware.
+share it. Both checked on the ESP32-C5-340X the same day (`learnings/hardware-bringup-hil-rig.md`).
 
 These cover the common cases: reading off-the-shelf sensors (BTHome, Ruuvi, Xiaomi-style beacons) and broadcasting
 a reading with no pairing. Decoders for particular beacon formats are transforms; ship one (BTHome v2), leave the
