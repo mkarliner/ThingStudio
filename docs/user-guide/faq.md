@@ -66,6 +66,11 @@ The firmware doesn't use the PSRAM. The generic ESP32-S3 build leaves it off. Fl
 octal PSRAM (the `SPIRAM_OCT` variant) from [micropython.org/download](https://micropython.org/download/ESP32_GENERIC_S3/).
 The console then shows megabytes free. Freenove's S3 display boards are an example: 121 KB before, 7.8 MB after.
 
+## My ESP32-C5 prints "PSRAM chip is not connected" at boot. Is it broken?
+
+No. The generic ESP32-C5 build looks for PSRAM, and many C5 modules have none. It reports the failure, says
+"continuing without it", and starts MicroPython with the chip's own RAM.
+
 ## Which board should I use for a display and WiFi together?
 
 An ESP32 with external RAM (PSRAM), such as many ESP32-S3 boards. MicroPython puts its heap in the external RAM,
