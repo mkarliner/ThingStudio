@@ -773,7 +773,7 @@ chip families the editor can write are listed, and only builds whose hash is pin
 tested.
 
 The list covers every build Thingstudio pins, so **Or use your own image file** is only for the rest: a build for a
-board Thingstudio doesn't list, or an image you downloaded yourself. Pick the `.bin` or `.uf2`; the chip family you
+board Thingstudio doesn't list, a chip with no pinned build yet (the ESP32-C5), or an image you downloaded yourself. Pick the `.bin` or `.uf2`; the chip family you
 choose decides the address, and the file's own header usually decides the family.
 
 Flashing erases the flow and all settings on the board. Afterwards, [connect](connecting.md) it
@@ -794,6 +794,7 @@ exact board if it's listed, or the generic build for your chip:
 | ESP32-S2 | `ESP32_GENERIC_S2` | `.bin` |
 | ESP32-S3 | `ESP32_GENERIC_S3` | `.bin` |
 | ESP32-C3 | `ESP32_GENERIC_C3` | `.bin` |
+| ESP32-C5 | `ESP32_GENERIC_C5` | `.bin` |
 | RP2040 (Pico, Pico W) | `RPI_PICO`, `RPI_PICO_W` | `.uf2` |
 | RP2350 (Pico 2, Pico 2 W) | `RPI_PICO2`, `RPI_PICO2_W` | `.uf2` |
 
@@ -831,6 +832,7 @@ esptool.py --port PORT --baud 460800 write_flash ADDRESS firmware.bin
 | --- | --- |
 | ESP32, ESP32-S2 | `0x1000` |
 | ESP32-S3, ESP32-C3 | `0` |
+| ESP32-C5 | `0x2000` |
 
 `PORT` is the board's serial port. On macOS and Linux it starts with `/dev/`, on Windows it's `COM` followed by a
 number. To find it, run `esptool.py flash_id` with no `--port`: esptool searches for the board and prints the port
@@ -849,6 +851,10 @@ a different port afterwards.
 **Tools → Options → Interpreter** and use **Install or update MicroPython**.
 
 When it's done, close Thonny. Like esptool, it needs the board's port to itself.
+
+Thonny can't install MicroPython on an ESP32-C5. It writes the image at `0`, but a C5 needs `0x2000`, and Thonny
+doesn't offer that address. The board then restarts in a loop printing `invalid header`. Use Thingstudio or
+esptool instead.
 
 ### Other microcontrollers
 
@@ -2010,6 +2016,7 @@ been deployed and run on that hardware. Pin details for boards and processors ar
 | Raspberry Pi Pico 2 | RP2350 | Yes |
 | LOLIN S2 Mini | ESP32-S2 | Yes |
 | LuatOS ESP32C3-CORE | ESP32-C3 | Yes, with the adc and neopixel nodes |
+| ESP32-C5-340X (ESP32-C5-KITC-A) | ESP32-C5 | Yes, with the ble scan and ble advertise nodes |
 | CYD (ESP32-2432S028, ST7789) | ESP32 | Yes, display only. |
 | Freenove ESP32-S3 Display 4.0" (FNK0104S) | ESP32-S3 | Yes, with the display and touch |
 | Pyboard v1.0 | STM32F405 | Untested |
@@ -2033,6 +2040,7 @@ Any board with one of these processors can be used by picking the processor from
 | ESP32-S2 | Yes, on the LOLIN S2 Mini |
 | ESP32-S3 | Yes, on the Freenove board |
 | ESP32-C3 | Yes, on a generic ESP32-C3 board, over USB and WiFi |
+| ESP32-C5 | Yes, on the ESP32-C5-340X, over USB |
 | RP2040 | Yes, on the Pico and Pico W |
 | RP2350 | Yes, on the Pico 2 |
 
@@ -2166,6 +2174,7 @@ In the properties panel, a pin field shows the board's name for that pin, such a
 | Raspberry Pi Pico 2 | RP2350 | GPIO 0–29. LED on GPIO 25. |
 | LOLIN S2 Mini | ESP32-S2 | LED on GPIO 15, button on GPIO 0 |
 | LuatOS ESP32C3-CORE | ESP32-C3 | Pick by hand. LEDs on GPIO 12 and 13, button on GPIO 9. |
+| ESP32-C5-340X (ESP32-C5-KITC-A) | ESP32-C5 | Pick by hand. RGB LED (WS2812) on GPIO 27, button on GPIO 28. Left USB-C is a CH340E on GPIO 11/12, right is native USB on 13/14. If flashing doesn't start: hold BOOT, press RESET, release BOOT. |
 | CYD (ESP32-2432S028, ST7789) | ESP32 | Pick by hand. Display, touch, SD, RGB LED and speaker pins are labelled. |
 | Freenove ESP32-S3 Display 4.0" (FNK0104S, ST7796) | ESP32-S3 | Pick by hand. Display and touch pins are labelled. 320x480, SPI bus 1. Rotation 1 is portrait. For landscape, set the display's `orientation` to 90 (or 270 for the other way up) and keep the screen and display at 320x480. Display and touch (FT6336U) work. |
 | Pyboard v1.0 | STM32F405 | Pins are named `X1`–`X22` and `Y1`–`Y12`. The four onboard LEDs are on `A13`, `A14`, `A15` and `B4` (labelled `LED_RED`–`LED_BLUE`); the user switch `SW` is on `X17`. |
@@ -2180,6 +2189,7 @@ In the properties panel, a pin field shows the board's name for that pin, such a
 | ESP32-S2 | 0–21, 26–46 (46 input only) | 27–32 (flash) |
 | ESP32-S3 | 0–21, 26–48 | 27–32 (flash) |
 | ESP32-C3 | 0–21 | 12–17 (flash) |
+| ESP32-C5 | 0–28 | 16–22 (flash and PSRAM) |
 | RP2040 | 0–29 | none |
 | RP2350 | 0–47 (0–29 on the RP2350A) | none |
 | STM32F405 | X1–X22, Y1–Y12 (named pins, not numbers) | none |
@@ -2605,6 +2615,8 @@ See [flows, nodes and messages](../background/flows-and-nodes.md) for how they f
 | call a web API | [http request](http-request.md) |
 | serve a web page or API from the board | [http in](http-in.md) and [http response](http-response.md) |
 | send or receive UDP packets | [udp send](udp-send.md), [udp receive](udp-receive.md) |
+| read BLE beacons and sensors | [ble scan](ble-scan.md) |
+| broadcast a reading over Bluetooth | [ble advertise](ble-advertise.md) |
 | know when WiFi connects or drops | [wifi status](wifi-status.md) |
 | stop messages while WiFi is down | [wifi gate](wifi-gate.md) |
 
@@ -2640,6 +2652,15 @@ These nodes share the flow's WiFi network. A flow has one, set on any WiFi node'
 | [http response](http-response.md) | sink | Answers a request that arrived through `http in`. |
 | [udp receive](udp-receive.md) | source | Sends a message for each UDP packet received on a port. |
 | [udp send](udp-send.md) | sink | Sends a message's payload as a UDP packet. |
+
+## Bluetooth
+
+These nodes need a board with Bluetooth LE: ESP32, ESP32-S3, ESP32-C3 or ESP32-C5. They share the board's one radio.
+
+| Node | Kind | What it does |
+| --- | --- | --- |
+| [ble scan](ble-scan.md) | source | Sends a message for each Bluetooth LE advertisement nearby. |
+| [ble advertise](ble-advertise.md) | sink | Advertises the board's name and a payload over Bluetooth LE. |
 
 ## Hardware
 
@@ -3284,6 +3305,118 @@ dot stays blank until the first message reaches it, even if the flow has been ru
 
 A red dot, with a console line starting `mqtt connect to` and ending `failed after 3 attempts`, means the board can't
 reach the broker. See [MQTT broker unreachable](../debugging.md#mqtt-broker-unreachable).
+
+
+---
+
+Source: https://docs.thingstudio.net/nodes/ble-scan/
+
+# ble scan
+
+Listens for Bluetooth LE advertisements, such as beacons and BLE sensors, and sends one message per advertisement.
+
+## Properties
+
+- **name starts with** — only devices whose advertised name starts with this. Many devices send their name only
+  in reply to an active scan.
+- **address** — only this device, as `aa:bb:cc:dd:ee:ff`.
+- **manufacturer id** — only advertisements with this manufacturer id, in decimal or hex (`0x0499` is Ruuvi).
+- **service UUID** — only advertisements that list this service or carry data for it: 16-bit (`fcd2` is BTHome)
+  or 128-bit.
+- **active scan** — also ask each device for its scan response, which usually holds its name.
+- **repeat window (ms)** — drops an advertisement identical to the same device's last one within this time.
+  Default 1000. `0` sends every one; a changed advertisement is always sent.
+- **scan interval (ms)** / **scan window (ms)** — the radio listens for the window once every interval. Default
+  30 ms every 320 ms. A longer window misses fewer advertisements and leaves WiFi less time.
+
+The filters combine: an advertisement must pass every one that is set.
+
+With **active scan** on, a device's scan response arrives as a second message, usually a few milliseconds after its
+advertisement, with `scanResponse` set. That's where most devices put their name. Empty scan responses are
+dropped.
+
+## Wiring
+
+- **Output** — `payload` is the advertising data as bytes. The message also carries:
+
+| field | |
+| --- | --- |
+| `addr` | the sender's address, `aa:bb:cc:dd:ee:ff` |
+| `addrType` | `public` or `random` (phones use random addresses that change) |
+| `rssi` | signal strength in dBm, such as `-60` |
+| `connectable` | whether the device accepts connections; `None` for a scan response |
+| `scanResponse` | `True` for a device's reply to an active scan, sent as its own message |
+| `name` | the advertised name, or `''` |
+| `mfrId`, `mfr` | the manufacturer id and the bytes after it, or `None` and `b''` |
+| `svcData` | service data, by UUID: `{'fcd2': b'...'}` |
+| `services` | the service UUIDs it lists |
+
+Decode the bytes in a [function](function.md) node, with `struct.unpack`.
+
+## Behavior
+
+Every ble scan node in a flow shares one scan, so they must have the same scan interval, scan window and active
+scan settings. Each node applies its own filters. A node keeps up to 20 advertisements waiting; if they come faster
+than the flow handles them, the oldest are dropped.
+
+The radio is shared with WiFi on an ESP32. A long scan window slows WiFi and MQTT.
+
+Needs a board with Bluetooth LE: ESP32, ESP32-S3, ESP32-C3 or ESP32-C5. The ESP32-S2 has none.
+
+## Errors
+
+A bad address, manufacturer id, UUID or scan setting stops the compile, naming the value. So do two ble scan
+nodes with different scan settings, and a board without Bluetooth LE. The status shows **scanning**, or **scan
+stopped by the radio** if the radio ends the scan. If the radio can't start, often because the board is short of
+memory, the console says so: hard-reset the board.
+
+An advertisement is untrusted input: anyone nearby can send one, with any name or address.
+
+
+---
+
+Source: https://docs.thingstudio.net/nodes/ble-advertise/
+
+# ble advertise
+
+Advertises over Bluetooth LE: the board's name, and each message's payload as manufacturer or service data.
+
+## Properties
+
+- **name** — what phone apps show. Default `thingstudio`.
+- **payload goes in** — **manufacturer data**, **service data**, or **nothing (name only)**.
+- **manufacturer id** — for manufacturer data, in decimal or hex. Default `0xFFFF`, which is reserved for testing;
+  a product uses its maker's id from the Bluetooth SIG.
+- **service UUID** — for service data: 16-bit (`fcd2` is BTHome) or 128-bit.
+- **interval (ms)** — how often the advertisement is sent, 20 to 10240. Default 500. Shorter is found faster and
+  uses more power.
+
+## Wiring
+
+- **Input** — `payload` replaces the data: bytes as they are, text as UTF-8. With **nothing (name only)** it's
+  ignored. Pack a number with `struct.pack` in a
+  [function](function.md) node first, for example `struct.pack('<h', round(t * 100))`.
+
+The node needs no input: unwired, it advertises the name only.
+
+## Behavior
+
+The board advertises the name from the moment the flow starts. Each message replaces the data, and the board sends
+the new advertisement until the next one. Phones (nRF Connect, for example) and other boards with a
+[ble scan](ble-scan.md) node see it without connecting. It doesn't accept connections.
+
+An advertisement holds 31 bytes. The flags take 3, the name its length plus 2, and the data's header 4 (manufacturer
+or 16-bit service) or 18 (128-bit service). The node's status says how many are left for the payload.
+
+A flow has one ble advertise node. Needs a board with Bluetooth LE: ESP32, ESP32-S3, ESP32-C3 or ESP32-C5.
+
+## Errors
+
+A name with no room left for data, a bad id or UUID, a second ble advertise node, or a board without Bluetooth LE
+stops the compile. A payload that isn't bytes or text, or that doesn't fit, is reported on the console with its
+size, and the board keeps sending the last advertisement.
+
+Anyone nearby can read an advertisement. Don't put anything private in it.
 
 
 ---
@@ -4327,6 +4460,10 @@ the node is selected:
 A polled `source` node must declare a numeric property named `intervalMs` — it
 sets the poll interval. An `eventSource` or `runOnce` source does not need one.
 
+**`requires`** (optional) — hardware the node needs, as `{ "capabilities": ["ble"] }`. The words are the board
+definitions' capabilities (`wifi`, `ble`, `espnow`, `pio`, see [Boards](boards.md)). On a board without one, the
+palette grays the node out and the compile refuses it, naming the missing capability.
+
 ## The behavior: `<name>.node.py`
 
 Ordinary MicroPython. Define exactly one top-level function, named for
@@ -4483,6 +4620,27 @@ async def run(msg, properties):
 redeployed flow can leave the old socket open and fail with
 `EADDRINUSE` on the next deploy.
 
+### Libraries you can import
+
+When a node imports one of these, Thingstudio sends it to the board with the flow:
+
+| Library | For |
+| --- | --- |
+| `ts_ble` | the board's Bluetooth LE radio, shared with the ble nodes (below) |
+| `ts_wifi`, `ts_mqtt`, `ts_http_server` | the flow's WiFi, MQTT client and HTTP server, shared with the network nodes |
+| `threadsafe_event` | waking a coroutine from a hardware interrupt (see Event-driven sources) |
+| `events`, `delay_ms`, `encoder`, `aadc` | Peter Hinch's asyncio switch, button, timer, encoder and ADC drivers |
+| `ssd1306`, `st7789py`, `st7796py` | display drivers |
+| `bme280_float`, `ft6336u` | the BME280 sensor and FT6336U touch drivers |
+| `mqtt_as` | Peter Hinch's asyncio MQTT client |
+
+A library of your own can't be sent yet. Code two of your nodes share goes in each `.node.py`.
+
+For Bluetooth, use `ts_ble.radio()`, not `bluetooth.BLE()`: the board has one radio, and the ble nodes use the same
+one. `radio().scan(...)` and `radio().advertise(...)` share it as `ble scan` and `ble advertise` do, and
+`ts_ble.decode(adv)` and `ts_ble.build_adv(...)` read and build advertising data. The radio is turned off on each
+redeploy.
+
 ### Persisting values
 
 `runtime.settings` keeps a value across reboots and redeploys of the same flow. Use it for an application
@@ -4636,6 +4794,13 @@ a message naming what's wrong: bad `type`, wrong port count, missing
 (e.g. a non-numeric `number` field) errors out naming that node and
 property.
 
+**Without the editor** — the [check command](check-a-flow.md) loads the same folder (or `--custom-nodes <dir>`).
+Check a flow that uses your node and it reports load and compile errors the same way:
+
+```sh
+node dist-cli/thingstudio-compile.mjs --board board:cyd my.flow.json
+```
+
 **Deploy time** — `.node.py` is spliced into the flow as-is;
 Thingstudio doesn't check it. A typo surfaces as a runtime error (e.g.
 `NameError`) reported from the device, attributed to your node.
@@ -4699,8 +4864,9 @@ version matches your editor. Otherwise the check needs Node and the built `thing
    [`device_cli.py`](command-line.md#deploy-and-run-a-flow-without-the-editor) instead, and report what the board
    printed. That result is for that board only.
 
-The check is the same compile the editor runs, so a flow that passes it opens and compiles in the editor. It can't
-check credentials, custom node packages or the hardware. Don't claim a flow works on a board unless you deployed it
+The check is the same compile the editor runs, so a flow that passes it opens and compiles in the editor. It loads
+the user's custom node packages the way the editor does. It can't check credentials, what a custom node's Python does
+on the board, or the hardware. Don't claim a flow works on a board unless you deployed it
 there and saw it run; otherwise say it passes the check.
 
 ## The flow file
@@ -4911,8 +5077,10 @@ Read [GUI nodes](nodes/gui.md) for the details, and copy from `examples/`:
 
 If no node does the job and a function node is not enough, write a custom node: `<name>.node.json` and
 `<name>.node.py`. [Writing custom nodes](custom-nodes.md) is complete on its own. The two files go in `~/.thingstudio/custom-nodes/` on the
-computer running Thingstudio. The check command can't check them: read them against that page, and test the
-Python body on its own with sample messages.
+computer running Thingstudio. The check command loads that folder (or the one given with `--custom-nodes <dir>`), so
+check a flow that uses the node: a bad descriptor is reported by file, and the node's wires, properties and compile
+hook are checked like a built-in's. What the Python does on the board isn't checked: test its body on its own with
+sample messages.
 
 ## Examples to copy
 
@@ -4992,7 +5160,10 @@ The exit code is 0 for a valid flow, 1 for a flow with errors, and 2 for a bad c
 - `--describe timer` prints a node's type, ports and properties with their defaults. `--describe-all` prints every
   node and config node (add `--json` for JSON). The same list is on the [node catalog](nodes-catalog.md) page,
   generated from the code.
-- `--no-syntax` skips the MicroPython syntax check. `--arch` sets its `-march` (default `xtensawin`).
+- `--custom-nodes ~/my-nodes` loads custom node packages from that folder. Without it, the check loads
+  `~/.thingstudio/custom-nodes/` when it exists, as the editor does. `--no-custom-nodes` loads none.
+- `--no-syntax` skips the MicroPython syntax check. `--arch` sets its `-march`; the default is the `--board`'s
+  processor (`rv32imc` for an ESP32-C3 or C5), or `xtensawin` without a board.
 
 ## What it checks
 
@@ -5000,6 +5171,8 @@ The exit code is 0 for a valid flow, 1 for a flow with errors, and 2 for a bad c
 - Every wire joins real ports, and is one the editor would accept. The editor drops a wire it refuses when it opens the file.
 - A property the file leaves out gets the editor's default, as when you open the file in the editor.
 - The flow compiles: pins, properties, GUI layouts, nodes with nothing wired to them.
+- Custom node packages load as they do in the editor. A package that doesn't load is named with its file and the
+  reason, and its nodes' wires and properties are checked like a built-in node's.
 - The generated code is valid MicroPython. This uses the same `mpy-cross` the editor deploys with, and catches a
   typo in a function node's code before you deploy.
 
@@ -5007,7 +5180,8 @@ The exit code is 0 for a valid flow, 1 for a flow with errors, and 2 for a bad c
 
 - **WiFi and MQTT credentials.** The secrets are in the backend, so the check uses stand-in values and says so in a
   note. A missing credential shows up when you open the flow in the editor.
-- **Custom node packages.** A flow that uses one fails with "unknown node type".
+- **What a custom node's Python does.** It is checked for syntax, not run. Test its body on its own with sample
+  messages.
 - **A real board.** It can't tell you the display is wired right, or that the memory is enough. Deploy does that;
   [Command line](command-line.md#deploy-and-run-a-flow-without-the-editor) can deploy and run a flow without the
   editor.
@@ -5509,6 +5683,37 @@ Type `thingstudio/touch_i2c`, kind source, palette group hardware.
 
 ## network
 
+### ble advertise
+
+Type `thingstudio/ble_advertise`, kind sink, palette group network.
+
+- Inputs: msg (any)
+- Outputs: none
+- Needs hardware: ble (checked against the board at compile time)
+- Properties (name, type, default):
+    - `name`, string, default `"thingstudio"` — the advertised name; name and payload share 31 bytes
+    - `field`, string, default `"manufacturer"` — manufacturer (payload after a 2-byte manufacturer id), service (after a service UUID) or none (name only)
+    - `mfrId`, string, default `"0xFFFF"` — manufacturer id, decimal or hex with 0x; 0xFFFF is for testing
+    - `serviceUuid`, string, default `"fcd2"` — service UUID for service data: 16-bit (fcd2, BTHome) or 128-bit
+    - `advIntervalMs`, number, default `500` — how often the advertisement is sent, 20-10240 ms
+
+### ble scan
+
+Type `thingstudio/ble_scan`, kind source, palette group network.
+
+- Inputs: none
+- Outputs: msg (bytes)
+- Needs hardware: ble (checked against the board at compile time)
+- Properties (name, type, default):
+    - `namePrefix`, string, default `""` — only devices whose advertised name starts with this; many send a name only to an active scan
+    - `addr`, string, default `""` — only this device, aa:bb:cc:dd:ee:ff
+    - `mfrId`, string, default `""` — only this manufacturer id, decimal or hex with 0x (0x0499 Ruuvi)
+    - `serviceUuid`, string, default `""` — only advertisements listing this service or carrying its data: 16-bit (fcd2, BTHome) or 128-bit
+    - `active`, boolean, default `false` — also request each device's scan response (usually its name)
+    - `repeatMs`, number, default `1000` — drop an advertisement identical to the same device's last one within this time; 0 sends all
+    - `scanIntervalMs`, number, default `320` — how often the radio listens, 2.5-10240 ms; every ble_scan in a flow must agree
+    - `scanWindowMs`, number, default `30` — how long each listen lasts, up to the interval; longer misses less and leaves WiFi less time
+
 ### http in
 
 Type `thingstudio/http_in`, kind source, palette group network.
@@ -5823,7 +6028,7 @@ The raw error stays in the message, in brackets. Include it if you report a prob
 | The chip family list is empty, or the catalog can't be read | This install's `firmware/builds.json` is missing or malformed; the dialog says which line. A reinstall replaces it. |
 | … is not a .uf2, or is a .uf2 sent to a serial port | A mounted drive takes the `.uf2` build, a serial port the `.bin`. Pick the matching file. |
 | choose the chip family, so esptool knows which chip and address to use | A file on its own doesn't say which chip it is for. Pick the family; if the image is the reason, the editor reads it out of the file. |
-| The board doesn't start after flashing | The address or the family was wrong: `0x1000` for an ESP32 or ESP32-S2, `0` for an ESP32-S3, C3, C6 or ESP8266. Flash again with the right family; the board is recoverable. |
+| The board doesn't start after flashing, or its serial output repeats `invalid header` | The address or the family was wrong: `0x1000` for an ESP32 or ESP32-S2, `0x2000` for an ESP32-C5, `0` for an ESP32-S3, C3, C6 or ESP8266. A board maker's manual may give another address for its own demo images; for MicroPython, use these. Thonny can't write a C5 at `0x2000` ([Install MicroPython](installing-micropython.md#without-a-terminal-thonny)). Flash again with the right family; the board is recoverable. |
 | esptool is not installed on this machine | The backend's Python has no `esptool`: `pip install esptool`, then restart Thingstudio. |
 | esptool exited N at … on PORT | The write stopped; the dialog's log has the tool's own lines. Check the cable and the bootloader mode, and retry. In **Install options**, try a slower speed, or tick **Disable the stub loader**. |
 | the flash did not finish within … | The tool stopped answering. Unplug and replug the board, then flash again. |
@@ -6131,6 +6336,11 @@ The firmware doesn't use the PSRAM. The generic ESP32-S3 build leaves it off. Fl
 octal PSRAM (the `SPIRAM_OCT` variant) from [micropython.org/download](https://micropython.org/download/ESP32_GENERIC_S3/).
 The console then shows megabytes free. Freenove's S3 display boards are an example: 121 KB before, 7.8 MB after.
 
+## My ESP32-C5 prints "PSRAM chip is not connected" at boot. Is it broken?
+
+No. The generic ESP32-C5 build looks for PSRAM, and many C5 modules have none. It reports the failure, says
+"continuing without it", and starts MicroPython with the chip's own RAM.
+
 ## Which board should I use for a display and WiFi together?
 
 An ESP32 with external RAM (PSRAM), such as many ESP32-S3 boards. MicroPython puts its heap in the external RAM,
@@ -6238,3 +6448,20 @@ to A3 (CS) and GPIO 32 to A4 (RST), then set those pins in the display node.
 No, for boards Thingstudio can flash: the ESP32 family over a serial port, and a board whose bootloader mounts as a
 drive (RP2040, RP2350, nRF52). Put the board in its bootloader and use **Tools → Install firmware…**. Other chips
 have their own installation routes; see [Install MicroPython](installing-micropython.md).
+
+## Why are the ble nodes grayed out?
+
+The chosen board has no Bluetooth LE that MicroPython's `bluetooth` module drives. The ESP32, S3, C3 and C5 have it.
+The ESP32-S2 has no Bluetooth, and an nRF52840's MicroPython reaches its radio through a different module
+(`ubluepy`), which these nodes don't use yet. Pick your board in the **Board** menu; see [boards](boards.md).
+
+## Why doesn't ble scan show my device's name?
+
+Many devices put their name only in the scan response, which a passive scan doesn't ask for. Turn on **active
+scan**. Some never advertise a name: filter them by address or manufacturer id instead.
+
+## Why did WiFi get slower when I added a ble scan?
+
+On an ESP32 the WiFi and Bluetooth share one radio, taking turns. The longer the **scan window** against the **scan
+interval**, the less time WiFi gets. The default listens 30 ms in every 320 ms; lower the window, or raise the
+interval, if MQTT or HTTP become slow. See [ble scan](nodes/ble-scan.md).

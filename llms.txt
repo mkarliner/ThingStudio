@@ -81,6 +81,11 @@
 - [udp send](https://docs.thingstudio.net/nodes/udp-send/): Sends a message's payload as a UDP datagram to a fixed host and port.
 - [mqtt publish](https://docs.thingstudio.net/nodes/mqtt-publish/): Publishes a message's payload to an MQTT topic.
 
+## Bluetooth
+
+- [ble scan](https://docs.thingstudio.net/nodes/ble-scan/): Listens for Bluetooth LE advertisements, such as beacons and BLE sensors, and sends one message per advertisement.
+- [ble advertise](https://docs.thingstudio.net/nodes/ble-advertise/): Advertises over Bluetooth LE: the board's name, and each message's payload as manufacturer or service data.
+
 ## Hardware
 
 - [interrupt](https://docs.thingstudio.net/nodes/interrupt/): Fires immediately when a GPIO pin changes state — genuinely event-driven, not polled.

@@ -1579,6 +1579,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#bluetooth" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bluetooth
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#hardware" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2310,7 +2321,7 @@
   <span class="md-ellipsis">
     
   
-    Hardware
+    Bluetooth
   
 
     
@@ -2323,6 +2334,119 @@
         
         <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_4_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_8_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Bluetooth
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="ble-scan/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ble scan
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="ble-advertise/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ble advertise
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_8_5" id="__nav_8_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hardware
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8_5">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -3208,6 +3332,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#bluetooth" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bluetooth
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#hardware" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3398,6 +3533,14 @@ all, grouped as in the editor's palette: General, Network and Hardware.</p>
 <td><a href="udp-send/">udp send</a>, <a href="udp-receive/">udp receive</a></td>
 </tr>
 <tr>
+<td>read BLE beacons and sensors</td>
+<td><a href="ble-scan/">ble scan</a></td>
+</tr>
+<tr>
+<td>broadcast a reading over Bluetooth</td>
+<td><a href="ble-advertise/">ble advertise</a></td>
+</tr>
+<tr>
 <td>know when WiFi connects or drops</td>
 <td><a href="wifi-status/">wifi status</a></td>
 </tr>
@@ -3525,6 +3668,29 @@ all, grouped as in the editor's palette: General, Network and Hardware.</p>
 <td><a href="udp-send/">udp send</a></td>
 <td>sink</td>
 <td>Sends a message's payload as a UDP packet.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="bluetooth">Bluetooth</h2>
+<p>These nodes need a board with Bluetooth LE: ESP32, ESP32-S3, ESP32-C3 or ESP32-C5. They share the board's one radio.</p>
+<table>
+<thead>
+<tr>
+<th>Node</th>
+<th>Kind</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="ble-scan/">ble scan</a></td>
+<td>source</td>
+<td>Sends a message for each Bluetooth LE advertisement nearby.</td>
+</tr>
+<tr>
+<td><a href="ble-advertise/">ble advertise</a></td>
+<td>sink</td>
+<td>Advertises the board's name and a payload over Bluetooth LE.</td>
 </tr>
 </tbody>
 </table>

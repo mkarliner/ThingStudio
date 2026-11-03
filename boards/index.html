@@ -2315,7 +2315,7 @@
   <span class="md-ellipsis">
     
   
-    Hardware
+    Bluetooth
   
 
     
@@ -2328,6 +2328,119 @@
         
         <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_4_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_8_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Bluetooth
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/ble-scan/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ble scan
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/ble-advertise/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ble advertise
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_8_5" id="__nav_8_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hardware
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8_5">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -3367,6 +3480,11 @@ see <a href="#adding-a-processor">Adding a processor</a>.</p>
 <td>Pick by hand. LEDs on GPIO 12 and 13, button on GPIO 9.</td>
 </tr>
 <tr>
+<td>ESP32-C5-340X (ESP32-C5-KITC-A)</td>
+<td>ESP32-C5</td>
+<td>Pick by hand. RGB LED (WS2812) on GPIO 27, button on GPIO 28. Left USB-C is a CH340E on GPIO 11/12, right is native USB on 13/14. If flashing doesn't start: hold BOOT, press RESET, release BOOT.</td>
+</tr>
+<tr>
 <td>CYD (ESP32-2432S028, ST7789)</td>
 <td>ESP32</td>
 <td>Pick by hand. Display, touch, SD, RGB LED and speaker pins are labelled.</td>
@@ -3422,6 +3540,11 @@ see <a href="#adding-a-processor">Adding a processor</a>.</p>
 <td>ESP32-C3</td>
 <td>0–21</td>
 <td>12–17 (flash)</td>
+</tr>
+<tr>
+<td>ESP32-C5</td>
+<td>0–28</td>
+<td>16–22 (flash and PSRAM)</td>
 </tr>
 <tr>
 <td>RP2040</td>

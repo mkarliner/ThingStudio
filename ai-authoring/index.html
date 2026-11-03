@@ -2167,7 +2167,7 @@
   <span class="md-ellipsis">
     
   
-    Hardware
+    Bluetooth
   
 
     
@@ -2180,6 +2180,119 @@
         
         <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_4_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_8_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Bluetooth
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/ble-scan/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ble scan
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/ble-advertise/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ble advertise
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_8_5" id="__nav_8_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hardware
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8_5">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -3386,8 +3499,9 @@ version matches your editor. Otherwise the check needs Node and the built <code>
    <a href="../command-line/#deploy-and-run-a-flow-without-the-editor"><code>device_cli.py</code></a> instead, and report what the board
    printed. That result is for that board only.</li>
 </ol>
-<p>The check is the same compile the editor runs, so a flow that passes it opens and compiles in the editor. It can't
-check credentials, custom node packages or the hardware. Don't claim a flow works on a board unless you deployed it
+<p>The check is the same compile the editor runs, so a flow that passes it opens and compiles in the editor. It loads
+the user's custom node packages the way the editor does. It can't check credentials, what a custom node's Python does
+on the board, or the hardware. Don't claim a flow works on a board unless you deployed it
 there and saw it run; otherwise say it passes the check.</p>
 <h2 id="the-flow-file">The flow file</h2>
 <p>A JSON object. These keys matter:</p>
@@ -3651,8 +3765,10 @@ plug), <code>gui.md</code> has the wiring.</p>
 <h2 id="custom-nodes">Custom nodes</h2>
 <p>If no node does the job and a function node is not enough, write a custom node: <code>&lt;name&gt;.node.json</code> and
 <code>&lt;name&gt;.node.py</code>. <a href="../custom-nodes/">Writing custom nodes</a> is complete on its own. The two files go in <code>~/.thingstudio/custom-nodes/</code> on the
-computer running Thingstudio. The check command can't check them: read them against that page, and test the
-Python body on its own with sample messages.</p>
+computer running Thingstudio. The check command loads that folder (or the one given with <code>--custom-nodes &lt;dir&gt;</code>), so
+check a flow that uses the node: a bad descriptor is reported by file, and the node's wires, properties and compile
+hook are checked like a built-in's. What the Python does on the board isn't checked: test its body on its own with
+sample messages.</p>
 <h2 id="examples-to-copy">Examples to copy</h2>
 <table>
 <thead>

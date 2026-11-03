@@ -2167,7 +2167,7 @@
   <span class="md-ellipsis">
     
   
-    Hardware
+    Bluetooth
   
 
     
@@ -2180,6 +2180,119 @@
         
         <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_4_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_8_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Bluetooth
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/ble-scan/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ble scan
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/ble-advertise/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ble advertise
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_8_5" id="__nav_8_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hardware
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8_5">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -3756,8 +3869,8 @@ what the board sent instead, and what to do:</p>
 <td>A file on its own doesn't say which chip it is for. Pick the family; if the image is the reason, the editor reads it out of the file.</td>
 </tr>
 <tr>
-<td>The board doesn't start after flashing</td>
-<td>The address or the family was wrong: <code>0x1000</code> for an ESP32 or ESP32-S2, <code>0</code> for an ESP32-S3, C3, C6 or ESP8266. Flash again with the right family; the board is recoverable.</td>
+<td>The board doesn't start after flashing, or its serial output repeats <code>invalid header</code></td>
+<td>The address or the family was wrong: <code>0x1000</code> for an ESP32 or ESP32-S2, <code>0x2000</code> for an ESP32-C5, <code>0</code> for an ESP32-S3, C3, C6 or ESP8266. A board maker's manual may give another address for its own demo images; for MicroPython, use these. Thonny can't write a C5 at <code>0x2000</code> (<a href="../installing-micropython/#without-a-terminal-thonny">Install MicroPython</a>). Flash again with the right family; the board is recoverable.</td>
 </tr>
 <tr>
 <td>esptool is not installed on this machine</td>

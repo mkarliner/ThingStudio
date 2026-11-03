@@ -2167,7 +2167,7 @@
   <span class="md-ellipsis">
     
   
-    Hardware
+    Bluetooth
   
 
     
@@ -2180,6 +2180,119 @@
         
         <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_4_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_8_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Bluetooth
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/ble-scan/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ble scan
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/ble-advertise/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ble advertise
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_8_5" id="__nav_8_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hardware
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8_5">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -3237,7 +3350,10 @@ npm run build:cli
 <li><code>--describe timer</code> prints a node's type, ports and properties with their defaults. <code>--describe-all</code> prints every
   node and config node (add <code>--json</code> for JSON). The same list is on the <a href="../nodes-catalog/">node catalog</a> page,
   generated from the code.</li>
-<li><code>--no-syntax</code> skips the MicroPython syntax check. <code>--arch</code> sets its <code>-march</code> (default <code>xtensawin</code>).</li>
+<li><code>--custom-nodes ~/my-nodes</code> loads custom node packages from that folder. Without it, the check loads
+  <code>~/.thingstudio/custom-nodes/</code> when it exists, as the editor does. <code>--no-custom-nodes</code> loads none.</li>
+<li><code>--no-syntax</code> skips the MicroPython syntax check. <code>--arch</code> sets its <code>-march</code>; the default is the <code>--board</code>'s
+  processor (<code>rv32imc</code> for an ESP32-C3 or C5), or <code>xtensawin</code> without a board.</li>
 </ul>
 <h2 id="what-it-checks">What it checks</h2>
 <ul>
@@ -3245,6 +3361,8 @@ npm run build:cli
 <li>Every wire joins real ports, and is one the editor would accept. The editor drops a wire it refuses when it opens the file.</li>
 <li>A property the file leaves out gets the editor's default, as when you open the file in the editor.</li>
 <li>The flow compiles: pins, properties, GUI layouts, nodes with nothing wired to them.</li>
+<li>Custom node packages load as they do in the editor. A package that doesn't load is named with its file and the
+  reason, and its nodes' wires and properties are checked like a built-in node's.</li>
 <li>The generated code is valid MicroPython. This uses the same <code>mpy-cross</code> the editor deploys with, and catches a
   typo in a function node's code before you deploy.</li>
 </ul>
@@ -3252,7 +3370,8 @@ npm run build:cli
 <ul>
 <li><strong>WiFi and MQTT credentials.</strong> The secrets are in the backend, so the check uses stand-in values and says so in a
   note. A missing credential shows up when you open the flow in the editor.</li>
-<li><strong>Custom node packages.</strong> A flow that uses one fails with "unknown node type".</li>
+<li><strong>What a custom node's Python does.</strong> It is checked for syntax, not run. Test its body on its own with sample
+  messages.</li>
 <li><strong>A real board.</strong> It can't tell you the display is wired right, or that the memory is enough. Deploy does that;
   <a href="../command-line/#deploy-and-run-a-flow-without-the-editor">Command line</a> can deploy and run a flow without the
   editor.</li>

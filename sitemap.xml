@@ -141,6 +141,14 @@
          <lastmod>2026-11-03</lastmod>
     </url>
     <url>
+         <loc>https://docs.thingstudio.net/nodes/ble-advertise/</loc>
+         <lastmod>2026-11-03</lastmod>
+    </url>
+    <url>
+         <loc>https://docs.thingstudio.net/nodes/ble-scan/</loc>
+         <lastmod>2026-11-03</lastmod>
+    </url>
+    <url>
          <loc>https://docs.thingstudio.net/nodes/bme280/</loc>
          <lastmod>2026-11-03</lastmod>
     </url>

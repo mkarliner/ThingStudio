@@ -2165,7 +2165,7 @@
   <span class="md-ellipsis">
     
   
-    Hardware
+    Bluetooth
   
 
     
@@ -2178,6 +2178,119 @@
         
         <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_4_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_8_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Bluetooth
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/ble-scan/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ble scan
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/ble-advertise/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ble advertise
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_8_5" id="__nav_8_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hardware
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8_5">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -3125,6 +3238,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#my-esp32-c5-prints-psram-chip-is-not-connected-at-boot-is-it-broken" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        My ESP32-C5 prints "PSRAM chip is not connected" at boot. Is it broken?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#which-board-should-i-use-for-a-display-and-wifi-together" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3316,6 +3440,39 @@
     <span class="md-ellipsis">
       
         Do I need a terminal to install MicroPython?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-are-the-ble-nodes-grayed-out" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why are the ble nodes grayed out?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-doesnt-ble-scan-show-my-devices-name" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why doesn't ble scan show my device's name?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-did-wifi-get-slower-when-i-added-a-ble-scan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why did WiFi get slower when I added a ble scan?
       
     </span>
   </a>
@@ -3464,6 +3621,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#my-esp32-c5-prints-psram-chip-is-not-connected-at-boot-is-it-broken" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        My ESP32-C5 prints "PSRAM chip is not connected" at boot. Is it broken?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#which-board-should-i-use-for-a-display-and-wifi-together" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3661,6 +3829,39 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#why-are-the-ble-nodes-grayed-out" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why are the ble nodes grayed out?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-doesnt-ble-scan-show-my-devices-name" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why doesn't ble scan show my device's name?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-did-wifi-get-slower-when-i-added-a-ble-scan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why did WiFi get slower when I added a ble scan?
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -3747,6 +3948,9 @@ with PSRAM for large pages.</p>
 <p>The firmware doesn't use the PSRAM. The generic ESP32-S3 build leaves it off. Flash the build for boards with
 octal PSRAM (the <code>SPIRAM_OCT</code> variant) from <a href="https://micropython.org/download/ESP32_GENERIC_S3/">micropython.org/download</a>.
 The console then shows megabytes free. Freenove's S3 display boards are an example: 121 KB before, 7.8 MB after.</p>
+<h2 id="my-esp32-c5-prints-psram-chip-is-not-connected-at-boot-is-it-broken">My ESP32-C5 prints "PSRAM chip is not connected" at boot. Is it broken?</h2>
+<p>No. The generic ESP32-C5 build looks for PSRAM, and many C5 modules have none. It reports the failure, says
+"continuing without it", and starts MicroPython with the chip's own RAM.</p>
 <h2 id="which-board-should-i-use-for-a-display-and-wifi-together">Which board should I use for a display and WiFi together?</h2>
 <p>An ESP32 with external RAM (PSRAM), such as many ESP32-S3 boards. MicroPython puts its heap in the external RAM,
 leaving the chip's own RAM for WiFi. A classic ESP32 or ESP32-C3 without PSRAM can run a display and WiFi, but
@@ -3819,6 +4023,17 @@ to A3 (CS) and GPIO 32 to A4 (RST), then set those pins in the display node.</p>
 <p>No, for boards Thingstudio can flash: the ESP32 family over a serial port, and a board whose bootloader mounts as a
 drive (RP2040, RP2350, nRF52). Put the board in its bootloader and use <strong>Tools → Install firmware…</strong>. Other chips
 have their own installation routes; see <a href="../installing-micropython/">Install MicroPython</a>.</p>
+<h2 id="why-are-the-ble-nodes-grayed-out">Why are the ble nodes grayed out?</h2>
+<p>The chosen board has no Bluetooth LE that MicroPython's <code>bluetooth</code> module drives. The ESP32, S3, C3 and C5 have it.
+The ESP32-S2 has no Bluetooth, and an nRF52840's MicroPython reaches its radio through a different module
+(<code>ubluepy</code>), which these nodes don't use yet. Pick your board in the <strong>Board</strong> menu; see <a href="../boards/">boards</a>.</p>
+<h2 id="why-doesnt-ble-scan-show-my-devices-name">Why doesn't ble scan show my device's name?</h2>
+<p>Many devices put their name only in the scan response, which a passive scan doesn't ask for. Turn on <strong>active
+scan</strong>. Some never advertise a name: filter them by address or manufacturer id instead.</p>
+<h2 id="why-did-wifi-get-slower-when-i-added-a-ble-scan">Why did WiFi get slower when I added a ble scan?</h2>
+<p>On an ESP32 the WiFi and Bluetooth share one radio, taking turns. The longer the <strong>scan window</strong> against the <strong>scan
+interval</strong>, the less time WiFi gets. The default listens 30 ms in every 320 ms; lower the window, or raise the
+interval, if MQTT or HTTP become slow. See <a href="../nodes/ble-scan/">ble scan</a>.</p>
 
 
 

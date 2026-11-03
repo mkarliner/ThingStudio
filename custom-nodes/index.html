@@ -2167,7 +2167,7 @@
   <span class="md-ellipsis">
     
   
-    Hardware
+    Bluetooth
   
 
     
@@ -2180,6 +2180,119 @@
         
         <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_4_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_8_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Bluetooth
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/ble-scan/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ble scan
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/ble-advertise/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ble advertise
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_8_5" id="__nav_8_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hardware
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8_5">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -2890,6 +3003,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#libraries-you-can-import" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Libraries you can import
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#persisting-values" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3330,6 +3454,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#libraries-you-can-import" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Libraries you can import
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#persisting-values" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3557,6 +3692,9 @@ the node is selected:</p>
 </ul>
 <p>A polled <code>source</code> node must declare a numeric property named <code>intervalMs</code> — it
 sets the poll interval. An <code>eventSource</code> or <code>runOnce</code> source does not need one.</p>
+<p><strong><code>requires</code></strong> (optional) — hardware the node needs, as <code>{ "capabilities": ["ble"] }</code>. The words are the board
+definitions' capabilities (<code>wifi</code>, <code>ble</code>, <code>espnow</code>, <code>pio</code>, see <a href="../boards/">Boards</a>). On a board without one, the
+palette grays the node out and the compile refuses it, naming the missing capability.</p>
 <h2 id="the-behavior-namenodepy">The behavior: <code>&lt;name&gt;.node.py</code></h2>
 <p>Ordinary MicroPython. Define exactly one top-level function, named for
 your node's <code>kind</code>:</p>
@@ -3670,6 +3808,51 @@ typically — register it:</p>
 <p><code>runtime</code> is already available — no import needed. Without cleanup, a
 redeployed flow can leave the old socket open and fail with
 <code>EADDRINUSE</code> on the next deploy.</p>
+<h3 id="libraries-you-can-import">Libraries you can import</h3>
+<p>When a node imports one of these, Thingstudio sends it to the board with the flow:</p>
+<table>
+<thead>
+<tr>
+<th>Library</th>
+<th>For</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ts_ble</code></td>
+<td>the board's Bluetooth LE radio, shared with the ble nodes (below)</td>
+</tr>
+<tr>
+<td><code>ts_wifi</code>, <code>ts_mqtt</code>, <code>ts_http_server</code></td>
+<td>the flow's WiFi, MQTT client and HTTP server, shared with the network nodes</td>
+</tr>
+<tr>
+<td><code>threadsafe_event</code></td>
+<td>waking a coroutine from a hardware interrupt (see Event-driven sources)</td>
+</tr>
+<tr>
+<td><code>events</code>, <code>delay_ms</code>, <code>encoder</code>, <code>aadc</code></td>
+<td>Peter Hinch's asyncio switch, button, timer, encoder and ADC drivers</td>
+</tr>
+<tr>
+<td><code>ssd1306</code>, <code>st7789py</code>, <code>st7796py</code></td>
+<td>display drivers</td>
+</tr>
+<tr>
+<td><code>bme280_float</code>, <code>ft6336u</code></td>
+<td>the BME280 sensor and FT6336U touch drivers</td>
+</tr>
+<tr>
+<td><code>mqtt_as</code></td>
+<td>Peter Hinch's asyncio MQTT client</td>
+</tr>
+</tbody>
+</table>
+<p>A library of your own can't be sent yet. Code two of your nodes share goes in each <code>.node.py</code>.</p>
+<p>For Bluetooth, use <code>ts_ble.radio()</code>, not <code>bluetooth.BLE()</code>: the board has one radio, and the ble nodes use the same
+one. <code>radio().scan(...)</code> and <code>radio().advertise(...)</code> share it as <code>ble scan</code> and <code>ble advertise</code> do, and
+<code>ts_ble.decode(adv)</code> and <code>ts_ble.build_adv(...)</code> read and build advertising data. The radio is turned off on each
+redeploy.</p>
 <h3 id="persisting-values">Persisting values</h3>
 <p><code>runtime.settings</code> keeps a value across reboots and redeploys of the same flow. Use it for an application
 setting a user changes on the device — units, a colour scheme — not for per-message state, which belongs in a
@@ -3808,6 +3991,10 @@ a message naming what's wrong: bad <code>type</code>, wrong port count, missing
 <p><strong>Compile time</strong> — a bad property value on a specific node instance
 (e.g. a non-numeric <code>number</code> field) errors out naming that node and
 property.</p>
+<p><strong>Without the editor</strong> — the <a href="../check-a-flow/">check command</a> loads the same folder (or <code>--custom-nodes &lt;dir&gt;</code>).
+Check a flow that uses your node and it reports load and compile errors the same way:</p>
+<div class="highlight"><pre><span></span><code>node<span class="w"> </span>dist-cli/thingstudio-compile.mjs<span class="w"> </span>--board<span class="w"> </span>board:cyd<span class="w"> </span>my.flow.json
+</code></pre></div>
 <p><strong>Deploy time</strong> — <code>.node.py</code> is spliced into the flow as-is;
 Thingstudio doesn't check it. A typo surfaces as a runtime error (e.g.
 <code>NameError</code>) reported from the device, attributed to your node.</p>

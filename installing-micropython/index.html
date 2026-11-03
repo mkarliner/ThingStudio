@@ -2310,7 +2310,7 @@
   <span class="md-ellipsis">
     
   
-    Hardware
+    Bluetooth
   
 
     
@@ -2323,6 +2323,119 @@
         
         <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_4_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_8_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Bluetooth
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/ble-scan/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ble scan
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/ble-advertise/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ble advertise
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_8_5" id="__nav_8_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hardware
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8_5">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -3308,7 +3421,7 @@ After flashing it, <strong>Install runtime</strong> writes only the boot script.
 chip families the editor can write are listed, and only builds whose hash is pinned, so what you flash is what was
 tested.</p>
 <p>The list covers every build Thingstudio pins, so <strong>Or use your own image file</strong> is only for the rest: a build for a
-board Thingstudio doesn't list, or an image you downloaded yourself. Pick the <code>.bin</code> or <code>.uf2</code>; the chip family you
+board Thingstudio doesn't list, a chip with no pinned build yet (the ESP32-C5), or an image you downloaded yourself. Pick the <code>.bin</code> or <code>.uf2</code>; the chip family you
 choose decides the address, and the file's own header usually decides the family.</p>
 <p>Flashing erases the flow and all settings on the board. Afterwards, <a href="../connecting/">connect</a> it
 and <a href="../installing-runtime/">install the runtime</a>.</p>
@@ -3344,6 +3457,11 @@ exact board if it's listed, or the generic build for your chip:</p>
 <tr>
 <td>ESP32-C3</td>
 <td><code>ESP32_GENERIC_C3</code></td>
+<td><code>.bin</code></td>
+</tr>
+<tr>
+<td>ESP32-C5</td>
+<td><code>ESP32_GENERIC_C5</code></td>
 <td><code>.bin</code></td>
 </tr>
 <tr>
@@ -3393,6 +3511,10 @@ esptool.py<span class="w"> </span>--port<span class="w"> </span>PORT<span class=
 <td>ESP32-S3, ESP32-C3</td>
 <td><code>0</code></td>
 </tr>
+<tr>
+<td>ESP32-C5</td>
+<td><code>0x2000</code></td>
+</tr>
 </tbody>
 </table>
 <p><code>PORT</code> is the board's serial port. On macOS and Linux it starts with <code>/dev/</code>, on Windows it's <code>COM</code> followed by a
@@ -3407,6 +3529,9 @@ a different port afterwards.</p>
 <p><a href="https://thonny.org">Thonny</a> installs MicroPython on the board through a GUI. Open
 <strong>Tools → Options → Interpreter</strong> and use <strong>Install or update MicroPython</strong>.</p>
 <p>When it's done, close Thonny. Like esptool, it needs the board's port to itself.</p>
+<p>Thonny can't install MicroPython on an ESP32-C5. It writes the image at <code>0</code>, but a C5 needs <code>0x2000</code>, and Thonny
+doesn't offer that address. The board then restarts in a loop printing <code>invalid header</code>. Use Thingstudio or
+esptool instead.</p>
 <h3 id="other-microcontrollers">Other microcontrollers</h3>
 <p>Other chips, such as STM32, nRF or SAMD, each have their own way of installing MicroPython. See your board's page
 on <a href="https://micropython.org/download/">micropython.org/download</a> and the
