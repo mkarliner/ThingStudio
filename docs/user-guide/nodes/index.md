@@ -44,6 +44,8 @@ See [flows, nodes and messages](../background/flows-and-nodes.md) for how they f
 | send or receive UDP packets | [udp send](udp-send.md), [udp receive](udp-receive.md) |
 | read BLE beacons and sensors | [ble scan](ble-scan.md) |
 | broadcast a reading over Bluetooth | [ble advertise](ble-advertise.md) |
+| let a phone read or set a value | [ble characteristic out](ble-characteristic-out.md), [ble characteristic in](ble-characteristic-in.md) |
+| send and receive text with a phone terminal app | [ble uart in](ble-uart-in.md), [ble uart out](ble-uart-out.md) |
 | know when WiFi connects or drops | [wifi status](wifi-status.md) |
 | stop messages while WiFi is down | [wifi gate](wifi-gate.md) |
 
@@ -88,6 +90,12 @@ These nodes need a board with Bluetooth LE: ESP32, ESP32-S3, ESP32-C3 or ESP32-C
 | --- | --- | --- |
 | [ble scan](ble-scan.md) | source | Sends a message for each Bluetooth LE advertisement nearby. |
 | [ble advertise](ble-advertise.md) | sink | Advertises the board's name and a payload over Bluetooth LE. |
+| [ble characteristic in](ble-characteristic-in.md) | source | Sends a message when a phone writes a characteristic. |
+| [ble characteristic out](ble-characteristic-out.md) | sink | Sets a characteristic a phone can read, and notifies it. |
+| [ble uart in](ble-uart-in.md) | source | Receives text lines from a phone terminal app. |
+| [ble uart out](ble-uart-out.md) | sink | Sends text to a phone terminal app. |
+
+The board's Bluetooth name is set once, in the [BLE config](ble.md).
 
 ## Hardware
 
@@ -125,6 +133,7 @@ Some settings are set once and shared by the nodes that use them:
 - **WiFi network** and **MQTT broker**: config nodes, with the real passwords kept outside the flow file. See
   [config nodes](../working-in-the-editor.md#config-nodes).
 - **I2C bus**: the pins and clock for a bus, shared by every I2C node on it. See [I2C bus](i2c-bus.md).
+- **BLE**: the board's Bluetooth name, shared by the ble nodes. See [BLE](ble.md).
 - **Touch panel**: the controller, bus and size of a touch screen, used by a gui screen or a touch node. See
   [touch panels](touch-panel.md).
 
