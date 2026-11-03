@@ -1,5 +1,9 @@
 # Blink from anywhere
 
+!!! note "Work in progress"
+
+    This tutorial is still being checked on a board. The example flow compiles, but some steps may not match the editor.
+
 If you've worked through [Web Blink](blink-from-your-network.md), you have a board on your WiFi that switches its LED
 when a browser on your network asks. Here an MQTT broker sits in the middle. A broker passes messages between clients,
 so your phone or laptop doesn't have to be on the board's network. You'll publish a message from the board, switch the

@@ -55,6 +55,11 @@
       "file": "docs/user-guide/sensor-display.md",
       "rule": "plans",
       "snippet": "!!! note \"Work in progress\""
+    },
+    {
+      "file": "docs/user-guide/tutorials/blink-from-anywhere.md",
+      "rule": "plans",
+      "snippet": "!!! note \"Work in progress\""
     }
   ]
 }

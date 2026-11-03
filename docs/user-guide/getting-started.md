@@ -68,8 +68,8 @@ To upgrade or remove Thingstudio, or build it from source, see
 
 How you start Thingstudio depends on how you installed it:
 
-- **Installer script:** run `thingstudio` in a terminal. If the command isn't found, open a new terminal and try
-  again.
+- **Installer script:** run `thingstudio` in a terminal. If the command isn't found, see
+  [If the command isn't found](#if-the-command-isnt-found).
 - **Package on macOS or Linux:** run `./thingstudio` in the unpacked folder.
 - **Package on Windows:** run `thingstudio.cmd` in the unzipped folder.
 
@@ -77,6 +77,50 @@ The editor opens in your browser at `http://127.0.0.1:8765/`. Leave the terminal
 there to stop Thingstudio.
 
 Thingstudio also serves this user guide, so it works offline. **Help → User guide** opens it.
+
+### Where it is installed
+
+- **Installer script, macOS and Linux:** the program is in `~/.local/share/thingstudio`, and the `thingstudio`
+  command is `~/.local/bin/thingstudio`.
+- **Installer script, Windows:** `%LOCALAPPDATA%\Thingstudio`. The `thingstudio` command is in its `bin` folder.
+- **Package:** the folder you unpacked it into.
+
+To see which copy your terminal runs, use `command -v thingstudio` in a macOS or Linux shell, or
+`Get-Command thingstudio` in PowerShell.
+
+### If the command isn't found
+
+The shell looks for commands in the folders listed in your PATH, and remembers what it found. After an install it can
+be out of date in two ways.
+
+**The command's folder isn't on your PATH.** To check, run `echo "$PATH"` and look for `.local/bin`. When it's missing,
+the installer prints the line that adds it to your shell's startup file; it prints nothing when the folder is already
+on your PATH. Run that line, or add the line `export PATH="$HOME/.local/bin:$PATH"` to the startup file yourself. Then
+make the current terminal read the file, or open a new terminal:
+
+| Shell | Run |
+| --- | --- |
+| zsh (macOS default) | `source ~/.zshrc` |
+| bash on Linux | `source ~/.bashrc` |
+| bash on macOS | `source ~/.bash_profile` |
+| PowerShell | Open a new window. |
+
+**The folder is on your PATH, but the shell hasn't noticed the new command.** In zsh, run `rehash`. In bash, run
+`hash -r`.
+
+On Windows, the installer adds the command to the PowerShell window that ran it and to your saved PATH. A PowerShell
+window that was already open doesn't see it. Open a new window, or run this in the old one:
+
+```powershell
+$env:Path = [Environment]::GetEnvironmentVariable('Path','User') + ';' + [Environment]::GetEnvironmentVariable('Path','Machine')
+```
+
+If the command still isn't found, start Thingstudio by its full path, from the list above.
+
+### Remove Thingstudio
+
+[Installation details](installation-details.md#remove) has the commands for the installer script. To remove a package,
+delete its folder. Removing never touches your flows or your settings in `.thingstudio`.
 
 ## Getting help
 

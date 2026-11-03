@@ -57,7 +57,6 @@ ThingStudio is designed to be private, and as open and hackable as possible:
 ThingStudio is designed for developers with a reasonable amount of programming experience, it doesn't aim to teach programming fundamentals.
 You should also have some level of experience in working with microcontrollers. You don't have to be an EE graduate, but you should be comfortable wiring a breadboard. You should also be able to do basic commands from the terminal or PowerShell.
 
-
 ## What's different about programming with Thingstudio?
 
 A typical microcontroller program, in Arduino for example, has a `setup()` section that runs once at boot, then a
@@ -101,7 +100,7 @@ Node-RED, flows run on a server or a Raspberry Pi. In Thingstudio, they run on t
 
 ## Including your own code
 
-There are a number of ready made functions available built-in [nodes](nodes/index.md) . There is also the 
+There are a number of ready made functions available built-in [nodes](nodes/index.md) . There is also the
 [function](nodes/function.md) node, which will take regular MicroPython and runs your it on each message that arrives:
 
 ```python
