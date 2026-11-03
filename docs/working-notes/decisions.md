@@ -333,3 +333,9 @@ A WiFi "Power save" control (on by default, off for an immediate-answer mains bo
 hook in `ts_wifi.ensure_station`, one select on the flow's WiFi config, a major runtime bump -- but parked until a
 runtime change touches `ts_wifi` anyway (Mike, 2026-11-01, having hit the idle-board wake on `http in`). 1 entry:
 `docs/working-notes/decisions/modem-sleep-setting.md`.
+
+## BLE nodes
+
+BLE flow nodes ship in phases: broadcast first (scan, advertise), then the board as a GATT peripheral (unpaired,
+with a documented warning), then central. ESP32 family only for now; Pico W later. Library choice still open
+(2026-11-03). 1 entry: `docs/working-notes/decisions/ble-nodes.md`.

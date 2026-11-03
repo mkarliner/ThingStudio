@@ -1,6 +1,7 @@
 # BLE nodes — scoping
 
-Status: proposal, 2026-11-03. Not yet agreed with Mike; the open calls are at the end. Branch: `ble-nodes`.
+Status: partly decided, 2026-11-03. Calls 2-5 agreed with Mike (`decisions/ble-nodes.md`); call 1, the library,
+is open. Branch: `ble-nodes`.
 
 Scope: flow nodes that use the board's Bluetooth Low Energy radio. Not in scope: BLE as a board transport (the
 editor ⇄ board link over Web Bluetooth), which stays the separate v2 item in design doc §10 and
@@ -102,10 +103,9 @@ retries on a fixed interval. It does not hunt for a different peer.
 
 ## Calls for Mike
 
-1. **Library:** own `ts_ble` on the raw `bluetooth` module (recommended), flattened `aioble`, or a catalog
-   change to carry packages?
-2. **Phasing:** ship phase 1 (scan + advertise) on its own first, then phase 2 (peripheral + UART)?
-3. **Pico W:** add `ble` to `pico-w` (and a `pico-2-w` board) in this work, or ESP32 only for now?
-4. **Unpaired GATT server:** OK for phase 2 with a documented warning, pairing deferred?
-5. **Names:** `ble scan` / `ble advertise` / `ble characteristic in|out` / `ble uart in|out` — or shorter (`ble char
-   in`)?
+1. **Library: open.** Own `ts_ble` on the raw `bluetooth` module, flattened `aioble`, or a catalog change to carry
+   packages.
+2. **Phasing: agreed.** Phase 1 (scan + advertise) ships on its own, then phase 2, then phase 3.
+3. **Pico W: not yet.** ESP32 family only in this work.
+4. **Unpaired GATT server: agreed** for phase 2, with a documented warning; pairing deferred.
+5. **Names: agreed** as proposed.
