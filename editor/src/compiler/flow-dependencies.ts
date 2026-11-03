@@ -17,11 +17,17 @@ import type { DepCommitMessage, DepPutMessage } from "../protocol/messages.js";
 export interface DependencyInfo {
   readonly name: string;
   readonly requires: readonly string[];
-  /** Board file name ("mqtt_as.py") and Python source. */
+  /** Board file name ("mqtt_as.py", or "aioble/core.py" in a package, runtime 15.0.0) and Python source. */
   readonly files: readonly { readonly name: string; readonly source: string }[];
 }
 
 const IMPORT_LINE = /^[ \t]*(?:import[ \t]+([\w.]+(?:[ \t]*,[ \t]*[\w.]+)*)|from[ \t]+([\w.]+)[ \t]+import\b)/gm;
+
+/** The top-level module a library's board file belongs to: "mqtt_as.py" -> "mqtt_as", "aioble/core.py" ->
+ * "aioble". What a flow's `import` is matched against (findImportedModules gives top-level names). */
+export function topModuleOfBoardFile(boardName: string): string {
+  return boardName.replace(/\.py$/, "").split("/")[0]!;
+}
 
 /** Top-level module names imported anywhere in `source` ("from a.b import c" -> "a"). A line inside a
  * string can match too; harmless, since only names in the library list matter. */
@@ -42,7 +48,7 @@ export function findImportedModules(source: string): Set<string> {
 export function resolveDependencies(modules: Iterable<string>, list: readonly DependencyInfo[]): DependencyInfo[] {
   const byName = new Map(list.map((d) => [d.name, d]));
   const byModule = new Map<string, DependencyInfo>();
-  for (const d of list) for (const f of d.files) byModule.set(f.name.replace(/\.py$/, ""), d);
+  for (const d of list) for (const f of d.files) byModule.set(topModuleOfBoardFile(f.name), d);
 
   const out: DependencyInfo[] = [];
   const seen = new Set<string>();

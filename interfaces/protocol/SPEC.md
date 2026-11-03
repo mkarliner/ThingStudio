@@ -367,8 +367,10 @@ diagram and a table. Two rules follow from it, and the editor relies on both:
   write.
 
 Every other piece is illegal and answered `BadPiece`: a gap, a different `total`, a piece that runs past the end,
-a piece at `offset` > 0 when nothing is under way. A library piece is checked before this: a `name` or `file`
-that isn't a plain module name is `BadName`, and a first piece larger than the free flash space is `NoSpace`.
+a piece at `offset` > 0 when nothing is under way. A library piece is checked before this: a `name` that isn't a
+plain module name, or a `file` that isn't a plain module file name (`.py`/`.mpy`, optionally in plain-named folders:
+`aioble/core.mpy`, runtime 15.0.0; never absolute, never `..`), is `BadName`, and a first piece larger than the free
+flash space is `NoSpace`.
 
 ### 7.3 Commit
 

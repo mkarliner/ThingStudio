@@ -86,7 +86,10 @@ jobs:
           python3 - <<'PY'
           import json, os
           idx = json.load(open("firmware/classic-esp32/out/_deps.json"))
-          staged = {n[:-3] for n in os.listdir("firmware/classic-esp32/out/stage") if n.endswith(".py")}
+          stage = "firmware/classic-esp32/out/stage"
+          # A module (name.py) or, from runtime 15.0.0, a package (name/__init__.py).
+          staged = {n[:-3] for n in os.listdir(stage) if n.endswith(".py")}
+          staged |= {n for n in os.listdir(stage) if os.path.isfile(os.path.join(stage, n, "__init__.py"))}
           missing = sorted(set(idx) - staged)
           if missing:
               raise SystemExit("indexed but not staged: %s" % ", ".join(missing))
