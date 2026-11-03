@@ -1,0 +1,111 @@
+# BLE nodes — scoping
+
+Status: proposal, 2026-11-03. Not yet agreed with Mike; the open calls are at the end. Branch: `ble-nodes`.
+
+Scope: flow nodes that use the board's Bluetooth Low Energy radio. Not in scope: BLE as a board transport (the
+editor ⇄ board link over Web Bluetooth), which stays the separate v2 item in design doc §10 and
+`outstanding-items.md`. Nothing here touches the wire protocol.
+
+## What exists today
+
+- **Capability word:** `ble` is already on the ESP32, ESP32-S3 and ESP32-C3 processors (`node-board-mapping.md`).
+  Not on the S2 (no Bluetooth). Not on the nRF52840: its MicroPython port has `ubluepy`, not the `bluetooth`
+  module (`decisions/chip-board-definitions.md`). No node uses `ble` yet.
+- **Pico W / Pico 2 W:** stock MicroPython has the `bluetooth` module (BTstack) on the `RPI_PICO_W` build, but the
+  `pico-w` board has no `ble` capability. Adding it is board data (`capabilities: ["ble"]`), not a schema change.
+- **Firmware:** stock ESP32 builds include NimBLE. The custom classic-ESP32 image is "stock `sdkconfig.base` + BLE"
+  (`classic-esp32-firmware-briefing.md`); confirm it before relying on it.
+- **Memory:** on a classic ESP32, Bluetooth's reservation is part of the ~287 KB gone before any heap
+  (`learnings/micropython-device-runtime.md`). BLE plus WiFi plus a display on a CYD will very likely not fit.
+- **Node shape:** core packages under `editor/src/node-library/core-packages/` (descriptor + compile hook +
+  device Python), with shared state in a vendored flow dependency, as `ts_mqtt`/`ts_wifi` do.
+
+## The radio is one keyed singleton
+
+There is one `bluetooth.BLE()` object and one IRQ handler per board. Every BLE node goes through one shared
+library (working name `ts_ble`, a flow dependency like `ts_mqtt`) that:
+
+- builds the radio once through `runtime.shared('ble', 0, signature, factory)`, signature = the `ble` config
+  (device name, and so on). A second, different config is a compile error, not a silent override;
+- owns the one IRQ handler and routes events to each node's own queue (the `ts_mqtt` per-node queue pattern);
+- collects GATT services from every peripheral node and registers them **once**, before advertising starts.
+  `gatts_register_services` takes the whole table in one call, so this is a startup barrier, not a per-node call;
+- registers a cleanup that deactivates the radio on redeploy, since module state survives `cancel_running`.
+
+The ordering point (register every service, then advertise) is the main design risk. Spike it first.
+
+## Proposed nodes
+
+Names are palette names. Every message keeps the `payload`/`topic` envelope; `topic` is `''` unless noted.
+
+### Phase 1 — broadcast only, no connections
+
+| Node | Kind | What it does |
+|---|---|---|
+| `ble` (config) | config | Device name, and later TX power and address type. One per flow (`singleton: true`, like WiFi). |
+| `ble scan` | event source | Scans; one message per advertisement that passes the filters. `payload`: raw advertising data (`bytes`). Fields: `addr`, `addrType`, `rssi`, `name`, `mfr` (manufacturer data, bytes), `svcData`. Properties: name/address/service-UUID/manufacturer-ID filter, active vs passive, interval/window, a dedupe window. |
+| `ble advertise` | sink | Sets what the board advertises. Each input message updates the manufacturer data or service data from `payload` (bytes). Properties: interval, connectable (off in phase 1), the field to set. |
+
+These cover the common cases: reading off-the-shelf sensors (BTHome, Ruuvi, Xiaomi-style beacons) and broadcasting
+a reading with no pairing. Decoders for particular beacon formats are transforms; ship one (BTHome v2), leave the
+rest to custom nodes.
+
+### Phase 2 — the board as a peripheral (GATT server)
+
+| Node | Kind | What it does |
+|---|---|---|
+| `ble characteristic out` | sink | Writes `payload` to a characteristic and notifies subscribed centrals. |
+| `ble characteristic in` | event source | One message each time a central writes the characteristic. Fields: `conn` (connection handle). |
+| `ble uart` (in / out) | source + sink | The Nordic UART Service, so phone apps (nRF Connect, Serial Bluetooth Terminal, Bluefruit) can send and receive text with no setup. Same split as `mqtt subscribe`/`mqtt publish`. |
+
+A characteristic is named by service UUID + characteristic UUID on the node. Two nodes naming the same pair share
+it, as two MQTT nodes share a client. An encoding property (`bytes`, `utf8`, `int`/`uint` 8/16/32 little-endian,
+`float32`) sets the port type, so the wire check stays honest.
+
+The `in`/`out` split follows the existing source/transform/sink model. A single node with an input and an
+external-event output would need a new kind, the same gap `ebutton` already notes for multi-event sources.
+
+### Phase 3 — the board as a central (GATT client)
+
+`ble connect` (config: a peer by address or advertised name), `ble read`, `ble write`, `ble notify` (source).
+Connection loss, reconnect and service discovery make this the largest piece. One deterministic path: connect,
+discover, subscribe, and each step is a named state with one failure line. The node reports `disconnected` and
+retries on a fixed interval. It does not hunt for a different peer.
+
+## Cross-cutting
+
+- **Capability gating:** every node `requires: { capabilities: ["ble"] }`. The palette greys them out elsewhere.
+- **Library choice (call 1):** `aioble` (micropython-lib, MIT) is the maintained asyncio BLE layer, but it is a
+  package (`aioble/` with relative imports). The dependency catalog only installs flat modules with identifier
+  names (`deps.py`, runtime-api §3). Options: (a) flatten `aioble` into modules with recorded patches,
+  (b) extend the catalog to carry packages, which is an interface change, or (c) write a small `ts_ble` on
+  the raw `bluetooth` module for phases 1–2 and decide on `aioble` at phase 3. Recommend (c). Scan, advertise and
+  a GATT server are a few hundred lines on the raw API. The central role is where `aioble` earns its size.
+- **WiFi coexistence:** ESP32 WiFi and BLE share one radio. A continuous scan cuts WiFi throughput and can delay
+  MQTT keepalives. Default the scan duty cycle low, and document it in the FAQ.
+- **Memory:** warn, don't refuse (AGENTS.md "warn on a prediction"). A compile warning on classic ESP32 when a
+  flow uses BLE with a display, or with BLE + WiFi + MQTT.
+- **Security (`docs/security-policy.md`):** scanned advertisements are untrusted input parsed on the board (§3.6).
+  A GATT server opens a new boundary: anyone in radio range can write a writable characteristic. That needs a new
+  row in the table and a tier. Phase 2 ships unpaired, and the docs say so. Pairing/bonding is a later item.
+  Vendoring anything needs Mike's approval first (§3.7).
+- **Fault handling:** radio activation failure, a full service table, an over-long advertising payload (31 bytes
+  legacy) and a write to a characteristic that isn't registered each get one attributed `NODE_ERROR` line naming
+  the node and the figure (bytes, UUID).
+- **Runtime version:** if this is all flow dependencies and codegen with no `runtime.py` change, there's no bump.
+  Re-check if `ts_ble` needs a runtime hook (e.g. for redeploy cleanup ordering).
+- **Tests:** a `bluetooth` mock in `editor/test/fixtures/pymock/` for codegen tests. The unix MicroPython port has
+  no `bluetooth`, so the real-MicroPython suite covers only the pure parts (advertising-data encode/decode).
+  Hardware checks: ESP32-S3 and ESP32-C3 against a phone running nRF Connect, plus a Pico W if call 3 says yes.
+- **Docs:** a page per node, the nodes index, `PROPERTY_NOTES`, the regenerated catalog, FAQ entries (BLE + WiFi
+  memory; "my phone doesn't see the board"; phones caching GATT tables after a redeploy), and one tutorial.
+
+## Calls for Mike
+
+1. **Library:** own `ts_ble` on the raw `bluetooth` module (recommended), flattened `aioble`, or a catalog
+   change to carry packages?
+2. **Phasing:** ship phase 1 (scan + advertise) on its own first, then phase 2 (peripheral + UART)?
+3. **Pico W:** add `ble` to `pico-w` (and a `pico-2-w` board) in this work, or ESP32 only for now?
+4. **Unpaired GATT server:** OK for phase 2 with a documented warning, pairing deferred?
+5. **Names:** `ble scan` / `ble advertise` / `ble characteristic in|out` / `ble uart in|out` — or shorter (`ble char
+   in`)?
