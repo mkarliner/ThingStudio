@@ -270,3 +270,9 @@ committed -- if this VM stays in the loop, `install.sh` should grow the same sin
   Every connectable advertisement was followed ~17 ms later by an empty scan response (adv_type 4) from the same
   address, which phase 1 sent on as a message with `payload b''` and `connectable False`. Fixed the same day:
   `ts_ble` drops empty scan responses, and a non-empty one carries `scanResponse True`, `connectable None`.
+  Confirmed on the C5 after the fix (deploy at 14:25): `scanResponse` present, empty responses gone. The same
+  redeploy showed `scan stopped by the radio` for a moment: the radio answers `gap_scan(None)` with a scan-done
+  event, and `stop()` cleared its own flag only after asking. Fixed (flag cleared first); both test stand-ins now
+  send scan-done on stop, so the tests catch it. Also seen on that deploy, not chased: the first flow piece arrived
+  garbled (`incorrect padding`) and the resend worked, while the old flow was printing a debug line per
+  advertisement over the same serial link. Watch for it with chatty flows on the CH340E.

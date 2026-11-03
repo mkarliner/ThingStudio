@@ -195,6 +195,8 @@ r2.scan('n1', 320, 60, True, name_prefix='', addr='', mfr_id=None, svc_uuid='', 
 print('NEW SETTINGS OK')
 `);
     expect(out).toContain("AFTER False False None");
+    // Its own stop is not "the radio stopped the scan".
+    expect(out).not.toContain("scan stopped by the radio");
     expect(out).toContain("FRESH True True 0");
     expect(out).toContain("NEW SETTINGS OK");
   });

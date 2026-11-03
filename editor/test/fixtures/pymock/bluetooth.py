@@ -49,7 +49,10 @@ class BLE:
         if not self.is_active:
             raise OSError(19)  # ENODEV: the radio is off
         self.calls.append(("gap_scan", duration_ms, interval_us, window_us, active))
+        was = self.scanning
         self.scanning = duration_ms is not None
+        if duration_ms is None and was and self.handler is not None:
+            self.handler(6, ())  # the real stack reports scan-done when a scan is stopped
 
     def gap_advertise(self, interval_us, adv_data=None, resp_data=None, connectable=True):
         if not self.is_active:

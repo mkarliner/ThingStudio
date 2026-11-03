@@ -36,6 +36,8 @@ class _FakeBLE:
 
     def gap_scan(self, duration, interval_us=1280000, window_us=11250, active=False):
         self.calls.append(("gap_scan", duration, interval_us, window_us, active))
+        if duration is None and self.handler is not None:
+            self.handler(6, ())  # as the real stack does when a scan is stopped
 
     def gap_advertise(self, interval_us, adv_data=None, connectable=True):
         self.calls.append(("gap_advertise", interval_us, adv_data, connectable))
@@ -154,8 +156,16 @@ def test_different_scan_settings_refused():
 
 def test_redeploy_turns_the_radio_off_and_the_next_deploy_starts_fresh():
     r = ts_ble.radio()
+    r.scan("n1", 320, 30, False, name_prefix="", addr="", mfr_id=None, svc_uuid="", repeat_ms=0)
     r.advertise("a1", 500, ts_ble.build_adv("ts"))
-    _redeploy()
+    reported = []
+    saved = runtime.report_status
+    runtime.report_status = lambda nid, state, text=None: reported.append((nid, state, text))
+    try:
+        _redeploy()
+    finally:
+        runtime.report_status = saved
+    assert reported == [], reported
     assert _BLE.on is False
     r2 = ts_ble.radio()
     assert r2 is not r and _BLE.on is True and r2.scanners == []

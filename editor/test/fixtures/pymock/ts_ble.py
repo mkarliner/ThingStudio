@@ -290,9 +290,12 @@ class _Radio:
 
     def stop(self):
         try:
-            if self.scanning:
-                self.ble.gap_scan(None)
+            # Cleared before stopping: the radio answers gap_scan(None) with a scan-done event, which must not be
+            # reported as the radio stopping the scan by itself (seen on the ESP32-C5 at every redeploy).
+            was_scanning = self.scanning
             self.scanning = False
+            if was_scanning:
+                self.ble.gap_scan(None)
             self.ble.gap_advertise(None)
         finally:
             self.ble.active(False)
