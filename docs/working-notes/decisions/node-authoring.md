@@ -974,3 +974,8 @@ only on change. Board-to-board messaging over I2C was split off as a separate PO
   and the future dynamic `mqtt_subscribe` (see `outstanding-items/mqtt-dynamic-subscription.md`). Approved with
   "continue" after the 2026-10-19 review recommended it; additive, saved flows unaffected. **`ntp` flipped the same
   day**, the first two-faced package: `run` pokes the clock, `wait`/`emit` send after a sync, one closure.
+- **2026-11-03 — Build a node from the user manual, as a user would.** Mike: "to make a new node, you should read
+  the user manual; if it doesn't work for you, how would a user get it to work". New node work (first: the BLE
+  nodes) follows `docs/user-guide/custom-nodes.md` and the node pages, not a neighbouring node's code. Where the
+  manual falls short, that is a manual bug, fixed in the same change. Same for board bring-up: the ESP32-C5 install
+  failure was checked against `installing-micropython.md` and `debugging.md` first.

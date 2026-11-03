@@ -36,7 +36,7 @@ chip families the editor can write are listed, and only builds whose hash is pin
 tested.
 
 The list covers every build Thingstudio pins, so **Or use your own image file** is only for the rest: a build for a
-board Thingstudio doesn't list, or an image you downloaded yourself. Pick the `.bin` or `.uf2`; the chip family you
+board Thingstudio doesn't list, a chip with no pinned build yet (the ESP32-C5), or an image you downloaded yourself. Pick the `.bin` or `.uf2`; the chip family you
 choose decides the address, and the file's own header usually decides the family.
 
 Flashing erases the flow and all settings on the board. Afterwards, [connect](connecting.md) it
