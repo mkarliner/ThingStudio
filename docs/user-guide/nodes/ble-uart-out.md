@@ -4,12 +4,14 @@ Sends text to the devices connected over Bluetooth LE, through the Nordic UART S
 
 ## Properties
 
-- **end with a newline** — add `\n` after each payload. On by default.
+- **end with a newline** — add `\n` after each payload. Default on.
 - **BLE** — the flow's [BLE config](ble.md).
 
 ## Wiring
 
-- **Input** — `payload` as text. Bytes are sent as they are; anything else is sent as `str(payload)`.
+**Input** — `payload` as text. Bytes are sent as they are; anything else is sent as `str(payload)`.
+
+This node has no output.
 
 ## Behavior
 
@@ -18,4 +20,4 @@ agrees a larger MTU. With no device connected, nothing is sent and nothing is ke
 
 ## Errors
 
-None at run time. Anyone in range can connect and read what's sent: there's no pairing yet.
+A board without the ble nodes stops the deploy. Anyone in range can connect and read what's sent: there's no pairing.

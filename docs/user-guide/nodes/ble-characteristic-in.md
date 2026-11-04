@@ -4,21 +4,23 @@ Sends a message each time a connected device writes a Bluetooth LE characteristi
 
 ## Properties
 
-- **service UUID** — the service the characteristic belongs to: 16-bit (`181a`) or 128-bit. Use the same service on
-  the nodes for its other characteristics.
-- **characteristic UUID** — 16-bit (`2a6e`) or 128-bit.
+- **service UUID** — the service the characteristic belongs to: 16-bit (`181a`) or 128-bit. Required. Use the same
+  service on the nodes for its other characteristics.
+- **characteristic UUID** — 16-bit (`2a6e`) or 128-bit. Required.
 - **encoding** — how the bytes written become `payload`: **bytes**, **text** (UTF-8), **int8**, **uint8**,
-  **int16**, **uint16**, **int32**, **uint32** or **float32**, little-endian. It also sets the output's type, so a
-  number encoding can wire into a number input.
-- **BLE** — the flow's [BLE config](ble.md), for the board's name.
+  **int16**, **uint16**, **int32**, **uint32** or **float32**, little-endian. Default **bytes**. It also sets the
+  output's type, so a number encoding can wire into a number input.
+- **BLE** — the flow's [BLE config](ble.md), for the board's name. Optional.
 
 For your own service, pick a random 128-bit UUID (an online UUID generator, or `python3 -c "import uuid;
 print(uuid.uuid4())"`). 16-bit UUIDs belong to services the Bluetooth SIG has defined.
 
 ## Wiring
 
-- **Output** — `payload` is the value. The message also carries `conn`, the connection's number, and `uuid`, the
-  characteristic.
+**Input** — none. `ble characteristic in` is a source.
+
+**Output** — `payload` is the value. The message also carries `conn`, the connection's number, and `uuid`, the
+characteristic.
 
 ## Behavior
 
@@ -36,8 +38,9 @@ The node's status shows **advertising, no one connected** or **1 connected**.
 
 ## Errors
 
-A missing or malformed UUID, or two nodes using one characteristic with different encodings, stops the compile.
+A missing or malformed UUID, two nodes using one characteristic with different encodings, or a board without the
+ble nodes stops the deploy.
 A write that doesn't decode (2 bytes sent to an `int32`, text that isn't UTF-8) is reported on the console with its
 size and dropped.
 
-Anyone in range can connect and write: there's no pairing yet. Treat what arrives as untrusted input.
+Anyone in range can connect and write: there's no pairing. Treat what arrives as untrusted input.

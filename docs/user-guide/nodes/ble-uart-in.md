@@ -4,13 +4,15 @@ Receives text from a connected device over Bluetooth LE, through the Nordic UART
 
 ## Properties
 
-- **one message per line** — on by default: text is gathered until a newline, and the line is sent without its
-  line ending. Off: one message per write.
+- **one message per line** — default on: text is gathered until a newline (`\n`; a `\r` is dropped), and the line
+  is sent without its line ending. Off: one message per write.
 - **BLE** — the flow's [BLE config](ble.md).
 
 ## Wiring
 
-- **Output** — `payload` is the text. The message also carries `conn`, the connection's number.
+**Input** — none. `ble uart in` is a source.
+
+**Output** — `payload` is the text. The message also carries `conn`, the connection's number.
 
 ## Behavior
 
@@ -24,4 +26,4 @@ A line over 512 bytes is sent as it is, so a device that never sends a newline s
 ## Errors
 
 Bytes that aren't UTF-8 text are reported on the console and dropped. Anyone in range can connect and send: there's
-no pairing yet.
+no pairing.

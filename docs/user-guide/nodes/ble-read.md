@@ -4,20 +4,21 @@ Reads a characteristic of another Bluetooth LE device for each message that arri
 
 ## Properties
 
-- **BLE peer** — the [device to read from](ble-peer.md).
-- **service UUID** / **characteristic UUID** — the characteristic to read: 16-bit (`2a6e`) or 128-bit. Phone apps
-  such as nRF Connect list a device's UUIDs.
+- **BLE peer** — the [device to read from](ble-peer.md). Required.
+- **service UUID** / **characteristic UUID** — the characteristic to read: 16-bit (`2a6e`) or 128-bit. Required.
+  Apps such as nRF Connect list a device's UUIDs.
 - **encoding** — how the bytes read become `payload`: **bytes**, **text**, **int8** to **uint32**, or **float32**,
-  little-endian. It also sets the output's type.
+  little-endian. Default **bytes**. It also sets the output's type.
 
 ## Wiring
 
-- **Input** — any message starts a read. Wire a [timer](timer.md) in to read at an interval.
-- **Output** — the incoming message, with `payload` set to the value read.
+**Input** — any message starts a read. Wire a [timer](timer.md) in to read at an interval.
+
+**Output** — the incoming message, with `payload` set to the value read.
 
 ## Behavior
 
-The read waits up to 5 seconds for the device's answer, and holds up the flow meanwhile. For a device that pushes
+The read waits up to 5 seconds for the device's answer, and the message's chain waits with it. For a device that pushes
 its values, a [ble notify](ble-notify.md) node needs no polling.
 
 ## Errors

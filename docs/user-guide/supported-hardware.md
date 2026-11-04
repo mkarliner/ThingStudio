@@ -42,6 +42,9 @@ Any board with one of these processors can be used by picking the processor from
 | RP2350 | Yes, on the Pico 2 |
 | nRF52840 | Smoke tested on the Seeed XIAO nRF52840 (Sense) |
 
+The [ble nodes](nodes/index.md#bluetooth) run on the ESP32, ESP32-S3, ESP32-C3 and ESP32-C5. On other processors
+Deploy refuses them.
+
 ## Displays
 
 The [GUI nodes](nodes/gui.md) that draw on these displays are provisional.

@@ -266,6 +266,24 @@ facts, now a link to Seeing a board's pins. Fixed in code: `i2c device` had no `
 a bus without pins compiled and failed on the board, and its pins weren't claimed; it now has bme280's check
 (`node-i2c.test.ts`). Left for Mike: `display i2c` accepts a height that isn't a multiple of 8.
 
+`gui.md` done 2026-11-04: one page for the GUI nodes, now with a section per node (gui screen, readout, label, bar,
+light, Buttons, Histogram), each with its properties and defaults from `gui.ts`, and a Widgets section for what they
+share (`--` until a value and for `None`, stale after, name, font, a draw error crossing the widget out). Every
+inbound anchor kept. Rotating the screen now points at display spi's orientation for the settings instead of
+repeating them. Checked against `thingstudio_gui` (readout draws non-numbers as text; a navigate button sends
+nothing). Left for Mike: the "Provisional" note contradicts Say what's true now; `gui_navigator` is hidden from the
+palette and undocumented.
+
+BLE pages done 2026-11-04: `BLE`, `BLE peer`, `ble scan`, `ble advertise`, `ble characteristic in`/`out`,
+`ble uart in`/`out`, `ble read`, `ble write`, `ble notify`. These were already close to the layout; checked against
+the descriptors, `ble-shared.ts` and `ts_ble` (5 s step, 10 s retry, queue of 20, peer timeout 1000-60000 ms, status
+texts) and found accurate. Defaults added; Wiring as **Input** / **Output** paragraphs; "compile" is "deploy"; "no
+pairing yet" is "no pairing". Corrected: `ble read` holds up its chain, not the flow. Moved: which processors run the
+ble nodes (ESP32, -S3, -C3, -C5, from the processor definitions' `ble` capability) now lives on Supported hardware,
+and the pages link there instead of listing chips.
+
+Phase 5 is done: every node page is in the node-page layout and checked against the code.
+
 ### Phase 6 -- structure (review order item 6)
 
 Developer section in the nav (remark 4: check-a-flow, command-line's source-checkout half, From source,

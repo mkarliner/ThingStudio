@@ -4,21 +4,22 @@ Advertises over Bluetooth LE: the board's name, and each message's payload as ma
 
 ## Properties
 
-- **payload goes in** — **manufacturer data**, **service data**, or **nothing (name only)**.
+- **payload goes in** — **manufacturer data**, **service data**, or **nothing (name only)**. Default **manufacturer
+  data**.
 - **manufacturer id** — for manufacturer data, in decimal or hex. Default `0xFFFF`, which is reserved for testing;
   a product uses its maker's id from the Bluetooth SIG.
-- **service UUID** — for service data: 16-bit (`fcd2` is BTHome) or 128-bit.
+- **service UUID** — for service data: 16-bit (`fcd2` is BTHome) or 128-bit. Default `fcd2`.
 - **interval (ms)** — how often the advertisement is sent, 20 to 10240. Default 500. Shorter is found faster and
   uses more power.
 - **BLE** — the flow's [BLE config](ble.md), whose name is advertised. Without one, the name is `thingstudio`.
 
 ## Wiring
 
-- **Input** — `payload` replaces the data: bytes as they are, text as UTF-8. With **nothing (name only)** it's
-  ignored. Pack a number with `struct.pack` in a
-  [function](function.md) node first, for example `struct.pack('<h', round(t * 100))`.
+**Input** — `payload` replaces the data: bytes as they are, text as UTF-8. With **nothing (name only)** it's
+ignored. Pack a number with `struct.pack` in a [function](function.md) node first, for example
+`struct.pack('<h', round(t * 100))`. Unwired, the node advertises the name only.
 
-The node needs no input: unwired, it advertises the name only.
+This node has no output.
 
 ## Behavior
 
@@ -30,12 +31,12 @@ advertisement accepts connections, so other devices can connect to them.
 An advertisement holds 31 bytes. The flags take 3, the name its length plus 2, and the data's header 4 (manufacturer
 or 16-bit service) or 18 (128-bit service). The node's status says how many are left for the payload.
 
-A flow has one ble advertise node. Needs a board with Bluetooth LE: ESP32, ESP32-S3, ESP32-C3 or ESP32-C5.
+A flow has one ble advertise node. It runs on the processors [Supported hardware](../supported-hardware.md#processors-without-a-board-definition) lists for the ble nodes.
 
 ## Errors
 
-A name with no room left for data, a bad id or UUID, a second ble advertise node, or a board without Bluetooth LE
-stops the compile. A payload that isn't bytes or text, or that doesn't fit, is reported on the console with its
+A name with no room left for data, a bad id or UUID, a second ble advertise node, or a board without the ble nodes
+stops the deploy. A payload that isn't bytes or text, or that doesn't fit, is reported on the console with its
 size, and the board keeps sending the last advertisement.
 
 Anyone nearby can read an advertisement. Don't put anything private in it.

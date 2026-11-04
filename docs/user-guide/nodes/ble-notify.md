@@ -4,15 +4,18 @@ Subscribes to a characteristic of another Bluetooth LE device and sends a messag
 
 ## Properties
 
-- **BLE peer** — the [device to listen to](ble-peer.md).
-- **service UUID** / **characteristic UUID** — the characteristic: 16-bit or 128-bit. It must support notify or
+- **BLE peer** — the [device to listen to](ble-peer.md). Required.
+- **service UUID** / **characteristic UUID** — the characteristic: 16-bit or 128-bit. Required. It must support notify or
   indicate; nRF Connect shows which.
-- **encoding** — how each value becomes `payload`, as for [ble read](ble-read.md). It also sets the output's type.
+- **encoding** — how each value becomes `payload`, as for [ble read](ble-read.md). Default **bytes**.
+  It also sets the output's type.
 
 ## Wiring
 
-- **Output** — `payload` is the value. The message also carries `peer`, the device's address or name, and `uuid`,
-  the characteristic.
+**Input** — none. `ble notify` is a source.
+
+**Output** — `payload` is the value. The message also carries `peer`, the device's address or name, and `uuid`, the
+characteristic.
 
 ## Behavior
 

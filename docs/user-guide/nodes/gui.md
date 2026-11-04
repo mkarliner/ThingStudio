@@ -4,26 +4,20 @@
 
     The GUI nodes are provisional: their properties and the page layout may change between releases.
 
-Show readings on a display as pages of labels, numbers, bars and lights. Lay out the pages in the gui screen node's
-property panel: see [Laying out pages](#laying-out-pages).
+The GUI nodes show readings on a display as pages of numbers, text, bars, lights, histograms and buttons. A
+[gui screen](#gui-screen) draws the pages and sends them to a [display spi](display-spi.md) node; each widget node
+shows the `payload` of the messages wired to it. Lay out the pages in the gui screen's property panel: see
+[Laying out pages](#laying-out-pages).
 
-## The nodes
+The nodes on this page:
 
-- **gui screen** — one per display. Sends the screen each time it changes, in strips of about 5 KB, so
-  a whole frame never has to fit in memory at once. Wire it to a [display spi](display-spi.md) node: the screen
-  takes its width, height and frame format from that display, so set them once on the display. To use touch, pick a
-  [touch panel](touch-panel.md) in its properties.
-- **gui readout** — shows `msg.payload` as a number with units. Set the lowest and highest value it will
-  show, and how many decimals. Its space is sized for that range. An optional **caption** puts a small muted
-  line above the number ("Temperature"), which is the card-friendly way to label it.
-- **gui label** — shows `msg.payload` as text.
-- **gui bar** — a bar that fills between *empty at* and *full at*. Its **style** is *solid* (the outline) or
-  *segments*: a row of cells, lit in the accent color and unlit in the track, with a cell count to set.
-- **gui histogram** — a moving histogram: a row of bars, oldest on the left, newest on the right. See [Histogram](#histogram).
-- **gui light** — on when `msg.payload` is true, off when false. Its **style** is *light* (the circle) or
-  *chip*: a filled pill showing a short word, with the on and off text both editable ("OK"/"Off").
-- **gui button** — a touch button. It has an input, which sets what it shows, and an output, which sends when it is
-  tapped. See [Buttons](#buttons).
+- [gui screen](#gui-screen) — one per display.
+- [gui readout](#gui-readout) — a number with units.
+- [gui label](#gui-label) — text.
+- [gui bar](#gui-bar) — a bar between two values.
+- [gui light](#gui-light) — on or off.
+- [gui button](#buttons) — a touch button.
+- [gui histogram](#histogram) — the recent history of a number.
 
 <!-- gui modal: left out until the editor can lay a modal out (its layout is written in the flow file).
 - **gui modal** — a full-screen message. Send any payload to open it, `None` to close it. If several are
@@ -33,11 +27,34 @@ property panel: see [Laying out pages](#laying-out-pages).
   screen in the flow file, see [Modals in the flow file](#modals-in-the-flow-file).
 -->
 
-Each widget starts as `--` until a value arrives. With **stale after** set, a value that isn't updated in
-time is dimmed (or underlined, on a black-and-white display), so an old reading never looks current.
-
 On a classic ESP32 without PSRAM, a GUI flow needs the [custom firmware for classic ESP32](../custom-firmware.md):
 stock MicroPython runs out of memory loading the display stack.
+
+## gui screen
+
+Draws a display's pages of widgets and sends them to a [display spi](display-spi.md) node.
+
+### Properties
+
+The screen takes its width, height and frame format from the display it is wired to, so set them once on the display.
+
+- **name** — the screen's name, sent as `topic`. Default `screen`.
+- **fastest redraw (ms)** — the shortest time between two redraws. Default 200.
+- **next/prev wrap round** — whether `next` on the last page goes to the first, and `prev` on the first to the last.
+  Default on.
+- **grid columns** — the layout grid's columns, 2 to 48. Default 12. See [Laying out pages](#laying-out-pages).
+- **grid rows (0 = from the display's shape)** — 0 to 64. Default 0, which keeps the cells roughly square.
+- **touch panel (blank: no touch)** — the [touch panel](touch-panel.md) the screen reads, for buttons. Default blank.
+- **theme** and the ten role colors — the screen's colors. Default blank, the GUI's own colors. See [Themes](#themes).
+- **shared theme config (older flows)** — used only when the theme fields are empty, so a flow saved with a shared
+  theme still draws.
+
+### Wiring
+
+**Input** — none. The widgets on its pages get their own wires.
+
+**Output** — the picture, in strips of about 5 KB, each with `y` set to its first row, so a whole frame never has to
+fit in memory. Wire it to a display spi node.
 
 ## Laying out pages
 
@@ -66,25 +83,94 @@ page; the outline is a view of the flow file's `"screens"` section, which you ca
 
 To put the page dots in a footer, give them the last grid row. The current page's dot is drawn as a pill.
 
+## Widgets
+
+The readout, label, bar, light, button and histogram are widgets: each sits on a page and shows the `payload` of each
+message that arrives on its input.
+
+- A widget shows `--` until a value arrives. A `payload` of `None` shows `--` again.
+- **stale after (s, 0 = never)**, default 0: a value not updated in that time is dimmed (or underlined, on a
+  black-and-white display), so an old reading never looks current.
+- **name** is how Deploy names the widget in an error, after its flow label.
+- **font (blank = fit the cells)**, where a widget has one: default blank, the largest font that fits its cells.
+- A widget that can't draw its value, such as a bar given text, is crossed out and the console shows a
+  `[NODE_ERROR]` naming it. The other widgets carry on.
+
+A widget belongs to one screen, and can be on several of its pages.
+
+## gui readout
+
+Shows `payload` as a number with units. A number is drawn with **decimals** places; anything else is drawn as text.
+
+- **caption (above the number)** — a small muted line above the number, such as `Temperature`. Default blank.
+- **units** — text after the number. Default blank.
+- **decimals** — 0 to 6. Default 1.
+- **lowest value** / **highest value** — the range it will show. Defaults 0 and 100. The number's space is sized for
+  this range, so the layout doesn't shift as the value changes.
+
+## gui label
+
+Shows `payload` as text.
+
+- **room for (characters)** — how many characters its space is sized for. Default 8.
+
+## gui bar
+
+A bar that fills between two values. A value below **empty at** shows empty, one above **full at** shows full.
+
+- **style** — `solid` (an outline and a fill) or `segments` (a row of cells, lit in the accent color and unlit in the
+  track color). Default `solid`.
+- **cells** — for `segments`, 1 to 40. Default 10.
+- **empty at** / **full at** — defaults 0 and 100. **full at** must be above **empty at**.
+
+## gui light
+
+On when `payload` is true, off when it is false, by Python's `bool()`.
+
+- **style** — `light` (a circle) or `chip` (a filled pill showing a word). Default `light`.
+- **chip when on** / **chip when off** — the chip's words. Defaults `On` and `Off`.
+
 ## Buttons
 
-A button's **mode** says what a tap does.
+A touch button. Its input sets what it shows, and its output sends when it is tapped. A button needs a
+[touch panel](touch-panel.md) on its screen to be pressed.
 
-- **momentary** — sends its value: `{topic: <the button's topic>, payload: <its sends value>}`. The **board label** is only the text drawn on the button (blank: the flow label); **sends** is what leaves the output.
-- **toggle** — sends the opposite of its state. It shows its *on* and *off* text.
-- **navigate** — changes page: `next`, `prev`, `back`, `home` or a page name. It needs no wires.
+### Properties
 
-Its **style** draws it as *box* (the outline, unchanged), *filled* (a solid accent button for the main action), or
-*switch* (a toggle drawn as a track and knob — it needs the toggle mode).
+- **topic** — the `topic` of the messages it sends. Default blank, the node's id.
+- **mode** — what a tap does. Default `momentary`.
+    - `momentary` — sends its **sends** value.
+    - `toggle` — sends the opposite of its state, and shows its **on shows** or **off shows** text.
+    - `navigate` — changes page, to **goes to**. It needs no wires.
+- **style** — `box` (outline and text), `filled` (a solid accent button, for the main action) or `switch` (a track
+  and knob; it needs `toggle`). Default `box`.
+- **value type** — `true / false`, `text` or `number`: the type of what it sends. Default `true / false`.
+- **send on** — `release` (when your finger lifts inside the button; lifting outside sends nothing) or `press`.
+  Default `release`. The button is drawn inverted while held.
+- **board label (drawn on the button)** — `momentary`: the text drawn on it. Default blank, the flow label. A
+  `payload` on its input replaces it.
+- **sends (the payload)** — `momentary`: what it sends. Default blank.
+- **room for (characters, if no text)** — `momentary`: default 8.
+- **on sends** / **off sends** — `toggle`: what it sends to turn on and off. Default blank.
+- **on shows** / **off shows** — `toggle`: its text. Defaults `ON` and `OFF`.
+- **starts on (when nothing is wired in)** — `toggle`: default off.
+- **wait for confirmation (s, 5 or more)** — `toggle` with a wired input: how long a tap waits for the input to agree.
+  Default 5.
+- **goes to** — `navigate`: `next`, `prev`, `back`, `home` or a page name.
 
-A button sends when your finger lifts inside it. Lift outside and nothing is sent. Set **send on** to *press*
-to send as soon as it is touched. It is drawn inverted while held.
+A blank value field sends `true` and `false` for `true / false`, `ON` and `OFF` for `text`, and `1` and `0` for
+`number`. The gray placeholder shows which.
 
-Leave the value fields blank and a button sends `true` and `false`; for text, `ON` and `OFF`; for a number, `1` and
-`0`. The gray placeholder shows which. Type a value to send something else.
+### Wiring
 
-A button needs a [touch panel](touch-panel.md) on its screen to be pressed. Deploy warns if a screen has
-buttons and no panel, and if a momentary or toggle button's output goes nowhere.
+**Input** — for `momentary`, a `payload` replaces the text drawn on it. For `toggle`, the real state of the thing it
+switches; see below.
+
+**Output** — `{'topic': <topic>, 'payload': <value>}` on each tap. A `navigate` button sends nothing.
+
+Deploy warns when a screen has buttons and no touch panel, and when a `momentary` or `toggle` button's output goes
+nowhere. A `navigate` button whose **goes to** isn't `next`, `prev`, `back`, `home` or a page on its screen stops the
+deploy.
 
 ### A toggle that follows the real device
 
@@ -110,17 +196,17 @@ Unwired, the toggle keeps its own state and starts as set by *starts on*.
 
 ## Histogram
 
-Shows what a number can't: which way it is heading. Wire it to the first output of a [journal](journal.md), or to
-any node that sends a list of numbers (a `None` is a gap), such as a spectrum from a function node.
+A moving histogram: a row of bars, oldest on the left, newest on the right. It shows what a number can't: which way
+it is heading. Wire it to the first output of a [journal](journal.md), or to any node that sends a list of numbers (a
+`None` is a gap), such as a spectrum from a function node.
 
-Each bar is a row's average, in the theme's accent color, with a thin line from the row's min to its max in the
-muted color — so the range reads as context behind the value. A gap is empty. A wider space shows more history: it
+Each bar is a row's average, in the theme's accent color, with a thin line from the row's minimum to its maximum in
+the muted color, so the range reads as context behind the value. A gap is empty. A wider space shows more history: it
 draws as many bars as fit, newest at the right edge.
 
-- **bottom at / top at** — the range of the bars. Values outside are cut off at the edge. The range is fixed.
-- **columns, column width, height** — the natural size: it is as wide as columns times column width, plus the border.
-  In a layout it can stretch, and then shows more rows.
-- **stale after** — dims the bars if nothing new arrives in this time.
+- **bottom at** / **top at** — the range of the bars. Defaults 0 and 100. Values outside are cut off at the edge.
+- **columns (natural width)**, **column width (px)**, **height (px)** — the natural size, defaults 60, 3 and 48: as
+  wide as columns times column width, plus the border. In a layout it can stretch, and then shows more rows.
 
 It shows only the rows its journal kept. With fewer rows than the space holds, the bars sit at the right edge and the
 left of the card stays empty; the compiler says how many rows to keep. Raising **rows kept** on the journal fills it.
@@ -160,16 +246,10 @@ themed screen is wired to it, and Deploy says so in the console.
 
 ## Rotating the screen
 
-On the display node, set **orientation** to 0, 90, 180 or 270 (the picture turned clockwise). It is one setting
-on each display, so a display can't have two. Set the display's width and height to the panel's own size, and its
-rotation to how the panel is mounted (0 to 3). The gui screen wired to that display takes the display's size and
-turns its layout to match, and its touch axes follow. An orientation
-can't be combined with a panel offset (`xstart`/`ystart`, or the 135x240 panel). `xstart`/`ystart` of `-1` mean
-"no offset" and are the right values with an orientation. At 90 or 270 the usable picture is the panel turned:
-480 wide by 320 high on a 320x480 panel.
-
-A flow that reads touch with a [touch](touch-i2c.md) node instead of a gui screen sets the same angle on the node,
-since there is no display for it to follow.
+The screen follows its display's **orientation** (see [display spi](display-spi.md#properties)). It takes the
+display's size and turns its layout and its touch to match. At 90 or 270 the usable picture is the panel turned: 480
+wide by 320 high on a 320x480 panel. A flow that reads touch with a [touch](touch-i2c.md) node instead of a gui
+screen sets the same angle on that node, since there is no display for it to follow.
 
 ## Seven-segment digits
 

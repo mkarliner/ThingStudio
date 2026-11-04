@@ -6,14 +6,16 @@ devices that subscribed.
 ## Properties
 
 - **service UUID** / **characteristic UUID** — as for [ble characteristic in](ble-characteristic-in.md).
-- **encoding** — how `payload` becomes bytes: the same choices. A number must fit: `70000` doesn't fit an
-  **int16**.
-- **notify** — also push each new value to the devices subscribed to it. On by default.
+- **encoding** — how `payload` becomes bytes: the same choices. Default **bytes**. A number must fit: `70000`
+  doesn't fit an **int16**.
+- **notify** — also push each new value to the devices subscribed to it. Default on.
 - **BLE** — the flow's [BLE config](ble.md).
 
 ## Wiring
 
-- **Input** — `payload` is the new value. Unwired, the characteristic exists but stays empty.
+**Input** — `payload` is the new value. Unwired, the characteristic exists but stays empty.
+
+This node has no output.
 
 ## Behavior
 
@@ -25,7 +27,7 @@ One characteristic out node per characteristic: two would fight over its value. 
 
 ## Errors
 
-A missing or malformed UUID, or two out nodes on one characteristic, stops the compile. A payload that doesn't fit
+A missing or malformed UUID, two out nodes on one characteristic, or a board without the ble nodes stops the deploy. A payload that doesn't fit
 the encoding is reported on the console and dropped, and the last value stays.
 
 Anyone in range can connect and read: don't put anything private in a characteristic.
