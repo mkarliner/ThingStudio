@@ -2046,6 +2046,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#wiring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Wiring
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#behavior" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2053,6 +2064,23 @@
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Behavior">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dynamic-subscription" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dynamic subscription
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -3481,6 +3509,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#wiring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Wiring
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#behavior" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3488,6 +3527,23 @@
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Behavior">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dynamic-subscription" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dynamic subscription
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -3523,35 +3579,82 @@
 
 
 <h1 id="mqtt-subscribe">mqtt subscribe</h1>
-<p>Emits one message per incoming message on a subscribed MQTT topic. With dynamic subscription on, its input changes
-the subscriptions while the flow runs.</p>
+<p>Sends a message for each message that arrives on an MQTT topic.</p>
 <h2 id="properties">Properties</h2>
 <ul>
-<li><strong>topic</strong> — the topic to subscribe to. Required.</li>
-<li><strong>QoS</strong> — <code>0</code> or <code>1</code>. QoS 2 isn't supported.</li>
-<li><strong>dynamic subscription</strong> — accept subscribe/unsubscribe messages on the input (see below). Off by default.</li>
+<li><strong>topic</strong> — the topic to subscribe to. Required. <code>+</code> matches one level and <code>#</code> the rest, as usual in MQTT.</li>
+<li><strong>QoS</strong> — <code>0</code> or <code>1</code>. Default 0. QoS 2 isn't supported.</li>
+<li><strong>dynamic subscription</strong> — let messages on the input change the subscriptions (see below). Default off.</li>
 <li><strong>MQTT Broker</strong> — the flow's MQTT broker, shared by every MQTT node in the flow: change it on one and it changes on
-  all (see <a href="../../working-in-the-editor/#config-nodes">Editor in depth</a>). Required — won't compile without one.</li>
+  all (see <a href="../../working-in-the-editor/#config-nodes">Editor in depth</a>). Required.</li>
+<li><strong>WiFi</strong> — the flow's WiFi network, shared by every WiFi node in the flow. <strong>unmanaged</strong> isn't accepted in a flow with
+  MQTT nodes, because they manage the connection themselves.</li>
 </ul>
+<h2 id="wiring">Wiring</h2>
+<p><strong>Input</strong> — only with dynamic subscription on. See below.</p>
+<p><strong>Output</strong> — one message per message received:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>payload</code></td>
+<td>the message body, decoded as UTF-8 text</td>
+</tr>
+<tr>
+<td><code>topic</code></td>
+<td>the topic it arrived on, which can differ from the subscription when that has a wildcard</td>
+</tr>
+<tr>
+<td><code>retained</code></td>
+<td><code>True</code> when the broker sent it as a retained message</td>
+</tr>
+</tbody>
+</table>
 <h2 id="behavior">Behavior</h2>
-<p>The node subscribes to <strong>topic</strong> when the flow starts, and keeps it subscribed.</p>
-<p>Uses the flow's WiFi network and broker config, same as <strong>mqtt publish</strong>. An "unmanaged" WiFi config isn't accepted here, for the same reason.</p>
-<p>The message carries the payload (decoded as text when possible, raw bytes otherwise), the actual topic it arrived on, and whether the broker sent it as a retained message.</p>
-<p><strong>Dynamic subscription.</strong> With it on, an input message changes what the node listens to:</p>
-<ul>
-<li><code>msg.action</code> is <code>subscribe</code> or <code>unsubscribe</code>.</li>
-<li><code>msg.topic</code> is a topic string, a <code>{topic, qos}</code> object, or a list of either.</li>
-</ul>
-<p><code>unsubscribe</code> stops the node receiving that topic. Two nodes subscribed to the same topic are independent: one
-unsubscribing doesn't stop the other. The configured <strong>topic</strong> is subscribed at start, so turning dynamic
-subscription on doesn't interrupt anything; an <code>unsubscribe</code> for it takes effect until the next reload.</p>
-<p>With dynamic subscription off, a message on the input raises an error rather than being ignored. An unknown action,
-or an action without a topic, raises an error too.</p>
-<p>A subscription isn't guaranteed to be fully confirmed before an <strong>mqtt publish</strong> node on the same broker sends its first message. This is usually not an issue, but an early publish can go unheard by a subscriber that was still connecting.</p>
-<p>Shows a connection-status dot on the canvas (see <a href="../../working-in-the-editor/#node-status">Editor in depth</a>) once connected to a device, same as <strong>mqtt publish</strong>.</p>
+<p>The node subscribes to <strong>topic</strong> when the flow starts and keeps the subscription across reconnects. Nodes on the same
+broker share one connection and subscribe independently.</p>
+<p>The node holds up to 20 messages that haven't been sent on yet. When more arrive, the oldest is dropped.</p>
+<p>A subscription may not be confirmed by the broker before an <a href="../mqtt-publish/">mqtt publish</a> node on the same broker
+sends its first message. An early publish can go unheard.</p>
+<p>The status dot shows this node's own view of the connection, as for mqtt publish.</p>
+<h3 id="dynamic-subscription">Dynamic subscription</h3>
+<p>With it on, an input message changes what the node listens to:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>action</code></td>
+<td><code>subscribe</code> or <code>unsubscribe</code></td>
+</tr>
+<tr>
+<td><code>topic</code></td>
+<td>a topic string, a <code>{topic, qos}</code> object, or a list of either</td>
+</tr>
+</tbody>
+</table>
+<p>An unsubscribe stops this node receiving that topic. Another node subscribed to the same topic keeps receiving it. The
+configured <strong>topic</strong> can be unsubscribed too, until the flow is next reloaded.</p>
 <h2 id="errors">Errors</h2>
-<p>A red dot, with a console line starting <code>mqtt connect to</code> and ending <code>failed after 3 attempts</code>, means the board can't
-reach the broker. See <a href="../../debugging/#mqtt-broker-unreachable">MQTT broker unreachable</a>.</p>
+<ul>
+<li><strong>The board can't reach the broker.</strong> The dot turns red and the console shows <code>mqtt connect to HOST:PORT failed after
+  3 attempts</code>, with the reason for each attempt. See
+  <a href="../../debugging/#mqtt-broker-unreachable">MQTT broker unreachable</a>.</li>
+<li><strong>The subscribe fails.</strong> The console shows <code>mqtt subscribe to HOST:PORT failed</code>, with the system's error.</li>
+<li><strong>A message arrives on the input with dynamic subscription off.</strong> The node raises an error rather than ignoring it.</li>
+<li><strong>An action message has no topic, an unknown action, or a QoS other than 0 or 1.</strong> The node raises an error.</li>
+</ul>
+<p>These stop the compile: no MQTT broker or no WiFi network in the flow, an empty topic, a QoS other than 0 or 1, an
+unmanaged WiFi network.</p>
 
 
 

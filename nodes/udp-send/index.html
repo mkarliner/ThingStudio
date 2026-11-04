@@ -2158,10 +2158,32 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#wiring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Wiring
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#behavior" class="md-nav__link">
     <span class="md-ellipsis">
       
         Behavior
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Errors
       
     </span>
   </a>
@@ -3470,10 +3492,32 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#wiring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Wiring
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#behavior" class="md-nav__link">
     <span class="md-ellipsis">
       
         Behavior
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Errors
       
     </span>
   </a>
@@ -3504,14 +3548,28 @@
 <p>Sends a message's payload as a UDP datagram to a fixed host and port.</p>
 <h2 id="properties">Properties</h2>
 <ul>
-<li><strong>host</strong> — destination hostname or IP.</li>
-<li><strong>port</strong> — destination port (1–65535).</li>
-<li><strong>timeout (ms)</strong> — how long to wait before giving up on the send. Default 2000ms.</li>
-<li><strong>WiFi</strong> — the flow's WiFi network. Every WiFi node in a flow shares this one setting.</li>
+<li><strong>host</strong> — the destination hostname or IP address. Required.</li>
+<li><strong>port</strong> — the destination port (1–65535). Default 9999.</li>
+<li><strong>timeout (ms)</strong> — how long to wait for the board's network stack to accept the datagram. Default 2000.</li>
+<li><strong>WiFi</strong> — the flow's WiFi network, shared by every WiFi node in the flow.</li>
 </ul>
+<h2 id="wiring">Wiring</h2>
+<p><strong>Input</strong> — any message. <code>payload</code> is the datagram: bytes are sent as they are, a string as UTF-8, and anything else is
+converted to text first. <code>None</code> sends the text <code>None</code>.</p>
+<p>This node has no output.</p>
 <h2 id="behavior">Behavior</h2>
-<p>Uses the flow's WiFi network (its <strong>WiFi</strong> field, shared by every WiFi node). The payload is sent as bytes (a string is UTF-8 encoded, other types are converted); nothing about its content is validated.</p>
-<p>A send that fails — an unreachable host, a DNS failure, a timeout — raises a clear error naming the host and port it was trying to reach, not a bare error code.</p>
+<p>UDP has no acknowledgement. A send that succeeds doesn't mean the datagram arrived, and sending to an IP address that
+nobody is listening on raises no error.</p>
+<p>A hostname is looked up again for every message.</p>
+<h2 id="errors">Errors</h2>
+<ul>
+<li><strong>The name can't be resolved.</strong> The console shows <code>udp_send: could not resolve HOST:PORT</code>. Check the name, or use the
+  IP address.</li>
+<li><strong>The send fails.</strong> The console shows <code>udp_send to HOST:PORT failed</code>, with the system's error.</li>
+<li><strong>The network stack doesn't take the datagram within the timeout.</strong> The console shows a timeout error, without the
+  host or port.</li>
+</ul>
+<p>These stop the compile: an empty host, a port outside 1–65535, a timeout that isn't a positive number.</p>
 
 
 

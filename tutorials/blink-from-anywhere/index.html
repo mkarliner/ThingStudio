@@ -3665,11 +3665,10 @@ LED by sending one to it, and see why every topic here carries a number of your 
 the button in the editor, and <strong>mqtt subscribe</strong> → <strong>function</strong> → <strong>gpio out</strong> switches the LED when a message
 arrives on another topic. The board joins your WiFi with the saved credential from Web Blink.</p>
 <p>You can build the flow step by step, or start from the finished flow,
-<a href="https://github.com/mkarliner/ThingStudio/blob/main/examples/blink-from-anywhere.flow.json">blink-from-anywhere.flow.json</a>,
-in the <a href="../../examples/#where-the-folder-is">examples folder</a>, with <strong>File → Open…</strong>. Open the file; don't copy it from
-this page. It names a WiFi network, <code>tutorial wifi</code>, and a broker, <code>test-mosquitto</code>, that your computer doesn't have:
-each field's ✎ form says so, and saving it with your details creates it. Before you deploy, replace
-<code>change-this-number</code> in both topics (see below).</p>
+<a href="https://github.com/mkarliner/ThingStudio/blob/main/tutorials/blink-from-anywhere.flow.json">blink-from-anywhere.flow.json</a>,
+in the <a href="../../examples/#where-the-folder-is">tutorials folder</a>, with <strong>File → Open…</strong>. Before you deploy, replace
+<code>change-this-number</code> in both topics (see below), and set the WiFi network and broker as
+<a href="../../examples/#before-you-deploy">Example flows</a> describes.</p>
 <p>If a step misbehaves on the way, start at <a href="../../debugging/">Debugging &amp; troubleshooting</a>.</p>
 <h2 id="pick-a-topic-prefix">Pick a topic prefix</h2>
 <p>This tutorial uses <code>test.mosquitto.org</code>, a public broker. Anyone who knows or guesses a topic can read it and publish
@@ -3741,7 +3740,7 @@ the broker form instead. The nodes work the same way.</p>
 <ul>
 <li><a href="../../nodes/mqtt-publish/">mqtt publish</a> and <a href="../../nodes/mqtt-subscribe/">mqtt subscribe</a> — every property, including
   QoS and retain.</li>
-<li><a href="../../examples/">Example flows</a> — <code>basic-mqtt.flow.json</code> publishes and subscribes on one topic, with nothing wired to the board.</li>
+<li><a href="../../examples/">Example flows</a> — the finished flows for the tutorials, and what to change in each.</li>
 <li><a href="../">Tutorials</a> — the other tutorials.</li>
 </ul>
 

@@ -1071,61 +1071,6 @@
   
 </li>
         
-          <li class="md-nav__item">
-  <a href="#basic-http-requestflowjson" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        basic-http-request.flow.json
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#basic-mqttflowjson" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        basic-mqtt.flow.json
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#bmp280-test-flowflowjson" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        bmp280-test-flow.flow.json
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#gui-touch-freenove-s3-4inflowjson" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        gui-touch-freenove-s3-4in.flow.json
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#gui-headliner-sensor-freenove-s3-4inflowjson" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        gui-headliner-sensor-freenove-s3-4in.flow.json
-      
-    </span>
-  </a>
-  
-</li>
-        
       </ul>
     </nav>
   
@@ -3661,61 +3606,6 @@
   
 </li>
         
-          <li class="md-nav__item">
-  <a href="#basic-http-requestflowjson" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        basic-http-request.flow.json
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#basic-mqttflowjson" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        basic-mqtt.flow.json
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#bmp280-test-flowflowjson" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        bmp280-test-flow.flow.json
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#gui-touch-freenove-s3-4inflowjson" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        gui-touch-freenove-s3-4in.flow.json
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#gui-headliner-sensor-freenove-s3-4inflowjson" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        gui-headliner-sensor-freenove-s3-4in.flow.json
-      
-    </span>
-  </a>
-  
-</li>
-        
       </ul>
     </nav>
   
@@ -3753,11 +3643,14 @@
 
 
 <h1 id="example-flows">Example flows</h1>
-<p>Flows to open with <strong>File → Open…</strong> and make your own. Open the file rather than copying a flow from a page: pick it
-from the examples folder, change what is yours (the pin, the credentials, the board), and deploy. This is a map of
-what each one shows and what to change first; the tutorials walk the first four step by step.</p>
+<p>If you'd rather not build the tutorial flows from scratch, or you get stuck, their finished flow files are in the
+tutorials folder, <a href="#where-the-folder-is">below</a>. Open one with <strong>File → Open…</strong>. Each entry below says what the flow shows
+and what to change first.</p>
+<p>You'll need to change the flow to match your WiFi setup, and the actual pins that devices, like LEDs, are connected to on
+your board. If your board is one of those that already have a definition file made for it, you can set it in the <strong>Board</strong>
+drop-down (<a href="../boards/#picking-the-board">Boards and processors</a>).</p>
 <h2 id="where-the-folder-is">Where the folder is</h2>
-<p>Every install has an <code>examples</code> folder. Where it is depends on how you installed:</p>
+<p>Every install has a <code>tutorials</code> folder. Where it is depends on how you installed:</p>
 <table>
 <thead>
 <tr>
@@ -3768,19 +3661,19 @@ what each one shows and what to change first; the tutorials walk the first four 
 <tbody>
 <tr>
 <td>Installer script, macOS and Linux</td>
-<td><code>~/.local/share/thingstudio/current/examples</code></td>
+<td><code>~/.local/share/thingstudio/current/tutorials</code></td>
 </tr>
 <tr>
 <td>Installer script, Windows</td>
-<td><code>%LOCALAPPDATA%\Thingstudio\versions\thingstudio-VERSION-windows-x86_64\examples</code></td>
+<td><code>%LOCALAPPDATA%\Thingstudio\versions\thingstudio-VERSION-windows-x86_64\tutorials</code></td>
 </tr>
 <tr>
 <td>Package</td>
-<td><code>examples</code>, inside the folder you unpacked</td>
+<td><code>tutorials</code>, inside the folder you unpacked</td>
 </tr>
 <tr>
 <td>From source</td>
-<td><code>examples</code>, in the repository folder</td>
+<td><code>tutorials</code>, in the repository folder</td>
 </tr>
 </tbody>
 </table>
@@ -3789,9 +3682,10 @@ what each one shows and what to change first; the tutorials walk the first four 
 <ul>
 <li><strong>Pins are examples.</strong> Set your board's pin in the property panel. <strong>Pins…</strong> next to the <strong>Board</strong> menu lists the
   pins your board has.</li>
-<li><strong>WiFi and MQTT flows name a saved network or broker</strong> that your computer doesn't have. The <strong>WiFi</strong> or <strong>MQTT
-  Broker</strong> field's ✎ form says so; saving it with your own details creates it. Credentials stay on your computer,
-  not in the flow (<a href="../thingstudio-folder/#credentials">The Thingstudio folder</a>).</li>
+<li><strong>A flow with a WiFi or MQTT node holds no passwords.</strong> The network name, password and broker address are kept in a
+  saved credential on your computer, never in the flow file. Open the node's <strong>WiFi</strong> or <strong>MQTT Broker</strong> field and
+  click ✎: fill in your own details and save, or pick one you have already saved from the drop-down. See
+  <a href="../thingstudio-folder/#credentials">The Thingstudio folder</a>.</li>
 </ul>
 <h2 id="the-flows">The flows</h2>
 <p>In the order that builds up. Each entry lists what to try changing first, and where to read about the node.</p>
@@ -3814,7 +3708,7 @@ next level. Walked by <a href="../tutorials/two-more-blinks/">Two more blinks</a
 <h3 id="http-blinkflowjson"><code>http-blink.flow.json</code></h3>
 <p>The same LED, toggled from a browser. An <code>http in</code> node serves <code>/toggle</code> on port 9999, a <code>function</code> flips the LED
 and builds the reply, and <code>http response</code> answers the browser. <code>wifi status</code> and <code>debug</code> show the connection. It
-names a WiFi network, <code>tutorial wifi</code>. Walked by <a href="../tutorials/blink-from-your-network/">Web Blink</a>.</p>
+needs a WiFi network of yours. Walked by <a href="../tutorials/blink-from-your-network/">Web Blink</a>.</p>
 <ul>
 <li><strong>path</strong> and <strong>port</strong> on <a href="../nodes/http-in/">http in</a>.</li>
 <li>The reply text in the function's <strong>code</strong> (<code>'LED on'</code> and <code>'LED off'</code>).</li>
@@ -3823,7 +3717,7 @@ names a WiFi network, <code>tutorial wifi</code>. Walked by <a href="../tutorial
 <h3 id="blink-from-anywhereflowjson"><code>blink-from-anywhere.flow.json</code></h3>
 <p>The same LED through an MQTT broker. Clicking <code>inject</code> publishes <code>pressed</code> to a <code>button</code> topic, and <code>mqtt subscribe</code>
 on an <code>led</code> topic feeds a <code>function</code> that turns <code>on</code>, <code>1</code> or <code>true</code> into true for <code>gpio out</code>; <code>debug</code> prints what
-arrives. The file names a WiFi network (<code>tutorial wifi</code>) and a broker (<code>test-mosquitto</code>). Its topics start
+arrives. It needs a WiFi network and a broker of yours. Its topics start
 <code>thingstudio/change-this-number/</code>: replace that number in both before you deploy, because the broker is public. Walked
 by <a href="../tutorials/blink-from-anywhere/">Blink from anywhere</a>.</p>
 <ul>
@@ -3832,52 +3726,8 @@ by <a href="../tutorials/blink-from-anywhere/">Blink from anywhere</a>.</p>
 <li><strong>host</strong> and <strong>port</strong> in the broker form, to use a broker on your own network.</li>
 <li>The <a href="../nodes/function/">function</a> node's <strong>code</strong>, which decides which messages count as on.</li>
 </ul>
-<h3 id="basic-http-requestflowjson"><code>basic-http-request.flow.json</code></h3>
-<p>Fetches a web page from the board: clicking the <code>inject</code> node makes <code>http request</code> GET the URL, and <code>debug</code> prints
-the answer in the console. The file's URL is <code>http://localhost:8000/index.html</code>, and on a board <code>localhost</code> is the
-board itself, so point it at a server your network reaches.</p>
-<ul>
-<li><strong>url</strong>, <strong>method</strong> and <strong>timeout (ms)</strong> on <a href="../nodes/http-request/">http request</a>.</li>
-<li>A <a href="../nodes/function/">function</a> node between <code>http request</code> and <code>debug</code>, to pick one part out of the answer.</li>
-</ul>
-<h3 id="basic-mqttflowjson"><code>basic-mqtt.flow.json</code></h3>
-<p>Publish and subscribe on one broker. Clicking <code>inject</code> publishes a message to the topic <code>foobar</code>; <code>mqtt subscribe</code>
-on the same topic receives it and <code>debug</code> prints it. A second <code>debug</code> prints <code>wifi status</code>. The file names a WiFi
-network and an MQTT broker.</p>
-<ul>
-<li><strong>topic</strong> on <a href="../nodes/mqtt-publish/">mqtt publish</a> and <a href="../nodes/mqtt-subscribe/">mqtt subscribe</a>: keep the two the
-  same. On a public broker such as <code>test.mosquitto.org</code>, anyone can read a topic, so use one nobody else will.</li>
-<li><strong>value</strong> on <a href="../nodes/inject/">inject</a>, the message that is published.</li>
-<li><strong>QoS</strong> and <strong>retain</strong> on mqtt publish.</li>
-</ul>
-<p>If nothing arrives, see <a href="../debugging/#mqtt-broker-unreachable">MQTT broker unreachable</a>.</p>
-<h3 id="bmp280-test-flowflowjson"><code>bmp280-test-flow.flow.json</code></h3>
-<p>Reads a BME280 or BMP280 sensor over I2C and prints the temperature. A <code>bme280</code> node reads every 5 seconds, a
-<code>function</code> takes the temperature out of the reading, and <code>debug</code> prints it. A <code>filter</code> also passes it on only when it
-changes by at least 0.1. The sensor is on I2C bus 0, SCL 5 and SDA 4.</p>
-<ul>
-<li><strong>address</strong> on <a href="../nodes/bme280/">bme280</a>: the file has 118, which is <code>0x76</code>; use 119 for <code>0x77</code>.</li>
-<li>The bus pins, in the <strong>I2C bus</strong> config (<a href="../nodes/i2c-bus/">I2C bus</a>).</li>
-<li><strong>mode</strong> and <strong>threshold</strong> on <a href="../nodes/filter/">filter</a>.</li>
-</ul>
-<h3 id="gui-touch-freenove-s3-4inflowjson"><code>gui-touch-freenove-s3-4in.flow.json</code></h3>
-<p>A touch display on the Freenove ESP32-S3 4.0" board, with no sensor wired: a <code>timer</code> and a <code>function</code> make slow
-triangle-wave readings for three readouts, a pressure bar and a status light. Buttons turn the pages, and a toggle
-button switches a smart plug over MQTT, publishing to <code>cmnd/plug/POWER</code> and following <code>stat/plug/POWER</code> as a Tasmota
-plug does. It needs that board, and WiFi and MQTT credentials. The <a href="../nodes/gui/">GUI nodes</a> are provisional.</p>
-<ul>
-<li>The plug topics on <a href="../nodes/mqtt-subscribe/">mqtt subscribe</a> and <a href="../nodes/mqtt-publish/">mqtt publish</a>.</li>
-<li>The range of a readout, and its caption and units: <a href="../nodes/gui/">GUI nodes</a>.</li>
-</ul>
-<h3 id="gui-headliner-sensor-freenove-s3-4inflowjson"><code>gui-headliner-sensor-freenove-s3-4in.flow.json</code></h3>
-<p>The sensor display from <a href="../sensor-display/">A sensor display</a>: a BME280 on a touch display, with pressure and
-temperature histories, a clock from <code>ntp</code>, and the readings published over MQTT. It needs the Freenove ESP32-S3 4.0"
-board, a BME280 on I2C bus 0 (SCL 15, SDA 16), and WiFi and MQTT credentials. That tutorial is being reworked.</p>
-<ul>
-<li><strong>UTC offset (hours)</strong> and <strong>daylight saving</strong> on <a href="../nodes/ntp/">ntp</a>.</li>
-<li>The topics on <a href="../nodes/mqtt-publish/">mqtt publish</a>.</li>
-<li><strong>rows kept</strong> and <strong>seconds per row</strong> on <a href="../nodes/journal/">journal</a>, which feed the histories.</li>
-</ul>
+<p>The repository's <code>test-flows/</code> folder holds more flows, written for trying one node at a time on a board. They aren't
+installed.</p>
 <h2 id="flows-written-by-an-ai-assistant">Flows written by an AI assistant</h2>
 <p>An assistant can write a flow file for you to open the same way. See <a href="../ai-authoring/">Writing flows with an AI assistant</a>.</p>
 

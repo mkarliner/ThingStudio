@@ -4011,9 +4011,9 @@ itself; a navigate button with <code>target</code> <code>back</code> acknowledge
 <p>No element takes a font, height, width, gap or padding: fonts follow the cells and spacing is the screen's gutter. The button's own behaviour (<code>mode</code>, <code>target</code>,
 <code>onValue</code>, ...) is on the node: see the <a href="../nodes-catalog/">catalog</a>. For a toggle that follows a real device (a smart
 plug), <code>gui.md</code> has the wiring.</p>
-<p>Read <a href="../nodes/gui/">GUI nodes</a> for the details, and copy from <code>examples/</code>:
-<code>gui-headliner-sensor-freenove-s3-4in.flow.json</code> (a sensor display with histograms, a clock and MQTT),
-<code>gui-touch-freenove-s3-4in.flow.json</code> (buttons).</p>
+<p>Read <a href="../nodes/gui/">GUI nodes</a> for the details, and copy from
+<code>test-flows/gui-headliner-sensor-freenove-s3-4in.flow.json</code> (a sensor display with histograms, a clock and MQTT) and
+<code>test-flows/gui-touch-freenove-s3-4in.flow.json</code> (buttons).</p>
 <h2 id="custom-nodes">Custom nodes</h2>
 <p>If no node does the job and a function node is not enough, write a custom node: <code>&lt;name&gt;.node.json</code> and
 <code>&lt;name&gt;.node.py</code>. <a href="../custom-nodes/">Writing custom nodes</a> is complete on its own. The two files go in <code>~/.thingstudio/custom-nodes/</code> on the
@@ -4026,13 +4026,13 @@ sample messages.</p>
 <thead>
 <tr>
 <th>Task</th>
-<th>File in <code>examples/</code></th>
+<th>File</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>Blink an LED</td>
-<td><code>blink.flow.json</code></td>
+<td><code>tutorials/blink.flow.json</code></td>
 </tr>
 <tr>
 <td>Read and set a GPIO pin, keep state in the node</td>
@@ -4044,23 +4044,23 @@ sample messages.</p>
 </tr>
 <tr>
 <td>Publish to MQTT</td>
-<td><code>basic-mqtt.flow.json</code></td>
+<td><code>test-flows/basic-mqtt.flow.json</code></td>
 </tr>
 <tr>
 <td>Call a web service</td>
-<td><code>basic-http-request.flow.json</code></td>
+<td><code>test-flows/basic-http-request.flow.json</code></td>
 </tr>
 <tr>
 <td>A BME280 reading</td>
-<td><code>bmp280-test-flow.flow.json</code></td>
+<td><code>test-flows/bmp280-test-flow.flow.json</code></td>
 </tr>
 <tr>
 <td>A sensor on a display, with histograms and a clock</td>
-<td><code>gui-headliner-sensor-freenove-s3-4in.flow.json</code></td>
+<td><code>test-flows/gui-headliner-sensor-freenove-s3-4in.flow.json</code></td>
 </tr>
 <tr>
 <td>Touch buttons</td>
-<td><code>gui-touch-freenove-s3-4in.flow.json</code></td>
+<td><code>test-flows/gui-touch-freenove-s3-4in.flow.json</code></td>
 </tr>
 </tbody>
 </table>

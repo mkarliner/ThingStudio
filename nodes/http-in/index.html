@@ -2102,6 +2102,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#wiring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Wiring
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#behavior" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2113,10 +2124,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#limitations" class="md-nav__link">
+  <a href="#errors" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Limitations
+        Errors
       
     </span>
   </a>
@@ -3481,6 +3492,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#wiring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Wiring
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#behavior" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3492,10 +3514,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#limitations" class="md-nav__link">
+  <a href="#errors" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Limitations
+        Errors
       
     </span>
   </a>
@@ -3523,27 +3545,66 @@
 
 
 <h1 id="http-in">http in</h1>
-<p>Starts (or joins) an HTTP server on the device and fires a message for each matching incoming request.</p>
+<p>Starts a web server on the board and sends a message for each request to a path.</p>
 <h2 id="properties">Properties</h2>
 <ul>
-<li><strong>port</strong> — the TCP port to listen on (1–65535).</li>
-<li><strong>path</strong> — the exact path to match, e.g. <code>/status</code>. No named parameters: <code>path</code> matches one exact string (no <code>/user/:id</code>).</li>
-<li><strong>method</strong> — <code>GET</code> or <code>POST</code>. No other methods are supported.</li>
-<li><strong>response timeout (ms)</strong> — how long to wait for a paired <code>http response</code> node to actually reply before the request times out with a 500. Default 10000ms.</li>
+<li><strong>port</strong> — the TCP port to listen on (1–65535). Default 8080.</li>
+<li><strong>path</strong> — the exact path to match, such as <code>/status</code>. It must start with <code>/</code>. A pattern such as <code>/user/:id</code> isn't
+  supported.</li>
+<li><strong>method</strong> — <code>GET</code> or <code>POST</code>. Default <code>GET</code>.</li>
+<li><strong>response timeout (ms)</strong> — how long to wait for an <a href="../http-response/">http response</a> node before the client gets a</li>
+<li>Default 10000.</li>
+<li><strong>WiFi</strong> — the flow's WiFi network, shared by every WiFi node in the flow.</li>
 </ul>
+<h2 id="wiring">Wiring</h2>
+<p><strong>Output</strong> — one message per matching request:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>payload</code></td>
+<td><code>None</code>. The request body isn't read.</td>
+</tr>
+<tr>
+<td><code>topic</code></td>
+<td>an empty string</td>
+</tr>
+<tr>
+<td><code>req.method</code></td>
+<td><code>GET</code> or <code>POST</code></td>
+</tr>
+<tr>
+<td><code>req.path</code></td>
+<td>the path requested, without any query string</td>
+</tr>
+</tbody>
+</table>
+<p>Every chain that starts here must end at an <a href="../http-response/">http response</a> node. The message carries a hidden link
+to the client's connection, and http response uses it. A node that returns a new message instead of the one it
+received, such as a <a href="../function/">function</a> node, drops the link.</p>
 <h2 id="behavior">Behavior</h2>
-<p>Any number of <code>http in</code> nodes can share one <code>port</code> — each one claims its own exact <code>(method, path)</code> pair, and the device runs one shared server per port, routing each incoming request to whichever <code>http in</code> node matches. Two <code>http in</code> nodes claiming the same <code>(method, path)</code> on the same port is a compile error.</p>
-<p>Fires once per matching request. The message carries <code>req.method</code> and <code>req.path</code>; <strong><code>payload</code> is always <code>None</code></strong> — the request body isn't parsed (see "Limitations" below). Pair every <code>http in</code> with a downstream <a href="../http-response/"><code>http response</code></a> node to actually answer the request — a request whose flow never reaches one gets a 500 automatically once the response timeout above elapses, rather than hanging the client forever.</p>
-<p>A second request to the <em>same</em> route while an earlier one is still being processed queues behind it (this node processes one request at a time). Requests to <em>different</em> routes — even on the same port — are handled concurrently.</p>
-<p>Uses the flow's WiFi network (its <strong>WiFi</strong> field, shared by every WiFi node).</p>
-<h2 id="limitations">Limitations</h2>
+<p>Several http in nodes can share one port. Each claims its own method and path. Two nodes claiming the same method and
+path on one port is a compile error.</p>
+<p>A request that matches no node gets a 404: that includes a method other than <code>GET</code> or <code>POST</code>. A query string is
+dropped, so <code>/status?x=1</code> matches <code>/status</code>, and the value isn't available to the flow. Request headers are ignored.</p>
+<p>If no http response node replies within the response timeout, the client gets a 500 with the body
+<code>Internal Server Error: no response</code>. The connection closes after each reply.</p>
+<p>The server speaks plain HTTP and has no login. It limits neither the number of requests in flight nor their size, apart
+from the board's own memory and sockets. Use it on a network you trust.</p>
+<h2 id="errors">Errors</h2>
+<p>These stop the compile:</p>
 <ul>
-<li><strong>No named path parameters.</strong> <code>path</code> matches one exact string, not Node-RED's <code>/user/:name</code> style.</li>
-<li><strong>No request body parsing.</strong> <code>payload</code> is always <code>None</code>; a <code>POST</code>/<code>PUT</code> body is read off the wire so it doesn't
-  corrupt the next request, then discarded.</li>
-<li><strong>No cap on requests in flight.</strong> The device's own memory and socket limits apply, so this suits a handful of
-  well-behaved clients rather than untrusted traffic.</li>
+<li>the port isn't a number from 1 to 65535</li>
+<li>the path doesn't start with <code>/</code></li>
+<li>the response timeout isn't a positive number</li>
+<li>two nodes claim the same method and path on one port. The error names both.</li>
 </ul>
+<p>A client that doesn't finish sending its request line and headers within 5 seconds gets a 400.</p>
 
 
 

@@ -2074,10 +2074,32 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#wiring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Wiring
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#behavior" class="md-nav__link">
     <span class="md-ellipsis">
       
         Behavior
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Errors
       
     </span>
   </a>
@@ -3470,10 +3492,32 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#wiring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Wiring
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#behavior" class="md-nav__link">
     <span class="md-ellipsis">
       
         Behavior
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Errors
       
     </span>
   </a>
@@ -3506,13 +3550,31 @@
 <ul>
 <li><strong>url</strong> — <code>http://host[:port]/path</code>. <strong>HTTPS isn't supported.</strong></li>
 <li><strong>method</strong> — <code>GET</code> or <code>POST</code>. No other methods are supported.</li>
-<li><strong>timeout (ms)</strong> — how long to wait for the whole request/response exchange. Default 5000ms.</li>
-<li><strong>WiFi</strong> — the flow's WiFi network. Every WiFi node in a flow shares this one setting.</li>
+<li><strong>timeout (ms)</strong> — how long to wait for the whole request and response. Default 5000.</li>
+<li><strong>WiFi</strong> — the flow's WiFi network, shared by every WiFi node in the flow.</li>
 </ul>
+<h2 id="wiring">Wiring</h2>
+<p><strong>Input</strong> — any message. For a <code>POST</code>, <code>payload</code> is the request body: a string is UTF-8 encoded, and other types are
+converted.</p>
+<p><strong>Output</strong> — the response:</p>
+<ul>
+<li><code>payload</code> — the decoded body, as a string.</li>
+<li><code>status</code> — the HTTP status code, an integer.</li>
+</ul>
+<p>A response with any status (404, 500, …) is sent on. Test <code>msg['status'] == 200</code> yourself.</p>
 <h2 id="behavior">Behavior</h2>
-<p>For a <code>POST</code>, the incoming message's payload becomes the request body (a string is UTF-8 encoded; other types are converted). The first request goes out when the first message arrives, so a timer's first tick (one full interval after start) is the first request. The response comes back as the message's payload (the decoded body, as a string) and a <code>status</code> field (the HTTP status code).</p>
-<p><strong>When it goes wrong.</strong> A response with any status (404, 500, ...) is still sent on, with <code>status</code> set to that number (an integer), so test <code>msg['status'] == 200</code> yourself. If the connection fails, the request times out or the reply can't be read, nothing is sent on: the node raises an error that shows in the debug log, and the next message tries again. To act on a failure, add a <a href="../timer/">timer</a>-driven check or watch the log; there is no failure output.</p>
-<p>A few real limitations worth knowing: no HTTPS/TLS, no chunked transfer-encoding (the server needs to send <code>Content-Length</code>), no redirect following, and the response body must be valid UTF-8 — anything else raises rather than silently mangling it. The whole body is read into memory at once, so a response larger than the board's largest free block fails with <code>MemoryError</code>; request a smaller response or use a board with PSRAM. Uses the flow's WiFi network (its <strong>WiFi</strong> field, shared by every WiFi node).</p>
+<p>The first request goes out when the first message arrives, so with a <a href="../timer/">timer</a> it is one full interval after
+the flow starts.</p>
+<p>The server must send <code>Content-Length</code>: chunked transfer-encoding isn't supported. Redirects aren't followed. The body
+must be valid UTF-8.</p>
+<h2 id="errors">Errors</h2>
+<p>If the connection fails, the request times out or the reply can't be read, nothing is sent on. The console shows the
+error, and the next message tries again. There is no failure output. To act on a failure, watch the console.</p>
+<ul>
+<li>A body that isn't valid UTF-8 raises an error.</li>
+<li>The whole body is read into memory at once. A response larger than the board's largest free block fails with
+  <code>MemoryError</code>. Request a smaller response, or use a board with PSRAM.</li>
+</ul>
 
 
 

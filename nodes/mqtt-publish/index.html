@@ -2186,6 +2186,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#wiring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Wiring
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#behavior" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3481,6 +3492,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#wiring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Wiring
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#behavior" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3523,24 +3545,35 @@
 
 
 <h1 id="mqtt-publish">mqtt publish</h1>
-<p>Publishes a message's payload to an MQTT topic.</p>
+<p>Publishes each message's payload to an MQTT topic.</p>
 <h2 id="properties">Properties</h2>
 <ul>
-<li><strong>topic</strong> — the topic to publish to. Required.</li>
-<li><strong>retain</strong> — publish as a retained message.</li>
-<li><strong>QoS</strong> — <code>0</code> or <code>1</code>. QoS 2 isn't supported.</li>
+<li><strong>topic</strong> — the topic to publish to. Required. It is fixed: a message's <code>topic</code> is ignored. To publish to several
+  topics, use one node for each.</li>
+<li><strong>retain</strong> — ask the broker to keep the message and give it to later subscribers. Default off.</li>
+<li><strong>QoS</strong> — <code>0</code> or <code>1</code>. Default 0. QoS 2 isn't supported.</li>
 <li><strong>MQTT Broker</strong> — the flow's MQTT broker, shared by every MQTT node in the flow: change it on one and it changes on
-  all (see <a href="../../working-in-the-editor/#config-nodes">Editor in depth</a>). Required — won't compile without one.</li>
+  all (see <a href="../../working-in-the-editor/#config-nodes">Editor in depth</a>). Required.</li>
+<li><strong>WiFi</strong> — the flow's WiFi network, shared by every WiFi node in the flow. <strong>unmanaged</strong> isn't accepted in a flow with
+  MQTT nodes, because they manage the connection themselves.</li>
 </ul>
+<h2 id="wiring">Wiring</h2>
+<p><strong>Input</strong> — any message. <code>payload</code> is the message sent: bytes as they are, a string as UTF-8, and anything else
+converted to text first. <code>None</code> sends the text <code>None</code>.</p>
+<p>This node has no output.</p>
 <h2 id="behavior">Behavior</h2>
-<p>Uses the flow's WiFi network (the WiFi config in the flow, shared by every WiFi node; the node's WiFi field selects that same network) and the flow's broker config for the MQTT connection. Nodes on the same broker share one connection. In a flow with MQTT nodes, MQTT manages the WiFi connection. An "unmanaged" WiFi config isn't accepted here: this node manages its own WiFi reconnection, so it needs a real network to connect to. The payload is sent as bytes (a string is UTF-8 encoded, other types are converted).</p>
-<p>Shows a connection-status dot on the canvas (see <a href="../../working-in-the-editor/#node-status">Editor in depth</a>) once
-connected to a device. It reports its own broker connection state, even when it shares that broker with an
-<code>mqtt subscribe</code> node. The node opens its broker connection only when there's actually something to publish, so the
-dot stays blank until the first message reaches it, even if the flow has been running a while.</p>
+<p>Nodes on the same broker share one connection. The node connects when the first message reaches it, so its status dot
+stays blank until then (see <a href="../../working-in-the-editor/#node-status">node status</a>). It shows this node's own view of
+the connection, even when an <a href="../mqtt-subscribe/">mqtt subscribe</a> node shares the broker.</p>
 <h2 id="errors">Errors</h2>
-<p>A red dot, with a console line starting <code>mqtt connect to</code> and ending <code>failed after 3 attempts</code>, means the board can't
-reach the broker. See <a href="../../debugging/#mqtt-broker-unreachable">MQTT broker unreachable</a>.</p>
+<ul>
+<li><strong>The board can't reach the broker.</strong> The dot turns red and the console shows <code>mqtt connect to HOST:PORT failed after
+  3 attempts</code>, with the reason for each attempt. See
+  <a href="../../debugging/#mqtt-broker-unreachable">MQTT broker unreachable</a>.</li>
+<li><strong>The publish fails.</strong> The console shows <code>mqtt publish to HOST:PORT failed</code>, with the system's error.</li>
+</ul>
+<p>These stop the compile: no MQTT broker or no WiFi network in the flow, an empty topic, a QoS other than 0 or 1, an
+unmanaged WiFi network.</p>
 
 
 

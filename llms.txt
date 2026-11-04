@@ -32,7 +32,7 @@
 ## Tutorials
 
 - [Overview](https://docs.thingstudio.net/tutorials/): Getting started ends with a blinking LED.
-- [Example flows](https://docs.thingstudio.net/examples/): Flows to open with **File → Open…** and make your own.
+- [Example flows](https://docs.thingstudio.net/examples/): If you'd rather not build the tutorial flows from scratch, or you get stuck, their finished flow files are in the tutorials folder, below.
 - [Two more blinks](https://docs.thingstudio.net/tutorials/two-more-blinks/): If you've followed the steps in Getting started you'll now have a board with a blinking LED.
 - [Web Blink](https://docs.thingstudio.net/tutorials/blink-from-your-network/): If you've worked through Two more blinks, you have a board whose LED blinks on a timer.
 - [Blink from anywhere](https://docs.thingstudio.net/tutorials/blink-from-anywhere/): This tutorial is still being checked on a board.
@@ -71,15 +71,15 @@
 ## Network
 
 - [wifi status](https://docs.thingstudio.net/nodes/wifi-status/): Reports the board's WiFi connection state.
-- [wifi gate](https://docs.thingstudio.net/nodes/wifi-gate/): Passes a message through unchanged if the WiFi station is currently connected, or drops it if it isn't.
+- [wifi gate](https://docs.thingstudio.net/nodes/wifi-gate/): Passes a message through unchanged while the board's WiFi is connected, and drops it while it isn't.
 - [ntp](https://docs.thingstudio.net/nodes/ntp/): Sets the board's clock from the internet and sends the time, as text for a display or as Unix time.
 - [udp receive](https://docs.thingstudio.net/nodes/udp-receive/): Listens on a UDP port and emits one message per datagram received.
-- [mqtt subscribe](https://docs.thingstudio.net/nodes/mqtt-subscribe/): Emits one message per incoming message on a subscribed MQTT topic.
+- [mqtt subscribe](https://docs.thingstudio.net/nodes/mqtt-subscribe/): Sends a message for each message that arrives on an MQTT topic.
 - [http request](https://docs.thingstudio.net/nodes/http-request/): Makes one HTTP request per incoming message and returns the response.
-- [http in](https://docs.thingstudio.net/nodes/http-in/): Starts (or joins) an HTTP server on the device and fires a message for each matching incoming request.
-- [http response](https://docs.thingstudio.net/nodes/http-response/): Completes a request that arrived via a matching http in node.
+- [http in](https://docs.thingstudio.net/nodes/http-in/): Starts a web server on the board and sends a message for each request to a path.
+- [http response](https://docs.thingstudio.net/nodes/http-response/): Sends the reply to a request that arrived through an http in node.
 - [udp send](https://docs.thingstudio.net/nodes/udp-send/): Sends a message's payload as a UDP datagram to a fixed host and port.
-- [mqtt publish](https://docs.thingstudio.net/nodes/mqtt-publish/): Publishes a message's payload to an MQTT topic.
+- [mqtt publish](https://docs.thingstudio.net/nodes/mqtt-publish/): Publishes each message's payload to an MQTT topic.
 
 ## Bluetooth
 
@@ -121,7 +121,7 @@
 - [Writing flows with an AI assistant](https://docs.thingstudio.net/ai-authoring/): This page is for an AI assistant (or a person) writing a Thingstudio flow file or a custom node in the user's folder, without the editor.
 - [Check a flow without the editor](https://docs.thingstudio.net/check-a-flow/): thingstudio-compile compiles and checks a flow file from the command line, with the same errors the editor gives.
 - [Command line](https://docs.thingstudio.net/command-line/): Options for starting Thingstudio, a way to install the runtime and run flows without the editor, and a check for a flow file.
-- [Node catalog](https://docs.thingstudio.net/nodes-catalog/): Every node a flow file can use: its type id, its ports with their payload types, and its properties with the default the editor gives a new node.
+- [Node catalog](https://docs.thingstudio.net/nodes-catalog/): This is the flow-file reference.
 
 ## Troubleshooting
 

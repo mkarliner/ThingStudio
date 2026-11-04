@@ -34,7 +34,7 @@ will start again after a reset or power cycle.
        [custom image](custom-firmware.md).
     4. [Connect your board](connecting.md), then [install the runtime](installing-runtime.md).
     5. [Blink an LED](first-flow.md) — three nodes and deploy. Not in a building mood? Open
-       `examples/blink.flow.json` (the [examples folder](examples.md#where-the-folder-is)) with
+       `tutorials/blink.flow.json` (the [tutorials folder](examples.md#where-the-folder-is)) with
        **File → Open…**, point the pin at your board's own LED, deploy.
 
     When something doesn't work, [Debugging](debugging.md) and the [FAQ](faq.md) go by what you see on screen.
@@ -980,7 +980,7 @@ Don't leave out the resistor. Without it, the LED draws too much current and can
 3. Drag a **gpio out** onto the canvas. Set **pin** to your LED's GPIO number.
 4. Wire **timer** → **function** → **gpio out**.
 
-This flow is `examples/blink.flow.json`, in the [examples folder](examples.md#where-the-folder-is). Opened from
+This flow is `tutorials/blink.flow.json`, in the [tutorials folder](examples.md#where-the-folder-is). Opened from
 there, it needs only **pin** set to your LED's GPIO number.
 
 ## Deploy
@@ -1098,7 +1098,7 @@ presets, custom nodes and board definitions.
 
 ## Example flows
 
-Every install has an `examples` folder. [Example flows](examples.md#where-the-folder-is) says where it is for each route.
+Every install has a `tutorials` folder. [Example flows](examples.md#where-the-folder-is) says where it is for each route.
 
 ## From source
 
@@ -1137,8 +1137,8 @@ project.
 4. [A sensor display](../sensor-display.md) — read a sensor and show it on a touch display. It is a work in
    progress.
 
-The finished flow for each tutorial is in the [examples folder](../examples.md#where-the-folder-is). Open it
-with **File → Open…** rather than copying it from the page.
+The finished flow for each tutorial is in the tutorials folder. [Example flows](../examples.md) says where the folder
+is and what to change in each flow.
 
 If you've built something past the tutorials, what worked and what stalled is a useful report: what you tried next,
 and what happened. [File it on the issue tracker](https://github.com/mkarliner/ThingStudio/issues).
@@ -1150,20 +1150,24 @@ Source: https://docs.thingstudio.net/examples/
 
 # Example flows
 
-Flows to open with **File → Open…** and make your own. Open the file rather than copying a flow from a page: pick it
-from the examples folder, change what is yours (the pin, the credentials, the board), and deploy. This is a map of
-what each one shows and what to change first; the tutorials walk the first four step by step.
+If you'd rather not build the tutorial flows from scratch, or you get stuck, their finished flow files are in the
+tutorials folder, [below](#where-the-folder-is). Open one with **File → Open…**. Each entry below says what the flow shows
+and what to change first.
+
+You'll need to change the flow to match your WiFi setup, and the actual pins that devices, like LEDs, are connected to on
+your board. If your board is one of those that already have a definition file made for it, you can set it in the **Board**
+drop-down ([Boards and processors](boards.md#picking-the-board)).
 
 ## Where the folder is
 
-Every install has an `examples` folder. Where it is depends on how you installed:
+Every install has a `tutorials` folder. Where it is depends on how you installed:
 
 | Install | Examples folder |
 | --- | --- |
-| Installer script, macOS and Linux | `~/.local/share/thingstudio/current/examples` |
-| Installer script, Windows | `%LOCALAPPDATA%\Thingstudio\versions\thingstudio-VERSION-windows-x86_64\examples` |
-| Package | `examples`, inside the folder you unpacked |
-| From source | `examples`, in the repository folder |
+| Installer script, macOS and Linux | `~/.local/share/thingstudio/current/tutorials` |
+| Installer script, Windows | `%LOCALAPPDATA%\Thingstudio\versions\thingstudio-VERSION-windows-x86_64\tutorials` |
+| Package | `tutorials`, inside the folder you unpacked |
+| From source | `tutorials`, in the repository folder |
 
 The Windows path contains the version, so it changes when you upgrade.
 
@@ -1171,9 +1175,10 @@ The Windows path contains the version, so it changes when you upgrade.
 
 - **Pins are examples.** Set your board's pin in the property panel. **Pins…** next to the **Board** menu lists the
   pins your board has.
-- **WiFi and MQTT flows name a saved network or broker** that your computer doesn't have. The **WiFi** or **MQTT
-  Broker** field's ✎ form says so; saving it with your own details creates it. Credentials stay on your computer,
-  not in the flow ([The Thingstudio folder](thingstudio-folder.md#credentials)).
+- **A flow with a WiFi or MQTT node holds no passwords.** The network name, password and broker address are kept in a
+  saved credential on your computer, never in the flow file. Open the node's **WiFi** or **MQTT Broker** field and
+  click ✎: fill in your own details and save, or pick one you have already saved from the drop-down. See
+  [The Thingstudio folder](thingstudio-folder.md#credentials).
 
 ## The flows
 
@@ -1201,7 +1206,7 @@ next level. Walked by [Two more blinks](tutorials/two-more-blinks.md), which als
 
 The same LED, toggled from a browser. An `http in` node serves `/toggle` on port 9999, a `function` flips the LED
 and builds the reply, and `http response` answers the browser. `wifi status` and `debug` show the connection. It
-names a WiFi network, `tutorial wifi`. Walked by [Web Blink](tutorials/blink-from-your-network.md).
+needs a WiFi network of yours. Walked by [Web Blink](tutorials/blink-from-your-network.md).
 
 - **path** and **port** on [http in](nodes/http-in.md).
 - The reply text in the function's **code** (`'LED on'` and `'LED off'`).
@@ -1211,7 +1216,7 @@ names a WiFi network, `tutorial wifi`. Walked by [Web Blink](tutorials/blink-fro
 
 The same LED through an MQTT broker. Clicking `inject` publishes `pressed` to a `button` topic, and `mqtt subscribe`
 on an `led` topic feeds a `function` that turns `on`, `1` or `true` into true for `gpio out`; `debug` prints what
-arrives. The file names a WiFi network (`tutorial wifi`) and a broker (`test-mosquitto`). Its topics start
+arrives. It needs a WiFi network and a broker of yours. Its topics start
 `thingstudio/change-this-number/`: replace that number in both before you deploy, because the broker is public. Walked
 by [Blink from anywhere](tutorials/blink-from-anywhere.md).
 
@@ -1220,57 +1225,8 @@ by [Blink from anywhere](tutorials/blink-from-anywhere.md).
 - **host** and **port** in the broker form, to use a broker on your own network.
 - The [function](nodes/function.md) node's **code**, which decides which messages count as on.
 
-### `basic-http-request.flow.json`
-
-Fetches a web page from the board: clicking the `inject` node makes `http request` GET the URL, and `debug` prints
-the answer in the console. The file's URL is `http://localhost:8000/index.html`, and on a board `localhost` is the
-board itself, so point it at a server your network reaches.
-
-- **url**, **method** and **timeout (ms)** on [http request](nodes/http-request.md).
-- A [function](nodes/function.md) node between `http request` and `debug`, to pick one part out of the answer.
-
-### `basic-mqtt.flow.json`
-
-Publish and subscribe on one broker. Clicking `inject` publishes a message to the topic `foobar`; `mqtt subscribe`
-on the same topic receives it and `debug` prints it. A second `debug` prints `wifi status`. The file names a WiFi
-network and an MQTT broker.
-
-- **topic** on [mqtt publish](nodes/mqtt-publish.md) and [mqtt subscribe](nodes/mqtt-subscribe.md): keep the two the
-  same. On a public broker such as `test.mosquitto.org`, anyone can read a topic, so use one nobody else will.
-- **value** on [inject](nodes/inject.md), the message that is published.
-- **QoS** and **retain** on mqtt publish.
-
-If nothing arrives, see [MQTT broker unreachable](debugging.md#mqtt-broker-unreachable).
-
-### `bmp280-test-flow.flow.json`
-
-Reads a BME280 or BMP280 sensor over I2C and prints the temperature. A `bme280` node reads every 5 seconds, a
-`function` takes the temperature out of the reading, and `debug` prints it. A `filter` also passes it on only when it
-changes by at least 0.1. The sensor is on I2C bus 0, SCL 5 and SDA 4.
-
-- **address** on [bme280](nodes/bme280.md): the file has 118, which is `0x76`; use 119 for `0x77`.
-- The bus pins, in the **I2C bus** config ([I2C bus](nodes/i2c-bus.md)).
-- **mode** and **threshold** on [filter](nodes/filter.md).
-
-### `gui-touch-freenove-s3-4in.flow.json`
-
-A touch display on the Freenove ESP32-S3 4.0" board, with no sensor wired: a `timer` and a `function` make slow
-triangle-wave readings for three readouts, a pressure bar and a status light. Buttons turn the pages, and a toggle
-button switches a smart plug over MQTT, publishing to `cmnd/plug/POWER` and following `stat/plug/POWER` as a Tasmota
-plug does. It needs that board, and WiFi and MQTT credentials. The [GUI nodes](nodes/gui.md) are provisional.
-
-- The plug topics on [mqtt subscribe](nodes/mqtt-subscribe.md) and [mqtt publish](nodes/mqtt-publish.md).
-- The range of a readout, and its caption and units: [GUI nodes](nodes/gui.md).
-
-### `gui-headliner-sensor-freenove-s3-4in.flow.json`
-
-The sensor display from [A sensor display](sensor-display.md): a BME280 on a touch display, with pressure and
-temperature histories, a clock from `ntp`, and the readings published over MQTT. It needs the Freenove ESP32-S3 4.0"
-board, a BME280 on I2C bus 0 (SCL 15, SDA 16), and WiFi and MQTT credentials. That tutorial is being reworked.
-
-- **UTC offset (hours)** and **daylight saving** on [ntp](nodes/ntp.md).
-- The topics on [mqtt publish](nodes/mqtt-publish.md).
-- **rows kept** and **seconds per row** on [journal](nodes/journal.md), which feed the histories.
+The repository's `test-flows/` folder holds more flows, written for trying one node at a time on a board. They aren't
+installed.
 
 ## Flows written by an AI assistant
 
@@ -1294,10 +1250,9 @@ The second variant is **Keep the state in the node**: the state lives inside the
 `context`.
 
 You can build this flow up yourself or start from the finished flow,
-[two-more-blinks.flow.json](https://github.com/mkarliner/ThingStudio/blob/main/examples/two-more-blinks.flow.json),
-in the [examples folder](../examples.md#where-the-folder-is), with **File → Open…**. Open the file; don't copy
-it from this page. It carries the first of the two blinks: change `15` in `machine.Pin(15)` to your LED's GPIO
-number.
+[two-more-blinks.flow.json](https://github.com/mkarliner/ThingStudio/blob/main/tutorials/two-more-blinks.flow.json),
+in the [tutorials folder](../examples.md#where-the-folder-is), with **File → Open…**. It carries the first of the two
+blinks: change `15` in `machine.Pin(15)` to your LED's GPIO number.
 
 If a step misbehaves on the way, start at [Debugging & troubleshooting](../debugging.md).
 
@@ -1385,10 +1340,9 @@ runs a web server on the board, and the **function** gains a second output for t
 browser.
 
 You can build the flow step by step, or start from the finished flow,
-[http-blink.flow.json](https://github.com/mkarliner/ThingStudio/blob/main/examples/http-blink.flow.json), in the
-[examples folder](../examples.md#where-the-folder-is), with **File → Open…**. Open the file; don't copy it from this
-page. It names a WiFi network, `tutorial wifi`, that your computer doesn't have: the **WiFi** field's ✎ form says so,
-and saving it with your network's details creates it.
+[http-blink.flow.json](https://github.com/mkarliner/ThingStudio/blob/main/tutorials/http-blink.flow.json), in the
+[tutorials folder](../examples.md#where-the-folder-is), with **File → Open…**.
+[Example flows](../examples.md#before-you-deploy) says what to change before you deploy.
 
 If a step misbehaves on the way, start at [Debugging & troubleshooting](../debugging.md).
 
@@ -1447,7 +1401,7 @@ nothing drives the pin until a request does.
   `.local`; port 9999 and path `/toggle` are the **port** and **path** of the `http in` node.
 - **By IP:** the `debug` node prints the whole **wifi status** message, which includes `ip`. (In the example file,
   tick **full message** on the `debug` node first; it prints only the payload otherwise.) The fields are listed
-  under [wifi status](../nodes/wifi-status.md#behavior). Open `http://<ip>:9999/toggle`.
+  under [wifi status](../nodes/wifi-status.md#wiring). Open `http://<ip>:9999/toggle`.
 
 If `.local` names don't resolve on your network (they don't everywhere, and they don't across VPN tunnels at all —
 multicast doesn't pass), the IP address is the dependable one.
@@ -1476,8 +1430,6 @@ does and doesn't do.
 - [http in](../nodes/http-in.md) — routes, methods, timeouts and the server's limits.
 - [Blink from anywhere](blink-from-anywhere.md) — the next tutorial: the same LED through an MQTT broker.
 - [mqtt publish](../nodes/mqtt-publish.md) and [mqtt subscribe](../nodes/mqtt-subscribe.md) — the nodes behind it.
-  `examples/basic-mqtt.flow.json`, in the [examples folder](../examples.md#where-the-folder-is), publishes and
-  subscribes on one topic.
 - [Connecting over WiFi](../wifi-connection.md) — the board as an editor peer on your network, not just a web
   server.
 
@@ -1502,11 +1454,10 @@ the button in the editor, and **mqtt subscribe** → **function** → **gpio out
 arrives on another topic. The board joins your WiFi with the saved credential from Web Blink.
 
 You can build the flow step by step, or start from the finished flow,
-[blink-from-anywhere.flow.json](https://github.com/mkarliner/ThingStudio/blob/main/examples/blink-from-anywhere.flow.json),
-in the [examples folder](../examples.md#where-the-folder-is), with **File → Open…**. Open the file; don't copy it from
-this page. It names a WiFi network, `tutorial wifi`, and a broker, `test-mosquitto`, that your computer doesn't have:
-each field's ✎ form says so, and saving it with your details creates it. Before you deploy, replace
-`change-this-number` in both topics (see below).
+[blink-from-anywhere.flow.json](https://github.com/mkarliner/ThingStudio/blob/main/tutorials/blink-from-anywhere.flow.json),
+in the [tutorials folder](../examples.md#where-the-folder-is), with **File → Open…**. Before you deploy, replace
+`change-this-number` in both topics (see below), and set the WiFi network and broker as
+[Example flows](../examples.md#before-you-deploy) describes.
 
 If a step misbehaves on the way, start at [Debugging & troubleshooting](../debugging.md).
 
@@ -1598,7 +1549,7 @@ the broker form instead. The nodes work the same way.
 
 - [mqtt publish](../nodes/mqtt-publish.md) and [mqtt subscribe](../nodes/mqtt-subscribe.md) — every property, including
   QoS and retain.
-- [Example flows](../examples.md) — `basic-mqtt.flow.json` publishes and subscribes on one topic, with nothing wired to the board.
+- [Example flows](../examples.md) — the finished flows for the tutorials, and what to change in each.
 - [Tutorials](index.md) — the other tutorials.
 
 
@@ -1621,7 +1572,7 @@ with its own parts, listed under What you need.
 The flow is a **bme280** sensor feeding GUI nodes that draw the readings, with an **mqtt publish** that sends them on.
 
 The finished flow is in the Thingstudio repository:
-[`examples/gui-headliner-sensor-freenove-s3-4in.flow.json`](https://github.com/mkarliner/ThingStudio/blob/main/examples/gui-headliner-sensor-freenove-s3-4in.flow.json).
+[`test-flows/gui-headliner-sensor-freenove-s3-4in.flow.json`](https://github.com/mkarliner/ThingStudio/blob/main/test-flows/gui-headliner-sensor-freenove-s3-4in.flow.json).
 Open it in one of two ways:
 
 - **Open the finished flow.** Download it and open it with **File → Open…**, then set your own WiFi and MQTT
@@ -1731,8 +1682,8 @@ Until the board has the time, the labels show `--`.
 Add a **gui button** with **mode** `navigate` to each page, so you can turn the pages by touch. See
 [Buttons](nodes/gui.md#buttons).
 
-The example flow also turns the pages every 8 seconds with a **gui navigator** node, which isn't in the palette.
-See [GUI nodes](nodes/gui.md#the-nodes).
+The finished flow also turns the pages by itself every 8 seconds, with a node that isn't in the palette. Skip it when
+you build the flow: the buttons turn the pages by touch.
 
 ## 6. Publish the readings
 
@@ -2999,7 +2950,7 @@ A sensor reads every 5 seconds.
 2. Journal B, fed from A's second output: rows 156, **seconds per row** 0. Its first output goes to a second
    histogram: the last 2.6 hours, one bar a minute, each with its min to max line.
 
-`examples/gui-headliner-sensor-freenove-s3-4in.flow.json` does this with a BME280.
+`test-flows/gui-headliner-sensor-freenove-s3-4in.flow.json`, in the repository, does this with a BME280.
 
 
 ---
@@ -3029,24 +2980,41 @@ Reports the board's WiFi connection state. In a flow with no other WiFi node, it
 
 ## Properties
 
-- **poll interval (ms)** — how often to check the connection. Default 5000ms.
-- **WiFi** — the flow's WiFi network. Every WiFi node in a flow shares this one setting (see [Editor in depth](../working-in-the-editor.md#config-nodes)).
+- **poll interval (ms)** — how often to check the connection. Default 5000.
+- **WiFi** — the flow's WiFi network, shared by every WiFi node in the flow (see
+  [Editor in depth](../working-in-the-editor.md#config-nodes)). Pick **unmanaged** to stop this node connecting: use it
+  when something else manages the connection, or to leave the network out of the flow and enter it on the board. See
+  [WiFi provisioning](../wifi-provisioning.md).
+
+## Wiring
+
+**Output** — a message when the connection changes:
+
+| Field | Value |
+| --- | --- |
+| `payload` | `True` when connected, `False` when disconnected |
+| `ip`, `subnet`, `gateway`, `dns` | the connection's addresses; empty strings when disconnected |
+| `rssi` | signal strength in dBm; `None` when disconnected, or when the board can't read it (ESP32 only) |
+
+A [debug](debug.md) node prints only `payload`. Tick **full message** on it to see the other fields.
 
 ## Behavior
 
-This node is optional: other network nodes don't need it. In a flow with MQTT nodes, MQTT manages the WiFi connection and this node only reports on it.
+This node is optional: other network nodes don't need it. In a flow with MQTT nodes, MQTT manages the WiFi connection
+and this node only reports on it.
 
-The payload is `true`/`false` for connected/disconnected. The message also carries `ip`, `subnet`, `gateway`, `dns` (all empty strings when disconnected), and `rssi` (signal strength in dBm, or `null` when disconnected or when the board doesn't support reading it — RSSI is an ESP32-only reading, not available on every board). Use a `debug` node with "full message" checked to see all of these — by default `debug` only prints `payload`.
+It sends a message when the connection changes: a connect or disconnect, or a new `ip`, `subnet`, `gateway` or `dns`.
+It doesn't send on every poll, except the first, which always reports.
 
-It emits when connection identity changes (connect/disconnect, or a change to `ip`/`subnet`/`gateway`/`dns`), not on every poll — except the very first poll, which always reports. `rssi` doesn't trigger a re-emit on its own — it drifts constantly even on an idle connection, so it's included whenever a message fires for another reason, but its own changes don't cause one. It's a snapshot, not a live reading.
+`rssi` drifts constantly, so a change in it sends nothing by itself. It is included, as read at that poll, whenever a
+message goes out for another reason. It is a snapshot, not a live reading.
 
-Pick "unmanaged" on the WiFi config when you don't want this node issuing its own connect — either because something else already manages the connection, or because you want the device to learn its credentials on its own over the air. See [WiFi provisioning](../wifi-provisioning.md) for how that self-provisioning flow works, including the setup network's password and the reprovisioning-fallback option.
+If no connection is ever made, the node reports disconnected, as for any failed connect. Provisioning changes how the
+board gets its credentials, not what this node reports.
 
-If no connection is ever made, this node reports disconnected, the same as any other failed connect — provisioning changes how the interface gets its credentials, not how wifi_status reports on them.
-
-Shows a connection-status dot on the canvas (see [Editor in depth](../working-in-the-editor.md#node-status)) once connected to a device.
-
-While this node has the board on a network, the editor can connect to the board over WiFi. See [Connecting over WiFi](../wifi-connection.md).
+Once the board is connected, the node shows a status dot on the canvas (see
+[node status](../working-in-the-editor.md#node-status)). While the node has the board on a network, the editor can
+connect to the board over WiFi. See [Connecting over WiFi](../wifi-connection.md).
 
 
 ---
@@ -3055,23 +3023,29 @@ Source: https://docs.thingstudio.net/nodes/wifi-gate/
 
 # wifi gate
 
-Passes a message through unchanged if the WiFi station is currently connected, or drops it if it isn't.
+Passes a message through unchanged while the board's WiFi is connected, and drops it while it isn't.
 
 ## Properties
 
-- **WiFi** — the flow's WiFi network. Every WiFi node in a flow shares this one setting.
+- **WiFi** — the flow's WiFi network, shared by every WiFi node in the flow.
+
+## Wiring
+
+**Input** — any message.
+
+**Output** — the same message, unchanged, while the link is up. While it is down, nothing is sent on, as when a
+[function](function.md) node returns `None`.
 
 ## Behavior
 
-A `transform`, like `function` or `delay` — one input, one output, same `msg` in and out unchanged when the WiFi link is up. When the link is down, the message is dropped: nothing propagates past this node, the same way a `function` node's `return None` stops a message.
+The gate checks the live WiFi link as each message arrives. It doesn't use the last message from
+[wifi status](wifi-status.md), which sends only when the connection changes and can be out of date.
 
-Uses the flow's WiFi network (its **WiFi** field, shared by every WiFi node).
+Put it between a source that fires on its own schedule, such as a timer or a sensor, and a node that sends over the
+network. Messages that arrive while the link is down are dropped instead of failing downstream.
 
-This checks the WiFi station's live link state at the moment each message arrives, not a value read off `wifi status`'s own output messages. `wifi status` only emits when its connection identity changes, so a fast-firing source (a timer or sensor) gated off `wifi status`'s wire could be checking stale state. This node reads the hardware directly, so it always answers "is the link up right now."
-
-A GPIO, timer or sensor source fires on its own schedule with no awareness of whether WiFi is up. Put a `wifi gate` between that source and whatever sends the result over the network: messages that arrive while the link is down are dropped instead of failing downstream (or queuing for a retry a node like `http request` might otherwise attempt).
-
-This only checks the WiFi link itself — not whether a specific MQTT broker or HTTP server is reachable beyond that. `mqtt publish`, `mqtt subscribe` and `http request` already handle their own connection lifecycle on top of a working WiFi link.
+It checks the WiFi link only, not whether a given MQTT broker or HTTP server can be reached. `mqtt publish`,
+`mqtt subscribe` and `http request` handle their own connections on top of a working link.
 
 
 ---
@@ -3138,12 +3112,16 @@ Listens on a UDP port and emits one message per datagram received.
 ## Properties
 
 - **port** — local port to listen on (1–65535).
-- **poll interval (ms)** — internal receive polling cadence. Default 20ms; rarely needs changing.
-- **WiFi** — the flow's WiFi network. Every WiFi node in a flow shares this one setting.
+- **poll interval (ms)** — how often the node checks for datagrams. Default 20.
+- **WiFi** — the flow's WiFi network, shared by every WiFi node in the flow.
 
-## Behavior
+## Wiring
 
-Uses the flow's WiFi network (its **WiFi** field, shared by every WiFi node). The payload is the raw bytes received, unparsed — decode it yourself in a `function` node if you're expecting text or a structured format. `host` and `port` fields on the message carry the sender's address, alongside the payload.
+**Output** — one message per datagram:
+
+- `payload` — the raw bytes received, not parsed. To read text or a structured format, decode it in a
+  [function](function.md) node.
+- `host` and `port` — the sender's address.
 
 
 ---
@@ -3152,45 +3130,65 @@ Source: https://docs.thingstudio.net/nodes/mqtt-subscribe/
 
 # mqtt subscribe
 
-Emits one message per incoming message on a subscribed MQTT topic. With dynamic subscription on, its input changes
-the subscriptions while the flow runs.
+Sends a message for each message that arrives on an MQTT topic.
 
 ## Properties
 
-- **topic** — the topic to subscribe to. Required.
-- **QoS** — `0` or `1`. QoS 2 isn't supported.
-- **dynamic subscription** — accept subscribe/unsubscribe messages on the input (see below). Off by default.
+- **topic** — the topic to subscribe to. Required. `+` matches one level and `#` the rest, as usual in MQTT.
+- **QoS** — `0` or `1`. Default 0. QoS 2 isn't supported.
+- **dynamic subscription** — let messages on the input change the subscriptions (see below). Default off.
 - **MQTT Broker** — the flow's MQTT broker, shared by every MQTT node in the flow: change it on one and it changes on
-  all (see [Editor in depth](../working-in-the-editor.md#config-nodes)). Required — won't compile without one.
+  all (see [Editor in depth](../working-in-the-editor.md#config-nodes)). Required.
+- **WiFi** — the flow's WiFi network, shared by every WiFi node in the flow. **unmanaged** isn't accepted in a flow with
+  MQTT nodes, because they manage the connection themselves.
+
+## Wiring
+
+**Input** — only with dynamic subscription on. See below.
+
+**Output** — one message per message received:
+
+| Field | Value |
+| --- | --- |
+| `payload` | the message body, decoded as UTF-8 text |
+| `topic` | the topic it arrived on, which can differ from the subscription when that has a wildcard |
+| `retained` | `True` when the broker sent it as a retained message |
 
 ## Behavior
 
-The node subscribes to **topic** when the flow starts, and keeps it subscribed.
+The node subscribes to **topic** when the flow starts and keeps the subscription across reconnects. Nodes on the same
+broker share one connection and subscribe independently.
 
-Uses the flow's WiFi network and broker config, same as **mqtt publish**. An "unmanaged" WiFi config isn't accepted here, for the same reason.
+The node holds up to 20 messages that haven't been sent on yet. When more arrive, the oldest is dropped.
 
-The message carries the payload (decoded as text when possible, raw bytes otherwise), the actual topic it arrived on, and whether the broker sent it as a retained message.
+A subscription may not be confirmed by the broker before an [mqtt publish](mqtt-publish.md) node on the same broker
+sends its first message. An early publish can go unheard.
 
-**Dynamic subscription.** With it on, an input message changes what the node listens to:
+The status dot shows this node's own view of the connection, as for mqtt publish.
 
-- `msg.action` is `subscribe` or `unsubscribe`.
-- `msg.topic` is a topic string, a `{topic, qos}` object, or a list of either.
+### Dynamic subscription
 
-`unsubscribe` stops the node receiving that topic. Two nodes subscribed to the same topic are independent: one
-unsubscribing doesn't stop the other. The configured **topic** is subscribed at start, so turning dynamic
-subscription on doesn't interrupt anything; an `unsubscribe` for it takes effect until the next reload.
+With it on, an input message changes what the node listens to:
 
-With dynamic subscription off, a message on the input raises an error rather than being ignored. An unknown action,
-or an action without a topic, raises an error too.
+| Field | Value |
+| --- | --- |
+| `action` | `subscribe` or `unsubscribe` |
+| `topic` | a topic string, a `{topic, qos}` object, or a list of either |
 
-A subscription isn't guaranteed to be fully confirmed before an **mqtt publish** node on the same broker sends its first message. This is usually not an issue, but an early publish can go unheard by a subscriber that was still connecting.
-
-Shows a connection-status dot on the canvas (see [Editor in depth](../working-in-the-editor.md#node-status)) once connected to a device, same as **mqtt publish**.
+An unsubscribe stops this node receiving that topic. Another node subscribed to the same topic keeps receiving it. The
+configured **topic** can be unsubscribed too, until the flow is next reloaded.
 
 ## Errors
 
-A red dot, with a console line starting `mqtt connect to` and ending `failed after 3 attempts`, means the board can't
-reach the broker. See [MQTT broker unreachable](../debugging.md#mqtt-broker-unreachable).
+- **The board can't reach the broker.** The dot turns red and the console shows `mqtt connect to HOST:PORT failed after
+  3 attempts`, with the reason for each attempt. See
+  [MQTT broker unreachable](../debugging.md#mqtt-broker-unreachable).
+- **The subscribe fails.** The console shows `mqtt subscribe to HOST:PORT failed`, with the system's error.
+- **A message arrives on the input with dynamic subscription off.** The node raises an error rather than ignoring it.
+- **An action message has no topic, an unknown action, or a QoS other than 0 or 1.** The node raises an error.
+
+These stop the compile: no MQTT broker or no WiFi network in the flow, an empty topic, a QoS other than 0 or 1, an
+unmanaged WiFi network.
 
 
 ---
@@ -3205,16 +3203,37 @@ Makes one HTTP request per incoming message and returns the response.
 
 - **url** — `http://host[:port]/path`. **HTTPS isn't supported.**
 - **method** — `GET` or `POST`. No other methods are supported.
-- **timeout (ms)** — how long to wait for the whole request/response exchange. Default 5000ms.
-- **WiFi** — the flow's WiFi network. Every WiFi node in a flow shares this one setting.
+- **timeout (ms)** — how long to wait for the whole request and response. Default 5000.
+- **WiFi** — the flow's WiFi network, shared by every WiFi node in the flow.
+
+## Wiring
+
+**Input** — any message. For a `POST`, `payload` is the request body: a string is UTF-8 encoded, and other types are
+converted.
+
+**Output** — the response:
+
+- `payload` — the decoded body, as a string.
+- `status` — the HTTP status code, an integer.
+
+A response with any status (404, 500, …) is sent on. Test `msg['status'] == 200` yourself.
 
 ## Behavior
 
-For a `POST`, the incoming message's payload becomes the request body (a string is UTF-8 encoded; other types are converted). The first request goes out when the first message arrives, so a timer's first tick (one full interval after start) is the first request. The response comes back as the message's payload (the decoded body, as a string) and a `status` field (the HTTP status code).
+The first request goes out when the first message arrives, so with a [timer](timer.md) it is one full interval after
+the flow starts.
 
-**When it goes wrong.** A response with any status (404, 500, ...) is still sent on, with `status` set to that number (an integer), so test `msg['status'] == 200` yourself. If the connection fails, the request times out or the reply can't be read, nothing is sent on: the node raises an error that shows in the debug log, and the next message tries again. To act on a failure, add a [timer](timer.md)-driven check or watch the log; there is no failure output.
+The server must send `Content-Length`: chunked transfer-encoding isn't supported. Redirects aren't followed. The body
+must be valid UTF-8.
 
-A few real limitations worth knowing: no HTTPS/TLS, no chunked transfer-encoding (the server needs to send `Content-Length`), no redirect following, and the response body must be valid UTF-8 — anything else raises rather than silently mangling it. The whole body is read into memory at once, so a response larger than the board's largest free block fails with `MemoryError`; request a smaller response or use a board with PSRAM. Uses the flow's WiFi network (its **WiFi** field, shared by every WiFi node).
+## Errors
+
+If the connection fails, the request times out or the reply can't be read, nothing is sent on. The console shows the
+error, and the next message tries again. There is no failure output. To act on a failure, watch the console.
+
+- A body that isn't valid UTF-8 raises an error.
+- The whole body is read into memory at once. A response larger than the board's largest free block fails with
+  `MemoryError`. Request a smaller response, or use a board with PSRAM.
 
 
 ---
@@ -3223,32 +3242,57 @@ Source: https://docs.thingstudio.net/nodes/http-in/
 
 # http in
 
-Starts (or joins) an HTTP server on the device and fires a message for each matching incoming request.
+Starts a web server on the board and sends a message for each request to a path.
 
 ## Properties
 
-- **port** — the TCP port to listen on (1–65535).
-- **path** — the exact path to match, e.g. `/status`. No named parameters: `path` matches one exact string (no `/user/:id`).
-- **method** — `GET` or `POST`. No other methods are supported.
-- **response timeout (ms)** — how long to wait for a paired `http response` node to actually reply before the request times out with a 500. Default 10000ms.
+- **port** — the TCP port to listen on (1–65535). Default 8080.
+- **path** — the exact path to match, such as `/status`. It must start with `/`. A pattern such as `/user/:id` isn't
+  supported.
+- **method** — `GET` or `POST`. Default `GET`.
+- **response timeout (ms)** — how long to wait for an [http response](http-response.md) node before the client gets a
+  500. Default 10000.
+- **WiFi** — the flow's WiFi network, shared by every WiFi node in the flow.
+
+## Wiring
+
+**Output** — one message per matching request:
+
+| Field | Value |
+| --- | --- |
+| `payload` | `None`. The request body isn't read. |
+| `topic` | an empty string |
+| `req.method` | `GET` or `POST` |
+| `req.path` | the path requested, without any query string |
+
+Every chain that starts here must end at an [http response](http-response.md) node. The message carries a hidden link
+to the client's connection, and http response uses it. A node that returns a new message instead of the one it
+received, such as a [function](function.md) node, drops the link.
 
 ## Behavior
 
-Any number of `http in` nodes can share one `port` — each one claims its own exact `(method, path)` pair, and the device runs one shared server per port, routing each incoming request to whichever `http in` node matches. Two `http in` nodes claiming the same `(method, path)` on the same port is a compile error.
+Several http in nodes can share one port. Each claims its own method and path. Two nodes claiming the same method and
+path on one port is a compile error.
 
-Fires once per matching request. The message carries `req.method` and `req.path`; **`payload` is always `None`** — the request body isn't parsed (see "Limitations" below). Pair every `http in` with a downstream [`http response`](http-response.md) node to actually answer the request — a request whose flow never reaches one gets a 500 automatically once the response timeout above elapses, rather than hanging the client forever.
+A request that matches no node gets a 404: that includes a method other than `GET` or `POST`. A query string is
+dropped, so `/status?x=1` matches `/status`, and the value isn't available to the flow. Request headers are ignored.
 
-A second request to the *same* route while an earlier one is still being processed queues behind it (this node processes one request at a time). Requests to *different* routes — even on the same port — are handled concurrently.
+If no http response node replies within the response timeout, the client gets a 500 with the body
+`Internal Server Error: no response`. The connection closes after each reply.
 
-Uses the flow's WiFi network (its **WiFi** field, shared by every WiFi node).
+The server speaks plain HTTP and has no login. It limits neither the number of requests in flight nor their size, apart
+from the board's own memory and sockets. Use it on a network you trust.
 
-## Limitations
+## Errors
 
-- **No named path parameters.** `path` matches one exact string, not Node-RED's `/user/:name` style.
-- **No request body parsing.** `payload` is always `None`; a `POST`/`PUT` body is read off the wire so it doesn't
-  corrupt the next request, then discarded.
-- **No cap on requests in flight.** The device's own memory and socket limits apply, so this suits a handful of
-  well-behaved clients rather than untrusted traffic.
+These stop the compile:
+
+- the port isn't a number from 1 to 65535
+- the path doesn't start with `/`
+- the response timeout isn't a positive number
+- two nodes claim the same method and path on one port. The error names both.
+
+A client that doesn't finish sending its request line and headers within 5 seconds gets a 400.
 
 
 ---
@@ -3257,20 +3301,36 @@ Source: https://docs.thingstudio.net/nodes/http-response/
 
 # http response
 
-Completes a request that arrived via a matching [`http in`](http-in.md) node.
+Sends the reply to a request that arrived through an [http in](http-in.md) node.
 
 ## Properties
 
-None — everything comes off the message at runtime, same field names Node-RED uses:
+None. The reply comes from the message.
 
-- **`msg.statusCode`** — the HTTP status code to send. Defaults to `200` if not set.
-- **`msg.payload`** — the response body. A string is UTF-8 encoded; other types are converted; `None` sends an empty body.
+## Wiring
+
+**Input** — a message that started at an http in node:
+
+| Field | Value |
+| --- | --- |
+| `payload` | the reply body. A string is sent as UTF-8, bytes as they are, and `None` as an empty body. Anything else is converted to text. |
+| `statusCode` | the HTTP status, a whole number. Default 200. |
+
+This node has no output.
 
 ## Behavior
 
-Must fire on a message that originated from an `http in` node — firing it on any other message (one built from scratch, or one whose originating request already got its response) raises a clear error rather than failing silently.
+The reply has no `Content-Type` header. A client that needs to know the body is JSON has to assume it.
 
-The response is sent as plain bytes/text with no `Content-Type` header. Add one on the client side if you need to interpret the body as JSON.
+Send one reply per request. Once a reply has gone, another for the same request does nothing. A reply that arrives
+after the [response timeout](http-in.md#properties) is too late: the client has already received a 500.
+
+## Errors
+
+- **The message didn't come from an http in node.** The console shows
+  `http_response: msg did not come from an http_in node (no request to respond to)`. The same happens when a node
+  between the two built a new message and dropped the link. Change the message you received and pass it on.
+- **`statusCode` isn't a whole number.** The node raises an error and the client gets the 500 after the timeout.
 
 
 ---
@@ -3283,16 +3343,34 @@ Sends a message's payload as a UDP datagram to a fixed host and port.
 
 ## Properties
 
-- **host** — destination hostname or IP.
-- **port** — destination port (1–65535).
-- **timeout (ms)** — how long to wait before giving up on the send. Default 2000ms.
-- **WiFi** — the flow's WiFi network. Every WiFi node in a flow shares this one setting.
+- **host** — the destination hostname or IP address. Required.
+- **port** — the destination port (1–65535). Default 9999.
+- **timeout (ms)** — how long to wait for the board's network stack to accept the datagram. Default 2000.
+- **WiFi** — the flow's WiFi network, shared by every WiFi node in the flow.
+
+## Wiring
+
+**Input** — any message. `payload` is the datagram: bytes are sent as they are, a string as UTF-8, and anything else is
+converted to text first. `None` sends the text `None`.
+
+This node has no output.
 
 ## Behavior
 
-Uses the flow's WiFi network (its **WiFi** field, shared by every WiFi node). The payload is sent as bytes (a string is UTF-8 encoded, other types are converted); nothing about its content is validated.
+UDP has no acknowledgement. A send that succeeds doesn't mean the datagram arrived, and sending to an IP address that
+nobody is listening on raises no error.
 
-A send that fails — an unreachable host, a DNS failure, a timeout — raises a clear error naming the host and port it was trying to reach, not a bare error code.
+A hostname is looked up again for every message.
+
+## Errors
+
+- **The name can't be resolved.** The console shows `udp_send: could not resolve HOST:PORT`. Check the name, or use the
+  IP address.
+- **The send fails.** The console shows `udp_send to HOST:PORT failed`, with the system's error.
+- **The network stack doesn't take the datagram within the timeout.** The console shows a timeout error, without the
+  host or port.
+
+These stop the compile: an empty host, a port outside 1–65535, a timeout that isn't a positive number.
 
 
 ---
@@ -3301,29 +3379,41 @@ Source: https://docs.thingstudio.net/nodes/mqtt-publish/
 
 # mqtt publish
 
-Publishes a message's payload to an MQTT topic.
+Publishes each message's payload to an MQTT topic.
 
 ## Properties
 
-- **topic** — the topic to publish to. Required.
-- **retain** — publish as a retained message.
-- **QoS** — `0` or `1`. QoS 2 isn't supported.
+- **topic** — the topic to publish to. Required. It is fixed: a message's `topic` is ignored. To publish to several
+  topics, use one node for each.
+- **retain** — ask the broker to keep the message and give it to later subscribers. Default off.
+- **QoS** — `0` or `1`. Default 0. QoS 2 isn't supported.
 - **MQTT Broker** — the flow's MQTT broker, shared by every MQTT node in the flow: change it on one and it changes on
-  all (see [Editor in depth](../working-in-the-editor.md#config-nodes)). Required — won't compile without one.
+  all (see [Editor in depth](../working-in-the-editor.md#config-nodes)). Required.
+- **WiFi** — the flow's WiFi network, shared by every WiFi node in the flow. **unmanaged** isn't accepted in a flow with
+  MQTT nodes, because they manage the connection themselves.
+
+## Wiring
+
+**Input** — any message. `payload` is the message sent: bytes as they are, a string as UTF-8, and anything else
+converted to text first. `None` sends the text `None`.
+
+This node has no output.
 
 ## Behavior
 
-Uses the flow's WiFi network (the WiFi config in the flow, shared by every WiFi node; the node's WiFi field selects that same network) and the flow's broker config for the MQTT connection. Nodes on the same broker share one connection. In a flow with MQTT nodes, MQTT manages the WiFi connection. An "unmanaged" WiFi config isn't accepted here: this node manages its own WiFi reconnection, so it needs a real network to connect to. The payload is sent as bytes (a string is UTF-8 encoded, other types are converted).
-
-Shows a connection-status dot on the canvas (see [Editor in depth](../working-in-the-editor.md#node-status)) once
-connected to a device. It reports its own broker connection state, even when it shares that broker with an
-`mqtt subscribe` node. The node opens its broker connection only when there's actually something to publish, so the
-dot stays blank until the first message reaches it, even if the flow has been running a while.
+Nodes on the same broker share one connection. The node connects when the first message reaches it, so its status dot
+stays blank until then (see [node status](../working-in-the-editor.md#node-status)). It shows this node's own view of
+the connection, even when an [mqtt subscribe](mqtt-subscribe.md) node shares the broker.
 
 ## Errors
 
-A red dot, with a console line starting `mqtt connect to` and ending `failed after 3 attempts`, means the board can't
-reach the broker. See [MQTT broker unreachable](../debugging.md#mqtt-broker-unreachable).
+- **The board can't reach the broker.** The dot turns red and the console shows `mqtt connect to HOST:PORT failed after
+  3 attempts`, with the reason for each attempt. See
+  [MQTT broker unreachable](../debugging.md#mqtt-broker-unreachable).
+- **The publish fails.** The console shows `mqtt publish to HOST:PORT failed`, with the system's error.
+
+These stop the compile: no MQTT broker or no WiFi network in the flow, an empty topic, a QoS other than 0 or 1, an
+unmanaged WiFi network.
 
 
 ---
@@ -5391,9 +5481,9 @@ No element takes a font, height, width, gap or padding: fonts follow the cells a
 `onValue`, ...) is on the node: see the [catalog](nodes-catalog.md). For a toggle that follows a real device (a smart
 plug), `gui.md` has the wiring.
 
-Read [GUI nodes](nodes/gui.md) for the details, and copy from `examples/`:
-`gui-headliner-sensor-freenove-s3-4in.flow.json` (a sensor display with histograms, a clock and MQTT),
-`gui-touch-freenove-s3-4in.flow.json` (buttons).
+Read [GUI nodes](nodes/gui.md) for the details, and copy from
+`test-flows/gui-headliner-sensor-freenove-s3-4in.flow.json` (a sensor display with histograms, a clock and MQTT) and
+`test-flows/gui-touch-freenove-s3-4in.flow.json` (buttons).
 
 ## Custom nodes
 
@@ -5406,16 +5496,16 @@ sample messages.
 
 ## Examples to copy
 
-| Task | File in `examples/` |
+| Task | File |
 | --- | --- |
-| Blink an LED | `blink.flow.json` |
+| Blink an LED | `tutorials/blink.flow.json` |
 | Read and set a GPIO pin, keep state in the node | `tutorials/two-more-blinks.flow.json` |
 | Blink an LED from an HTTP request (WiFi, `http in`) | `tutorials/http-blink.flow.json` |
-| Publish to MQTT | `basic-mqtt.flow.json` |
-| Call a web service | `basic-http-request.flow.json` |
-| A BME280 reading | `bmp280-test-flow.flow.json` |
-| A sensor on a display, with histograms and a clock | `gui-headliner-sensor-freenove-s3-4in.flow.json` |
-| Touch buttons | `gui-touch-freenove-s3-4in.flow.json` |
+| Publish to MQTT | `test-flows/basic-mqtt.flow.json` |
+| Call a web service | `test-flows/basic-http-request.flow.json` |
+| A BME280 reading | `test-flows/bmp280-test-flow.flow.json` |
+| A sensor on a display, with histograms and a clock | `test-flows/gui-headliner-sensor-freenove-s3-4in.flow.json` |
+| Touch buttons | `test-flows/gui-touch-freenove-s3-4in.flow.json` |
 
 ## When you hand the flow back
 
@@ -5581,9 +5671,17 @@ Source: https://docs.thingstudio.net/nodes-catalog/
 
 <!-- Generated by `node dist-cli/thingstudio-compile.mjs --describe-all --markdown`. Do not edit by hand: a test fails when it is out of date. -->
 
-Every node a flow file can use: its type id, its ports with their payload types, and its properties with the default
-the editor gives a new node. A property a flow file leaves out gets this default. Allowed values and ranges are
-checked when the flow is compiled, and the error says what is allowed. See [Check a flow without the editor](check-a-flow.md).
+This is the flow-file reference. It lists every node a `.flow.json` can use, with the exact names a flow file needs:
+the node's type, its ports, and its properties with their types, defaults and allowed values. The editor's code
+generates it, so it matches what the compiler accepts.
+
+It does not explain how to use a node. Each entry links to the node's page, which says what the node does and what
+each property means. To build a flow in the editor, start from the [node reference](nodes/index.md). To write or check
+a flow file without the editor, see [Check a flow without the editor](check-a-flow.md) and [AI authoring](ai-authoring.md).
+
+In a flow file a node's type is `thingstudio/` followed by the type shown here: `wifi_status` is written
+`thingstudio/wifi_status`. A property's editor label is the name the node's page uses for it. A port described as
+"message, payload bool" carries a message whose `payload` is a bool.
 
 Ports are numbered from 0 in a flow file's `edges`: `[fromNodeId, outputNumber, toNodeId, inputNumber]`, in the order listed here.
 
@@ -5591,661 +5689,959 @@ Ports are numbered from 0 in a flow file's `edges`: `[fromNodeId, outputNumber, 
 
 ### change
 
-Type `thingstudio/change`, kind transform, palette group general.
+Sets or deletes one value on each message, then passes the message on.
 
-- Inputs: msg (any)
-- Outputs: msg (any)
-- Properties (name, type, default):
-    - `operation`, string, default `"set"`
-    - `scope`, string, default `"msg"`
-    - `property`, string, default `"payload"`
-    - `valueFrom`, string, default `"literal"`
-    - `valueType`, string, default `"string"`
-    - `value`, string, default `""`
+Type: `change`. Kind: transform. Palette group: general.
+
+Properties explained: [change](nodes/change.md)
+
+- Inputs: message, any payload
+- Outputs: message, any payload
+
+| Property | Editor label | Type | Default | Allowed values and notes |
+| --- | --- | --- | --- | --- |
+| `operation` | operation | string | `"set"` | one of `set`, `delete` |
+| `scope` | target | string | `"msg"` | one of `msg`, `flow` |
+| `property` | property / name | string | `"payload"` |  |
+| `valueFrom` | value from | string | `"literal"` | one of `literal`, `msg`, `flow` |
+| `valueType` | literal type | string | `"string"` | one of `string`, `number`, `bool` |
+| `value` | value / source property | string | `""` |  |
 
 ### debug
 
-Type `thingstudio/debug`, kind sink, palette group general.
+Prints a message's payload to the console.
 
-- Inputs: msg (any)
+Type: `debug`. Kind: sink. Palette group: general.
+
+Properties explained: [debug](nodes/debug.md)
+
+- Inputs: message, any payload
 - Outputs: none
-- Properties (name, type, default):
-    - `fullMessage`, boolean, default `false`
+
+| Property | Editor label | Type | Default | Allowed values and notes |
+| --- | --- | --- | --- | --- |
+| `fullMessage` | full message | boolean | `false` |  |
 
 ### delay
 
-Type `thingstudio/delay`, kind transform, palette group general.
+Holds each message for a set time, then passes it on unchanged.
 
-- Inputs: msg (any)
-- Outputs: msg (any)
-- Properties (name, type, default):
-    - `delayMs`, number, default `1000`
+Type: `delay`. Kind: transform. Palette group: general.
+
+Properties explained: [delay](nodes/delay.md)
+
+- Inputs: message, any payload
+- Outputs: message, any payload
+
+| Property | Editor label | Type | Default | Allowed values and notes |
+| --- | --- | --- | --- | --- |
+| `delayMs` | delay (ms) | number | `1000` |  |
 
 ### filter
 
-Type `thingstudio/filter`, kind transform, palette group general.
+Passes a message on only when it is worth sending, and drops the rest.
 
-- Inputs: msg (any)
-- Outputs: msg (any)
-- Properties (name, type, default):
-    - `mode`, string, default `"change"`
-    - `threshold`, number, default `1`
-    - `intervalMs`, number, default `1000`
-    - `ignoreFirst`, boolean, default `false`
-    - `perTopic`, boolean, default `true`
+Type: `filter`. Kind: transform. Palette group: general.
+
+Properties explained: [filter](nodes/filter.md)
+
+- Inputs: message, any payload
+- Outputs: message, any payload
+
+| Property | Editor label | Type | Default | Allowed values and notes |
+| --- | --- | --- | --- | --- |
+| `mode` | mode | string | `"change"` | one of `change`, `deadband`, `rate` |
+| `threshold` | threshold | number | `1` |  |
+| `intervalMs` | interval (ms) | number | `1000` |  |
+| `ignoreFirst` | ignore first message | boolean | `false` |  |
+| `perTopic` | separately for each topic | boolean | `true` |  |
 
 ### function
 
-Type `thingstudio/function`, kind transform, palette group general.
+Runs your own MicroPython on each message.
 
-- Inputs: msg (any)
-- Outputs: msg (any) (the number of outputs is the node's `outputCount` property)
-- Properties (name, type, default):
-    - `code`, string, default `"msg['payload'] = msg['payload']\nreturn msg\n"` — the body of a MicroPython function; `msg` in, return the message, None, or a list with one entry per output
-    - `outputCount`, number, default `1` — how many outputs, 1 to 10
+Type: `function`. Kind: transform. Palette group: general.
+
+Properties explained: [function](nodes/function.md)
+
+- Inputs: message, any payload
+- Outputs: message, any payload (the number of outputs is the node's `outputCount` property)
+
+| Property | Editor label | Type | Default | Allowed values and notes |
+| --- | --- | --- | --- | --- |
+| `code` | code | string | `"msg['payload'] = msg['payload']\nreturn msg\n"` | the body of a MicroPython function; `msg` in, return the message, None, or a list with one entry per output |
+| `outputCount` | outputs | number | `1` | how many outputs, 1 to 10 |
 
 ### inject
 
-Type `thingstudio/inject`, kind source, palette group general.
+Sends one message with a fixed payload when you click its ▶ icon.
+
+Type: `inject`. Kind: source. Palette group: general.
+
+Properties explained: [inject](nodes/inject.md)
 
 - Inputs: none
-- Outputs: msg (bool)
-- Properties (name, type, default):
-    - `payloadType`, string, default `"bool"`
-    - `payloadValue`, string, default `"true"`
+- Outputs: message, payload bool
+
+| Property | Editor label | Type | Default | Allowed values and notes |
+| --- | --- | --- | --- | --- |
+| `payloadType` | payload type | string | `"bool"` | one of `bool`, `number`, `string` |
+| `payloadValue` | value | string | `"true"` |  |
 
 ### journal
 
-Type `thingstudio/journal`, kind transform, palette group general.
+Keeps the recent history of a number as rows of average, minimum and maximum.
 
-- Inputs: msg (any)
-- Outputs: series (any), rollup (any)
-- Properties (name, type, default):
-    - `rows`, number, default `60` — how many rows are kept, 1 to 256
-    - `stepSeconds`, number, default `60` — seconds per row; 0 makes every message its own row
-    - `steps`, number, default `0` — rows per roll-up to the second output; 0 sends none
-    - `xff`, number, default `0.5` — 0 to 1: a roll-up becomes a gap if more than this fraction of its rows are gaps
+Type: `journal`. Kind: transform. Palette group: general.
+
+Properties explained: [journal](nodes/journal.md)
+
+- Inputs: message, any payload
+- Outputs: series (any); rollup (any)
+
+| Property | Editor label | Type | Default | Allowed values and notes |
+| --- | --- | --- | --- | --- |
+| `rows` | rows kept | number | `60` | how many rows are kept, 1 to 256 |
+| `stepSeconds` | seconds per row (0 = one row per message) | number | `60` | seconds per row; 0 makes every message its own row |
+| `steps` | rows per roll-up (0 = none) | number | `0` | rows per roll-up to the second output; 0 sends none |
+| `xff` | gaps allowed in a roll-up (0 to 1) | number | `0.5` | 0 to 1: a roll-up becomes a gap if more than this fraction of its rows are gaps |
 
 ### startup
 
-Type `thingstudio/startup`, kind source, palette group general.
+Sends one message with a fixed payload each time the flow starts.
+
+Type: `startup`. Kind: source. Palette group: general.
+
+Properties explained: [startup](nodes/startup.md)
 
 - Inputs: none
-- Outputs: msg (bool)
-- Properties (name, type, default):
-    - `payloadType`, string, default `"bool"`
-    - `payloadValue`, string, default `"true"`
+- Outputs: message, payload bool
+
+| Property | Editor label | Type | Default | Allowed values and notes |
+| --- | --- | --- | --- | --- |
+| `payloadType` | payload type | string | `"bool"` | one of `bool`, `number`, `string`, `reason` |
+| `payloadValue` | value | string | `"true"` |  |
 
 ### timer
 
-Type `thingstudio/timer`, kind source, palette group general.
+Sends an increasing count at a fixed interval.
+
+Type: `timer`. Kind: source. Palette group: general.
+
+Properties explained: [timer](nodes/timer.md)
 
 - Inputs: none
-- Outputs: msg (int)
-- Properties (name, type, default):
-    - `intervalMs`, number, default `1000` — milliseconds between messages; the payload is a count that rises 1, 2, 3...
+- Outputs: message, payload int
+
+| Property | Editor label | Type | Default | Allowed values and notes |
+| --- | --- | --- | --- | --- |
+| `intervalMs` | interval (ms) | number | `1000` | milliseconds between messages; the payload is a count that rises 1, 2, 3.. |
 
 ## GUI
 
 ### bar
 
-Type `thingstudio/gui_bar`, kind sink, palette group GUI.
+Shows `msg.payload` as a bar that fills between two values.
 
-- Inputs: msg (any)
+Type: `gui_bar`. Kind: sink. Palette group: GUI.
+
+Properties explained: [bar](nodes/gui.md)
+
+- Inputs: message, any payload
 - Outputs: none
-- Properties (name, type, default):
-    - `name`, string, default `""`
-    - `style`, string, default `"solid"`
-    - `segments`, number, default `10`
-    - `lo`, number, default `0` — the value at which the bar is empty
-    - `hi`, number, default `100` — the value at which the bar is full
-    - `staleAfter`, number, default `0` — seconds without a new value before it dims; 0 = never
+
+| Property | Editor label | Type | Default | Allowed values and notes |
+| --- | --- | --- | --- | --- |
+| `name` | name | string | `""` |  |
+| `style` | style | string | `"solid"` | one of `solid`, `segments` |
+| `segments` | cells | number | `10` |  |
+| `lo` | empty at | number | `0` | the value at which the bar is empty |
+| `hi` | full at | number | `100` | the value at which the bar is full |
+| `staleAfter` | stale after (s, 0 = never) | number | `0` | seconds without a new value before it dims; 0 = never |
 
 ### button
 
-Type `thingstudio/gui_button`, kind sink, palette group GUI.
+A touch button: its input sets what it shows, and it sends a message when tapped.
 
-- Inputs: msg (any)
-- Outputs: msg (any)
-- Properties (name, type, default):
-    - `name`, string, default `""`
-    - `mode`, string, default `"momentary"` — momentary, toggle or navigate
-    - `style`, string, default `"box"`
-    - `valueType`, string, default `"bool"` — bool, string or number: the type of what it sends
-    - `fireOn`, string, default `"release"` — release (default: the finger lifts inside the button) or press
-    - `text`, string, default `""` — what is drawn on the button; empty uses `name`
-    - `value`, string, default `""` — momentary: what it sends; empty sends true, 'ON' or 1 by valueType
-    - `maxChars`, number, default `8` — room for this many characters (a value replaces the text)
-    - `onValue`, string, default `""` — toggle: what it sends to turn on
-    - `offValue`, string, default `""` — toggle: what it sends to turn off
-    - `onText`, string, default `"ON"`
-    - `offText`, string, default `"OFF"`
-    - `initial`, boolean, default `false`
-    - `pendingTimeout`, number, default `5` — toggle with a wired input: seconds to wait for the input to confirm before going back
-    - `target`, string, default `""` — navigate: next, prev, back, home or a page name from `screens`
+Type: `gui_button`. Kind: sink. Palette group: GUI.
+
+Properties explained: [button](nodes/gui.md)
+
+- Inputs: message, any payload
+- Outputs: message, any payload
+
+| Property | Editor label | Type | Default | Allowed values and notes |
+| --- | --- | --- | --- | --- |
+| `name` | topic | string | `""` |  |
+| `mode` | mode | string | `"momentary"` | one of `momentary`, `toggle`, `navigate`; momentary, toggle or navigate |
+| `style` | style | string | `"box"` | one of `box`, `filled`, `switch` |
+| `valueType` | value type | string | `"bool"` | one of `bool`, `string`, `number`; bool, string or number: the type of what it sends |
+| `fireOn` | send on | string | `"release"` | one of `release`, `press`; release (default: the finger lifts inside the button) or press |
+| `text` | board label (drawn on the button) | string | `""` | what is drawn on the button; empty uses `name` |
+| `value` | sends (the payload) | string | `""` | momentary: what it sends; empty sends true, 'ON' or 1 by valueType |
+| `maxChars` | room for (characters, if no text) | number | `8` | room for this many characters (a value replaces the text) |
+| `onValue` | on sends | string | `""` | toggle: what it sends to turn on |
+| `offValue` | off sends | string | `""` | toggle: what it sends to turn off |
+| `onText` | on shows | string | `"ON"` |  |
+| `offText` | off shows | string | `"OFF"` |  |
+| `initial` | starts on (when nothing is wired in) | boolean | `false` |  |
+| `pendingTimeout` | wait for confirmation (s, 5 or more) | number | `5` | toggle with a wired input: seconds to wait for the input to confirm before going back |
+| `target` | goes to | string | `""` | navigate: next, prev, back, home or a page name from `screens` |
 
 ### label
 
-Type `thingstudio/gui_label`, kind sink, palette group GUI.
+Shows `msg.payload` as text.
 
-- Inputs: msg (any)
+Type: `gui_label`. Kind: sink. Palette group: GUI.
+
+Properties explained: [label](nodes/gui.md)
+
+- Inputs: message, any payload
 - Outputs: none
-- Properties (name, type, default):
-    - `name`, string, default `""`
-    - `font`, string, default `""`
-    - `maxChars`, number, default `8` — room for this many characters
-    - `staleAfter`, number, default `0` — seconds without a new value before it dims; 0 = never
+
+| Property | Editor label | Type | Default | Allowed values and notes |
+| --- | --- | --- | --- | --- |
+| `name` | name | string | `""` |  |
+| `font` | font (blank = fit the cells) | string | `""` | one of ``, `font_body12`, `font_body16`, `font_body20`, `font_body24`, `font_digits16`, `font_digits24`, `font_digits32`, `font_digits48`, `font_digits64`, `font_seg748`, `font_seg764`, `font_seg796` |
+| `maxChars` | room for (characters) | number | `8` | room for this many characters |
+| `staleAfter` | stale after (s, 0 = never) | number | `0` | seconds without a new value before it dims; 0 = never |
 
 ### light
 
-Type `thingstudio/gui_led`, kind sink, palette group GUI.
+A light that is on when `msg.payload` is true and off when it is false.
 
-- Inputs: msg (any)
+Type: `gui_led`. Kind: sink. Palette group: GUI.
+
+Properties explained: [light](nodes/gui.md)
+
+- Inputs: message, any payload
 - Outputs: none
-- Properties (name, type, default):
-    - `name`, string, default `""`
-    - `style`, string, default `"light"`
-    - `onText`, string, default `"On"`
-    - `offText`, string, default `"Off"`
-    - `staleAfter`, number, default `0` — seconds without a new value before it goes grey; 0 = never
+
+| Property | Editor label | Type | Default | Allowed values and notes |
+| --- | --- | --- | --- | --- |
+| `name` | name | string | `""` |  |
+| `style` | style | string | `"light"` | one of `light`, `chip` |
+| `onText` | chip when on | string | `"On"` |  |
+| `offText` | chip when off | string | `"Off"` |  |
+| `staleAfter` | stale after (s, 0 = never) | number | `0` | seconds without a new value before it goes grey; 0 = never |
 
 ### modal
 
-Type `thingstudio/gui_modal`, kind sink, palette group GUI.
+A full-screen message: any payload opens it, `None` closes it.
 
-- Inputs: msg (any)
-- Outputs: msg (any)
-- Properties (name, type, default):
-    - `name`, string, default `""`
-    - `screen`, string, default `""` — the id of the gui_screen node this modal belongs to
-    - `priority`, number, default `0` — a higher priority takes the screen from a lower one; the other waits
-    - `timeout`, number, default `0` — seconds before the modal closes itself; 0 never
+Type: `gui_modal`. Kind: sink. Palette group: GUI.
+
+Properties explained: [modal](nodes/gui.md)
+
+- Inputs: message, any payload
+- Outputs: message, any payload
+
+| Property | Editor label | Type | Default | Allowed values and notes |
+| --- | --- | --- | --- | --- |
+| `name` | name | string | `""` |  |
+| `screen` | screen | string | `""` | the id of the gui_screen node this modal belongs to |
+| `priority` | priority | number | `0` | a higher priority takes the screen from a lower one; the other waits |
+| `timeout` | close after (s, 0 = never) | number | `0` | seconds before the modal closes itself; 0 never |
 
 ### navigator
 
-Type `thingstudio/gui_navigator`, kind transform, palette group GUI.
+Takes page commands (next, prev, back, home or a page name) and sends the page when it changes.
 
-- Inputs: msg (any)
+Type: `gui_navigator`. Kind: transform. Palette group: GUI.
+
+Properties explained: [navigator](nodes/gui.md)
+
+- Inputs: message, any payload
 - Outputs: page (string)
-- Properties (name, type, default):
-    - `name`, string, default `"navigator"`
-    - `screen`, string, default `""`
+
+| Property | Editor label | Type | Default | Allowed values and notes |
+| --- | --- | --- | --- | --- |
+| `name` | name | string | `"navigator"` |  |
+| `screen` | screen | string | `""` |  |
 
 ### readout
 
-Type `thingstudio/gui_readout`, kind sink, palette group GUI.
+Shows `msg.payload` as a number with units.
 
-- Inputs: msg (any)
+Type: `gui_readout`. Kind: sink. Palette group: GUI.
+
+Properties explained: [readout](nodes/gui.md)
+
+- Inputs: message, any payload
 - Outputs: none
-- Properties (name, type, default):
-    - `name`, string, default `""`
-    - `font`, string, default `""`
-    - `caption`, string, default `""`
-    - `units`, string, default `""` — text shown after the number
-    - `decimals`, number, default `1`
-    - `lo`, number, default `0` — lowest value it will show; with hi, sizes the space the number gets
-    - `hi`, number, default `100` — highest value it will show; with lo, sizes the space the number gets
-    - `staleAfter`, number, default `0` — seconds without a new value before it dims; 0 = never
+
+| Property | Editor label | Type | Default | Allowed values and notes |
+| --- | --- | --- | --- | --- |
+| `name` | name | string | `""` |  |
+| `font` | font (blank = fit the cells) | string | `""` | one of ``, `font_body12`, `font_body16`, `font_body20`, `font_body24`, `font_digits16`, `font_digits24`, `font_digits32`, `font_digits48`, `font_digits64`, `font_seg748`, `font_seg764`, `font_seg796` |
+| `caption` | caption (above the number) | string | `""` |  |
+| `units` | units | string | `""` | text shown after the number |
+| `decimals` | decimals | number | `1` |  |
+| `lo` | lowest value | number | `0` | lowest value it will show; with hi, sizes the space the number gets |
+| `hi` | highest value | number | `100` | highest value it will show; with lo, sizes the space the number gets |
+| `staleAfter` | stale after (s, 0 = never) | number | `0` | seconds without a new value before it dims; 0 = never |
 
 ### screen
 
-Type `thingstudio/gui_screen`, kind source, palette group GUI.
+Draws a display's pages of widgets and sends the screen to a display spi node.
+
+Type: `gui_screen`. Kind: source. Palette group: GUI.
+
+Properties explained: [screen](nodes/gui.md)
 
 - Inputs: none
 - Outputs: frame (bytes)
-- Properties (name, type, default):
-    - `name`, string, default `"screen"`
-    - `minInterval`, number, default `200` — least milliseconds between screen updates
-    - `wrap`, boolean, default `true` — whether next/prev wrap around at the ends of the pages
-    - `gridColumns`, number, default `12`
-    - `gridRows`, number, default `0`
-    - `touchPanelConfigId`, string, default `""`, the id of a `thingstudio/config/touch-panel` config — the touch-panel config to read touches from; empty for none
-    - `themeConfigId`, string, default `""`, the id of a `thingstudio/config/gui-theme` config
-    - `themePreset`, string, default `""`
-    - `bg`, colour, default none
-    - `card`, colour, default none
-    - `fg`, colour, default none
-    - `muted`, colour, default none
-    - `track`, colour, default none
-    - `accent`, colour, default none
-    - `on_accent`, colour, default none
-    - `ok`, colour, default none
-    - `warn`, colour, default none
-    - `alarm`, colour, default none
+
+| Property | Editor label | Type | Default | Allowed values and notes |
+| --- | --- | --- | --- | --- |
+| `name` | name | string | `"screen"` |  |
+| `minInterval` | fastest redraw (ms) | number | `200` | least milliseconds between screen updates |
+| `wrap` | next/prev wrap round | boolean | `true` | whether next/prev wrap around at the ends of the pages |
+| `gridColumns` | grid columns | number | `12` |  |
+| `gridRows` | grid rows (0 = from the display's shape) | number | `0` |  |
+| `touchPanelConfigId` | touch panel (blank: no touch) | string | `""` | the touch-panel config to read touches from; empty for none; the id of a `thingstudio/config/touch-panel` config |
+| `themeConfigId` | shared theme config (older flows) | string | `""` | the id of a `thingstudio/config/gui-theme` config |
+| `themePreset` | theme | string | `""` | one of `dark-slate`, `light-paper`, `vivid`, `` |
+| `bg` | background | colour | none |  |
+| `card` | card | colour | none |  |
+| `fg` | foreground | colour | none |  |
+| `muted` | muted (stale values) | colour | none |  |
+| `track` | track (bar and cell background) | colour | none |  |
+| `accent` | accent (bars, lights) | colour | none |  |
+| `on_accent` | text on accent | colour | none |  |
+| `ok` | ok | colour | none |  |
+| `warn` | warn | colour | none |  |
+| `alarm` | alarm | colour | none |  |
 
 ### histogram
 
-Type `thingstudio/gui_trend`, kind sink, palette group GUI.
+A moving histogram: a row of bars, oldest on the left, newest on the right.
 
-- Inputs: msg (any)
+Type: `gui_trend`. Kind: sink. Palette group: GUI.
+
+Properties explained: [histogram](nodes/gui.md)
+
+- Inputs: message, any payload
 - Outputs: none
-- Properties (name, type, default):
-    - `name`, string, default `""`
-    - `lo`, number, default `0` — value at the bottom of the bars; the range is fixed
-    - `hi`, number, default `100` — value at the top of the bars; the range is fixed
-    - `columns`, number, default `60` — natural width in bars; in a layout it can stretch to show more
-    - `colWidth`, number, default `3` — pixels per bar
-    - `height`, number, default `48` — natural height in pixels
-    - `staleAfter`, number, default `0` — seconds without a new row before it dims; 0 = never
+
+| Property | Editor label | Type | Default | Allowed values and notes |
+| --- | --- | --- | --- | --- |
+| `name` | name | string | `""` |  |
+| `lo` | bottom at | number | `0` | value at the bottom of the bars; the range is fixed |
+| `hi` | top at | number | `100` | value at the top of the bars; the range is fixed |
+| `columns` | columns (natural width) | number | `60` | natural width in bars; in a layout it can stretch to show more |
+| `colWidth` | column width (px) | number | `3` | pixels per bar |
+| `height` | height (px) | number | `48` | natural height in pixels |
+| `staleAfter` | stale after (s, 0 = never) | number | `0` | seconds without a new row before it dims; 0 = never |
 
 ## hardware
 
 ### adc
 
-Type `thingstudio/adc`, kind source, palette group hardware.
+Reads an ADC pin and sends a message when the reading leaves, or returns to, a set range.
+
+Type: `adc`. Kind: source. Palette group: hardware.
+
+Properties explained: [adc](nodes/adc.md)
 
 - Inputs: none
-- Outputs: msg (any)
-- Properties (name, type, default):
-    - `pin`, number, default `34` — the ADC pin to read; on ESP32, use an ADC1 pin if the flow uses WiFi (ADC2 can't with the radio on)
-    - `mode`, string, default `"relative"` — relative (current value +- delta) or absolute (lower..upper)
-    - `delta`, number, default `2000` — relative mode: how far the reading must move from the last sent one to fire
-    - `lower`, number, default `0` — absolute mode: the low bound
-    - `upper`, number, default `50000` — absolute mode: the high bound
-    - `sense`, string, default `"outside"` — outside (fire when the value leaves the bounds) or inside (fire when it returns)
-    - `pollMs`, number, default `0` — also send every this many ms; 0 = only on a bounds crossing
+- Outputs: message, any payload
+
+| Property | Editor label | Type | Default | Allowed values and notes |
+| --- | --- | --- | --- | --- |
+| `pin` | pin | number | `34` | the ADC pin to read; on ESP32, use an ADC1 pin if the flow uses WiFi (ADC2 can't with the radio on) |
+| `mode` | mode | string | `"relative"` | one of `relative`, `absolute`; relative (current value +- delta) or absolute (lower..upper) |
+| `delta` | delta (counts) | number | `2000` | relative mode: how far the reading must move from the last sent one to fire |
+| `lower` | lower | number | `0` | absolute mode: the low bound |
+| `upper` | upper | number | `50000` | absolute mode: the high bound |
+| `sense` | sense | string | `"outside"` | one of `outside`, `inside`; outside (fire when the value leaves the bounds) or inside (fire when it returns) |
+| `pollMs` | poll (ms) | number | `0` | also send every this many ms; 0 = only on a bounds crossing |
 
 ### bme280
 
-Type `thingstudio/bme280`, kind source, palette group hardware.
+Reads a BME280 or BMP280 temperature, humidity and pressure sensor at a fixed interval.
+
+Type: `bme280`. Kind: source. Palette group: hardware.
+
+Properties explained: [bme280](nodes/bme280.md)
 
 - Inputs: none
-- Outputs: msg (any)
-- Properties (name, type, default):
-    - `i2cConfigId`, string, default `""`, the id of a `thingstudio/config/i2c-bus` config
-    - `address`, number, default `118` — the I2C address as a plain number: 118 is 0x76, 119 is 0x77
-    - `intervalMs`, number, default `5000` — milliseconds between readings, at least 100
+- Outputs: message, any payload
+
+| Property | Editor label | Type | Default | Allowed values and notes |
+| --- | --- | --- | --- | --- |
+| `i2cConfigId` | I2C bus | string | `""` | the id of a `thingstudio/config/i2c-bus` config |
+| `address` | address | number | `118` | one of `118`, `119`; the I2C address as a plain number: 118 is 0x76, 119 is 0x77 |
+| `intervalMs` | interval (ms) | number | `5000` | milliseconds between readings, at least 100 |
 
 ### display i2c
 
-Type `thingstudio/display_i2c`, kind sink, palette group hardware.
+Pushes an already-rendered frame to an I2C monochrome OLED panel.
+
+Type: `display_i2c`. Kind: sink. Palette group: hardware.
+
+Properties explained: [display i2c](nodes/display-i2c.md)
 
 - Inputs: frame (bytes)
 - Outputs: none
-- Properties (name, type, default):
-    - `controller`, string, default `"ssd1306"`
-    - `i2cConfigId`, string, default `""`, the id of a `thingstudio/config/i2c-bus` config
-    - `addr`, number, default `60` — the I2C address as a plain number: 60 is 0x3C, the usual SSD1306 address
-    - `width`, number, default `128`
-    - `height`, number, default `64`
+
+| Property | Editor label | Type | Default | Allowed values and notes |
+| --- | --- | --- | --- | --- |
+| `controller` | controller | string | `"ssd1306"` | one of `ssd1306` |
+| `i2cConfigId` | I2C bus | string | `""` | the id of a `thingstudio/config/i2c-bus` config |
+| `addr` | address | number | `60` | the I2C address as a plain number: 60 is 0x3C, the usual SSD1306 address |
+| `width` | width (px) | number | `128` |  |
+| `height` | height (px, multiple of 8) | number | `64` |  |
 
 ### display spi
 
-Type `thingstudio/display_spi`, kind sink, palette group hardware.
+Pushes an already-rendered frame to an SPI color TFT panel.
+
+Type: `display_spi`. Kind: sink. Palette group: hardware.
+
+Properties explained: [display spi](nodes/display-spi.md)
 
 - Inputs: frame (bytes)
 - Outputs: none
-- Properties (name, type, default):
-    - `orientation`, string, default `""` — empty = off (the raw `rotation`), or 0, 90, 180, 270 as a string: the picture turned clockwise. Portrait 320x480 needs none
-    - `controller`, string, default `"st7789"`
-    - `frameFormat`, string, default `"rgb565"` — rgb565, gs4, gs2 or mono; must match the gui screen
-    - `palette`, object, default `[0,65535,63488,2016,31,65504,2047,63519,33808,16904,50712,64800,32768,1024,16,1040]`
-    - `spiBus`, number, default `2`
-    - `baudrate`, number, default `40000000`
-    - `sck`, number, default `12`
-    - `mosi`, number, default `11`
-    - `dc`, number, default `13`
-    - `cs`, number, default `-1` — GPIO, or -1 for none
-    - `reset`, number, default `-1` — GPIO, or -1 for none
-    - `backlight`, number, default `-1` — GPIO, or -1 for none
-    - `width`, number, default `135` — the panel's own width in pixels
-    - `height`, number, default `240` — the panel's own height in pixels
-    - `rotation`, number, default `1` — how the panel is mounted, 0 to 7 (MADCTL); with an orientation, 0 to 3 only
-    - `colorOrder`, string, default `"bgr"`
-    - `invertColors`, boolean, default `false`
-    - `dataLatchOrder`, boolean, default `true`
-    - `xstart`, number, default `-1` — -1 lets the driver choose; set both only for an unusual panel offset
-    - `ystart`, number, default `-1`
+
+| Property | Editor label | Type | Default | Allowed values and notes |
+| --- | --- | --- | --- | --- |
+| `orientation` | orientation | string | `""` | one of ``, `0`, `90`, `180`, `270`; empty = off (the raw `rotation`), or 0, 90, 180, 270 as a string: the picture turned clockwise. Portrait 320x480 needs none |
+| `controller` | controller | string | `"st7789"` | one of `st7789`, `st7796` |
+| `frameFormat` | frame format | string | `"rgb565"` | one of `rgb565`, `gs4`, `gs2`, `mono`; rgb565, gs4, gs2 or mono; must match the gui screen |
+| `palette` | palette | object | `[0,65535,63488,2016,31,65504,2047,63519,33808,16904,50712,64800,32768,1024,16,1040]` |  |
+| `spiBus` | SPI bus | number | `2` |  |
+| `baudrate` | baudrate | number | `40000000` |  |
+| `sck` | sck pin | number | `12` |  |
+| `mosi` | mosi pin | number | `11` |  |
+| `dc` | dc pin | number | `13` |  |
+| `cs` | cs pin (-1 = not wired) | number | `-1` | GPIO, or -1 for none |
+| `reset` | reset pin (-1 = not wired) | number | `-1` | GPIO, or -1 for none |
+| `backlight` | backlight pin (-1 = not wired) | number | `-1` | GPIO, or -1 for none |
+| `width` | width (px) | number | `135` | the panel's own width in pixels |
+| `height` | height (px) | number | `240` | the panel's own height in pixels |
+| `rotation` | rotation (0-7) | number | `1` | how the panel is mounted, 0 to 7 (MADCTL); with an orientation, 0 to 3 only |
+| `colorOrder` | color order | string | `"bgr"` | one of `bgr`, `rgb` |
+| `invertColors` | invert colors | boolean | `false` |  |
+| `dataLatchOrder` | data latch order (MH bit) | boolean | `true` |  |
+| `xstart` | xstart (-1 = auto) | number | `-1` | -1 lets the driver choose; set both only for an unusual panel offset |
+| `ystart` | ystart (-1 = auto) | number | `-1` |  |
 
 ### ebutton
 
-Type `thingstudio/ebutton`, kind source, palette group hardware.
+Reports press, release, long-press and double-click events from one debounced button.
+
+Type: `ebutton`. Kind: source. Palette group: hardware.
+
+Properties explained: [ebutton](nodes/ebutton.md)
 
 - Inputs: none
-- Outputs: msg (string)
-- Properties (name, type, default):
-    - `pin`, number, default `5`
-    - `pull`, string, default `"none"`
-    - `senseMode`, string, default `"auto"`
-    - `suppress`, boolean, default `false`
-    - `debounceMs`, number, default `50`
-    - `longPressMs`, number, default `1000`
-    - `doubleClickMs`, number, default `400`
+- Outputs: message, payload string
+
+| Property | Editor label | Type | Default | Allowed values and notes |
+| --- | --- | --- | --- | --- |
+| `pin` | pin | number | `5` |  |
+| `pull` | pull | string | `"none"` | one of `none`, `up`, `down` |
+| `senseMode` | sense | string | `"auto"` | one of `auto`, `0`, `1` |
+| `suppress` | suppress (delay/suppress release in favor of double/long) | boolean | `false` |  |
+| `debounceMs` | debounce (ms) | number | `50` |  |
+| `longPressMs` | long press (ms) | number | `1000` |  |
+| `doubleClickMs` | double click (ms) | number | `400` |  |
 
 ### encoder
 
-Type `thingstudio/encoder`, kind source, palette group hardware.
+Reads a rotary encoder and sends its value each time it turns.
+
+Type: `encoder`. Kind: source. Palette group: hardware.
+
+Properties explained: [encoder](nodes/encoder.md)
 
 - Inputs: none
-- Outputs: msg (number)
-- Properties (name, type, default):
-    - `pinX`, number, default `10` — one of the two quadrature switch pins
-    - `pinY`, number, default `11` — the other quadrature switch pin
-    - `div`, number, default `1` — divide the count by this to track detents; 1 counts every pulse
-    - `value`, number, default `0` — the starting value
-    - `vmin`, string, default `""` — lowest value, or blank for no limit
-    - `vmax`, string, default `""` — highest value, or blank for no limit
-    - `mod`, string, default `""` — wrap the value at this number, or blank for none
-    - `delay`, number, default `100` — ms to wait for motion to settle; also limits how often it sends
+- Outputs: message, payload number
+
+| Property | Editor label | Type | Default | Allowed values and notes |
+| --- | --- | --- | --- | --- |
+| `pinX` | pin x | number | `10` | one of the two quadrature switch pins |
+| `pinY` | pin y | number | `11` | the other quadrature switch pin |
+| `div` | divide by (div) | number | `1` | divide the count by this to track detents; 1 counts every pulse |
+| `value` | start value | number | `0` | the starting value |
+| `vmin` | lowest (blank for none) | string | `""` | lowest value, or blank for no limit |
+| `vmax` | highest (blank for none) | string | `""` | highest value, or blank for no limit |
+| `mod` | wrap at (blank for none) | string | `""` | wrap the value at this number, or blank for none |
+| `delay` | settle (ms) | number | `100` | ms to wait for motion to settle; also limits how often it sends |
 
 ### eswitch
 
-Type `thingstudio/eswitch`, kind source, palette group hardware.
+Reports when a debounced switch opens or closes.
+
+Type: `eswitch`. Kind: source. Palette group: hardware.
+
+Properties explained: [eswitch](nodes/eswitch.md)
 
 - Inputs: none
-- Outputs: msg (bool)
-- Properties (name, type, default):
-    - `pin`, number, default `4`
-    - `pull`, string, default `"none"`
-    - `lopen`, number, default `1`
-    - `debounceMs`, number, default `50`
+- Outputs: message, payload bool
+
+| Property | Editor label | Type | Default | Allowed values and notes |
+| --- | --- | --- | --- | --- |
+| `pin` | pin | number | `4` |  |
+| `pull` | pull | string | `"none"` | one of `none`, `up`, `down` |
+| `lopen` | open level (lopen) | number | `1` | one of `1`, `0` |
+| `debounceMs` | debounce (ms) | number | `50` |  |
 
 ### gpio out
 
-Type `thingstudio/gpio_out`, kind sink, palette group hardware.
+Drives a GPIO pin high or low from each incoming message.
+
+Type: `gpio_out`. Kind: sink. Palette group: hardware.
+
+Properties explained: [gpio out](nodes/gpio-out.md)
 
 - Inputs: signal (bool)
 - Outputs: none
-- Properties (name, type, default):
-    - `pin`, number, default `12`
+
+| Property | Editor label | Type | Default | Allowed values and notes |
+| --- | --- | --- | --- | --- |
+| `pin` | pin | number | `12` |  |
 
 ### i2c device
 
-Type `thingstudio/i2c`, kind transform, palette group hardware.
+Talks to an I2C device that has no node of its own; each message does one transfer.
 
-- Inputs: msg (any)
-- Outputs: msg (any)
-- Properties (name, type, default):
-    - `i2cConfigId`, string, default `""`, the id of a `thingstudio/config/i2c-bus` config
-    - `operation`, string, default `"read"`
-    - `address`, string, default `""`
-    - `register`, string, default `""`
-    - `length`, number, default `1`
+Type: `i2c`. Kind: transform. Palette group: hardware.
+
+Properties explained: [i2c device](nodes/i2c.md)
+
+- Inputs: message, any payload
+- Outputs: message, any payload
+
+| Property | Editor label | Type | Default | Allowed values and notes |
+| --- | --- | --- | --- | --- |
+| `i2cConfigId` | I2C bus | string | `""` | the id of a `thingstudio/config/i2c-bus` config |
+| `operation` | operation | string | `"read"` | one of `read`, `write`, `scan` |
+| `address` | address | string | `""` |  |
+| `register` | register | string | `""` |  |
+| `length` | length (bytes) | number | `1` |  |
 
 ### interrupt
 
-Type `thingstudio/interrupt`, kind source, palette group hardware.
+Fires immediately when a GPIO pin changes state.
+
+Type: `interrupt`. Kind: source. Palette group: hardware.
+
+Properties explained: [interrupt](nodes/interrupt.md)
 
 - Inputs: none
-- Outputs: msg (bool)
-- Properties (name, type, default):
-    - `pin`, number, default `4`
-    - `edge`, string, default `"rising"`
+- Outputs: message, payload bool
+
+| Property | Editor label | Type | Default | Allowed values and notes |
+| --- | --- | --- | --- | --- |
+| `pin` | pin | number | `4` |  |
+| `edge` | edge | string | `"rising"` | one of `rising`, `falling`, `both` |
 
 ### neopixel
 
-Type `thingstudio/neopixel`, kind sink, palette group hardware.
+Drives a WS2812 (NeoPixel) strip: sets the pixels from each message and writes.
 
-- Inputs: msg (any)
+Type: `neopixel`. Kind: sink. Palette group: hardware.
+
+Properties explained: [neopixel](nodes/neopixel.md)
+
+- Inputs: message, any payload
 - Outputs: none
-- Properties (name, type, default):
-    - `pin`, number, default `13` — the strip's data pin
-    - `count`, number, default `8` — how many pixels on the strip
-    - `order`, string, default `"GRB"` — RGB, GRB, RGBW or GRBW: the wire colour order of your strip
+
+| Property | Editor label | Type | Default | Allowed values and notes |
+| --- | --- | --- | --- | --- |
+| `pin` | pin | number | `13` | the strip's data pin |
+| `count` | count | number | `8` | how many pixels on the strip |
+| `order` | order | string | `"GRB"` | one of `GRB`, `RGB`, `RGBW`, `GRBW`; RGB, GRB, RGBW or GRBW: the wire colour order of your strip |
 
 ### pwm out
 
-Type `thingstudio/pwm_out`, kind sink, palette group hardware.
+Drives a PWM signal on a GPIO pin, for dimming or any variable duty cycle.
+
+Type: `pwm_out`. Kind: sink. Palette group: hardware.
+
+Properties explained: [pwm out](nodes/pwm-out.md)
 
 - Inputs: duty (number)
 - Outputs: none
-- Properties (name, type, default):
-    - `pin`, number, default `12`
-    - `freq`, number, default `1000`
+
+| Property | Editor label | Type | Default | Allowed values and notes |
+| --- | --- | --- | --- | --- |
+| `pin` | pin | number | `12` |  |
+| `freq` | frequency (Hz) | number | `1000` |  |
 
 ### touch
 
-Type `thingstudio/touch_i2c`, kind source, palette group hardware.
+Raw touch input from an I2C touch panel: sends a message when a finger lands and when it lifts.
+
+Type: `touch_i2c`. Kind: source. Palette group: hardware.
+
+Properties explained: [touch](nodes/touch-i2c.md)
 
 - Inputs: none
-- Outputs: msg (any)
-- Properties (name, type, default):
-    - `touchPanelConfigId`, string, default `""`, the id of a `thingstudio/config/touch-panel` config
-    - `orientation`, string, default `""`
+- Outputs: message, any payload
+
+| Property | Editor label | Type | Default | Allowed values and notes |
+| --- | --- | --- | --- | --- |
+| `touchPanelConfigId` | Touch panel | string | `""` | the id of a `thingstudio/config/touch-panel` config |
+| `orientation` | orientation | string | `""` | one of ``, `0`, `90`, `180`, `270` |
 
 ## network
 
 ### ble advertise
 
-Type `thingstudio/ble_advertise`, kind sink, palette group network.
+Advertises over Bluetooth LE: the board's name, and each message's payload as manufacturer or service data.
 
-- Inputs: msg (any)
+Type: `ble_advertise`. Kind: sink. Palette group: network.
+
+Properties explained: [ble advertise](nodes/ble-advertise.md)
+
+- Inputs: message, any payload
 - Outputs: none
 - Needs hardware: ble (checked against the board at compile time)
-- Properties (name, type, default):
-    - `field`, string, default `"manufacturer"` — manufacturer (payload after a 2-byte manufacturer id), service (after a service UUID) or none (name only)
-    - `mfrId`, string, default `"0xFFFF"` — manufacturer id, decimal or hex with 0x; 0xFFFF is for testing
-    - `serviceUuid`, string, default `"fcd2"` — service UUID for service data: 16-bit (fcd2, BTHome) or 128-bit
-    - `advIntervalMs`, number, default `500` — how often the advertisement is sent, 20-10240 ms
-    - `bleConfigId`, string, default `""`, the id of a `thingstudio/config/ble` config — the flow's BLE config, whose name is advertised; name and payload share 31 bytes
+
+| Property | Editor label | Type | Default | Allowed values and notes |
+| --- | --- | --- | --- | --- |
+| `field` | payload goes in | string | `"manufacturer"` | one of `manufacturer`, `service`, `none`; manufacturer (payload after a 2-byte manufacturer id), service (after a service UUID) or none (name only) |
+| `mfrId` | manufacturer id | string | `"0xFFFF"` | manufacturer id, decimal or hex with 0x; 0xFFFF is for testing |
+| `serviceUuid` | service UUID | string | `"fcd2"` | service UUID for service data: 16-bit (fcd2, BTHome) or 128-bit |
+| `advIntervalMs` | interval (ms) | number | `500` | how often the advertisement is sent, 20-10240 ms |
+| `bleConfigId` | BLE | string | `""` | the flow's BLE config, whose name is advertised; name and payload share 31 bytes; the id of a `thingstudio/config/ble` config |
 
 ### ble characteristic in
 
-Type `thingstudio/ble_characteristic_in`, kind source, palette group network.
+Sends a message each time a connected phone writes a Bluetooth LE characteristic.
+
+Type: `ble_characteristic_in`. Kind: source. Palette group: network.
+
+Properties explained: [ble characteristic in](nodes/ble-characteristic-in.md)
 
 - Inputs: none
-- Outputs: msg (bytes)
+- Outputs: message, payload bytes
 - Needs hardware: ble (checked against the board at compile time)
-- Properties (name, type, default):
-    - `serviceUuid`, string, default `""` — the service it belongs to: 16-bit (181a) or 128-bit; nodes for one service's characteristics share it
-    - `charUuid`, string, default `""` — the characteristic a phone writes: 16-bit or 128-bit
-    - `encoding`, string, default `"bytes"` — how the written bytes become payload: bytes, text, int8/uint8/int16/uint16/int32/uint32 or float32 (little-endian); sets the output type
-    - `bleConfigId`, string, default `""`, the id of a `thingstudio/config/ble` config
+
+| Property | Editor label | Type | Default | Allowed values and notes |
+| --- | --- | --- | --- | --- |
+| `serviceUuid` | service UUID | string | `""` | the service it belongs to: 16-bit (181a) or 128-bit; nodes for one service's characteristics share it |
+| `charUuid` | characteristic UUID | string | `""` | the characteristic a phone writes: 16-bit or 128-bit |
+| `encoding` | encoding | string | `"bytes"` | one of `bytes`, `text`, `int8`, `uint8`, `int16`, `uint16`, `int32`, `uint32`, `float32`; how the written bytes become payload: bytes, text, int8/uint8/int16/uint16/int32/uint32 or float32 (little-endian); sets the output type |
+| `bleConfigId` | BLE | string | `""` | the id of a `thingstudio/config/ble` config |
 
 ### ble characteristic out
 
-Type `thingstudio/ble_characteristic_out`, kind sink, palette group network.
+Sets a Bluetooth LE characteristic to each message's payload for a phone to read, and notifies subscribed phones.
 
-- Inputs: msg (any)
+Type: `ble_characteristic_out`. Kind: sink. Palette group: network.
+
+Properties explained: [ble characteristic out](nodes/ble-characteristic-out.md)
+
+- Inputs: message, any payload
 - Outputs: none
 - Needs hardware: ble (checked against the board at compile time)
-- Properties (name, type, default):
-    - `serviceUuid`, string, default `""` — the service it belongs to: 16-bit (181a) or 128-bit
-    - `charUuid`, string, default `""` — the characteristic a phone reads: 16-bit or 128-bit; one out node per characteristic
-    - `encoding`, string, default `"bytes"` — how payload becomes bytes: as for ble_characteristic_in; a value that doesn't fit is reported and dropped
-    - `notify`, boolean, default `true` — also push each value to subscribed phones
-    - `bleConfigId`, string, default `""`, the id of a `thingstudio/config/ble` config
+
+| Property | Editor label | Type | Default | Allowed values and notes |
+| --- | --- | --- | --- | --- |
+| `serviceUuid` | service UUID | string | `""` | the service it belongs to: 16-bit (181a) or 128-bit |
+| `charUuid` | characteristic UUID | string | `""` | the characteristic a phone reads: 16-bit or 128-bit; one out node per characteristic |
+| `encoding` | encoding | string | `"bytes"` | one of `bytes`, `text`, `int8`, `uint8`, `int16`, `uint16`, `int32`, `uint32`, `float32`; how payload becomes bytes: as for ble_characteristic_in; a value that doesn't fit is reported and dropped |
+| `notify` | notify | boolean | `true` | also push each value to subscribed phones |
+| `bleConfigId` | BLE | string | `""` | the id of a `thingstudio/config/ble` config |
 
 ### ble notify
 
-Type `thingstudio/ble_notify`, kind source, palette group network.
+Subscribes to a characteristic of another Bluetooth LE device and sends a message for each new value.
+
+Type: `ble_notify`. Kind: source. Palette group: network.
+
+Properties explained: [ble notify](nodes/ble-notify.md)
 
 - Inputs: none
-- Outputs: msg (bytes)
+- Outputs: message, payload bytes
 - Needs hardware: ble (checked against the board at compile time)
-- Properties (name, type, default):
-    - `peerConfigId`, string, default `""`, the id of a `thingstudio/config/ble-peer` config — the ble peer config
-    - `serviceUuid`, string, default `""` — the peer's service: 16-bit or 128-bit
-    - `charUuid`, string, default `""` — the characteristic subscribed to (notify, or indicate if that's all it has)
-    - `encoding`, string, default `"bytes"` — how each value becomes payload; sets the output type
+
+| Property | Editor label | Type | Default | Allowed values and notes |
+| --- | --- | --- | --- | --- |
+| `peerConfigId` | BLE peer | string | `""` | the ble peer config; the id of a `thingstudio/config/ble-peer` config |
+| `serviceUuid` | service UUID | string | `""` | the peer's service: 16-bit or 128-bit |
+| `charUuid` | characteristic UUID | string | `""` | the characteristic subscribed to (notify, or indicate if that's all it has) |
+| `encoding` | encoding | string | `"bytes"` | one of `bytes`, `text`, `int8`, `uint8`, `int16`, `uint16`, `int32`, `uint32`, `float32`; how each value becomes payload; sets the output type |
 
 ### ble read
 
-Type `thingstudio/ble_read`, kind transform, palette group network.
+Reads a characteristic of another Bluetooth LE device for each message that arrives, and sends the value on.
 
-- Inputs: msg (any)
-- Outputs: msg (bytes)
+Type: `ble_read`. Kind: transform. Palette group: network.
+
+Properties explained: [ble read](nodes/ble-read.md)
+
+- Inputs: message, any payload
+- Outputs: message, payload bytes
 - Needs hardware: ble (checked against the board at compile time)
-- Properties (name, type, default):
-    - `peerConfigId`, string, default `""`, the id of a `thingstudio/config/ble-peer` config — the ble peer config: the device to connect to, by address or name
-    - `serviceUuid`, string, default `""` — the peer's service: 16-bit or 128-bit
-    - `charUuid`, string, default `""` — the characteristic read for each message in
-    - `encoding`, string, default `"bytes"` — how the bytes read become payload (bytes, text, int8..uint32, float32 little-endian); sets the output type
+
+| Property | Editor label | Type | Default | Allowed values and notes |
+| --- | --- | --- | --- | --- |
+| `peerConfigId` | BLE peer | string | `""` | the ble peer config: the device to connect to, by address or name; the id of a `thingstudio/config/ble-peer` config |
+| `serviceUuid` | service UUID | string | `""` | the peer's service: 16-bit or 128-bit |
+| `charUuid` | characteristic UUID | string | `""` | the characteristic read for each message in |
+| `encoding` | encoding | string | `"bytes"` | one of `bytes`, `text`, `int8`, `uint8`, `int16`, `uint16`, `int32`, `uint32`, `float32`; how the bytes read become payload (bytes, text, int8..uint32, float32 little-endian); sets the output type |
 
 ### ble scan
 
-Type `thingstudio/ble_scan`, kind source, palette group network.
+Listens for Bluetooth LE advertisements, such as beacons and BLE sensors, and sends one message per advertisement.
+
+Type: `ble_scan`. Kind: source. Palette group: network.
+
+Properties explained: [ble scan](nodes/ble-scan.md)
 
 - Inputs: none
-- Outputs: msg (bytes)
+- Outputs: message, payload bytes
 - Needs hardware: ble (checked against the board at compile time)
-- Properties (name, type, default):
-    - `namePrefix`, string, default `""` — only devices whose advertised name starts with this; many send a name only to an active scan
-    - `addr`, string, default `""` — only this device, aa:bb:cc:dd:ee:ff
-    - `mfrId`, string, default `""` — only this manufacturer id, decimal or hex with 0x (0x0499 Ruuvi)
-    - `serviceUuid`, string, default `""` — only advertisements listing this service or carrying its data: 16-bit (fcd2, BTHome) or 128-bit
-    - `active`, boolean, default `false` — also request each device's scan response (usually its name)
-    - `repeatMs`, number, default `1000` — drop an advertisement identical to the same device's last one within this time; 0 sends all
-    - `scanIntervalMs`, number, default `320` — how often the radio listens, 2.5-10240 ms; every ble_scan in a flow must agree
-    - `scanWindowMs`, number, default `30` — how long each listen lasts, up to the interval; longer misses less and leaves WiFi less time
+
+| Property | Editor label | Type | Default | Allowed values and notes |
+| --- | --- | --- | --- | --- |
+| `namePrefix` | name starts with | string | `""` | only devices whose advertised name starts with this; many send a name only to an active scan |
+| `addr` | address | string | `""` | only this device, aa:bb:cc:dd:ee:ff |
+| `mfrId` | manufacturer id | string | `""` | only this manufacturer id, decimal or hex with 0x (0x0499 Ruuvi) |
+| `serviceUuid` | service UUID | string | `""` | only advertisements listing this service or carrying its data: 16-bit (fcd2, BTHome) or 128-bit |
+| `active` | active scan | boolean | `false` | also request each device's scan response (usually its name) |
+| `repeatMs` | repeat window (ms) | number | `1000` | drop an advertisement identical to the same device's last one within this time; 0 sends all |
+| `scanIntervalMs` | scan interval (ms) | number | `320` | how often the radio listens, 2.5-10240 ms; every ble_scan in a flow must agree |
+| `scanWindowMs` | scan window (ms) | number | `30` | how long each listen lasts, up to the interval; longer misses less and leaves WiFi less time |
 
 ### ble uart in
 
-Type `thingstudio/ble_uart_in`, kind source, palette group network.
+Receives text from a phone over Bluetooth LE, through the Nordic UART Service.
+
+Type: `ble_uart_in`. Kind: source. Palette group: network.
+
+Properties explained: [ble uart in](nodes/ble-uart-in.md)
 
 - Inputs: none
-- Outputs: msg (string)
+- Outputs: message, payload string
 - Needs hardware: ble (checked against the board at compile time)
-- Properties (name, type, default):
-    - `lines`, boolean, default `true` — one message per line the phone sends (\n ends a line, \r is dropped); off: one per write
-    - `bleConfigId`, string, default `""`, the id of a `thingstudio/config/ble` config
+
+| Property | Editor label | Type | Default | Allowed values and notes |
+| --- | --- | --- | --- | --- |
+| `lines` | one message per line | boolean | `true` | one message per line the phone sends (\n ends a line, \r is dropped); off: one per write |
+| `bleConfigId` | BLE | string | `""` | the id of a `thingstudio/config/ble` config |
 
 ### ble uart out
 
-Type `thingstudio/ble_uart_out`, kind sink, palette group network.
+Sends text to the phones connected over Bluetooth LE, through the Nordic UART Service.
 
-- Inputs: msg (any)
+Type: `ble_uart_out`. Kind: sink. Palette group: network.
+
+Properties explained: [ble uart out](nodes/ble-uart-out.md)
+
+- Inputs: message, any payload
 - Outputs: none
 - Needs hardware: ble (checked against the board at compile time)
-- Properties (name, type, default):
-    - `newline`, boolean, default `true` — add \n after each payload
-    - `bleConfigId`, string, default `""`, the id of a `thingstudio/config/ble` config
+
+| Property | Editor label | Type | Default | Allowed values and notes |
+| --- | --- | --- | --- | --- |
+| `newline` | end with a newline | boolean | `true` | add \n after each payload |
+| `bleConfigId` | BLE | string | `""` | the id of a `thingstudio/config/ble` config |
 
 ### ble write
 
-Type `thingstudio/ble_write`, kind sink, palette group network.
+Writes each message's payload to a characteristic of another Bluetooth LE device.
 
-- Inputs: msg (any)
+Type: `ble_write`. Kind: sink. Palette group: network.
+
+Properties explained: [ble write](nodes/ble-write.md)
+
+- Inputs: message, any payload
 - Outputs: none
 - Needs hardware: ble (checked against the board at compile time)
-- Properties (name, type, default):
-    - `peerConfigId`, string, default `""`, the id of a `thingstudio/config/ble-peer` config — the ble peer config
-    - `serviceUuid`, string, default `""` — the peer's service: 16-bit or 128-bit
-    - `charUuid`, string, default `""` — the characteristic written
-    - `encoding`, string, default `"bytes"` — how payload becomes bytes; a value that doesn't fit is reported and dropped
-    - `response`, boolean, default `true` — wait for the peer to confirm each write; off writes without response
+
+| Property | Editor label | Type | Default | Allowed values and notes |
+| --- | --- | --- | --- | --- |
+| `peerConfigId` | BLE peer | string | `""` | the ble peer config; the id of a `thingstudio/config/ble-peer` config |
+| `serviceUuid` | service UUID | string | `""` | the peer's service: 16-bit or 128-bit |
+| `charUuid` | characteristic UUID | string | `""` | the characteristic written |
+| `encoding` | encoding | string | `"bytes"` | one of `bytes`, `text`, `int8`, `uint8`, `int16`, `uint16`, `int32`, `uint32`, `float32`; how payload becomes bytes; a value that doesn't fit is reported and dropped |
+| `response` | wait for the peer's response | boolean | `true` | wait for the peer to confirm each write; off writes without response |
 
 ### http in
 
-Type `thingstudio/http_in`, kind source, palette group network.
+Starts (or joins) an HTTP server on the board and sends a message for each matching request.
+
+Type: `http_in`. Kind: source. Palette group: network.
+
+Properties explained: [http in](nodes/http-in.md)
 
 - Inputs: none
-- Outputs: msg (any)
-- Properties (name, type, default):
-    - `port`, number, default `8080`
-    - `path`, string, default `"/"`
-    - `method`, string, default `"GET"`
-    - `responseTimeoutMs`, number, default `10000`
-    - `wifiConfigId`, string, default `""`, the id of a `thingstudio/config/wifi` config
+- Outputs: message, any payload
+
+| Property | Editor label | Type | Default | Allowed values and notes |
+| --- | --- | --- | --- | --- |
+| `port` | port | number | `8080` |  |
+| `path` | path | string | `"/"` |  |
+| `method` | method | string | `"GET"` | one of `GET`, `POST` |
+| `responseTimeoutMs` | response timeout (ms) | number | `10000` |  |
+| `wifiConfigId` | WiFi | string | `""` | the id of a `thingstudio/config/wifi` config |
 
 ### http request
 
-Type `thingstudio/http_request`, kind transform, palette group network.
+Makes one HTTP request per incoming message and returns the response.
 
-- Inputs: msg (any)
-- Outputs: msg (any)
-- Properties (name, type, default):
-    - `url`, string, default `""`
-    - `method`, string, default `"GET"`
-    - `timeoutMs`, number, default `5000`
-    - `wifiConfigId`, string, default `""`, the id of a `thingstudio/config/wifi` config
+Type: `http_request`. Kind: transform. Palette group: network.
+
+Properties explained: [http request](nodes/http-request.md)
+
+- Inputs: message, any payload
+- Outputs: message, any payload
+
+| Property | Editor label | Type | Default | Allowed values and notes |
+| --- | --- | --- | --- | --- |
+| `url` | url | string | `""` |  |
+| `method` | method | string | `"GET"` | one of `GET`, `POST` |
+| `timeoutMs` | timeout (ms) | number | `5000` |  |
+| `wifiConfigId` | WiFi | string | `""` | the id of a `thingstudio/config/wifi` config |
 
 ### http response
 
-Type `thingstudio/http_response`, kind sink, palette group network.
+Completes a request that arrived through an http in node.
 
-- Inputs: msg (any)
+Type: `http_response`. Kind: sink. Palette group: network.
+
+Properties explained: [http response](nodes/http-response.md)
+
+- Inputs: message, any payload
 - Outputs: none
 - Properties: none
 
 ### mqtt publish
 
-Type `thingstudio/mqtt_publish`, kind sink, palette group network.
+Publishes each message's payload to an MQTT topic.
 
-- Inputs: msg (any)
+Type: `mqtt_publish`. Kind: sink. Palette group: network.
+
+Properties explained: [mqtt publish](nodes/mqtt-publish.md)
+
+- Inputs: message, any payload
 - Outputs: none
-- Properties (name, type, default):
-    - `topic`, string, default `""`
-    - `retain`, boolean, default `false`
-    - `qos`, number, default `0` — 0 or 1
-    - `brokerConfigId`, string, default `""`, the id of a `thingstudio/config/mqtt-broker` config
-    - `wifiConfigId`, string, default `""`, the id of a `thingstudio/config/wifi` config
+
+| Property | Editor label | Type | Default | Allowed values and notes |
+| --- | --- | --- | --- | --- |
+| `topic` | topic | string | `""` |  |
+| `retain` | retain | boolean | `false` |  |
+| `qos` | qos | number | `0` | one of `0`, `1`; 0 or 1 |
+| `brokerConfigId` | MQTT Broker | string | `""` | the id of a `thingstudio/config/mqtt-broker` config |
+| `wifiConfigId` | WiFi | string | `""` | the id of a `thingstudio/config/wifi` config |
 
 ### mqtt subscribe
 
-Type `thingstudio/mqtt_subscribe`, kind sink, palette group network.
+Sends one message for each message that arrives on a subscribed MQTT topic.
 
-- Inputs: msg (any)
-- Outputs: msg (any)
-- Properties (name, type, default):
-    - `topic`, string, default `""`
-    - `qos`, number, default `0`
-    - `dynamic`, boolean, default `false`
-    - `brokerConfigId`, string, default `""`, the id of a `thingstudio/config/mqtt-broker` config
-    - `wifiConfigId`, string, default `""`, the id of a `thingstudio/config/wifi` config
+Type: `mqtt_subscribe`. Kind: sink. Palette group: network.
+
+Properties explained: [mqtt subscribe](nodes/mqtt-subscribe.md)
+
+- Inputs: message, any payload
+- Outputs: message, any payload
+
+| Property | Editor label | Type | Default | Allowed values and notes |
+| --- | --- | --- | --- | --- |
+| `topic` | topic | string | `""` |  |
+| `qos` | qos | number | `0` | one of `0`, `1` |
+| `dynamic` | dynamic subscription | boolean | `false` |  |
+| `brokerConfigId` | MQTT Broker | string | `""` | the id of a `thingstudio/config/mqtt-broker` config |
+| `wifiConfigId` | WiFi | string | `""` | the id of a `thingstudio/config/wifi` config |
 
 ### ntp
 
-Type `thingstudio/ntp`, kind sink, palette group network.
+Sets the board's clock from the internet and sends the time.
 
-- Inputs: msg (any)
-- Outputs: msg (any)
-- Properties (name, type, default):
-    - `server`, string, default `"pool.ntp.org"`
-    - `utcOffset`, number, default `0` — hours from UTC for standard time, -12 to 14 (5.5 for India); the summer hour is added by `dst`
-    - `dst`, string, default `"eu"` — eu adds the UK/EU summer hour automatically; none adds nothing
-    - `format`, string, default `"time"` — what goes in payload: unix (int), time (14:05), time_seconds, time_12h (2:05 pm), date (Wed 14 Oct), date_iso, iso. Every message also carries all seven as fields of those names
-    - `wifiConfigId`, string, default `""`, the id of a `thingstudio/config/wifi` config
+Type: `ntp`. Kind: sink. Palette group: network.
+
+Properties explained: [ntp](nodes/ntp.md)
+
+- Inputs: message, any payload
+- Outputs: message, any payload
+
+| Property | Editor label | Type | Default | Allowed values and notes |
+| --- | --- | --- | --- | --- |
+| `server` | NTP server | string | `"pool.ntp.org"` |  |
+| `utcOffset` | UTC offset (hours) | number | `0` | hours from UTC for standard time, -12 to 14 (5.5 for India); the summer hour is added by `dst` |
+| `dst` | daylight saving | string | `"eu"` | one of `eu`, `none`; eu adds the UK/EU summer hour automatically; none adds nothing |
+| `format` | format | string | `"time"` | one of `time`, `time_seconds`, `time_12h`, `date`, `date_iso`, `iso`, `unix`; what goes in payload: unix (int), time (14:05), time_seconds, time_12h (2:05 pm), date (Wed 14 Oct), date_iso, iso. Every message also carries all seven as fields of those names |
+| `wifiConfigId` | WiFi | string | `""` | the id of a `thingstudio/config/wifi` config |
 
 ### udp receive
 
-Type `thingstudio/udp_receive`, kind source, palette group network.
+Listens on a UDP port and sends one message per datagram received.
+
+Type: `udp_receive`. Kind: source. Palette group: network.
+
+Properties explained: [udp receive](nodes/udp-receive.md)
 
 - Inputs: none
-- Outputs: msg (bytes)
-- Properties (name, type, default):
-    - `port`, number, default `9998`
-    - `pollMs`, number, default `20`
-    - `wifiConfigId`, string, default `""`, the id of a `thingstudio/config/wifi` config
+- Outputs: message, payload bytes
+
+| Property | Editor label | Type | Default | Allowed values and notes |
+| --- | --- | --- | --- | --- |
+| `port` | port | number | `9998` |  |
+| `pollMs` | poll interval (ms) | number | `20` |  |
+| `wifiConfigId` | WiFi | string | `""` | the id of a `thingstudio/config/wifi` config |
 
 ### udp send
 
-Type `thingstudio/udp_send`, kind sink, palette group network.
+Sends each message's payload as a UDP datagram to a fixed host and port.
 
-- Inputs: msg (any)
+Type: `udp_send`. Kind: sink. Palette group: network.
+
+Properties explained: [udp send](nodes/udp-send.md)
+
+- Inputs: message, any payload
 - Outputs: none
-- Properties (name, type, default):
-    - `host`, string, default `""`
-    - `port`, number, default `9999`
-    - `timeoutMs`, number, default `2000`
-    - `wifiConfigId`, string, default `""`, the id of a `thingstudio/config/wifi` config
+
+| Property | Editor label | Type | Default | Allowed values and notes |
+| --- | --- | --- | --- | --- |
+| `host` | host | string | `""` |  |
+| `port` | port | number | `9999` |  |
+| `timeoutMs` | timeout (ms) | number | `2000` |  |
+| `wifiConfigId` | WiFi | string | `""` | the id of a `thingstudio/config/wifi` config |
 
 ### wifi gate
 
-Type `thingstudio/wifi_gate`, kind transform, palette group network.
+Passes a message through unchanged while the board's WiFi is connected, and drops it while it isn't.
 
-- Inputs: msg (any)
-- Outputs: msg (any)
-- Properties (name, type, default):
-    - `wifiConfigId`, string, default `""`, the id of a `thingstudio/config/wifi` config
+Type: `wifi_gate`. Kind: transform. Palette group: network.
+
+Properties explained: [wifi gate](nodes/wifi-gate.md)
+
+- Inputs: message, any payload
+- Outputs: message, any payload
+
+| Property | Editor label | Type | Default | Allowed values and notes |
+| --- | --- | --- | --- | --- |
+| `wifiConfigId` | WiFi | string | `""` | the id of a `thingstudio/config/wifi` config |
 
 ### wifi status
 
-Type `thingstudio/wifi_status`, kind source, palette group network.
+Reports the board's WiFi connection state.
+
+Type: `wifi_status`. Kind: source. Palette group: network.
+
+Properties explained: [wifi status](nodes/wifi-status.md)
 
 - Inputs: none
-- Outputs: msg (bool)
-- Properties (name, type, default):
-    - `pollMs`, number, default `5000`
-    - `wifiConfigId`, string, default `""`, the id of a `thingstudio/config/wifi` config
+- Outputs: message, payload bool
+
+| Property | Editor label | Type | Default | Allowed values and notes |
+| --- | --- | --- | --- | --- |
+| `pollMs` | poll interval (ms) | number | `5000` |  |
+| `wifiConfigId` | WiFi | string | `""` | the id of a `thingstudio/config/wifi` config |
 
 ## Config nodes
 
-A config node is listed under `configs` in a flow file as `{id, type, properties}`. A node names it by id in a property such as `i2cConfigId`. Credentials are saved by name (`credentialName`), never as secrets in the file.
+A config node is listed under `configs` in a flow file as `{id, type, properties}`, with the full type shown here. A node names it by id in a property such as `i2cConfigId`. Credentials are saved by name (`credentialName`), never as secrets in the file.
 
 ### BLE
 
-Type `thingstudio/config/ble`, one per flow.
+Type: `thingstudio/config/ble` (one per flow).
 
 - `name`, text: What phone apps show, up to 26 bytes. Shorter leaves more room in an advertisement.
 
@@ -6253,7 +6649,7 @@ Defaults: `{"name":"thingstudio"}`
 
 ### BLE peer
 
-Type `thingstudio/config/ble-peer`.
+Type: `thingstudio/config/ble-peer`.
 
 - `addr`, text: aa:bb:cc:dd:ee:ff. Leave blank to find the device by its name instead.
 - `namePrefix`, text: Used when there's no address. Phones change their address; most sensors don't.
@@ -6263,7 +6659,7 @@ Defaults: `{"addr":"","namePrefix":"","timeoutMs":10000}`
 
 ### GUI theme
 
-Type `thingstudio/config/gui-theme`.
+Type: `thingstudio/config/gui-theme`.
 
 - `preset`, select: one of `dark-slate`, `light-paper`, `vivid`, ``; Choosing a starting point replaces the colours below; editing one makes the theme custom.
 - `bg`, colour
@@ -6281,7 +6677,7 @@ Defaults: `{"preset":"dark-slate","bg":4258,"card":8484,"fg":65535,"muted":35953
 
 ### I2C bus
 
-Type `thingstudio/config/i2c-bus`.
+Type: `thingstudio/config/i2c-bus`.
 
 - `bus`, number
 - `scl`, pin
@@ -6292,7 +6688,7 @@ Defaults: `{"bus":0,"scl":null,"sda":null,"freq":100000}`
 
 ### MQTT Broker
 
-Type `thingstudio/config/mqtt-broker`, one per flow.
+Type: `thingstudio/config/mqtt-broker` (one per flow).
 
 - `credentialName`, credential
 
@@ -6300,7 +6696,7 @@ Defaults: `{"credentialName":""}`
 
 ### Touch panel
 
-Type `thingstudio/config/touch-panel`.
+Type: `thingstudio/config/touch-panel`.
 
 - `controller`, select: one of `ft6336u`; Other controllers (GT911, CST820) aren't supported yet.
 - `i2cConfigId`, configRef: the id of a `thingstudio/config/i2c-bus` config
@@ -6317,7 +6713,7 @@ Defaults: `{"controller":"ft6336u","i2cConfigId":"","address":"0x38","rstPin":""
 
 ### WiFi
 
-Type `thingstudio/config/wifi`, one per flow.
+Type: `thingstudio/config/wifi` (one per flow).
 
 - `credentialName`, credential
 - `security`, select: one of `password`, `open`, `unmanaged`

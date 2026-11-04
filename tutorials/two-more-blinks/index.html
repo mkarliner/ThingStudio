@@ -3528,10 +3528,9 @@
 <p>The second variant is <strong>Keep the state in the node</strong>: the state lives inside the <code>function</code> node itself, in
 <code>context</code>.</p>
 <p>You can build this flow up yourself or start from the finished flow,
-<a href="https://github.com/mkarliner/ThingStudio/blob/main/examples/two-more-blinks.flow.json">two-more-blinks.flow.json</a>,
-in the <a href="../../examples/#where-the-folder-is">examples folder</a>, with <strong>File → Open…</strong>. Open the file; don't copy
-it from this page. It carries the first of the two blinks: change <code>15</code> in <code>machine.Pin(15)</code> to your LED's GPIO
-number.</p>
+<a href="https://github.com/mkarliner/ThingStudio/blob/main/tutorials/two-more-blinks.flow.json">two-more-blinks.flow.json</a>,
+in the <a href="../../examples/#where-the-folder-is">tutorials folder</a>, with <strong>File → Open…</strong>. It carries the first of the two
+blinks: change <code>15</code> in <code>machine.Pin(15)</code> to your LED's GPIO number.</p>
 <p>If a step misbehaves on the way, start at <a href="../../debugging/">Debugging &amp; troubleshooting</a>.</p>
 <h2 id="read-the-pin-write-it-back">Read the pin, write it back</h2>
 <p>Each message so far decides the LED by counting. Let the pin say where it is instead. Replace the function's code

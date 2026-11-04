@@ -2130,10 +2130,32 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#wiring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Wiring
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#behavior" class="md-nav__link">
     <span class="md-ellipsis">
       
         Behavior
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Errors
       
     </span>
   </a>
@@ -3470,10 +3492,32 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#wiring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Wiring
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#behavior" class="md-nav__link">
     <span class="md-ellipsis">
       
         Behavior
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Errors
       
     </span>
   </a>
@@ -3501,16 +3545,41 @@
 
 
 <h1 id="http-response">http response</h1>
-<p>Completes a request that arrived via a matching <a href="../http-in/"><code>http in</code></a> node.</p>
+<p>Sends the reply to a request that arrived through an <a href="../http-in/">http in</a> node.</p>
 <h2 id="properties">Properties</h2>
-<p>None — everything comes off the message at runtime, same field names Node-RED uses:</p>
-<ul>
-<li><strong><code>msg.statusCode</code></strong> — the HTTP status code to send. Defaults to <code>200</code> if not set.</li>
-<li><strong><code>msg.payload</code></strong> — the response body. A string is UTF-8 encoded; other types are converted; <code>None</code> sends an empty body.</li>
-</ul>
+<p>None. The reply comes from the message.</p>
+<h2 id="wiring">Wiring</h2>
+<p><strong>Input</strong> — a message that started at an http in node:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>payload</code></td>
+<td>the reply body. A string is sent as UTF-8, bytes as they are, and <code>None</code> as an empty body. Anything else is converted to text.</td>
+</tr>
+<tr>
+<td><code>statusCode</code></td>
+<td>the HTTP status, a whole number. Default 200.</td>
+</tr>
+</tbody>
+</table>
+<p>This node has no output.</p>
 <h2 id="behavior">Behavior</h2>
-<p>Must fire on a message that originated from an <code>http in</code> node — firing it on any other message (one built from scratch, or one whose originating request already got its response) raises a clear error rather than failing silently.</p>
-<p>The response is sent as plain bytes/text with no <code>Content-Type</code> header. Add one on the client side if you need to interpret the body as JSON.</p>
+<p>The reply has no <code>Content-Type</code> header. A client that needs to know the body is JSON has to assume it.</p>
+<p>Send one reply per request. Once a reply has gone, another for the same request does nothing. A reply that arrives
+after the <a href="../http-in/#properties">response timeout</a> is too late: the client has already received a 500.</p>
+<h2 id="errors">Errors</h2>
+<ul>
+<li><strong>The message didn't come from an http in node.</strong> The console shows
+  <code>http_response: msg did not come from an http_in node (no request to respond to)</code>. The same happens when a node
+  between the two built a new message and dropped the link. Change the message you received and pass it on.</li>
+<li><strong><code>statusCode</code> isn't a whole number.</strong> The node raises an error and the client gets the 500 after the timeout.</li>
+</ul>
 
 
 

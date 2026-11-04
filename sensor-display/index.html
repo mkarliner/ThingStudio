@@ -3664,7 +3664,7 @@ history on a three-page touch display, and publish them over MQTT. It's a separa
 with its own parts, listed under What you need.</p>
 <p>The flow is a <strong>bme280</strong> sensor feeding GUI nodes that draw the readings, with an <strong>mqtt publish</strong> that sends them on.</p>
 <p>The finished flow is in the Thingstudio repository:
-<a href="https://github.com/mkarliner/ThingStudio/blob/main/examples/gui-headliner-sensor-freenove-s3-4in.flow.json"><code>examples/gui-headliner-sensor-freenove-s3-4in.flow.json</code></a>.
+<a href="https://github.com/mkarliner/ThingStudio/blob/main/test-flows/gui-headliner-sensor-freenove-s3-4in.flow.json"><code>test-flows/gui-headliner-sensor-freenove-s3-4in.flow.json</code></a>.
 Open it in one of two ways:</p>
 <ul>
 <li><strong>Open the finished flow.</strong> Download it and open it with <strong>File → Open…</strong>, then set your own WiFi and MQTT
@@ -3809,8 +3809,8 @@ fill the right of the card and leave the rest empty — the compiler warns with 
 <h2 id="5-turn-the-pages">5. Turn the pages</h2>
 <p>Add a <strong>gui button</strong> with <strong>mode</strong> <code>navigate</code> to each page, so you can turn the pages by touch. See
 <a href="../nodes/gui/#buttons">Buttons</a>.</p>
-<p>The example flow also turns the pages every 8 seconds with a <strong>gui navigator</strong> node, which isn't in the palette.
-See <a href="../nodes/gui/#the-nodes">GUI nodes</a>.</p>
+<p>The finished flow also turns the pages by itself every 8 seconds, with a node that isn't in the palette. Skip it when
+you build the flow: the buttons turn the pages by touch.</p>
 <h2 id="6-publish-the-readings">6. Publish the readings</h2>
 <p>Drag three <strong>mqtt publish</strong> nodes, one per reading, with topics such as <code>thingstudio/headliner/temperature</code>. Wire
 outputs 1 to 3 of the function to them, and pick your MQTT broker and WiFi. See

@@ -1962,6 +1962,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#wiring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Wiring
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#behavior" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3470,6 +3481,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#wiring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Wiring
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#behavior" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3501,17 +3523,22 @@
 
 
 <h1 id="wifi-gate">wifi gate</h1>
-<p>Passes a message through unchanged if the WiFi station is currently connected, or drops it if it isn't.</p>
+<p>Passes a message through unchanged while the board's WiFi is connected, and drops it while it isn't.</p>
 <h2 id="properties">Properties</h2>
 <ul>
-<li><strong>WiFi</strong> — the flow's WiFi network. Every WiFi node in a flow shares this one setting.</li>
+<li><strong>WiFi</strong> — the flow's WiFi network, shared by every WiFi node in the flow.</li>
 </ul>
+<h2 id="wiring">Wiring</h2>
+<p><strong>Input</strong> — any message.</p>
+<p><strong>Output</strong> — the same message, unchanged, while the link is up. While it is down, nothing is sent on, as when a
+<a href="../function/">function</a> node returns <code>None</code>.</p>
 <h2 id="behavior">Behavior</h2>
-<p>A <code>transform</code>, like <code>function</code> or <code>delay</code> — one input, one output, same <code>msg</code> in and out unchanged when the WiFi link is up. When the link is down, the message is dropped: nothing propagates past this node, the same way a <code>function</code> node's <code>return None</code> stops a message.</p>
-<p>Uses the flow's WiFi network (its <strong>WiFi</strong> field, shared by every WiFi node).</p>
-<p>This checks the WiFi station's live link state at the moment each message arrives, not a value read off <code>wifi status</code>'s own output messages. <code>wifi status</code> only emits when its connection identity changes, so a fast-firing source (a timer or sensor) gated off <code>wifi status</code>'s wire could be checking stale state. This node reads the hardware directly, so it always answers "is the link up right now."</p>
-<p>A GPIO, timer or sensor source fires on its own schedule with no awareness of whether WiFi is up. Put a <code>wifi gate</code> between that source and whatever sends the result over the network: messages that arrive while the link is down are dropped instead of failing downstream (or queuing for a retry a node like <code>http request</code> might otherwise attempt).</p>
-<p>This only checks the WiFi link itself — not whether a specific MQTT broker or HTTP server is reachable beyond that. <code>mqtt publish</code>, <code>mqtt subscribe</code> and <code>http request</code> already handle their own connection lifecycle on top of a working WiFi link.</p>
+<p>The gate checks the live WiFi link as each message arrives. It doesn't use the last message from
+<a href="../wifi-status/">wifi status</a>, which sends only when the connection changes and can be out of date.</p>
+<p>Put it between a source that fires on its own schedule, such as a timer or a sensor, and a node that sends over the
+network. Messages that arrive while the link is down are dropped instead of failing downstream.</p>
+<p>It checks the WiFi link only, not whether a given MQTT broker or HTTP server can be reached. <code>mqtt publish</code>,
+<code>mqtt subscribe</code> and <code>http request</code> handle their own connections on top of a working link.</p>
 
 
 
