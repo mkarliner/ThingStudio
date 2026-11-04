@@ -117,7 +117,7 @@ When it's done, close Thonny. Like esptool, it needs the board's port to itself.
 
 Thonny can't install MicroPython on an ESP32-C5. It writes the image at `0`, but a C5 needs `0x2000`, and Thonny
 doesn't offer that address. The board then restarts in a loop printing `invalid header`. Use Thingstudio or
-esptool instead.
+esptool instead. ([Thonny issue #3963](https://github.com/thonny/thonny/issues/3963))
 
 ### Other microcontrollers
 

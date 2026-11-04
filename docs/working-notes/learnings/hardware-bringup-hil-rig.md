@@ -258,7 +258,7 @@ committed -- if this VM stays in the loop, `install.sh` should grow the same sin
   for esp32/esp32s2 and 0x0 for everything else, and only offers those two addresses. The C5's ROM wants the
   image at 0x2000 (MicroPython's own `ESP32_GENERIC_C5/board.json`, `flash_offset`), so a Thonny install boot-loops
   with `invalid header`. Mike hit it on the ESP32-C5-340X. User docs: `installing-micropython.md` (Thonny section),
-  `debugging.md` (no-boot row). Reported to Thonny by Mike, 2026-11-04.
+  `debugging.md` (no-boot row). Reported to Thonny by Mike, 2026-11-04: https://github.com/thonny/thonny/issues/3963.
   Reflashed with esptool at 0x2000 the same day: boots to `MicroPython v1.29.0 on 2026-08-24; ESP32C5 module with
   ESP32-C5`, after harmless `quad_psram ... continuing without it` lines (the C5-FH4 module has no PSRAM; the
   generic build enables quad PSRAM). FAQ entry added.
