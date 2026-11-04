@@ -2636,10 +2636,32 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#wiring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Wiring
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#behavior" class="md-nav__link">
     <span class="md-ellipsis">
       
         Behavior
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Errors
       
     </span>
   </a>
@@ -3470,10 +3492,32 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#wiring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Wiring
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#behavior" class="md-nav__link">
     <span class="md-ellipsis">
       
         Behavior
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Errors
       
     </span>
   </a>
@@ -3501,20 +3545,26 @@
 
 
 <h1 id="interrupt">interrupt</h1>
-<p>Fires immediately when a GPIO pin changes state — genuinely event-driven, not polled.</p>
+<p>Sends a message the moment a pin changes state.</p>
 <h2 id="properties">Properties</h2>
 <ul>
-<li><strong>pin</strong> — GPIO pin number. Checked against your <a href="../../boards/">board</a>.</li>
-<li><strong>edge</strong> — <code>rising</code>, <code>falling</code>, or <code>both</code>.</li>
+<li><strong>pin</strong> — the GPIO pin. Default 4.</li>
+<li><strong>edge</strong> — the change to react to: <code>rising</code>, <code>falling</code> or <code>both</code>. Default <code>rising</code>.</li>
 </ul>
+<h2 id="wiring">Wiring</h2>
+<p><strong>Input</strong> — none. <code>interrupt</code> is a source.</p>
+<p><strong>Output</strong> — a message with <code>payload</code> set to the pin's level, <code>True</code> or <code>False</code>, read when the node handles the
+change. <code>topic</code> is an empty string.</p>
 <h2 id="behavior">Behavior</h2>
-<p>The payload is the pin's level (<code>true</code>/<code>false</code>) at the moment the node wakes — a level, not a record of every
-intermediate change.</p>
-<p>No internal pull resistor is configured. Wire an external pull resistor, or use a button module with one built in.</p>
-<p>For a debounced switch or button, use <a href="../eswitch/">eswitch</a> or <a href="../ebutton/">ebutton</a> — they ignore contact bounce.
-<code>interrupt</code> is the raw edge node.</p>
-<p>Two <code>interrupt</code> nodes on the same pin must have the same edge, or the compile stops. See
-<a href="../#hardware-is-shared">Hardware is shared</a>.</p>
+<p>The pin's interrupt wakes the node, and the node reads the pin then. Changes that come faster than the flow handles
+them are collapsed into one message, so <code>payload</code> is the level at that moment, not a record of every change.</p>
+<p>The pin has no pull resistor. Wire an external one, or use a module with one built in. For a button or switch, use
+<a href="../ebutton/">ebutton</a> or <a href="../eswitch/">eswitch</a>, which ignore contact bounce and can use the pin's own pull resistor.</p>
+<h2 id="errors">Errors</h2>
+<ul>
+<li><strong>A pin the board can't use, or one another node sets up differently.</strong> Deploy stops and says why. See
+  <a href="../../boards/#what-gets-checked">What gets checked</a> and <a href="../#hardware-is-shared">Hardware is shared</a>.</li>
+</ul>
 
 
 

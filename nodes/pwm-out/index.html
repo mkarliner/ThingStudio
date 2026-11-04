@@ -2832,10 +2832,32 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#wiring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Wiring
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#behavior" class="md-nav__link">
     <span class="md-ellipsis">
       
         Behavior
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Errors
       
     </span>
   </a>
@@ -3470,10 +3492,32 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#wiring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Wiring
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#behavior" class="md-nav__link">
     <span class="md-ellipsis">
       
         Behavior
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Errors
       
     </span>
   </a>
@@ -3501,14 +3545,26 @@
 
 
 <h1 id="pwm-out">pwm out</h1>
-<p>Drives a PWM signal on a GPIO pin — for dimming an LED, driving a motor, or anything else that wants a variable duty cycle rather than a plain on/off.</p>
+<p>Drives a PWM signal on a pin, for dimming an LED, setting a motor's speed, or any other variable duty cycle.</p>
 <h2 id="properties">Properties</h2>
 <ul>
-<li><strong>pin</strong> — GPIO pin number. Checked against your <a href="../../boards/">board</a>.</li>
-<li><strong>frequency (Hz)</strong> — the PWM frequency. Default 1000Hz.</li>
+<li><strong>pin</strong> — the GPIO pin. Default 12.</li>
+<li><strong>frequency (Hz)</strong> — the PWM frequency. Default 1000. Must be 1 or more.</li>
 </ul>
+<h2 id="wiring">Wiring</h2>
+<p><strong>Input</strong> — <code>payload</code> is the duty cycle as a fraction, from <code>0.0</code> (always off) to <code>1.0</code> (always on). A value below 0
+is taken as 0 and one above 1 as 1. <code>True</code> and <code>False</code> work as 1 and 0. A string, even <code>"0.5"</code>, fails: convert it
+first, in a <a href="../function/">function</a> node. A message with no <code>payload</code> sets the duty to 0.</p>
+<p>This node has no output.</p>
 <h2 id="behavior">Behavior</h2>
-<p>The input is a duty fraction from <code>0.0</code> (always off) to <code>1.0</code> (always on). A value outside that range is clamped rather than rejected — a slightly-out-of-bounds computed value won't crash the flow.</p>
+<p>The duty cycle stays where the last message set it.</p>
+<h2 id="errors">Errors</h2>
+<ul>
+<li><strong>The payload is a string or another non-number.</strong> The console shows a <code>[NODE_ERROR]</code> naming this node. See
+  <a href="../../debugging/#reading-a-node-error">Reading a node error</a>.</li>
+<li><strong>A pin the board can't use, or one another node sets up differently.</strong> Deploy stops and says why. See
+  <a href="../../boards/#what-gets-checked">What gets checked</a> and <a href="../#hardware-is-shared">Hardware is shared</a>.</li>
+</ul>
 
 
 

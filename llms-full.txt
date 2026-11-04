@@ -1742,6 +1742,19 @@ made before any of them runs. The wires then run one after another, in the order
 shallow: a list or dict inside the message is shared, so a node that changes `msg['payload']` in place, rather than
 replacing it, changes it for the other wires too.
 
+## Typed values
+
+Some nodes take a value you type next to a type you pick: [inject](nodes/inject.md) and
+[startup](nodes/startup.md) (**payload type** and **value**), and [change](nodes/change.md) (**literal type** and
+**value / source property**). The value is read as that type:
+
+- `bool`: `true` is `True`. Anything else is `False`, including `True` and `1`.
+- `number`: a whole number becomes an `int`, any other number a `float`. An empty value is `0`.
+- `string`: sent as typed.
+
+With type `number`, a value that isn't a number stops the deploy for `change`. For `inject` and `startup` it fails on
+the board when the node fires, with a `[NODE_ERROR]`.
+
 ## Giving a node a flow label
 
 Every node has a **flow label** field at the top of its property panel. Type something, say `Fire!`, and the canvas
@@ -2698,13 +2711,8 @@ Sends one message with a fixed payload each time you click its ▶ icon while th
 
 - **payload type** — `bool`, `number` or `string`. Default `bool`. The output's type follows it, so the editor
   checks the wire against the input it feeds (see [Wiring](../working-in-the-editor.md#wiring)).
-- **value** — the value to send, read as the payload type. Default `true`.
-
-The value is read in one of three ways, by payload type:
-
-- `bool`: `true` sends `True`. Anything else sends `False`, including `True` and `1`.
-- `number`: a whole number is sent as an `int`, any other number as a `float`. An empty value sends `0`.
-- `string`: sent as typed.
+- **value** — the value to send, read as the payload type (see
+  [Typed values](../working-in-the-editor.md#typed-values)). Default `true`.
 
 ## Wiring
 
@@ -2743,8 +2751,8 @@ Sends one message with a fixed payload each time the flow starts.
 ## Properties
 
 - **payload type** — `bool`, `number`, `string` or `start reason`. Default `bool`.
-- **value** — the value to send, read as the payload type. Default `true`. Hidden with `start reason`. A `bool` is
-  true only for `true`. A whole number is sent as an `int`, and an empty `number` as `0`.
+- **value** — the value to send, read as the payload type (see
+  [Typed values](../working-in-the-editor.md#typed-values)). Default `true`. Hidden with `start reason`.
 
 ## Wiring
 
@@ -2911,7 +2919,8 @@ Sets or deletes one value, on the message or in a flow variable, then passes the
   `a literal value`.
 - **literal type** — with a literal: `string`, `number` or `bool`. Default `string`.
 - **value / source property** — with `set`: the literal, or the name of the message property or flow variable to
-  copy. Default empty. A `bool` literal is true only for `true`. An empty `number` literal is `0`.
+  copy. Default empty. A literal is read as the literal type (see
+  [Typed values](../working-in-the-editor.md#typed-values)).
 
 ## Wiring
 
@@ -3969,25 +3978,32 @@ Source: https://docs.thingstudio.net/nodes/interrupt/
 
 # interrupt
 
-Fires immediately when a GPIO pin changes state — genuinely event-driven, not polled.
+Sends a message the moment a pin changes state.
 
 ## Properties
 
-- **pin** — GPIO pin number. Checked against your [board](../boards.md).
-- **edge** — `rising`, `falling`, or `both`.
+- **pin** — the GPIO pin. Default 4.
+- **edge** — the change to react to: `rising`, `falling` or `both`. Default `rising`.
+
+## Wiring
+
+**Input** — none. `interrupt` is a source.
+
+**Output** — a message with `payload` set to the pin's level, `True` or `False`, read when the node handles the
+change. `topic` is an empty string.
 
 ## Behavior
 
-The payload is the pin's level (`true`/`false`) at the moment the node wakes — a level, not a record of every
-intermediate change.
+The pin's interrupt wakes the node, and the node reads the pin then. Changes that come faster than the flow handles
+them are collapsed into one message, so `payload` is the level at that moment, not a record of every change.
 
-No internal pull resistor is configured. Wire an external pull resistor, or use a button module with one built in.
+The pin has no pull resistor. Wire an external one, or use a module with one built in. For a button or switch, use
+[ebutton](ebutton.md) or [eswitch](eswitch.md), which ignore contact bounce and can use the pin's own pull resistor.
 
-For a debounced switch or button, use [eswitch](eswitch.md) or [ebutton](ebutton.md) — they ignore contact bounce.
-`interrupt` is the raw edge node.
+## Errors
 
-Two `interrupt` nodes on the same pin must have the same edge, or the compile stops. See
-[Hardware is shared](index.md#hardware-is-shared).
+- **A pin the board can't use, or one another node sets up differently.** Deploy stops and says why. See
+  [What gets checked](../boards.md#what-gets-checked) and [Hardware is shared](index.md#hardware-is-shared).
 
 
 ---
@@ -3996,34 +4012,33 @@ Source: https://docs.thingstudio.net/nodes/eswitch/
 
 # eswitch
 
-Reports when a debounced switch opens or closes. Polling-based, not the interrupt-driven `interrupt` node.
+Reports when a switch opens or closes, ignoring contact bounce.
 
 ## Properties
 
-- **pin** — GPIO pin number. Default 4. Checked against your [board](../boards.md).
-- **pull** — `none` (default), `up`, or `down`. Enables the board's own internal pull resistor on this pin.
-- **open level (lopen)** — which electrical level means "open": `1` (default, switch to ground, pulled up) or
-  `0` (switch to 3V3, pulled down).
-- **debounce (ms)** — how long a level must hold before it's accepted as real. Default 50ms.
+- **pin** — the GPIO pin. Default 4.
+- **pull** — the pin's own pull resistor: `none`, `up` or `down`. Default `none`, for a switch with an external
+  pull resistor or a module that has one.
+- **open level (lopen)** — the pin level that means open: `1` for a switch to ground with a pull-up, `0` for a
+  switch to 3V3 with a pull-down. Default `1`.
+- **debounce (ms)** — how long a level must hold before it counts. Default 50. Must be 1 or more.
+
+## Wiring
+
+**Input** — none. `eswitch` is a source.
+
+**Output** — a message for each change, with `payload` `True` when the switch closes and `False` when it opens, and
+`topic` an empty string. `payload` is a bool, so it can wire straight to a [gpio out](gpio-out.md) to mirror the
+switch.
 
 ## Behavior
 
-Each transition sends one message, a dict with two keys:
+The node checks the pin every **debounce** interval. It sends nothing when the flow starts, only on a change.
 
-```python
-msg = {'payload': True, 'topic': ''}
-```
+## Errors
 
-- **`payload`** — the switch state: `true` when closed, `false` when open.
-- **`topic`** — empty.
-
-`payload` is a bool, so it wires straight to `gpio out` to mirror the switch.
-
-No internal pull is enabled by default — wire an external pull resistor, use a switch module with one built in,
-or set **pull** if the switch instead relies on the board's own internal pull-up/pull-down.
-
-Two `eswitch` nodes on the same pin share one switch, so they must have the same settings, or the compile stops. See
-[Hardware is shared](index.md#hardware-is-shared).
+- **A pin the board can't use, or one another node sets up differently.** Deploy stops and says why. See
+  [What gets checked](../boards.md#what-gets-checked) and [Hardware is shared](index.md#hardware-is-shared).
 
 
 ---
@@ -4032,44 +4047,49 @@ Source: https://docs.thingstudio.net/nodes/ebutton/
 
 # ebutton
 
-Reports press, release, long-press, and double-click events from a single debounced button.
+Reports presses, releases, long presses and double clicks from one button, ignoring contact bounce.
 
 ## Properties
 
-- **pin** — GPIO pin number. Default 5. Checked against your [board](../boards.md).
-- **pull** — `none` (default), `up`, or `down`. Enables the board's own internal pull resistor on this pin.
-- **sense** — which electrical level means "pressed": `auto` (default, reads the pin's own boot state as
-  "not pressed"), `0`, or `1`.
-- **suppress** — off by default. When on, `press`/`release` are held back until it's clear the click isn't the
-  first half of a double — a plain single click still reports `press` then `release`, delayed by up to the
-  double-click window; an actual double-click reports only `double`, not `press`/`release` for the first click too.
-- **debounce (ms)** — default 50ms.
-- **long press (ms)** — how long a press must hold to count as `long`. Default 1000ms.
-- **double click (ms)** — the window a second press must land in to count as `double`. Default 400ms. Must be
-  less than long press.
+- **pin** — the GPIO pin. Default 5.
+- **pull** — the pin's own pull resistor: `none`, `up` or `down`. Default `none`, for a button with an external
+  pull resistor or a module that has one.
+- **sense** — the pin level when the button is not pressed: `auto`, `0` or `1`. Default `auto`, which takes the
+  level when the flow starts as not pressed. Set it if the button may be held down at start.
+- **suppress** — default off. When on, a click that may be the first half of a double click is held back (see
+  Behavior).
+- **debounce (ms)** — default 50. Must be 1 or more.
+- **long press (ms)** — how long a press must last to count as `long`. Default 1000.
+- **double click (ms)** — how soon a second press must follow the first to count as `double`. Default 400. Must be
+  less than **long press**.
+
+## Wiring
+
+**Input** — none. `ebutton` is a source.
+
+**Output** — a message for each event, with `payload` one of `press`, `release`, `long` or `double`, and `topic` an
+empty string.
 
 ## Behavior
 
-Each event sends one message, a dict with two keys:
+The events each action sends depend on **suppress**:
 
-```python
-msg = {'payload': 'press', 'topic': ''}
-```
+| Action | suppress off | suppress on |
+| --- | --- | --- |
+| a click | `press`, `release` | `press` and `release` together, after **double click** has passed |
+| a double click | `press`, `release`, then `press` and `double` together, then `release` | `double`, `release` |
+| a long press | `press`, `long`, `release` | `long`, `release` |
 
-- **`payload`** — the event that fired: `press`, `release`, `long` or `double`.
-- **`topic`** — empty.
+With suppress off, every press is reported at once. With it on, a click arrives later but never as part of a double
+click or a long press, and a press held longer than **double click** but released before **long press** sends only
+`release`.
 
-With `suppress` off (the default), a press always reports immediately, whether or not a second press follows —
-so a rapid double-click reports both a `press` and a `double`, not `double` alone. Turn `suppress` on if a plain
-single press should never be reported when it turns out to be part of a double-click.
+## Errors
 
-No internal pull is enabled by default — wire an external pull resistor, use a button module with one built in,
-or set **pull** if the button instead relies on the board's own internal pull-up/pull-down (a common case for
-boards with buttons wired straight to a GPIO with no resistor of their own — e.g. most of an EMF 2022 TiDAL
-badge's buttons).
-
-Two `ebutton` nodes on the same pin share one button, so they must have the same settings, or the compile stops. See
-[Hardware is shared](index.md#hardware-is-shared).
+- **double click is not less than long press.** Deploy stops with `property "doubleClickMs" 1000 must be less than
+  longPressMs (1000)`, naming the node.
+- **A pin the board can't use, or one another node sets up differently.** Deploy stops and says why. See
+  [What gets checked](../boards.md#what-gets-checked) and [Hardware is shared](index.md#hardware-is-shared).
 
 
 ---
@@ -4078,37 +4098,53 @@ Source: https://docs.thingstudio.net/nodes/adc/
 
 # adc
 
-Reads an ADC pin and sends a message when the reading moves outside (or back inside) the set bounds, and on a poll
-interval if one is set. Pin numbers are checked against your [board](../boards.md).
+Reads an analog pin, and sends the reading when it moves past the set bounds, and at a fixed interval if one is set.
 
 ## Properties
 
-- **pin** — the ADC pin. On ESP32 an ADC2 pin can't be used while WiFi is up, so Deploy refuses one when the flow
-  also uses the network.
-- **mode** — `relative` (the reading moved by **delta** since the last message) or `absolute` (**lower**..**upper**).
-- **delta** — for `relative`. The smallest change that sends a message.
-- **lower** / **upper** — for `absolute`.
-- **sense** — `outside` (send when the reading leaves the bounds) or `inside` (send when it returns to them).
-- **poll (ms)** — also send at least this often; `0` sends only on a bounds crossing.
+- **pin** — the ADC pin. Default 34.
+- **mode** — what counts as a change. Default `relative`.
+    - `relative` — the reading has moved more than **delta** from the last one sent.
+    - `absolute` — the reading is outside **lower** to **upper**.
+- **delta (counts)** — for `relative`. Default 2000. Must be 1 or more.
+- **lower** / **upper** — for `absolute`, in counts from 0 to 65535. Defaults 0 and 50000. **lower** must be less
+  than **upper**.
+- **sense** — `outside` to send when the reading is outside the bounds, `inside` to send when it is back inside them.
+  Default `outside`.
+- **poll (ms)** — also send the reading at least this often. Default 0, which sends only on a change.
 
 ## Wiring
 
-**Output** — one reading:
+**Input** — none. `adc` is a source.
+
+**Output** — a message with `payload` a dict, and `topic` an empty string:
 
 ```python
-msg = {'payload': {'raw': 0, 'volts': 0.0, 'percent': 0.0}, 'topic': ''}
+{'raw': 31250, 'volts': 1.572, 'percent': 47.7}
 ```
 
-`raw` is the 16-bit reading (0–65535), `volts` the pin voltage, and `percent` 0–100 of the full range.
+`raw` is the reading, 0 to 65535. `volts` is the pin voltage, to 3 decimal places; on a board that can't measure it,
+it is worked out as `raw` over 65535 times 3.3 V. `percent` is `raw` as a percentage of 65535, to 1 decimal place.
 
 ## Behavior
 
-The reading is noisy, so `relative` mode with a few thousand counts is the common setup; `absolute` suits an alarm
-or a threshold. With `inside`, a message arrives when the reading comes back within the bounds, so a flow can see
-both leaving and returning.
+A raw reading is noisy, so `relative` with a delta of a few thousand counts suits most sensors. `absolute` suits an
+alarm or a threshold.
 
-Two `adc` nodes on the same pin share one channel, so they must have the same settings, or the compile stops. See
-[Hardware is shared](index.md#hardware-is-shared).
+In `absolute` mode the node sends for as long as the reading stays on the **sense** side of the bounds, not once
+when it crosses: an `outside` node whose reading stays outside keeps sending. To get one message per crossing, follow
+it with a [filter](filter.md), or use `relative`.
+
+## Errors
+
+- **The pin can't be read.** The node's status dot turns red with the error, and the reading is dropped. See
+  [Node status](../working-in-the-editor.md#node-status).
+- **An ESP32 ADC2 pin in a flow that uses WiFi.** Deploy stops: ADC2 can't be read while WiFi is on. Use an ADC1
+  pin.
+- **lower is not less than upper**, in `absolute` mode. Deploy stops with `adc lower (100) must be less than upper
+  (50)`.
+- **A pin the board can't use, or one another node sets up differently.** Deploy stops and says why. See
+  [What gets checked](../boards.md#what-gets-checked) and [Hardware is shared](index.md#hardware-is-shared).
 
 
 ---
@@ -4117,30 +4153,43 @@ Source: https://docs.thingstudio.net/nodes/encoder/
 
 # encoder
 
-Reads a quadrature encoder (a rotary knob) and sends its value each time it turns. Pin numbers are checked against
-your [board](../boards.md).
+Reads a rotary encoder (a quadrature knob) and sends its value each time it turns.
 
 ## Properties
 
-- **pin x / pin y** — the encoder's two switch pins, read with internal pull-ups.
-- **divide by (div)** — the pulses in one detent: `4` or `2` for a mechanical knob's clicks, `1` for every pulse.
-- **start value** — the value it starts from.
-- **lowest / highest** — optional limits; the value stops at them (blank for none).
-- **wrap at (mod)** — optional: the value counts `0` to `mod - 1` and wraps (blank for none).
-- **settle (ms)** — how long to wait for motion to stop; also the shortest gap between messages.
+- **pin x** / **pin y** — the encoder's two switch pins. Defaults 10 and 11. Both are read with the pins' own
+  pull-ups. If the value counts the wrong way, swap them.
+- **divide by (div)** — pulses per step of the value: `4` or `2` for a knob that clicks, so one click is one step;
+  `1` counts every pulse. Default 1.
+- **start value** — the value when the flow starts. Default 0.
+- **lowest (blank for none)** / **highest (blank for none)** — whole numbers the value stops at. Default blank.
+- **wrap at (blank for none)** — a whole number: the value counts from `0` to one less than it, then wraps. Default
+  blank.
+- **settle (ms)** — how long to wait after the knob moves before sending the value. Default 100. Must be 0 or
+  more.
+
+The value is divided first, then held within lowest and highest, then wrapped.
 
 ## Wiring
 
-**Output** — the value, with the change since the last message:
+**Input** — none. `encoder` is a source.
 
-```python
-msg = {'payload': 0, 'topic': '', 'delta': 0}
-```
+**Output** — a message with `payload` set to the value, `delta` set to how far it moved since the last message
+(negative when it went down), and `topic` an empty string.
 
-`payload` is the current value; `delta` is how far it moved, positive or negative.
+## Behavior
 
-Two `encoder` nodes on the same pins share one encoder, so they must have the same settings, or the compile stops.
-See [Hardware is shared](index.md#hardware-is-shared).
+When the knob moves, the node waits **settle**, then sends the value it has reached. A fast turn gives about one
+message per **settle**, not one per pulse. A turn that ends where it started sends nothing.
+
+## Errors
+
+- **start value is below lowest or above highest.** The board reports `Incompatible args: must have vmin <= v <=
+  vmax` when the flow starts.
+- **lowest, highest or wrap at isn't a whole number.** Deploy stops with `property "vmin" "x" must be a whole number
+  (decimal or 0x hex)`, naming the node.
+- **A pin the board can't use, or one another node sets up differently.** Deploy stops and says why. See
+  [What gets checked](../boards.md#what-gets-checked) and [Hardware is shared](index.md#hardware-is-shared).
 
 
 ---
@@ -4149,34 +4198,41 @@ Source: https://docs.thingstudio.net/nodes/neopixel/
 
 # neopixel
 
-Drives a WS2812 / NeoPixel strip: sets the pixels from each message and writes. Uses MicroPython's built-in
-`neopixel` module. Pin numbers are checked against your [board](../boards.md).
+Lights a WS2812 (NeoPixel) strip: sets its pixels from each message, then writes the strip.
 
 ## Properties
 
-- **pin** — the strip's data pin.
-- **count** — how many pixels.
-- **order** — the wire colour order of your strip: `GRB` (most WS2812), `RGB`, `RGBW` or `GRBW`.
+- **pin** — the strip's data pin. Default 13.
+- **count** — how many pixels the strip has. Default 8. Must be 1 or more.
+- **order** — the color order of your strip: `GRB`, `RGB`, `RGBW` or `GRBW`. Default `GRB`, which most WS2812
+  strips use. The `W` orders are for strips with a white channel.
 
 ## Wiring
 
-**Input** — a colour, or a set of them:
+**Input** — `payload` in one of three forms:
 
 ```python
-msg = {'payload': 0xff4400, 'topic': ''}                         # the whole strip
-msg = {'payload': [0xff0000, 0x00ff00, 0x0000ff], 'topic': ''}   # one colour per pixel
-msg = {'payload': {'index': 2, 'colour': 0x00ff00}, 'topic': ''} # one pixel
+msg['payload'] = 0xff4400                            # one color for the whole strip
+msg['payload'] = [0xff0000, 0x00ff00, 0x0000ff]      # one color per pixel, from the first
+msg['payload'] = {'index': 2, 'colour': 0x00ff00}    # one pixel; 'color' works too
 ```
 
-A colour is a 24-bit `0xRRGGBB` (red, green, blue, 0–255 each). An `RGBW` or `GRBW` strip takes a 32-bit
-`0xWWRRGGBB` for the white channel; a plain `0xRRGGBB` leaves white off.
+A color is `0xRRGGBB`, 0 to 255 for each of red, green and blue. A strip with a white channel takes
+`0xWWRRGGBB`; a plain `0xRRGGBB` leaves white off. A list shorter than the strip leaves the other pixels as they
+were; one longer than the strip is cut off.
+
+This node has no output.
 
 ## Behavior
 
-The whole strip is written on every message, so the last message sets the colours. The node has no output.
+Each message sets the pixels it names and writes the whole strip. Pixels a message doesn't name keep their color.
 
-Two `neopixel` nodes on the same pin share one strip, so they must have the same count and order, or the compile
-stops. See [Hardware is shared](index.md#hardware-is-shared).
+## Errors
+
+- **A payload that isn't a color**, or an index past the end of the strip. The node's status dot turns red with the
+  error, and nothing is written. See [Node status](../working-in-the-editor.md#node-status).
+- **A pin the board can't use, or one another node sets up differently.** Deploy stops and says why. See
+  [What gets checked](../boards.md#what-gets-checked) and [Hardware is shared](index.md#hardware-is-shared).
 
 
 ---
@@ -4185,16 +4241,29 @@ Source: https://docs.thingstudio.net/nodes/gpio-out/
 
 # gpio out
 
-Drives a GPIO pin high or low based on an incoming message.
+Sets a pin high or low from each message.
 
 ## Properties
 
-- **pin** — GPIO pin number. Checked against your [board](../boards.md).
+- **pin** — the GPIO pin. Default 12.
+
+## Wiring
+
+**Input** — `payload`, read with Python's `bool()`: a true value sets the pin high, a false one (`False`, `0`,
+`""`, `None`, an empty list) sets it low. A message with no `payload` sets it low. The input is type `bool`, so any
+output can wire to it.
+
+This node has no output.
 
 ## Behavior
 
-A truthy `payload` sets the pin high, a falsy one sets it low, using Python's own truth test. `0`, `""`, `None` and
-`False` are low; a `bool` input works as you'd expect, and other types convert to one of the two.
+The pin stays where the last message set it. It is set up as an output when the flow starts, before any message
+arrives.
+
+## Errors
+
+- **A pin the board can't use, or one another node sets up differently.** Deploy stops and says why. See
+  [What gets checked](../boards.md#what-gets-checked) and [Hardware is shared](index.md#hardware-is-shared).
 
 
 ---
@@ -4203,16 +4272,31 @@ Source: https://docs.thingstudio.net/nodes/pwm-out/
 
 # pwm out
 
-Drives a PWM signal on a GPIO pin — for dimming an LED, driving a motor, or anything else that wants a variable duty cycle rather than a plain on/off.
+Drives a PWM signal on a pin, for dimming an LED, setting a motor's speed, or any other variable duty cycle.
 
 ## Properties
 
-- **pin** — GPIO pin number. Checked against your [board](../boards.md).
-- **frequency (Hz)** — the PWM frequency. Default 1000Hz.
+- **pin** — the GPIO pin. Default 12.
+- **frequency (Hz)** — the PWM frequency. Default 1000. Must be 1 or more.
+
+## Wiring
+
+**Input** — `payload` is the duty cycle as a fraction, from `0.0` (always off) to `1.0` (always on). A value below 0
+is taken as 0 and one above 1 as 1. `True` and `False` work as 1 and 0. A string, even `"0.5"`, fails: convert it
+first, in a [function](function.md) node. A message with no `payload` sets the duty to 0.
+
+This node has no output.
 
 ## Behavior
 
-The input is a duty fraction from `0.0` (always off) to `1.0` (always on). A value outside that range is clamped rather than rejected — a slightly-out-of-bounds computed value won't crash the flow.
+The duty cycle stays where the last message set it.
+
+## Errors
+
+- **The payload is a string or another non-number.** The console shows a `[NODE_ERROR]` naming this node. See
+  [Reading a node error](../debugging.md#reading-a-node-error).
+- **A pin the board can't use, or one another node sets up differently.** Deploy stops and says why. See
+  [What gets checked](../boards.md#what-gets-checked) and [Hardware is shared](index.md#hardware-is-shared).
 
 
 ---

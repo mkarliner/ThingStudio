@@ -2664,10 +2664,32 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#wiring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Wiring
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#behavior" class="md-nav__link">
     <span class="md-ellipsis">
       
         Behavior
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Errors
       
     </span>
   </a>
@@ -3470,10 +3492,32 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#wiring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Wiring
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#behavior" class="md-nav__link">
     <span class="md-ellipsis">
       
         Behavior
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Errors
       
     </span>
   </a>
@@ -3501,28 +3545,28 @@
 
 
 <h1 id="eswitch">eswitch</h1>
-<p>Reports when a debounced switch opens or closes. Polling-based, not the interrupt-driven <code>interrupt</code> node.</p>
+<p>Reports when a switch opens or closes, ignoring contact bounce.</p>
 <h2 id="properties">Properties</h2>
 <ul>
-<li><strong>pin</strong> — GPIO pin number. Default 4. Checked against your <a href="../../boards/">board</a>.</li>
-<li><strong>pull</strong> — <code>none</code> (default), <code>up</code>, or <code>down</code>. Enables the board's own internal pull resistor on this pin.</li>
-<li><strong>open level (lopen)</strong> — which electrical level means "open": <code>1</code> (default, switch to ground, pulled up) or
-  <code>0</code> (switch to 3V3, pulled down).</li>
-<li><strong>debounce (ms)</strong> — how long a level must hold before it's accepted as real. Default 50ms.</li>
+<li><strong>pin</strong> — the GPIO pin. Default 4.</li>
+<li><strong>pull</strong> — the pin's own pull resistor: <code>none</code>, <code>up</code> or <code>down</code>. Default <code>none</code>, for a switch with an external
+  pull resistor or a module that has one.</li>
+<li><strong>open level (lopen)</strong> — the pin level that means open: <code>1</code> for a switch to ground with a pull-up, <code>0</code> for a
+  switch to 3V3 with a pull-down. Default <code>1</code>.</li>
+<li><strong>debounce (ms)</strong> — how long a level must hold before it counts. Default 50. Must be 1 or more.</li>
 </ul>
+<h2 id="wiring">Wiring</h2>
+<p><strong>Input</strong> — none. <code>eswitch</code> is a source.</p>
+<p><strong>Output</strong> — a message for each change, with <code>payload</code> <code>True</code> when the switch closes and <code>False</code> when it opens, and
+<code>topic</code> an empty string. <code>payload</code> is a bool, so it can wire straight to a <a href="../gpio-out/">gpio out</a> to mirror the
+switch.</p>
 <h2 id="behavior">Behavior</h2>
-<p>Each transition sends one message, a dict with two keys:</p>
-<div class="highlight"><pre><span></span><code><span class="n">msg</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'payload'</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s1">'topic'</span><span class="p">:</span> <span class="s1">''</span><span class="p">}</span>
-</code></pre></div>
+<p>The node checks the pin every <strong>debounce</strong> interval. It sends nothing when the flow starts, only on a change.</p>
+<h2 id="errors">Errors</h2>
 <ul>
-<li><strong><code>payload</code></strong> — the switch state: <code>true</code> when closed, <code>false</code> when open.</li>
-<li><strong><code>topic</code></strong> — empty.</li>
+<li><strong>A pin the board can't use, or one another node sets up differently.</strong> Deploy stops and says why. See
+  <a href="../../boards/#what-gets-checked">What gets checked</a> and <a href="../#hardware-is-shared">Hardware is shared</a>.</li>
 </ul>
-<p><code>payload</code> is a bool, so it wires straight to <code>gpio out</code> to mirror the switch.</p>
-<p>No internal pull is enabled by default — wire an external pull resistor, use a switch module with one built in,
-or set <strong>pull</strong> if the switch instead relies on the board's own internal pull-up/pull-down.</p>
-<p>Two <code>eswitch</code> nodes on the same pin share one switch, so they must have the same settings, or the compile stops. See
-<a href="../#hardware-is-shared">Hardware is shared</a>.</p>
 
 
 

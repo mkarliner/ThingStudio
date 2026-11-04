@@ -2741,6 +2741,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Errors
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -3502,6 +3513,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Errors
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -3523,29 +3545,46 @@
 
 
 <h1 id="adc">adc</h1>
-<p>Reads an ADC pin and sends a message when the reading moves outside (or back inside) the set bounds, and on a poll
-interval if one is set. Pin numbers are checked against your <a href="../../boards/">board</a>.</p>
+<p>Reads an analog pin, and sends the reading when it moves past the set bounds, and at a fixed interval if one is set.</p>
 <h2 id="properties">Properties</h2>
 <ul>
-<li><strong>pin</strong> — the ADC pin. On ESP32 an ADC2 pin can't be used while WiFi is up, so Deploy refuses one when the flow
-  also uses the network.</li>
-<li><strong>mode</strong> — <code>relative</code> (the reading moved by <strong>delta</strong> since the last message) or <code>absolute</code> (<strong>lower</strong>..<strong>upper</strong>).</li>
-<li><strong>delta</strong> — for <code>relative</code>. The smallest change that sends a message.</li>
-<li><strong>lower</strong> / <strong>upper</strong> — for <code>absolute</code>.</li>
-<li><strong>sense</strong> — <code>outside</code> (send when the reading leaves the bounds) or <code>inside</code> (send when it returns to them).</li>
-<li><strong>poll (ms)</strong> — also send at least this often; <code>0</code> sends only on a bounds crossing.</li>
+<li><strong>pin</strong> — the ADC pin. Default 34.</li>
+<li><strong>mode</strong> — what counts as a change. Default <code>relative</code>.<ul>
+<li><code>relative</code> — the reading has moved more than <strong>delta</strong> from the last one sent.</li>
+<li><code>absolute</code> — the reading is outside <strong>lower</strong> to <strong>upper</strong>.</li>
+</ul>
+</li>
+<li><strong>delta (counts)</strong> — for <code>relative</code>. Default 2000. Must be 1 or more.</li>
+<li><strong>lower</strong> / <strong>upper</strong> — for <code>absolute</code>, in counts from 0 to 65535. Defaults 0 and 50000. <strong>lower</strong> must be less
+  than <strong>upper</strong>.</li>
+<li><strong>sense</strong> — <code>outside</code> to send when the reading is outside the bounds, <code>inside</code> to send when it is back inside them.
+  Default <code>outside</code>.</li>
+<li><strong>poll (ms)</strong> — also send the reading at least this often. Default 0, which sends only on a change.</li>
 </ul>
 <h2 id="wiring">Wiring</h2>
-<p><strong>Output</strong> — one reading:</p>
-<div class="highlight"><pre><span></span><code><span class="n">msg</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'payload'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'raw'</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">'volts'</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span> <span class="s1">'percent'</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">},</span> <span class="s1">'topic'</span><span class="p">:</span> <span class="s1">''</span><span class="p">}</span>
+<p><strong>Input</strong> — none. <code>adc</code> is a source.</p>
+<p><strong>Output</strong> — a message with <code>payload</code> a dict, and <code>topic</code> an empty string:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="s1">'raw'</span><span class="p">:</span> <span class="mi">31250</span><span class="p">,</span> <span class="s1">'volts'</span><span class="p">:</span> <span class="mf">1.572</span><span class="p">,</span> <span class="s1">'percent'</span><span class="p">:</span> <span class="mf">47.7</span><span class="p">}</span>
 </code></pre></div>
-<p><code>raw</code> is the 16-bit reading (0–65535), <code>volts</code> the pin voltage, and <code>percent</code> 0–100 of the full range.</p>
+<p><code>raw</code> is the reading, 0 to 65535. <code>volts</code> is the pin voltage, to 3 decimal places; on a board that can't measure it,
+it is worked out as <code>raw</code> over 65535 times 3.3 V. <code>percent</code> is <code>raw</code> as a percentage of 65535, to 1 decimal place.</p>
 <h2 id="behavior">Behavior</h2>
-<p>The reading is noisy, so <code>relative</code> mode with a few thousand counts is the common setup; <code>absolute</code> suits an alarm
-or a threshold. With <code>inside</code>, a message arrives when the reading comes back within the bounds, so a flow can see
-both leaving and returning.</p>
-<p>Two <code>adc</code> nodes on the same pin share one channel, so they must have the same settings, or the compile stops. See
-<a href="../#hardware-is-shared">Hardware is shared</a>.</p>
+<p>A raw reading is noisy, so <code>relative</code> with a delta of a few thousand counts suits most sensors. <code>absolute</code> suits an
+alarm or a threshold.</p>
+<p>In <code>absolute</code> mode the node sends for as long as the reading stays on the <strong>sense</strong> side of the bounds, not once
+when it crosses: an <code>outside</code> node whose reading stays outside keeps sending. To get one message per crossing, follow
+it with a <a href="../filter/">filter</a>, or use <code>relative</code>.</p>
+<h2 id="errors">Errors</h2>
+<ul>
+<li><strong>The pin can't be read.</strong> The node's status dot turns red with the error, and the reading is dropped. See
+  <a href="../../working-in-the-editor/#node-status">Node status</a>.</li>
+<li><strong>An ESP32 ADC2 pin in a flow that uses WiFi.</strong> Deploy stops: ADC2 can't be read while WiFi is on. Use an ADC1
+  pin.</li>
+<li><strong>lower is not less than upper</strong>, in <code>absolute</code> mode. Deploy stops with <code>adc lower (100) must be less than upper
+  (50)</code>.</li>
+<li><strong>A pin the board can't use, or one another node sets up differently.</strong> Deploy stops and says why. See
+  <a href="../../boards/#what-gets-checked">What gets checked</a> and <a href="../#hardware-is-shared">Hardware is shared</a>.</li>
+</ul>
 
 
 

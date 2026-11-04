@@ -2797,6 +2797,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Errors
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -3502,6 +3513,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Errors
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -3523,26 +3545,33 @@
 
 
 <h1 id="neopixel">neopixel</h1>
-<p>Drives a WS2812 / NeoPixel strip: sets the pixels from each message and writes. Uses MicroPython's built-in
-<code>neopixel</code> module. Pin numbers are checked against your <a href="../../boards/">board</a>.</p>
+<p>Lights a WS2812 (NeoPixel) strip: sets its pixels from each message, then writes the strip.</p>
 <h2 id="properties">Properties</h2>
 <ul>
-<li><strong>pin</strong> — the strip's data pin.</li>
-<li><strong>count</strong> — how many pixels.</li>
-<li><strong>order</strong> — the wire colour order of your strip: <code>GRB</code> (most WS2812), <code>RGB</code>, <code>RGBW</code> or <code>GRBW</code>.</li>
+<li><strong>pin</strong> — the strip's data pin. Default 13.</li>
+<li><strong>count</strong> — how many pixels the strip has. Default 8. Must be 1 or more.</li>
+<li><strong>order</strong> — the color order of your strip: <code>GRB</code>, <code>RGB</code>, <code>RGBW</code> or <code>GRBW</code>. Default <code>GRB</code>, which most WS2812
+  strips use. The <code>W</code> orders are for strips with a white channel.</li>
 </ul>
 <h2 id="wiring">Wiring</h2>
-<p><strong>Input</strong> — a colour, or a set of them:</p>
-<div class="highlight"><pre><span></span><code><span class="n">msg</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'payload'</span><span class="p">:</span> <span class="mh">0xff4400</span><span class="p">,</span> <span class="s1">'topic'</span><span class="p">:</span> <span class="s1">''</span><span class="p">}</span>                         <span class="c1"># the whole strip</span>
-<span class="n">msg</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'payload'</span><span class="p">:</span> <span class="p">[</span><span class="mh">0xff0000</span><span class="p">,</span> <span class="mh">0x00ff00</span><span class="p">,</span> <span class="mh">0x0000ff</span><span class="p">],</span> <span class="s1">'topic'</span><span class="p">:</span> <span class="s1">''</span><span class="p">}</span>   <span class="c1"># one colour per pixel</span>
-<span class="n">msg</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'payload'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'index'</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">'colour'</span><span class="p">:</span> <span class="mh">0x00ff00</span><span class="p">},</span> <span class="s1">'topic'</span><span class="p">:</span> <span class="s1">''</span><span class="p">}</span> <span class="c1"># one pixel</span>
+<p><strong>Input</strong> — <code>payload</code> in one of three forms:</p>
+<div class="highlight"><pre><span></span><code><span class="n">msg</span><span class="p">[</span><span class="s1">'payload'</span><span class="p">]</span> <span class="o">=</span> <span class="mh">0xff4400</span>                            <span class="c1"># one color for the whole strip</span>
+<span class="n">msg</span><span class="p">[</span><span class="s1">'payload'</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mh">0xff0000</span><span class="p">,</span> <span class="mh">0x00ff00</span><span class="p">,</span> <span class="mh">0x0000ff</span><span class="p">]</span>      <span class="c1"># one color per pixel, from the first</span>
+<span class="n">msg</span><span class="p">[</span><span class="s1">'payload'</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'index'</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">'colour'</span><span class="p">:</span> <span class="mh">0x00ff00</span><span class="p">}</span>    <span class="c1"># one pixel; 'color' works too</span>
 </code></pre></div>
-<p>A colour is a 24-bit <code>0xRRGGBB</code> (red, green, blue, 0–255 each). An <code>RGBW</code> or <code>GRBW</code> strip takes a 32-bit
-<code>0xWWRRGGBB</code> for the white channel; a plain <code>0xRRGGBB</code> leaves white off.</p>
+<p>A color is <code>0xRRGGBB</code>, 0 to 255 for each of red, green and blue. A strip with a white channel takes
+<code>0xWWRRGGBB</code>; a plain <code>0xRRGGBB</code> leaves white off. A list shorter than the strip leaves the other pixels as they
+were; one longer than the strip is cut off.</p>
+<p>This node has no output.</p>
 <h2 id="behavior">Behavior</h2>
-<p>The whole strip is written on every message, so the last message sets the colours. The node has no output.</p>
-<p>Two <code>neopixel</code> nodes on the same pin share one strip, so they must have the same count and order, or the compile
-stops. See <a href="../#hardware-is-shared">Hardware is shared</a>.</p>
+<p>Each message sets the pixels it names and writes the whole strip. Pixels a message doesn't name keep their color.</p>
+<h2 id="errors">Errors</h2>
+<ul>
+<li><strong>A payload that isn't a color</strong>, or an index past the end of the strip. The node's status dot turns red with the
+  error, and nothing is written. See <a href="../../working-in-the-editor/#node-status">Node status</a>.</li>
+<li><strong>A pin the board can't use, or one another node sets up differently.</strong> Deploy stops and says why. See
+  <a href="../../boards/#what-gets-checked">What gets checked</a> and <a href="../#hardware-is-shared">Hardware is shared</a>.</li>
+</ul>
 
 
 

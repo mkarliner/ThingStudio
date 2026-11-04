@@ -2804,10 +2804,32 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#wiring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Wiring
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#behavior" class="md-nav__link">
     <span class="md-ellipsis">
       
         Behavior
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Errors
       
     </span>
   </a>
@@ -3470,10 +3492,32 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#wiring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Wiring
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#behavior" class="md-nav__link">
     <span class="md-ellipsis">
       
         Behavior
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Errors
       
     </span>
   </a>
@@ -3501,14 +3545,24 @@
 
 
 <h1 id="gpio-out">gpio out</h1>
-<p>Drives a GPIO pin high or low based on an incoming message.</p>
+<p>Sets a pin high or low from each message.</p>
 <h2 id="properties">Properties</h2>
 <ul>
-<li><strong>pin</strong> — GPIO pin number. Checked against your <a href="../../boards/">board</a>.</li>
+<li><strong>pin</strong> — the GPIO pin. Default 12.</li>
 </ul>
+<h2 id="wiring">Wiring</h2>
+<p><strong>Input</strong> — <code>payload</code>, read with Python's <code>bool()</code>: a true value sets the pin high, a false one (<code>False</code>, <code>0</code>,
+<code>""</code>, <code>None</code>, an empty list) sets it low. A message with no <code>payload</code> sets it low. The input is type <code>bool</code>, so any
+output can wire to it.</p>
+<p>This node has no output.</p>
 <h2 id="behavior">Behavior</h2>
-<p>A truthy <code>payload</code> sets the pin high, a falsy one sets it low, using Python's own truth test. <code>0</code>, <code>""</code>, <code>None</code> and
-<code>False</code> are low; a <code>bool</code> input works as you'd expect, and other types convert to one of the two.</p>
+<p>The pin stays where the last message set it. It is set up as an output when the flow starts, before any message
+arrives.</p>
+<h2 id="errors">Errors</h2>
+<ul>
+<li><strong>A pin the board can't use, or one another node sets up differently.</strong> Deploy stops and says why. See
+  <a href="../../boards/#what-gets-checked">What gets checked</a> and <a href="../#hardware-is-shared">Hardware is shared</a>.</li>
+</ul>
 
 
 

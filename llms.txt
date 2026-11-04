@@ -97,14 +97,14 @@
 
 ## Hardware
 
-- [interrupt](https://docs.thingstudio.net/nodes/interrupt/): Fires immediately when a GPIO pin changes state — genuinely event-driven, not polled.
-- [eswitch](https://docs.thingstudio.net/nodes/eswitch/): Reports when a debounced switch opens or closes.
-- [ebutton](https://docs.thingstudio.net/nodes/ebutton/): Reports press, release, long-press, and double-click events from a single debounced button.
-- [adc](https://docs.thingstudio.net/nodes/adc/): Reads an ADC pin and sends a message when the reading moves outside (or back inside) the set bounds, and on a poll interval if one is set.
-- [encoder](https://docs.thingstudio.net/nodes/encoder/): Reads a quadrature encoder (a rotary knob) and sends its value each time it turns.
-- [neopixel](https://docs.thingstudio.net/nodes/neopixel/): Drives a WS2812 / NeoPixel strip: sets the pixels from each message and writes.
-- [gpio out](https://docs.thingstudio.net/nodes/gpio-out/): Drives a GPIO pin high or low based on an incoming message.
-- [pwm out](https://docs.thingstudio.net/nodes/pwm-out/): Drives a PWM signal on a GPIO pin — for dimming an LED, driving a motor, or anything else that wants a variable duty cycle rather than a plain on/off.
+- [interrupt](https://docs.thingstudio.net/nodes/interrupt/): Sends a message the moment a pin changes state.
+- [eswitch](https://docs.thingstudio.net/nodes/eswitch/): Reports when a switch opens or closes, ignoring contact bounce.
+- [ebutton](https://docs.thingstudio.net/nodes/ebutton/): Reports presses, releases, long presses and double clicks from one button, ignoring contact bounce.
+- [adc](https://docs.thingstudio.net/nodes/adc/): Reads an analog pin, and sends the reading when it moves past the set bounds, and at a fixed interval if one is set.
+- [encoder](https://docs.thingstudio.net/nodes/encoder/): Reads a rotary encoder (a quadrature knob) and sends its value each time it turns.
+- [neopixel](https://docs.thingstudio.net/nodes/neopixel/): Lights a WS2812 (NeoPixel) strip: sets its pixels from each message, then writes the strip.
+- [gpio out](https://docs.thingstudio.net/nodes/gpio-out/): Sets a pin high or low from each message.
+- [pwm out](https://docs.thingstudio.net/nodes/pwm-out/): Drives a PWM signal on a pin, for dimming an LED, setting a motor's speed, or any other variable duty cycle.
 - [display spi](https://docs.thingstudio.net/nodes/display-spi/): Pushes an already-rendered frame to an SPI color TFT panel.
 - [display i2c](https://docs.thingstudio.net/nodes/display-i2c/): Pushes an already-rendered frame to an I2C mono OLED panel.
 - [bme280](https://docs.thingstudio.net/nodes/bme280/): Reads a BME280 or BMP280 temperature, humidity and pressure sensor at a fixed interval.

@@ -1204,6 +1204,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#typed-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Typed values
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#giving-a-node-a-flow-label" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3512,6 +3523,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#typed-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Typed values
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#giving-a-node-a-flow-label" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3633,6 +3655,17 @@ on. An output can feed any number of inputs.</p>
 made before any of them runs. The wires then run one after another, in the order they were drawn. The copy is
 shallow: a list or dict inside the message is shared, so a node that changes <code>msg['payload']</code> in place, rather than
 replacing it, changes it for the other wires too.</p>
+<h2 id="typed-values">Typed values</h2>
+<p>Some nodes take a value you type next to a type you pick: <a href="../nodes/inject/">inject</a> and
+<a href="../nodes/startup/">startup</a> (<strong>payload type</strong> and <strong>value</strong>), and <a href="../nodes/change/">change</a> (<strong>literal type</strong> and
+<strong>value / source property</strong>). The value is read as that type:</p>
+<ul>
+<li><code>bool</code>: <code>true</code> is <code>True</code>. Anything else is <code>False</code>, including <code>True</code> and <code>1</code>.</li>
+<li><code>number</code>: a whole number becomes an <code>int</code>, any other number a <code>float</code>. An empty value is <code>0</code>.</li>
+<li><code>string</code>: sent as typed.</li>
+</ul>
+<p>With type <code>number</code>, a value that isn't a number stops the deploy for <code>change</code>. For <code>inject</code> and <code>startup</code> it fails on
+the board when the node fires, with a <code>[NODE_ERROR]</code>.</p>
 <h2 id="giving-a-node-a-flow-label">Giving a node a flow label</h2>
 <p>Every node has a <strong>flow label</strong> field at the top of its property panel. Type something, say <code>Fire!</code>, and the canvas
 shows it instead of the node's name. Leave it blank to show the name again. Console messages and errors that name

@@ -2692,10 +2692,32 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#wiring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Wiring
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#behavior" class="md-nav__link">
     <span class="md-ellipsis">
       
         Behavior
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Errors
       
     </span>
   </a>
@@ -3470,10 +3492,32 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#wiring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Wiring
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#behavior" class="md-nav__link">
     <span class="md-ellipsis">
       
         Behavior
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Errors
       
     </span>
   </a>
@@ -3501,38 +3545,63 @@
 
 
 <h1 id="ebutton">ebutton</h1>
-<p>Reports press, release, long-press, and double-click events from a single debounced button.</p>
+<p>Reports presses, releases, long presses and double clicks from one button, ignoring contact bounce.</p>
 <h2 id="properties">Properties</h2>
 <ul>
-<li><strong>pin</strong> — GPIO pin number. Default 5. Checked against your <a href="../../boards/">board</a>.</li>
-<li><strong>pull</strong> — <code>none</code> (default), <code>up</code>, or <code>down</code>. Enables the board's own internal pull resistor on this pin.</li>
-<li><strong>sense</strong> — which electrical level means "pressed": <code>auto</code> (default, reads the pin's own boot state as
-  "not pressed"), <code>0</code>, or <code>1</code>.</li>
-<li><strong>suppress</strong> — off by default. When on, <code>press</code>/<code>release</code> are held back until it's clear the click isn't the
-  first half of a double — a plain single click still reports <code>press</code> then <code>release</code>, delayed by up to the
-  double-click window; an actual double-click reports only <code>double</code>, not <code>press</code>/<code>release</code> for the first click too.</li>
-<li><strong>debounce (ms)</strong> — default 50ms.</li>
-<li><strong>long press (ms)</strong> — how long a press must hold to count as <code>long</code>. Default 1000ms.</li>
-<li><strong>double click (ms)</strong> — the window a second press must land in to count as <code>double</code>. Default 400ms. Must be
-  less than long press.</li>
+<li><strong>pin</strong> — the GPIO pin. Default 5.</li>
+<li><strong>pull</strong> — the pin's own pull resistor: <code>none</code>, <code>up</code> or <code>down</code>. Default <code>none</code>, for a button with an external
+  pull resistor or a module that has one.</li>
+<li><strong>sense</strong> — the pin level when the button is not pressed: <code>auto</code>, <code>0</code> or <code>1</code>. Default <code>auto</code>, which takes the
+  level when the flow starts as not pressed. Set it if the button may be held down at start.</li>
+<li><strong>suppress</strong> — default off. When on, a click that may be the first half of a double click is held back (see
+  Behavior).</li>
+<li><strong>debounce (ms)</strong> — default 50. Must be 1 or more.</li>
+<li><strong>long press (ms)</strong> — how long a press must last to count as <code>long</code>. Default 1000.</li>
+<li><strong>double click (ms)</strong> — how soon a second press must follow the first to count as <code>double</code>. Default 400. Must be
+  less than <strong>long press</strong>.</li>
 </ul>
+<h2 id="wiring">Wiring</h2>
+<p><strong>Input</strong> — none. <code>ebutton</code> is a source.</p>
+<p><strong>Output</strong> — a message for each event, with <code>payload</code> one of <code>press</code>, <code>release</code>, <code>long</code> or <code>double</code>, and <code>topic</code> an
+empty string.</p>
 <h2 id="behavior">Behavior</h2>
-<p>Each event sends one message, a dict with two keys:</p>
-<div class="highlight"><pre><span></span><code><span class="n">msg</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'payload'</span><span class="p">:</span> <span class="s1">'press'</span><span class="p">,</span> <span class="s1">'topic'</span><span class="p">:</span> <span class="s1">''</span><span class="p">}</span>
-</code></pre></div>
+<p>The events each action sends depend on <strong>suppress</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Action</th>
+<th>suppress off</th>
+<th>suppress on</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>a click</td>
+<td><code>press</code>, <code>release</code></td>
+<td><code>press</code> and <code>release</code> together, after <strong>double click</strong> has passed</td>
+</tr>
+<tr>
+<td>a double click</td>
+<td><code>press</code>, <code>release</code>, then <code>press</code> and <code>double</code> together, then <code>release</code></td>
+<td><code>double</code>, <code>release</code></td>
+</tr>
+<tr>
+<td>a long press</td>
+<td><code>press</code>, <code>long</code>, <code>release</code></td>
+<td><code>long</code>, <code>release</code></td>
+</tr>
+</tbody>
+</table>
+<p>With suppress off, every press is reported at once. With it on, a click arrives later but never as part of a double
+click or a long press, and a press held longer than <strong>double click</strong> but released before <strong>long press</strong> sends only
+<code>release</code>.</p>
+<h2 id="errors">Errors</h2>
 <ul>
-<li><strong><code>payload</code></strong> — the event that fired: <code>press</code>, <code>release</code>, <code>long</code> or <code>double</code>.</li>
-<li><strong><code>topic</code></strong> — empty.</li>
+<li><strong>double click is not less than long press.</strong> Deploy stops with <code>property "doubleClickMs" 1000 must be less than
+  longPressMs (1000)</code>, naming the node.</li>
+<li><strong>A pin the board can't use, or one another node sets up differently.</strong> Deploy stops and says why. See
+  <a href="../../boards/#what-gets-checked">What gets checked</a> and <a href="../#hardware-is-shared">Hardware is shared</a>.</li>
 </ul>
-<p>With <code>suppress</code> off (the default), a press always reports immediately, whether or not a second press follows —
-so a rapid double-click reports both a <code>press</code> and a <code>double</code>, not <code>double</code> alone. Turn <code>suppress</code> on if a plain
-single press should never be reported when it turns out to be part of a double-click.</p>
-<p>No internal pull is enabled by default — wire an external pull resistor, use a button module with one built in,
-or set <strong>pull</strong> if the button instead relies on the board's own internal pull-up/pull-down (a common case for
-boards with buttons wired straight to a GPIO with no resistor of their own — e.g. most of an EMF 2022 TiDAL
-badge's buttons).</p>
-<p>Two <code>ebutton</code> nodes on the same pin share one button, so they must have the same settings, or the compile stops. See
-<a href="../#hardware-is-shared">Hardware is shared</a>.</p>
 
 
 

@@ -2758,6 +2758,28 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Behavior
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Errors
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -3480,6 +3502,28 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Behavior
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Errors
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -3501,24 +3545,37 @@
 
 
 <h1 id="encoder">encoder</h1>
-<p>Reads a quadrature encoder (a rotary knob) and sends its value each time it turns. Pin numbers are checked against
-your <a href="../../boards/">board</a>.</p>
+<p>Reads a rotary encoder (a quadrature knob) and sends its value each time it turns.</p>
 <h2 id="properties">Properties</h2>
 <ul>
-<li><strong>pin x / pin y</strong> — the encoder's two switch pins, read with internal pull-ups.</li>
-<li><strong>divide by (div)</strong> — the pulses in one detent: <code>4</code> or <code>2</code> for a mechanical knob's clicks, <code>1</code> for every pulse.</li>
-<li><strong>start value</strong> — the value it starts from.</li>
-<li><strong>lowest / highest</strong> — optional limits; the value stops at them (blank for none).</li>
-<li><strong>wrap at (mod)</strong> — optional: the value counts <code>0</code> to <code>mod - 1</code> and wraps (blank for none).</li>
-<li><strong>settle (ms)</strong> — how long to wait for motion to stop; also the shortest gap between messages.</li>
+<li><strong>pin x</strong> / <strong>pin y</strong> — the encoder's two switch pins. Defaults 10 and 11. Both are read with the pins' own
+  pull-ups. If the value counts the wrong way, swap them.</li>
+<li><strong>divide by (div)</strong> — pulses per step of the value: <code>4</code> or <code>2</code> for a knob that clicks, so one click is one step;
+  <code>1</code> counts every pulse. Default 1.</li>
+<li><strong>start value</strong> — the value when the flow starts. Default 0.</li>
+<li><strong>lowest (blank for none)</strong> / <strong>highest (blank for none)</strong> — whole numbers the value stops at. Default blank.</li>
+<li><strong>wrap at (blank for none)</strong> — a whole number: the value counts from <code>0</code> to one less than it, then wraps. Default
+  blank.</li>
+<li><strong>settle (ms)</strong> — how long to wait after the knob moves before sending the value. Default 100. Must be 0 or
+  more.</li>
 </ul>
+<p>The value is divided first, then held within lowest and highest, then wrapped.</p>
 <h2 id="wiring">Wiring</h2>
-<p><strong>Output</strong> — the value, with the change since the last message:</p>
-<div class="highlight"><pre><span></span><code><span class="n">msg</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'payload'</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">'topic'</span><span class="p">:</span> <span class="s1">''</span><span class="p">,</span> <span class="s1">'delta'</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span>
-</code></pre></div>
-<p><code>payload</code> is the current value; <code>delta</code> is how far it moved, positive or negative.</p>
-<p>Two <code>encoder</code> nodes on the same pins share one encoder, so they must have the same settings, or the compile stops.
-See <a href="../#hardware-is-shared">Hardware is shared</a>.</p>
+<p><strong>Input</strong> — none. <code>encoder</code> is a source.</p>
+<p><strong>Output</strong> — a message with <code>payload</code> set to the value, <code>delta</code> set to how far it moved since the last message
+(negative when it went down), and <code>topic</code> an empty string.</p>
+<h2 id="behavior">Behavior</h2>
+<p>When the knob moves, the node waits <strong>settle</strong>, then sends the value it has reached. A fast turn gives about one
+message per <strong>settle</strong>, not one per pulse. A turn that ends where it started sends nothing.</p>
+<h2 id="errors">Errors</h2>
+<ul>
+<li><strong>start value is below lowest or above highest.</strong> The board reports <code>Incompatible args: must have vmin &lt;= v &lt;=
+  vmax</code> when the flow starts.</li>
+<li><strong>lowest, highest or wrap at isn't a whole number.</strong> Deploy stops with <code>property "vmin" "x" must be a whole number
+  (decimal or 0x hex)</code>, naming the node.</li>
+<li><strong>A pin the board can't use, or one another node sets up differently.</strong> Deploy stops and says why. See
+  <a href="../../boards/#what-gets-checked">What gets checked</a> and <a href="../#hardware-is-shared">Hardware is shared</a>.</li>
+</ul>
 
 
 

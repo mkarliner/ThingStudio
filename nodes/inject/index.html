@@ -3550,13 +3550,8 @@
 <ul>
 <li><strong>payload type</strong> — <code>bool</code>, <code>number</code> or <code>string</code>. Default <code>bool</code>. The output's type follows it, so the editor
   checks the wire against the input it feeds (see <a href="../../working-in-the-editor/#wiring">Wiring</a>).</li>
-<li><strong>value</strong> — the value to send, read as the payload type. Default <code>true</code>.</li>
-</ul>
-<p>The value is read in one of three ways, by payload type:</p>
-<ul>
-<li><code>bool</code>: <code>true</code> sends <code>True</code>. Anything else sends <code>False</code>, including <code>True</code> and <code>1</code>.</li>
-<li><code>number</code>: a whole number is sent as an <code>int</code>, any other number as a <code>float</code>. An empty value sends <code>0</code>.</li>
-<li><code>string</code>: sent as typed.</li>
+<li><strong>value</strong> — the value to send, read as the payload type (see
+  <a href="../../working-in-the-editor/#typed-values">Typed values</a>). Default <code>true</code>.</li>
 </ul>
 <h2 id="wiring">Wiring</h2>
 <p><strong>Input</strong> — none. <code>inject</code> is a source.</p>
