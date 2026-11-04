@@ -51,6 +51,19 @@ QUEUE_LIMIT = 20
 _DEDUPE_LIMIT = 64
 
 
+# TEMPORARY (2026-11-04): traces each radio call around a redeploy, to find what leaves the C5's controller
+# answering -519 (HCI 0x07) to the next flow's first scan. Remove once found (decisions/ble-nodes.md).
+def _trace(what):
+    print("BLE_TRACE %d %s" % (_ticks(), what))
+
+
+def _controller_error(what, e):
+    """A radio call refused by the controller, as a deploy/node error that says what to do."""
+    return OSError(
+        "Bluetooth controller refused to %s (%r): power-cycle the board (a reset button may not be enough)" % (what, e)
+    )
+
+
 def _ticks():
     try:
         return time.ticks_ms()
@@ -779,6 +792,7 @@ class _Peer:
 class _Radio:
     def __init__(self):
         self.ble = bluetooth.BLE()
+        _trace("start: active(True) [was %r]" % (self.ble.active(),))
         try:
             self.ble.active(True)
         except OSError as e:
@@ -799,6 +813,7 @@ class _Radio:
             for s in self.scanners:
                 s.offer(addr_type, addr, adv_type, rssi, adv)
         elif event == _IRQ_SCAN_DONE:
+            _trace("irq: scan done (scanning=%r)" % (self.scanning,))
             if self.scanning:
                 self.scanning = False
                 for s in self.scanners:
@@ -824,7 +839,12 @@ class _Radio:
         self.scanners.append(s)
         if not self.scanning:
             self.scan_params = params
-            self.ble.gap_scan(0, params[0], params[1], params[2])
+            _trace("start: gap_scan%r" % (params,))
+            try:
+                self.ble.gap_scan(0, params[0], params[1], params[2])
+            except OSError as e:
+                _trace("start: gap_scan raised %r" % (e,))
+                raise _controller_error("start the scan", e)
             self.scanning = True
         runtime.report_status(node_id, "connected", "scanning")
         return s
@@ -832,7 +852,11 @@ class _Radio:
     def advertise(self, node_id, interval_ms, adv):
         """Sends `adv`, connectable when the flow has a GATT server, until the next call."""
         self.adv = (interval_ms, adv)
-        self.readvertise()
+        try:
+            self.readvertise()
+        except OSError as e:
+            _trace("start: gap_advertise raised %r" % (e,))
+            raise _controller_error("start advertising", e)
         if node_id is not None:
             runtime.report_status(node_id, "connected", "advertising %d bytes" % len(adv))
 
@@ -883,6 +907,7 @@ class _Radio:
         return runtime.shared("ble_peer", key, (addr, name_prefix, int(timeout_ms)), make)
 
     def stop(self):
+        _trace("stop: scanning=%r peers=%d server=%r adv=%r" % (self.scanning, len(self.peers), self.gatt_server is not None, self.adv is not None))
         for p in self.peers:
             p.stop()
         self.peers = []
@@ -894,10 +919,17 @@ class _Radio:
             self.gatt_server = None
             self.adv = None
             if was_scanning:
+                _trace("stop: gap_scan(None)")
                 self.ble.gap_scan(None)
+            _trace("stop: gap_advertise(None)")
             self.ble.gap_advertise(None)
+        except OSError as e:
+            _trace("stop: raised %r" % (e,))
+            raise
         finally:
+            _trace("stop: active(False)")
             self.ble.active(False)
+            _trace("stop: done")
 
 
 def radio():
