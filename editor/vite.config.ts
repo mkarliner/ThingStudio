@@ -3,7 +3,7 @@
 import { execSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
 import vue from "@vitejs/plugin-vue";
 
 // Belt-and-braces runtime-build check (CLAUDE.md's "Device-runtime
@@ -35,7 +35,7 @@ function runtimeBuildSha(): string | null {
 // git commit it was built from and whether the tree had uncommitted changes, plus the build time.
 // Each part fails open (null) -- a diagnostic must never break the build. --no-optional-locks keeps
 // git status from writing .git/index.lock (CLAUDE.md, "Git writes from the agent sandbox").
-function editorBuild(): { version: string | null; commit: string | null; dirty: boolean; builtAt: string } {
+function editorBuild(): { version: string | null; commit: string | null; dirty: boolean; builtAt: string; id: string } {
   const root = fileURLToPath(new URL("..", import.meta.url));
   let version: string | null = null;
   try {
@@ -52,7 +52,24 @@ function editorBuild(): { version: string | null; commit: string | null; dirty: 
   } catch {
     commit = null;
   }
-  return { version, commit, dirty, builtAt: new Date().toISOString().slice(0, 16).replace("T", " ") + " UTC" };
+  const now = new Date().toISOString();
+  return { version, commit, dirty, builtAt: now.slice(0, 16).replace("T", " ") + " UTC", id: now };
+}
+
+// Computed once, so the bundle and dist/editor-build.json below name the same build.
+const EDITOR_BUILD = editorBuild();
+
+// dist/editor-build.json: the build the backend serves now, reported by /api/alive as `editorBuild`. An open tab
+// compares it with its own __EDITOR_BUILD__ and refuses Deploy on a mismatch (2026-11-04: a tab left open across
+// an update compiled old node code against the new libraries; editor-version.ts's servedBuildCheck).
+function editorBuildFile(): Plugin {
+  return {
+    name: "thingstudio-editor-build-file",
+    apply: "build",
+    generateBundle() {
+      this.emitFile({ type: "asset", fileName: "editor-build.json", source: JSON.stringify(EDITOR_BUILD) + "\n" });
+    },
+  };
 }
 
 // vue() is needed for `.vue` SFCs to compile at all (rete-migration-
@@ -62,10 +79,10 @@ function editorBuild(): { version: string | null; commit: string | null; dirty: 
 // alongside the dependency itself rather than deferred to when main.ts
 // actually imports one.
 export default defineConfig({
-  plugins: [vue()],
+  plugins: [vue(), editorBuildFile()],
   define: {
     __RUNTIME_BUILD_SHA__: JSON.stringify(runtimeBuildSha()),
-    __EDITOR_BUILD__: JSON.stringify(editorBuild()),
+    __EDITOR_BUILD__: JSON.stringify(EDITOR_BUILD),
   },
   // The editor is one ~600 kB chunk (~170 kB gzipped), mostly Vue, Rete and our own code. Vite's 500 kB warning is
   // aimed at sites loaded over the internet; the editor is served by the local backend, so splitting it would add

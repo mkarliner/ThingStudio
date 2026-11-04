@@ -12,4 +12,4 @@
 declare const __RUNTIME_BUILD_SHA__: string | null;
 
 // The editor's own build identity (vite.config.ts's editorBuild()), shown in the toolbar and About.
-declare const __EDITOR_BUILD__: { version: string | null; commit: string | null; dirty: boolean; builtAt: string };
+declare const __EDITOR_BUILD__: { version: string | null; commit: string | null; dirty: boolean; builtAt: string; id: string };

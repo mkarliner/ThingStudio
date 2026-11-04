@@ -153,7 +153,7 @@ import type { BoardSettingsResultMessage, HelloMessage, Message, NodeStatusMessa
 import { checkRuntimeBuild, decideDeploy } from "../protocol/version.js";
 import { DEFAULT_TIMING, TransferSession, type TransferEvent, type TransferFailure } from "../protocol/transfer.js";
 import { explainDeployImportError, networkWarningBeforeDeploy } from "./import-error-help.js";
-import { editorVersionLabel, editorVersionLine } from "./editor-version.js";
+import { editorVersionLabel, editorVersionLine, servedBuildCheck, staleTabLine, type EditorBuild } from "./editor-version.js";
 import { DEPLOY_MEMORY_DOC, DEPLOY_MEMORY_HINT, deployMemoryAdvice, looksLikeOutOfMemory, lowFlowMemoryWarning, lowMemoryWarningBeforeDeploy } from "./memory-advice.js";
 import { dependencyHash, findImportedModules, librariesToSend, libraryMessages, resolveDependencies, topModuleOfBoardFile, type DependencyInfo } from "../compiler/flow-dependencies.js";
 import { createThingstudioEditor, type ThingstudioEditor } from "./rete/editor-setup.js";
@@ -1306,11 +1306,15 @@ let boardAtPrompt = false;
 // Set from Tools → Restart/Reset until the board's boot HELLO arrives (2026-10-07, CYD): a Deploy sent
 // while the board was still booting got lost, and the boot HELLO was then misread as a crash mid-deploy.
 let boardRestarting = false;
+// The backend now serves a different editor build than this tab runs (watchBackend, 2026-11-04). Deploy stays
+// off until reload: this tab's node code no longer matches the libraries the backend sends the board.
+let staleTab: { served: EditorBuild } | null = null;
 // HELLO_REQUESTs sent and not yet answered. A HELLO that may be such a reply isn't taken as a restart.
 let helloRequestsPending = 0;
 
 function updateDeployButtonEnabled(): void {
-  el<HTMLButtonElement>("btnDeploy").disabled = !transport.isConnected || deployedClean || boardAtPrompt || boardRestarting;
+  el<HTMLButtonElement>("btnDeploy").disabled =
+    !transport.isConnected || deployedClean || boardAtPrompt || boardRestarting || staleTab !== null;
 }
 
 reteEditor.addPipe((context) => {
@@ -2383,19 +2387,38 @@ void refreshBackendPorts(true);
 // backend doesn't leave a dead tab. The backend opens a new tab only if none checks in within a couple of
 // seconds of starting (backend __main__.py). No automatic reload: the flow isn't saved anywhere else, so a
 // reload would lose unsaved work.
+//
+// Each answer also names the editor build the backend serves now (2026-11-04). A tab left open across an
+// update kept its old JavaScript and compiled old node code against the new libraries (`ts_ble` became a
+// package; the board said `AttributeError: '_Radio' object has no attribute 'gatt'`). Checked on every answer,
+// not just on reconnect, so a rebuild without a restart is caught too.
 let backendAlive = true;
 async function watchBackend(): Promise<void> {
   let ok = false;
+  let served: unknown = undefined;
+  let servedByBackend = false;
   try {
-    const res = await fetch(`${backendHttpBaseUrl(currentBackendWsUrl())}/api/alive`, { cache: "no-store" });
+    const base = backendHttpBaseUrl(currentBackendWsUrl());
+    servedByBackend = new URL(base).origin === window.location.origin;
+    const res = await fetch(`${base}/api/alive`, { cache: "no-store" });
     ok = res.ok;
+    if (ok) served = ((await res.json()) as { editorBuild?: unknown }).editorBuild;
   } catch {
     ok = false;
+  }
+  if (ok && staleTab === null) {
+    const check = servedBuildCheck(__EDITOR_BUILD__, served, servedByBackend);
+    if (check.state === "stale") {
+      staleTab = { served: check.served };
+      logLine(staleTabLine(__EDITOR_BUILD__, check.served), "err");
+      el("staleTabBanner").hidden = false;
+      updateDeployButtonEnabled();
+    }
   }
   if (!ok && backendAlive) {
     logLine("[backend] stopped -- this tab reconnects by itself when it's back", "err");
   } else if (ok && !backendAlive) {
-    logLine("[backend] back. If you rebuilt the editor, save your flow and reload this page to use the new build.", "ok");
+    logLine("[backend] back", "ok"); // a different editor build now served is reported above, with Deploy off
     void loadCustomNodes();
     if (!transport.isConnected) void refreshBackendPorts();
   }
@@ -2403,6 +2426,9 @@ async function watchBackend(): Promise<void> {
   setTimeout(() => void watchBackend(), ok ? 5000 : 1000);
 }
 setTimeout(() => void watchBackend(), 5000);
+el("btnReloadStaleTab").addEventListener("click", () => {
+  if (window.confirm("Reload now? Unsaved changes to the flow are lost.")) window.location.reload();
+});
 
 {
   const picker = el<HTMLSelectElement>("consoleLevel");
@@ -3338,6 +3364,12 @@ el("btnDeploy").addEventListener("click", async () => {
   clearNodeHighlights(); // stale red from a previous failed attempt shouldn't linger past a new one
   clearNodeStatuses(); // Mike's "clear all statuses on every redeploy" call -- same staleness reasoning, one state field over
   try {
+    // A stale tab compiles old node code against the backend's new libraries (watchBackend). The button is
+    // already off; this catches a click that raced the check.
+    if (staleTab) {
+      logLine(staleTabLine(__EDITOR_BUILD__, staleTab.served), "err");
+      return;
+    }
     // Gate the attempt itself, before any compile work -- §5's own
     // framing for why this check exists. Soft on absence (no HELLO seen
     // this connection -- proceed, warned), hard on a real mismatch (a

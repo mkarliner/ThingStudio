@@ -149,3 +149,15 @@ floor is now `>=22.12` with a message naming the wasm, and the box got Node 22.2
 SHASUM-verified, user-local in `~/.local/opt`, symlinked into `~/.local/bin`). Note the browser mattered too —
 WasmGC shipped clear back in Chrome 119 / Firefox 121 / Safari 17.2 (late 2023), so no practical browser is
 affected; this was purely a Node-runtime floor misstated by its only check.
+
+## An open tab keeps its old JavaScript across an update and backend restart, 2026-11-04
+
+The tab reconnects by itself after a restart (`watchBackend`, 2026-09-25), but nothing reloads its code. It then
+compiled flows with old node codegen against libraries the restarted backend served from the new checkout:
+`ts_ble` had become a package (`ts_ble.server.gatt(...)`), the old `ble characteristic` codegen still called
+`ts_ble.radio().gatt(...)`, and the board answered `DEPLOY_ERROR AttributeError: '_Radio' object has no attribute
+'gatt'`. The page-load stale banner (`editor_site.py`) can't catch it: it runs only on load and compares `dist`
+with its sources, not with the tab. Fixed the same day: `vite build` writes `dist/editor-build.json` with the same
+build id it inlines as `__EDITOR_BUILD__`; `/api/alive` reports it as `editorBuild`; the tab compares on every poll
+(`servedBuildCheck`, `editor-version.ts`) and on a mismatch logs one line, shows a reload banner and refuses Deploy.
+Skipped when the page didn't come from that backend (`npm run dev`), or when no build file is served.

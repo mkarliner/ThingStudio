@@ -29,7 +29,7 @@ from aiohttp import web
 from .admin_api import make_admin_routes
 from .cors import cors_middleware
 from .docs_site import default_docs_dir, make_docs_routes
-from .editor_site import default_editor_dir, make_editor_routes
+from .editor_site import default_editor_dir, make_editor_routes, served_editor_build
 from .middleware import DEFAULT_ALLOWED_HOSTS, host_allowlist_middleware
 from .persisted_store import PersistedStore
 import json
@@ -60,6 +60,7 @@ def create_app(
     docs_dir: Path | None = None,
 ) -> web.Application:
     app = web.Application(middlewares=[cors_middleware, host_allowlist_middleware(allowed_hosts)])
+    editor_dir = static_dir or default_editor_dir()
     store = PersistedStore(data_dir)
 
     def board_password(hostname: str) -> str | None:
@@ -78,8 +79,11 @@ def create_app(
 
     async def alive(request: web.Request) -> web.Response:
         request.app[EDITOR_SEEN_KEY]["seen"] = True
-        # The version is for the editor's Help -> About (2026-09-30).
-        return web.json_response({"ok": True, "version": backend_version()})
+        # The version is for the editor's Help -> About (2026-09-30). editorBuild is the editor build served
+        # now, so an open tab can tell it's stale (2026-11-04, editor_site.served_editor_build).
+        return web.json_response(
+            {"ok": True, "version": backend_version(), "editorBuild": served_editor_build(editor_dir)}
+        )
 
     app.router.add_get("/api/alive", alive)
 
@@ -112,6 +116,6 @@ def create_app(
     app.router.add_routes(make_docs_routes(docs_dir or default_docs_dir()))
 
     # The built editor at / (editor_site.py) -- registered last so every route above wins.
-    app.router.add_routes(make_editor_routes(static_dir or default_editor_dir()))
+    app.router.add_routes(make_editor_routes(editor_dir))
 
     return app

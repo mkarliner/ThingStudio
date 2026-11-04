@@ -21,6 +21,7 @@
 from __future__ import annotations
 
 import html
+import json
 import logging
 import mimetypes
 from pathlib import Path
@@ -68,6 +69,24 @@ def stale_source(editor_dir: Path) -> Path | None:
     if not (editor_dir.parent / "src").is_dir():
         return None
     return changed_since_build(editor_dir / "index.html", [editor_dir.parent / "index.html", editor_dir.parent / "src"])
+
+
+EDITOR_BUILD_FILE = "editor-build.json"  # written by editor/vite.config.ts at build time
+
+
+def served_editor_build(editor_dir: Path) -> dict | None:
+    """The build identity of the editor this backend serves now (dist/editor-build.json), for /api/alive.
+    An open tab compares it with its own and refuses Deploy on a mismatch (2026-11-04: a tab left open across
+    an update ran old node code against the new libraries). None if the file is missing, oversized or not a
+    JSON object -- the tab then can't confirm, and says nothing. Read on every call: a rebuild needs no restart."""
+    path = editor_dir / EDITOR_BUILD_FILE
+    try:
+        if path.stat().st_size > 4096:
+            return None
+        body = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    return body if isinstance(body, dict) else None
 
 
 def stale_banner(what: str, newer: Path, rebuild_cmd: str) -> str:

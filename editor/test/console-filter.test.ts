@@ -66,7 +66,7 @@ describe("consoleLevel", () => {
   });
 
   it("keeps the backend's own back-again note", () => {
-    expect(consoleLevel("[backend] back. If you rebuilt the editor, save your flow and reload this page to use the new build.", "ok")).toBe("normal");
+    expect(consoleLevel("[backend] back", "ok")).toBe("normal");
   });
 
   it("never hides a line logged as an error", () => {

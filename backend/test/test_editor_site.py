@@ -127,3 +127,20 @@ async def test_index_must_be_revalidated_but_hashed_assets_may_be_cached(tmp_pat
         assert (await client.get("/")).headers["Cache-Control"] == "no-cache"
         assert (await client.get("/vendor/mpy-cross/load.mjs")).headers["Cache-Control"] == "no-cache"
         assert "Cache-Control" not in (await client.get("/assets/index.js")).headers
+
+
+@pytest.mark.asyncio
+async def test_alive_reports_the_editor_build_served_now(tmp_path) -> None:
+    """2026-11-04: an open tab compares this with its own build and refuses Deploy on a mismatch. Read per
+    request, so a rebuild without a restart shows up."""
+    dist = _built_editor(tmp_path)
+    async with _client(tmp_path, dist) as client:
+        r = await client.get("/api/alive")
+        assert (await r.json())["editorBuild"] is None  # no build file: the tab can't confirm, says nothing
+        (dist / "editor-build.json").write_text('{"id": "2026-11-04T09:30:02.000Z", "commit": "9d1e4b7"}')
+        r = await client.get("/api/alive")
+        assert (await r.json())["editorBuild"] == {"id": "2026-11-04T09:30:02.000Z", "commit": "9d1e4b7"}
+        for bad in ("not json", "[1, 2]", "x" * 5000):
+            (dist / "editor-build.json").write_text(bad)
+            r = await client.get("/api/alive")
+            assert (await r.json())["editorBuild"] is None

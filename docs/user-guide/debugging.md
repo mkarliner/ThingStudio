@@ -159,7 +159,25 @@ own files. Flash the image again with **Erase all flash first** ticked, then ins
 - the editor isn't connected to a board;
 - the flow on the board is the one on the canvas, deployed and unchanged since;
 - the flow is stopped at the Python prompt (click **Restart Thingstudio**);
-- the board is restarting.
+- the board is restarting;
+- this tab runs an older editor than Thingstudio now serves (see
+  [Editor tab out of date after an update](#editor-tab-out-of-date-after-an-update)).
+
+## Editor tab out of date after an update
+
+A tab left open while Thingstudio is updated and restarted reconnects by itself, but still runs the old editor.
+Its nodes would then compile against the new libraries and fail on the board with errors that name neither, such
+as `AttributeError: '_Radio' object has no attribute 'gatt'`.
+
+So when the editor Thingstudio serves changes, the tab says so in the console and in a banner, and Deploy is off:
+
+```text
+[editor] this tab's build (v0.11.2 · 490c074) isn't the one the backend now serves (v0.11.3 · 9d1e4b7). Deploy is off: save your flow, then reload the page
+```
+
+Save your flow, then click **Reload** in the banner or reload the page. Reloading loses unsaved changes.
+
+The check is skipped for an editor served by `npm run dev`.
 
 ## Module missing on the board
 
