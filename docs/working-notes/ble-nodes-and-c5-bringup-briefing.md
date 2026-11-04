@@ -107,4 +107,4 @@ Shape (proposed, not started):
   Tools → Remove flow…, power cycle, then deploy. The editor's command box takes one line (`;` and list
   comprehensions). The ESP32-C5 installs MicroPython at **0x2000** (esptool or the firmware dialog; Thonny writes
   at 0 and the board boot-loops with `invalid header`).
-- Thonny issue (address 0x2000 for C5/P4) drafted for Mike; not known whether he filed it.
+- Thonny issue (address 0x2000 for C5/P4): filed upstream by Mike, 2026-11-04.
