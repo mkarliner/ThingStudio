@@ -49,7 +49,9 @@ The [FAQ](faq.md) explains where an ESP32's memory goes.
 ## Commands and the Python prompt
 
 The command box under the console runs Python on the board. Type a line and press Enter; the result appears in the
-console. The up and down arrows bring back earlier commands.
+console. The up and down arrows bring back earlier commands. The box takes one line: a pasted block of several
+lines is joined into one, which Python reads as a `SyntaxError`. Put statements on one line separated by `;`, and
+write a loop as a list comprehension, for example `[print(i) for i in range(3)]`.
 
 ```python
 gc.mem_free()
