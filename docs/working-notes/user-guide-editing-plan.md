@@ -240,6 +240,21 @@ and the two BLE error strings say "connected device" rather than "phone", since 
 `editor/src/cli/describe.ts` in `ceb25be1` was an earlier draft than the committed catalog and test (tsc failed, three
 catalog tests failed); rebuilt so it regenerates the committed catalog exactly.
 
+Typed values (2026-11-04): how `inject`, `startup` and `change` read a typed value now lives in Editor in depth,
+Typed values; the three pages link to it.
+
+Batch 4a done 2026-11-04, pin nodes: `gpio out`, `pwm out`, `interrupt`, `eswitch`, `ebutton`, `encoder`, `adc`,
+`neopixel`, checked against the descriptors, the vendored drivers (`events.py`, `encoder.py`, `aadc.py`) and the
+CLI's clash messages. Defaults added; the per-page "Checked against your board" and "two nodes on one pin" lines are
+one Errors line linking What gets checked and Hardware is shared. Corrected: `encoder` settle is a wait after motion
+starts (about one message per settle while turning), not "still for settle"; `ebutton` events per action, with and
+without suppress, as a table (suppress holds back press and release together, and a press between double click and
+long press sends only `release`). Added: `pwm out` fails on any string, even `"0.5"`; `adc` absolute mode keeps
+sending while the reading stays on the sense side; `neopixel` list and index edge cases. Open for Mike: `neopixel`
+reorders to GRB itself, but MicroPython's `NeoPixel` already writes GRB (`ORDER = (1, 0, 2, 3)`), so red and green
+look swapped on a GRB strip; needs a hardware check before any change. `adc` absolute repeat may be a bug rather
+than behavior.
+
 ### Phase 6 -- structure (review order item 6)
 
 Developer section in the nav (remark 4: check-a-flow, command-line's source-checkout half, From source,

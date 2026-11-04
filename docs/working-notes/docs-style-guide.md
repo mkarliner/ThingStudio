@@ -165,7 +165,10 @@ Homes so far:
 - What the board runs and when a change reaches it: [Flow lifecycle](../user-guide/flow-lifecycle.md), Deploy.
 - What a node error does, including stopping its chain: [Debugging](../user-guide/debugging.md), Reading a node
   error.
-- Which outputs feed which inputs: [Editor in depth](../user-guide/working-in-the-editor.md), Wiring.
+- Which outputs feed which inputs, and what a fork does to a message: [Editor in
+  depth](../user-guide/working-in-the-editor.md), Wiring.
+- How a typed value (`inject`, `startup`, `change`) is read: [Editor in
+  depth](../user-guide/working-in-the-editor.md), Typed values.
 - Status dots: [Editor in depth](../user-guide/working-in-the-editor.md), Node status.
 
 ## Quote console messages exactly

@@ -1,30 +1,37 @@
 # neopixel
 
-Drives a WS2812 / NeoPixel strip: sets the pixels from each message and writes. Uses MicroPython's built-in
-`neopixel` module. Pin numbers are checked against your [board](../boards.md).
+Lights a WS2812 (NeoPixel) strip: sets its pixels from each message, then writes the strip.
 
 ## Properties
 
-- **pin** — the strip's data pin.
-- **count** — how many pixels.
-- **order** — the wire colour order of your strip: `GRB` (most WS2812), `RGB`, `RGBW` or `GRBW`.
+- **pin** — the strip's data pin. Default 13.
+- **count** — how many pixels the strip has. Default 8. Must be 1 or more.
+- **order** — the color order of your strip: `GRB`, `RGB`, `RGBW` or `GRBW`. Default `GRB`, which most WS2812
+  strips use. The `W` orders are for strips with a white channel.
 
 ## Wiring
 
-**Input** — a colour, or a set of them:
+**Input** — `payload` in one of three forms:
 
 ```python
-msg = {'payload': 0xff4400, 'topic': ''}                         # the whole strip
-msg = {'payload': [0xff0000, 0x00ff00, 0x0000ff], 'topic': ''}   # one colour per pixel
-msg = {'payload': {'index': 2, 'colour': 0x00ff00}, 'topic': ''} # one pixel
+msg['payload'] = 0xff4400                            # one color for the whole strip
+msg['payload'] = [0xff0000, 0x00ff00, 0x0000ff]      # one color per pixel, from the first
+msg['payload'] = {'index': 2, 'colour': 0x00ff00}    # one pixel; 'color' works too
 ```
 
-A colour is a 24-bit `0xRRGGBB` (red, green, blue, 0–255 each). An `RGBW` or `GRBW` strip takes a 32-bit
-`0xWWRRGGBB` for the white channel; a plain `0xRRGGBB` leaves white off.
+A color is `0xRRGGBB`, 0 to 255 for each of red, green and blue. A strip with a white channel takes
+`0xWWRRGGBB`; a plain `0xRRGGBB` leaves white off. A list shorter than the strip leaves the other pixels as they
+were; one longer than the strip is cut off.
+
+This node has no output.
 
 ## Behavior
 
-The whole strip is written on every message, so the last message sets the colours. The node has no output.
+Each message sets the pixels it names and writes the whole strip. Pixels a message doesn't name keep their color.
 
-Two `neopixel` nodes on the same pin share one strip, so they must have the same count and order, or the compile
-stops. See [Hardware is shared](index.md#hardware-is-shared).
+## Errors
+
+- **A payload that isn't a color**, or an index past the end of the strip. The node's status dot turns red with the
+  error, and nothing is written. See [Node status](../working-in-the-editor.md#node-status).
+- **A pin the board can't use, or one another node sets up differently.** Deploy stops and says why. See
+  [What gets checked](../boards.md#what-gets-checked) and [Hardware is shared](index.md#hardware-is-shared).

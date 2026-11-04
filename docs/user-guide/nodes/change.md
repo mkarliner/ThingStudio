@@ -13,7 +13,8 @@ Sets or deletes one value, on the message or in a flow variable, then passes the
   `a literal value`.
 - **literal type** — with a literal: `string`, `number` or `bool`. Default `string`.
 - **value / source property** — with `set`: the literal, or the name of the message property or flow variable to
-  copy. Default empty. A `bool` literal is true only for `true`. An empty `number` literal is `0`.
+  copy. Default empty. A literal is read as the literal type (see
+  [Typed values](../working-in-the-editor.md#typed-values)).
 
 ## Wiring
 

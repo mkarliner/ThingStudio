@@ -5,8 +5,8 @@ Sends one message with a fixed payload each time the flow starts.
 ## Properties
 
 - **payload type** — `bool`, `number`, `string` or `start reason`. Default `bool`.
-- **value** — the value to send, read as the payload type. Default `true`. Hidden with `start reason`. A `bool` is
-  true only for `true`. A whole number is sent as an `int`, and an empty `number` as `0`.
+- **value** — the value to send, read as the payload type (see
+  [Typed values](../working-in-the-editor.md#typed-values)). Default `true`. Hidden with `start reason`.
 
 ## Wiring
 

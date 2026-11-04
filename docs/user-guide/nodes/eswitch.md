@@ -1,30 +1,29 @@
 # eswitch
 
-Reports when a debounced switch opens or closes. Polling-based, not the interrupt-driven `interrupt` node.
+Reports when a switch opens or closes, ignoring contact bounce.
 
 ## Properties
 
-- **pin** — GPIO pin number. Default 4. Checked against your [board](../boards.md).
-- **pull** — `none` (default), `up`, or `down`. Enables the board's own internal pull resistor on this pin.
-- **open level (lopen)** — which electrical level means "open": `1` (default, switch to ground, pulled up) or
-  `0` (switch to 3V3, pulled down).
-- **debounce (ms)** — how long a level must hold before it's accepted as real. Default 50ms.
+- **pin** — the GPIO pin. Default 4.
+- **pull** — the pin's own pull resistor: `none`, `up` or `down`. Default `none`, for a switch with an external
+  pull resistor or a module that has one.
+- **open level (lopen)** — the pin level that means open: `1` for a switch to ground with a pull-up, `0` for a
+  switch to 3V3 with a pull-down. Default `1`.
+- **debounce (ms)** — how long a level must hold before it counts. Default 50. Must be 1 or more.
+
+## Wiring
+
+**Input** — none. `eswitch` is a source.
+
+**Output** — a message for each change, with `payload` `True` when the switch closes and `False` when it opens, and
+`topic` an empty string. `payload` is a bool, so it can wire straight to a [gpio out](gpio-out.md) to mirror the
+switch.
 
 ## Behavior
 
-Each transition sends one message, a dict with two keys:
+The node checks the pin every **debounce** interval. It sends nothing when the flow starts, only on a change.
 
-```python
-msg = {'payload': True, 'topic': ''}
-```
+## Errors
 
-- **`payload`** — the switch state: `true` when closed, `false` when open.
-- **`topic`** — empty.
-
-`payload` is a bool, so it wires straight to `gpio out` to mirror the switch.
-
-No internal pull is enabled by default — wire an external pull resistor, use a switch module with one built in,
-or set **pull** if the switch instead relies on the board's own internal pull-up/pull-down.
-
-Two `eswitch` nodes on the same pin share one switch, so they must have the same settings, or the compile stops. See
-[Hardware is shared](index.md#hardware-is-shared).
+- **A pin the board can't use, or one another node sets up differently.** Deploy stops and says why. See
+  [What gets checked](../boards.md#what-gets-checked) and [Hardware is shared](index.md#hardware-is-shared).

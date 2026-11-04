@@ -27,26 +27,6 @@
       "snippet": "its properties and its output. This page lists them all, grouped as in the"
     },
     {
-      "file": "docs/user-guide/nodes/neopixel.md",
-      "rule": "uk-spelling",
-      "snippet": "**Input** — a colour, or a set of them:"
-    },
-    {
-      "file": "docs/user-guide/nodes/neopixel.md",
-      "rule": "uk-spelling",
-      "snippet": "- **order** — the wire colour order of your strip:"
-    },
-    {
-      "file": "docs/user-guide/nodes/neopixel.md",
-      "rule": "uk-spelling",
-      "snippet": "A colour is a 24-bit (red,"
-    },
-    {
-      "file": "docs/user-guide/nodes/neopixel.md",
-      "rule": "uk-spelling",
-      "snippet": "last message sets the colours. The node has no output."
-    },
-    {
       "file": "docs/user-guide/sensor-display.md",
       "rule": "plans",
       "snippet": "!!! note \"Work in progress\""

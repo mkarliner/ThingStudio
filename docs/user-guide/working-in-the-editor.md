@@ -26,6 +26,19 @@ made before any of them runs. The wires then run one after another, in the order
 shallow: a list or dict inside the message is shared, so a node that changes `msg['payload']` in place, rather than
 replacing it, changes it for the other wires too.
 
+## Typed values
+
+Some nodes take a value you type next to a type you pick: [inject](nodes/inject.md) and
+[startup](nodes/startup.md) (**payload type** and **value**), and [change](nodes/change.md) (**literal type** and
+**value / source property**). The value is read as that type:
+
+- `bool`: `true` is `True`. Anything else is `False`, including `True` and `1`.
+- `number`: a whole number becomes an `int`, any other number a `float`. An empty value is `0`.
+- `string`: sent as typed.
+
+With type `number`, a value that isn't a number stops the deploy for `change`. For `inject` and `startup` it fails on
+the board when the node fires, with a `[NODE_ERROR]`.
+
 ## Giving a node a flow label
 
 Every node has a **flow label** field at the top of its property panel. Type something, say `Fire!`, and the canvas

@@ -1,40 +1,45 @@
 # ebutton
 
-Reports press, release, long-press, and double-click events from a single debounced button.
+Reports presses, releases, long presses and double clicks from one button, ignoring contact bounce.
 
 ## Properties
 
-- **pin** — GPIO pin number. Default 5. Checked against your [board](../boards.md).
-- **pull** — `none` (default), `up`, or `down`. Enables the board's own internal pull resistor on this pin.
-- **sense** — which electrical level means "pressed": `auto` (default, reads the pin's own boot state as
-  "not pressed"), `0`, or `1`.
-- **suppress** — off by default. When on, `press`/`release` are held back until it's clear the click isn't the
-  first half of a double — a plain single click still reports `press` then `release`, delayed by up to the
-  double-click window; an actual double-click reports only `double`, not `press`/`release` for the first click too.
-- **debounce (ms)** — default 50ms.
-- **long press (ms)** — how long a press must hold to count as `long`. Default 1000ms.
-- **double click (ms)** — the window a second press must land in to count as `double`. Default 400ms. Must be
-  less than long press.
+- **pin** — the GPIO pin. Default 5.
+- **pull** — the pin's own pull resistor: `none`, `up` or `down`. Default `none`, for a button with an external
+  pull resistor or a module that has one.
+- **sense** — the pin level when the button is not pressed: `auto`, `0` or `1`. Default `auto`, which takes the
+  level when the flow starts as not pressed. Set it if the button may be held down at start.
+- **suppress** — default off. When on, a click that may be the first half of a double click is held back (see
+  Behavior).
+- **debounce (ms)** — default 50. Must be 1 or more.
+- **long press (ms)** — how long a press must last to count as `long`. Default 1000.
+- **double click (ms)** — how soon a second press must follow the first to count as `double`. Default 400. Must be
+  less than **long press**.
+
+## Wiring
+
+**Input** — none. `ebutton` is a source.
+
+**Output** — a message for each event, with `payload` one of `press`, `release`, `long` or `double`, and `topic` an
+empty string.
 
 ## Behavior
 
-Each event sends one message, a dict with two keys:
+The events each action sends depend on **suppress**:
 
-```python
-msg = {'payload': 'press', 'topic': ''}
-```
+| Action | suppress off | suppress on |
+| --- | --- | --- |
+| a click | `press`, `release` | `press` and `release` together, after **double click** has passed |
+| a double click | `press`, `release`, then `press` and `double` together, then `release` | `double`, `release` |
+| a long press | `press`, `long`, `release` | `long`, `release` |
 
-- **`payload`** — the event that fired: `press`, `release`, `long` or `double`.
-- **`topic`** — empty.
+With suppress off, every press is reported at once. With it on, a click arrives later but never as part of a double
+click or a long press, and a press held longer than **double click** but released before **long press** sends only
+`release`.
 
-With `suppress` off (the default), a press always reports immediately, whether or not a second press follows —
-so a rapid double-click reports both a `press` and a `double`, not `double` alone. Turn `suppress` on if a plain
-single press should never be reported when it turns out to be part of a double-click.
+## Errors
 
-No internal pull is enabled by default — wire an external pull resistor, use a button module with one built in,
-or set **pull** if the button instead relies on the board's own internal pull-up/pull-down (a common case for
-boards with buttons wired straight to a GPIO with no resistor of their own — e.g. most of an EMF 2022 TiDAL
-badge's buttons).
-
-Two `ebutton` nodes on the same pin share one button, so they must have the same settings, or the compile stops. See
-[Hardware is shared](index.md#hardware-is-shared).
+- **double click is not less than long press.** Deploy stops with `property "doubleClickMs" 1000 must be less than
+  longPressMs (1000)`, naming the node.
+- **A pin the board can't use, or one another node sets up differently.** Deploy stops and says why. See
+  [What gets checked](../boards.md#what-gets-checked) and [Hardware is shared](index.md#hardware-is-shared).

@@ -6,13 +6,8 @@ Sends one message with a fixed payload each time you click its ▶ icon while th
 
 - **payload type** — `bool`, `number` or `string`. Default `bool`. The output's type follows it, so the editor
   checks the wire against the input it feeds (see [Wiring](../working-in-the-editor.md#wiring)).
-- **value** — the value to send, read as the payload type. Default `true`.
-
-The value is read in one of three ways, by payload type:
-
-- `bool`: `true` sends `True`. Anything else sends `False`, including `True` and `1`.
-- `number`: a whole number is sent as an `int`, any other number as a `float`. An empty value sends `0`.
-- `string`: sent as typed.
+- **value** — the value to send, read as the payload type (see
+  [Typed values](../working-in-the-editor.md#typed-values)). Default `true`.
 
 ## Wiring
 
