@@ -6,13 +6,34 @@ Makes one HTTP request per incoming message and returns the response.
 
 - **url** — `http://host[:port]/path`. **HTTPS isn't supported.**
 - **method** — `GET` or `POST`. No other methods are supported.
-- **timeout (ms)** — how long to wait for the whole request/response exchange. Default 5000ms.
-- **WiFi** — the flow's WiFi network. Every WiFi node in a flow shares this one setting.
+- **timeout (ms)** — how long to wait for the whole request and response. Default 5000.
+- **WiFi** — the flow's WiFi network, shared by every WiFi node in the flow.
+
+## Wiring
+
+**Input** — any message. For a `POST`, `payload` is the request body: a string is UTF-8 encoded, and other types are
+converted.
+
+**Output** — the response:
+
+- `payload` — the decoded body, as a string.
+- `status` — the HTTP status code, an integer.
+
+A response with any status (404, 500, …) is sent on. Test `msg['status'] == 200` yourself.
 
 ## Behavior
 
-For a `POST`, the incoming message's payload becomes the request body (a string is UTF-8 encoded; other types are converted). The first request goes out when the first message arrives, so a timer's first tick (one full interval after start) is the first request. The response comes back as the message's payload (the decoded body, as a string) and a `status` field (the HTTP status code).
+The first request goes out when the first message arrives, so with a [timer](timer.md) it is one full interval after
+the flow starts.
 
-**When it goes wrong.** A response with any status (404, 500, ...) is still sent on, with `status` set to that number (an integer), so test `msg['status'] == 200` yourself. If the connection fails, the request times out or the reply can't be read, nothing is sent on: the node raises an error that shows in the debug log, and the next message tries again. To act on a failure, add a [timer](timer.md)-driven check or watch the log; there is no failure output.
+The server must send `Content-Length`: chunked transfer-encoding isn't supported. Redirects aren't followed. The body
+must be valid UTF-8.
 
-A few real limitations worth knowing: no HTTPS/TLS, no chunked transfer-encoding (the server needs to send `Content-Length`), no redirect following, and the response body must be valid UTF-8 — anything else raises rather than silently mangling it. The whole body is read into memory at once, so a response larger than the board's largest free block fails with `MemoryError`; request a smaller response or use a board with PSRAM. Uses the flow's WiFi network (its **WiFi** field, shared by every WiFi node).
+## Errors
+
+If the connection fails, the request times out or the reply can't be read, nothing is sent on. The console shows the
+error, and the next message tries again. There is no failure output. To act on a failure, watch the console.
+
+- A body that isn't valid UTF-8 raises an error.
+- The whole body is read into memory at once. A response larger than the board's largest free block fails with
+  `MemoryError`. Request a smaller response, or use a board with PSRAM.

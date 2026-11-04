@@ -12,7 +12,7 @@
 //     scripts/vendor/micropython-wasi/  the interpreter built-in nodes' compile hooks run in
 //     reference/                   the authoring guide, node catalog and node pages, from docs/user-guide/. A link to
 //                                  a page not carried here is rewritten to the docs site.
-//     examples/                    the flows the guide points at, from test-flows/ and test-flows/ai-authoring/
+//     examples/                    the flows the guide points at, from tutorials/, test-flows/ and test-flows/ai-authoring/
 //     LICENSE, THIRD-PARTY-NOTICES.txt
 //
 // The skill, checker and docs come from one checkout, so they always describe the same editor. The build refuses to
@@ -208,7 +208,7 @@ function main() {
   }
 
   const flowsDir = join(ROOT, "test-flows");
-  const examples = [...EXAMPLES.map((f) => join(flowsDir, f)), ...readdirSync(join(flowsDir, "ai-authoring")).filter((f) => f.endsWith(".flow.json")).sort().map((f) => join(flowsDir, "ai-authoring", f))];
+  const examples = [...EXAMPLES.map((f) => join(existsSync(join(ROOT, "tutorials", f)) ? join(ROOT, "tutorials") : flowsDir, f)), ...readdirSync(join(flowsDir, "ai-authoring")).filter((f) => f.endsWith(".flow.json")).sort().map((f) => join(flowsDir, "ai-authoring", f))];
   for (const f of examples) copy(f, join(out, "examples", f.split(/[\\/]/).pop()));
 
   copy(join(ROOT, "LICENSE"), join(out, "LICENSE"));

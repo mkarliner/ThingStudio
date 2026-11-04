@@ -6,7 +6,7 @@
 // to the left edge on a second row -- that wrap is what made the hero flows look like a rats nest even
 // though the graph itself was fine.
 //
-// The check is over test-flows/**/*flow.json and examples/**/*.flow.json -- the flows this repo
+// The check is over test-flows/**/*flow.json and tutorials/**/*.flow.json -- the flows this repo
 // authors and ships. A user's own flow can be laid out however they like; the editor never repositions
 // nodes on load.
 // `python3 test-flows/relayout.py` fixes a file that fails this.
@@ -17,7 +17,7 @@ import { describe, expect, it } from "vitest";
 
 const DIRS = [
   join(__dirname, "..", "..", "test-flows"),
-  join(__dirname, "..", "..", "examples"),
+  join(__dirname, "..", "..", "tutorials"),
 ];
 
 interface FlowFile {
@@ -40,7 +40,7 @@ for (const DIR of DIRS) {
 }
 files.sort();
 
-const display = (path: string) => path.replace(/.*?(?:^|\/)(?:test-flows|examples)\//, "");
+const display = (path: string) => path.replace(/.*?(?:^|\/)(?:test-flows|tutorials)\//, "");
 
 describe("authored flow layout", () => {
   it("finds the flows to check", () => {

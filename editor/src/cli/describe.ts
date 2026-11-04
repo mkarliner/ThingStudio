@@ -19,9 +19,13 @@ import { buildRegistry } from "../node-library/registry.js";
 
 export interface PortInfo { name: string; type: string }
 export interface PropertyInfo {
-  /** What the property means, when the name and default don't say. */
+  /** What the property means, when the name and default don't say: a hand-written note, else the descriptor's help. */
   note?: string;
   name: string;
+  /** The label the editor shows for it, which is how a user-guide page names it. */
+  label?: string;
+  /** The values a choice property allows. */
+  options?: string[];
   /** string, number, boolean, or object for anything else. */
   type: string;
   default: unknown;
@@ -32,6 +36,8 @@ export interface NodeInfo {
   type: string;
   kind: string;
   label: string;
+  /** One line saying what the node does. Hand-written in NODE_PURPOSES. */
+  purpose: string;
   group: string;
   inputs: PortInfo[];
   outputs: PortInfo[];
@@ -68,6 +74,30 @@ function ports(list: PortDefinition[] | undefined, props: Record<string, unknown
 // One line for the properties whose name and default don't say enough (units, which of several values, what a number
 // counts). Hand-written, keyed "<kind>.<property>"; a test fails if a key names a property that no longer exists.
 export const PROPERTY_NOTES: Record<string, string> = {
+  "change.property": "the message property or flow variable to set or delete",
+  "change.value": "with value from `literal`, the value itself; otherwise the name of the message property or flow variable to copy",
+  "delay.delayMs": "milliseconds to hold each message; positive",
+  "filter.threshold": "for `deadband`: how far the payload must move from the last one passed; 0 passes any change",
+  "filter.intervalMs": "for `rate`: least milliseconds between messages passed",
+  "filter.ignoreFirst": "for `change` and `deadband`: the first message only sets the starting value, and is not passed",
+  "filter.perTopic": "filter each `msg.topic` on its own",
+  "inject.payloadValue": "the value to send, read as the chosen payload type",
+  "startup.payloadValue": "the value to send, read as the chosen payload type",
+  "http_in.port": "the TCP port to listen on, 1 to 65535; nodes can share a port",
+  "http_in.path": "the exact path to match, such as `/status`; no `:name` parameters",
+  "http_in.responseTimeoutMs": "milliseconds to wait for an `http response` node before the client gets a 500",
+  "http_request.url": "`http://host[:port]/path`; HTTPS is not supported",
+  "http_request.timeoutMs": "milliseconds to wait for the whole request and response",
+  "mqtt_publish.topic": "the topic to publish to",
+  "mqtt_publish.retain": "ask the broker to keep the message for later subscribers",
+  "mqtt_subscribe.topic": "the topic to subscribe to when the flow starts",
+  "ntp.server": "the NTP server to ask for the time",
+  "udp_receive.port": "the local UDP port to listen on, 1 to 65535",
+  "udp_receive.pollMs": "milliseconds between checks for a datagram; rarely needs changing",
+  "udp_send.host": "the destination hostname or IP address",
+  "udp_send.port": "the destination UDP port, 1 to 65535",
+  "udp_send.timeoutMs": "milliseconds to wait before the send fails",
+  "wifi_status.pollMs": "milliseconds between checks of the WiFi connection; a message goes out when it changes, and on the first check",
   "timer.intervalMs": "milliseconds between messages; the payload is a count that rises 1, 2, 3...",
   "function.code": "the body of a MicroPython function; `msg` in, return the message, None, or a list with one entry per output",
   "function.outputCount": "how many outputs, 1 to 10",
@@ -178,6 +208,61 @@ export const PROPERTY_NOTES: Record<string, string> = {
   "neopixel.order": "RGB, GRB, RGBW or GRBW: the wire colour order of your strip",
 };
 
+// One line for each node saying what it does, the first thing the catalog says about it. Hand-written, keyed by the
+// node's kind (the key in NODE_FACTORIES); a test fails when a node has none or a key names no node.
+export const NODE_PURPOSES: Record<string, string> = {
+  change: "Sets or deletes one value on each message, then passes the message on.",
+  debug: "Prints a message's payload to the console.",
+  delay: "Holds each message for a set time, then passes it on unchanged.",
+  filter: "Passes a message on only when it is worth sending, and drops the rest.",
+  function: "Runs your own MicroPython on each message.",
+  inject: "Sends one message with a fixed payload when you click its \u25b6 icon.",
+  journal: "Keeps the recent history of a number as rows of average, minimum and maximum.",
+  startup: "Sends one message with a fixed payload each time the flow starts.",
+  timer: "Sends an increasing count at a fixed interval.",
+  gui_bar: "Shows `msg.payload` as a bar that fills between two values.",
+  gui_button: "A touch button: its input sets what it shows, and it sends a message when tapped.",
+  gui_label: "Shows `msg.payload` as text.",
+  gui_led: "A light that is on when `msg.payload` is true and off when it is false.",
+  gui_modal: "A full-screen message: any payload opens it, `None` closes it.",
+  gui_navigator: "Takes page commands (next, prev, back, home or a page name) and sends the page when it changes.",
+  gui_readout: "Shows `msg.payload` as a number with units.",
+  gui_screen: "Draws a display's pages of widgets and sends the screen to a display spi node.",
+  gui_trend: "A moving histogram: a row of bars, oldest on the left, newest on the right.",
+  adc: "Reads an ADC pin and sends a message when the reading leaves, or returns to, a set range.",
+  bme280: "Reads a BME280 or BMP280 temperature, humidity and pressure sensor at a fixed interval.",
+  display_i2c: "Pushes an already-rendered frame to an I2C monochrome OLED panel.",
+  display_spi: "Pushes an already-rendered frame to an SPI color TFT panel.",
+  ebutton: "Reports press, release, long-press and double-click events from one debounced button.",
+  encoder: "Reads a rotary encoder and sends its value each time it turns.",
+  eswitch: "Reports when a debounced switch opens or closes.",
+  gpio_out: "Drives a GPIO pin high or low from each incoming message.",
+  i2c: "Talks to an I2C device that has no node of its own; each message does one transfer.",
+  interrupt: "Fires immediately when a GPIO pin changes state.",
+  neopixel: "Drives a WS2812 (NeoPixel) strip: sets the pixels from each message and writes.",
+  pwm_out: "Drives a PWM signal on a GPIO pin, for dimming or any variable duty cycle.",
+  touch_i2c: "Raw touch input from an I2C touch panel: sends a message when a finger lands and when it lifts.",
+  ble_advertise: "Advertises over Bluetooth LE: the board's name, and each message's payload as manufacturer or service data.",
+  ble_characteristic_in: "Sends a message each time a connected phone writes a Bluetooth LE characteristic.",
+  ble_characteristic_out: "Sets a Bluetooth LE characteristic to each message's payload for a phone to read, and notifies subscribed phones.",
+  ble_notify: "Subscribes to a characteristic of another Bluetooth LE device and sends a message for each new value.",
+  ble_read: "Reads a characteristic of another Bluetooth LE device for each message that arrives, and sends the value on.",
+  ble_scan: "Listens for Bluetooth LE advertisements, such as beacons and BLE sensors, and sends one message per advertisement.",
+  ble_uart_in: "Receives text from a phone over Bluetooth LE, through the Nordic UART Service.",
+  ble_uart_out: "Sends text to the phones connected over Bluetooth LE, through the Nordic UART Service.",
+  ble_write: "Writes each message's payload to a characteristic of another Bluetooth LE device.",
+  http_in: "Starts (or joins) an HTTP server on the board and sends a message for each matching request.",
+  http_request: "Makes one HTTP request per incoming message and returns the response.",
+  http_response: "Completes a request that arrived through an http in node.",
+  mqtt_publish: "Publishes each message's payload to an MQTT topic.",
+  mqtt_subscribe: "Sends one message for each message that arrives on a subscribed MQTT topic.",
+  ntp: "Sets the board's clock from the internet and sends the time.",
+  udp_receive: "Listens on a UDP port and sends one message per datagram received.",
+  udp_send: "Sends each message's payload as a UDP datagram to a fixed host and port.",
+  wifi_gate: "Passes a message through unchanged while the board's WiFi is connected, and drops it while it isn't.",
+  wifi_status: "Reports the board's WiFi connection state.",
+};
+
 const typeOf = (v: unknown): string => (typeof v === "string" || typeof v === "number" || typeof v === "boolean" ? typeof v : "object");
 
 export function buildCatalog(): Catalog {
@@ -203,7 +288,9 @@ export function buildCatalog(): Catalog {
         const declared = (def?.properties ?? []).find((f) => f.name === name)?.configType;
         if (declared) p.configType = declared;
         else if (CONFIG_BY_PROPERTY[name]) p.configType = CONFIG_BY_PROPERTY[name];
-        const note = PROPERTY_NOTES[`${kind}.${name}`];
+        if (field?.label) p.label = field.label;
+        if (field?.options?.length) p.options = field.options.map((o) => String(o.value));
+        const note = PROPERTY_NOTES[`${kind}.${name}`] ?? field?.help;
         if (note) p.note = note;
         return p;
       });
@@ -211,6 +298,7 @@ export function buildCatalog(): Catalog {
       type: node.nodeType,
       kind: def?.kind ?? "?",
       label: style?.label ?? kind,
+      purpose: NODE_PURPOSES[kind] ?? "",
       group: style?.group ?? "",
       inputs: ports(def?.ports?.inputs, node.properties),
       outputs: ports(def?.ports?.outputs, node.properties),
@@ -247,20 +335,28 @@ export function findNode(catalog: Catalog, name: string): NodeInfo | undefined {
 const lit = (v: unknown): string => (v === "" ? '`""`' : `\`${JSON.stringify(v)}\``);
 const portList = (p: PortInfo[]): string => (p.length ? p.map((x) => `${x.name} (${x.type})`).join(", ") : "none");
 
+const shortType = (t: string): string => t.replace(/^thingstudio\//, "");
+const cell = (v: string): string => v.replace(/\|/g, "\\|").replace(/\s*\n\s*/g, " ");
+
 export function renderNode(n: NodeInfo, heading = "###"): string {
-  const lines = [`${heading} ${n.label}`, "", `Type \`${n.type}\`, kind ${n.kind}${n.group ? `, palette group ${n.group}` : ""}.`, ""];
+  const lines = [`${heading} ${n.label}`, ""];
+  if (n.purpose) lines.push(n.purpose, "");
+  lines.push(`Type: \`${shortType(n.type)}\`. Kind: ${n.kind}.${n.group ? ` Palette group: ${n.group}.` : ""}`, "");
   lines.push(`- Inputs: ${portList(n.inputs)}`);
   lines.push(`- Outputs: ${portList(n.outputs)}${n.variableOutputs ? " (the number of outputs is the node's `outputCount` property)" : ""}`);
   if (n.requires.length) lines.push(`- Needs hardware: ${n.requires.join(", ")} (checked against the board at compile time)`);
   if (n.properties.length === 0) {
     lines.push("- Properties: none");
   } else {
-    lines.push("- Properties (name, type, default):");
+    lines.push("", "| Property | Editor label | Type | Default | Meaning |", "| --- | --- | --- | --- | --- |");
     for (const p of n.properties) {
-      const cfg = p.configType ? `, the id of a \`${p.configType}\` config` : "";
-      const note = p.note ? ` — ${p.note}` : "";
+      const meaning = [
+        (p.note ?? "").replace(/\.$/, ""),
+        p.options ? `one of ${p.options.map((o) => `\`${o}\``).join(", ")}` : "",
+        p.configType ? `the id of a \`${p.configType}\` config` : "",
+      ].filter(Boolean).join("; ");
       const def = p.default === undefined ? "none" : lit(p.default);
-      lines.push(`    - \`${p.name}\`, ${p.type}, default ${def}${cfg}${note}`);
+      lines.push(`| \`${p.name}\` | ${cell(p.label ?? "")} | ${p.type} | ${cell(def)} | ${cell(meaning)} |`);
     }
   }
   return lines.join("\n");
@@ -272,9 +368,12 @@ export function renderMarkdown(c: Catalog): string {
     "",
     "<!-- Generated by `node dist-cli/thingstudio-compile.mjs --describe-all --markdown`. Do not edit by hand: a test fails when it is out of date. -->",
     "",
-    "Every node a flow file can use: its type id, its ports with their payload types, and its properties with the default",
-    "the editor gives a new node. A property a flow file leaves out gets this default. Allowed values and ranges are",
-    "checked when the flow is compiled, and the error says what is allowed. See [Check a flow without the editor](check-a-flow.md).",
+    "Every node a flow file can use: what it does, its type, its ports with their payload types, and its properties with",
+    "the default the editor gives a new node. A property a flow file leaves out gets this default. Ranges are checked when",
+    "the flow is compiled, and the error says what is allowed. See [Check a flow without the editor](check-a-flow.md).",
+    "",
+    "A node's type in a flow file is `thingstudio/` followed by the type shown here: `wifi_status` is written",
+    "`thingstudio/wifi_status`. A property's editor label is the name the node's page in this guide uses for it.",
     "",
     "Ports are numbered from 0 in a flow file's `edges`: `[fromNodeId, outputNumber, toNodeId, inputNumber]`, in the order listed here.",
     "",
@@ -290,9 +389,9 @@ export function renderMarkdown(c: Catalog): string {
   if (c.compileOnly.length) {
     out.push("## Compile-only types", "", "The compiler accepts these but the canvas has no node for them: " + c.compileOnly.map((t) => `\`${t}\``).join(", ") + ".", "");
   }
-  out.push("## Config nodes", "", "A config node is listed under `configs` in a flow file as `{id, type, properties}`. A node names it by id in a property such as `i2cConfigId`. Credentials are saved by name (`credentialName`), never as secrets in the file.", "");
+  out.push("## Config nodes", "", "A config node is listed under `configs` in a flow file as `{id, type, properties}`, with the full type shown here. A node names it by id in a property such as `i2cConfigId`. Credentials are saved by name (`credentialName`), never as secrets in the file.", "");
   for (const cfg of c.configs) {
-    out.push(`### ${cfg.label}`, "", `Type \`${cfg.type}\`${cfg.singleton ? ", one per flow" : ""}.`, "");
+    out.push(`### ${cfg.label}`, "", `Type: \`${cfg.type}\`${cfg.singleton ? " (one per flow)" : ""}.`, "");
     for (const f of cfg.fields) {
       const extra = [f.options ? `one of ${f.options.map((o) => `\`${o}\``).join(", ")}` : "", f.configType ? `the id of a \`${f.configType}\` config` : "", f.help ?? ""].filter(Boolean).join("; ");
       out.push(`- \`${f.name}\`, ${f.kind}${extra ? `: ${extra}` : ""}`);

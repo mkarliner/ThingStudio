@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # test-flows/http_test_server.py
 #
-# Local HTTP test peer for exercising examples/basic-http-request.flow.json's
+# Local HTTP test peer for exercising test-flows/basic-http-request.flow.json's
 # http_request node against real hardware (an ESP32/RP2040 board on the
 # same WiFi network as this machine) -- same role udp_echo_server.py
 # plays for udp_send/udp_receive.

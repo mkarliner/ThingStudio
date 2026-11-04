@@ -1,4 +1,4 @@
-// Every flow in examples/ checks clean. Newcomers open these with File -> Open... and copy from them, so a broken
+// Every flow in tutorials/ checks clean. Newcomers open these with File -> Open... and copy from them, so a broken
 // one fails at the front door. Before this test the examples had a layout check (flow-layout.test.ts) and the
 // blink and GUI ones a compile check (cli-check-flow.test.ts, gui-compile.test.ts); the rest were never compiled.
 //
@@ -13,7 +13,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { checkFlowText } from "../src/cli/check-flow.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
-const examplesDir = join(here, "..", "..", "examples");
+const examplesDir = join(here, "..", "..", "tutorials");
 const mpyDir = join(here, "..", "public", "vendor", "mpy-cross");
 const files = readdirSync(examplesDir)
   .filter((f) => f.endsWith(".flow.json"))
@@ -49,7 +49,7 @@ beforeAll(async () => {
   };
 });
 
-describe("the shipped examples", () => {
+describe("the shipped tutorial flows", () => {
   it("are there to check", () => {
     // tools/make_bundle.py refuses to build a bundle with fewer than two.
     expect(files.length).toBeGreaterThan(1);

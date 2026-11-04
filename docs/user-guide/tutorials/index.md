@@ -18,8 +18,8 @@ project.
 4. [A sensor display](../sensor-display.md) — read a sensor and show it on a touch display. It is a work in
    progress.
 
-The finished flow for each tutorial is in the [examples folder](../examples.md#where-the-folder-is). Open it
-with **File → Open…** rather than copying it from the page.
+The finished flow for each tutorial is in the tutorials folder. [Example flows](../examples.md) says where the folder
+is and what to change in each flow.
 
 If you've built something past the tutorials, what worked and what stalled is a useful report: what you tried next,
 and what happened. [File it on the issue tracker](https://github.com/mkarliner/ThingStudio/issues).

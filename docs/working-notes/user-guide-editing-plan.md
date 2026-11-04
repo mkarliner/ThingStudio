@@ -197,6 +197,21 @@ checklist; the lint plus `mkdocs build --strict` are the mechanical gate. Requir
 Wiring example is copy-pasteable -- the node page is the scavenger's document when an edit breaks, not the
 tutorial.
 
+Batch 1 done 2026-11-04 (for Mike's review before the rest): `wifi status`, `wifi gate`, `udp receive`, `http request`.
+Each now has Properties, Wiring (**Input** / **Output**), Behavior and, where the page has errors, Errors; the repeated
+WiFi sentence, the asides and the limitations paragraph are gone, with no facts added or dropped. The one inbound link
+that named a moved section (Web Blink, "wifi status") was repointed. Left: network `http in`, `http response`,
+`udp send`, `mqtt publish`, `mqtt subscribe`; general `inject`, `timer`, `function`, `change`, `delay`, `filter`,
+`journal`, `debug`, `startup`; hardware pages; the BLE pages are newer than the review and need their own check.
+
+Batch 2 done 2026-11-04: `http in`, `http response`, `udp send`, `mqtt publish`, `mqtt subscribe`, checked against
+the code, not just reformatted. Facts corrected, not only moved: `udp send` timeout only covers a full send buffer, so
+an unreachable IP raises nothing, and `None` sends the text `None` (also for `mqtt publish`); `http in` never reads
+a POST body and answers 404 for any other path or method; `http response` doesn't raise on a second reply. Dropped as
+unverifiable: `http in` queues same-route requests. Open: `mqtt subscribe`'s descriptor says the payload is bytes if it
+isn't text, but the code only decodes it. The node catalog is now lean (type, ports, defaults, allowed values) and
+links to the node pages for meanings.
+
 ### Phase 6 -- structure (review order item 6)
 
 Developer section in the nav (remark 4: check-a-flow, command-line's source-checkout half, From source,

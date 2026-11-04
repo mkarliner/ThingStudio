@@ -1,4 +1,4 @@
-# User guide editing: phases 0-4 landed, the MQTT tutorial written (untested), phase 5 next
+# User guide editing: phases 0-4 landed, tutorial opening rules set, phase 5 next
 
 Status: continuation brief, filed 2026-11-01. Executes `user-guide-editing-plan.md` against
 `reviews/2026-11-01-user-guide.md`. Phases 0, 1, 2 (with the discussion #5 additions) and 3 are done and committed;
@@ -12,8 +12,9 @@ the C6 correction). They carry the answers this brief only points at.
 
 ## State
 
-Pushed to `main` on 2026-11-02 up to `12787b4`. Phase 4 and the MQTT tutorial are committed locally and not pushed
-(check `git status -sb`). The commits that carry the work:
+Everything through phase 4, the MQTT tutorial and the 2026-11-03 start-up help is pushed to `main`, up to `76c4737`
+(`release: v0.11.2`). Check `git status -sb`: Mike's checkout moves between branches. The commits that carry the
+early work:
 
 | Commit | What |
 | --- | --- |
@@ -26,9 +27,36 @@ Pushed to `main` on 2026-11-02 up to `12787b4`. Phase 4 and the MQTT tutorial ar
 | `30569ec` | Blink from your network: tick **full message** when starting from the example file |
 
 Uncommitted: only the deleted `docs/working-notes/.outstanding-items.md.swp`. It is an editor swap file; leave it out
-of commits. The lint baseline is at 11 entries, all known: `nodes/neopixel.md` 4 spellings, `boards.md` 2 spellings and an
+of commits. The lint baseline is at 12 entries, all known: `nodes/neopixel.md` 4 spellings, `boards.md` 2 spellings and an
 opening, `nodes/function.md` 1, `custom-nodes.md` 1, `nodes/index.md` an opening, and `sensor-display.md`'s
-work-in-progress note (a deliberate hand-added entry). Phase 5 deletes most of them.
+and `tutorials/blink-from-anywhere.md`'s work-in-progress notes (deliberate hand-added entries). Phase 5 deletes most
+of the rest.
+
+## Landed 2026-11-03 and 2026-11-04
+
+- **Start Thingstudio** (`getting-started.md`): where it is installed, "If the command isn't found" (PATH, zsh
+  `rehash`, bash `hash -r`, `source` the startup file, PowerShell), and Remove. The installer prints the PATH line only
+  when `~/.local/bin` is missing from the PATH of the shell that ran it. Mike's machine is macOS with zsh. The
+  PowerShell refresh line is untested on Windows. The install paths now appear here and in Installation details.
+- **Tutorial openings:** Mike rewrote the Two more blinks opening and the rules drawn from it are in the style guide
+  ("Tutorial openings"). A session follows them and flags the place. Neutral openings in that shape are in place for
+  Web Blink, Blink from anywhere and A sensor display, as a baseline for Mike to rewrite.
+- **Repeats removed:** the "open the file, don't copy it" text and the "names a WiFi network" explanation live only on
+  `examples.md`. Each tutorial links to `examples.md#before-you-deploy`, and keeps only what is its own (the pin in
+  Two more blinks, the `change-this-number` topics in Blink from anywhere).
+- **Banners:** the tutorials index has a "More tutorials coming" banner inside the Web Blink entry (inside the list item,
+  so the numbering stays 1-4), and Blink from anywhere and A sensor display carry a "Work in progress" note. The lint
+  baseline has an entry for each note. It has 12 entries.
+- **Voice list:** the style guide's list is the master, with a why for each entry and a Written section. Mike's copy is
+  a project doc named "Places for my voice", whose link stays out of the repo.
+- **Landing page** (`mkarliner/ThingStudioWeb`, `index.html`, not part of this repo): the boards table became a chip
+  table (chips matter, board definitions ease wiring), typos fixed, "the editor sends nothing home", and the Get started
+  buttons go to the docs top, above the For the impatient box.
+- **Other:** the nRF52840 is smoke tested, IMU included (`supported-hardware.md`). `examples/README.md` is a pointer to
+  Examples. `sensor-display.md` no longer links the hidden `gui navigator`. The modal bullet stays commented out.
+- **Release:** the first v0.11.2 tag was pushed before `backend/pyproject.toml` said 0.11.2, so the Release workflow's
+  version check failed. The bump is on `main`. The remote tag needed deleting and re-pushing by Mike, since the cloud
+  session's git proxy refuses tag deletes.
 
 ## Settled, don't re-derive
 
@@ -62,8 +90,8 @@ work-in-progress note (a deliberate hand-added entry). Phase 5 deletes most of t
   Mike's own voice" list (the first five are there). AGENTS.md and `decisions/documentation-process.md` carry the rule.
 - **Refusal wording:** one short attributing clause on troubleshooting pages, none on reference pages (style guide,
   "A refusal says it is deliberate, once").
-- **Tutorials:** every download says "open the file, don't copy it"; the "Next" pointers stay; the index lists four
-  tutorials and no plans.
+- **Tutorials:** the example-file text lives on `examples.md` only (see "Landed"); the "Next" pointers stay; the index
+  lists four tutorials, with a banner for the ones still in progress.
   "Blink from your network" is titled **Web Blink** (Mike, 2026-11-02); its file is still `blink-from-your-network.md`, so
   the published URL and the README link keep working. Use the new title in any text that names it.
 - **Mike's own text in the tutorials is settled** (`tutorials-and-examples-landed-briefing.md`; read it before editing any
@@ -97,12 +125,10 @@ work-in-progress note (a deliberate hand-added entry). Phase 5 deletes most of t
   broker login), the misleading `[wifi] … reachable over WiFi` line, and a plainer console line for an unreachable broker.
 - `examples/http-blink.flow.json`'s `debug` node prints only the payload, so the tutorial tells readers to tick
   **full message**. Shipping the example with it ticked would let that sentence go.
-- `examples/README.md` still says `basic-http-request` "takes a value out of the answer"; the flow doesn't (it is
-  `inject -> http request -> debug`). The README duplicates the new Examples page; shorten it to a pointer if you want one home.
-- `gui-headliner-sensor-freenove-s3-4in.flow.json` carries the hidden `gui navigator` node, and `sensor-display.md` still
-  mentions it (remark 6); that tutorial is parked (remark 5), so decide example or tutorial when it is reworked.
-- Phase 4 commented out the `gui modal` bullet as well as its flow-file section. The review also offered one line saying
-  modals aren't laid out in the editor; say if you want that instead.
+- `gui-headliner-sensor-freenove-s3-4in.flow.json` carries the hidden `gui navigator` node. The tutorial now says to
+  skip it; decide whether the example keeps it when the tutorial is reworked.
+- Phase 4 commented out the `gui modal` bullet as well as its flow-file section, and that stands. The review offered
+  one line saying modals aren't laid out in the editor; say if you want that instead.
 - The lint's two departures are in the plan's notes, not `decisions/`. Move them if you want them on that record.
 
 ## Environment facts (every toolchain this run used)
@@ -176,6 +202,15 @@ work-in-progress note (a deliberate hand-added entry). Phase 5 deletes most of t
   `git fetch https://github.com/mkarliner/thingstudio docs/context-diet`, then `git merge FETCH_HEAD`. `pull.rebase` is
   unset, so a merge. Stage by explicit paths so the `.swp` deletion stays out.
 - Commit trailers: `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>` and the `Claude-Session:` line.
+- Pushing, as done 2026-11-03: the bundle must sit inside a connected folder to be staged (`.git/ts-push.bundle` worked;
+  `$HOME/mnt/outputs` did not). In the cloud, use a fresh `git clone --depth 1` in `/tmp`, not the session's attached
+  clone, which can be dirty. `git fetch <bundle> main:rel <tag>:refs/tags/<tag>`, then push the branch and the tag.
+  The proxy answered a tag push with a 403 even though the tag arrived, and refused to delete a remote tag; check with
+  `git ls-remote --tags origin` and `gh run list`, not the push output. Pushing a `v*` tag starts the Release
+  workflow, which checks the tag against `backend/pyproject.toml`.
+- Other repos: a repo the user connects as a folder (the landing page, `ThingStudioWeb`) is edited in place; the cloud
+  `add_repo` for it was refused push access. A rebase or merge left in progress there needs Mike's `git add` and
+  `GIT_EDITOR=true git rebase --continue`.
 
 **The cloud container (separate from the Mac):**
 - `add_repo` for `mkarliner/ThingStudio` (read) reports anonymous reads work; `git ls-remote` and a shallow

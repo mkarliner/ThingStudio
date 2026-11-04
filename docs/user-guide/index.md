@@ -25,7 +25,7 @@ will start again after a reset or power cycle.
        [custom image](custom-firmware.md).
     4. [Connect your board](connecting.md), then [install the runtime](installing-runtime.md).
     5. [Blink an LED](first-flow.md) — three nodes and deploy. Not in a building mood? Open
-       `examples/blink.flow.json` (the [examples folder](examples.md#where-the-folder-is)) with
+       `tutorials/blink.flow.json` (the [tutorials folder](examples.md#where-the-folder-is)) with
        **File → Open…**, point the pin at your board's own LED, deploy.
 
     When something doesn't work, [Debugging](debugging.md) and the [FAQ](faq.md) go by what you see on screen.

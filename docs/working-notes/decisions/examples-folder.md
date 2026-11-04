@@ -24,3 +24,18 @@ Rules that ride along:
 - Not settled: how an **installed** copy surfaces these flows (today: browse to the install folder and use File →
   Open, or download from the docs' links). An editor "Examples…" affordance over the shipped folder is a product
   idea, not a decision; see `outstanding-items.md`.
+
+## 2026-11-04: examples/ holds only the tutorial flows, and is renamed tutorials/
+
+Mike: test flows and tutorial flows go in separate folders; test flows stay in the repo, tutorial flows are copied
+to the installation. `examples/` now holds the four tutorial flows (`blink`, `two-more-blinks`, `http-blink`,
+`blink-from-anywhere`). `basic-http-request`, `basic-mqtt`, `bmp280-test-flow`, `gui-touch-freenove-s3-4in` and
+`gui-headliner-sensor-freenove-s3-4in` moved to `test-flows/`, and the tests that read them (cli-check-flow,
+gui-compile, gui-trend) follow. The tutorial flows carry blank credential names: a flow never names a saved credential,
+so the reader isn't pointed at one they don't have. `packaging/ai-skill/build.mjs` takes `blink` from `examples/` and
+the rest from `test-flows/`. The skill build's check fails on the `test-flows/ai-authoring` flows ("elements is not
+iterable"), unrelated to this change.
+
+Mike, later the same day: the folder is `tutorials/`, not `examples/`. `tools/make_bundle.py` copies it to the bundle
+root as `tutorials/`; the tests, the AI-skill build and the guide follow. The guide page is still `examples.md`
+("Example flows"); its name is open.

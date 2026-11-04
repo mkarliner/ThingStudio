@@ -14,11 +14,10 @@ the button in the editor, and **mqtt subscribe** → **function** → **gpio out
 arrives on another topic. The board joins your WiFi with the saved credential from Web Blink.
 
 You can build the flow step by step, or start from the finished flow,
-[blink-from-anywhere.flow.json](https://github.com/mkarliner/ThingStudio/blob/main/examples/blink-from-anywhere.flow.json),
-in the [examples folder](../examples.md#where-the-folder-is), with **File → Open…**. Open the file; don't copy it from
-this page. It names a WiFi network, `tutorial wifi`, and a broker, `test-mosquitto`, that your computer doesn't have:
-each field's ✎ form says so, and saving it with your details creates it. Before you deploy, replace
-`change-this-number` in both topics (see below).
+[blink-from-anywhere.flow.json](https://github.com/mkarliner/ThingStudio/blob/main/tutorials/blink-from-anywhere.flow.json),
+in the [tutorials folder](../examples.md#where-the-folder-is), with **File → Open…**. Before you deploy, replace
+`change-this-number` in both topics (see below), and set the WiFi network and broker as
+[Example flows](../examples.md#before-you-deploy) describes.
 
 If a step misbehaves on the way, start at [Debugging & troubleshooting](../debugging.md).
 
@@ -110,5 +109,5 @@ the broker form instead. The nodes work the same way.
 
 - [mqtt publish](../nodes/mqtt-publish.md) and [mqtt subscribe](../nodes/mqtt-subscribe.md) — every property, including
   QoS and retain.
-- [Example flows](../examples.md) — `basic-mqtt.flow.json` publishes and subscribes on one topic, with nothing wired to the board.
+- [Example flows](../examples.md) — the finished flows for the tutorials, and what to change in each.
 - [Tutorials](index.md) — the other tutorials.

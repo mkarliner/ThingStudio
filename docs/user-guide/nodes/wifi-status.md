@@ -4,21 +4,38 @@ Reports the board's WiFi connection state. In a flow with no other WiFi node, it
 
 ## Properties
 
-- **poll interval (ms)** — how often to check the connection. Default 5000ms.
-- **WiFi** — the flow's WiFi network. Every WiFi node in a flow shares this one setting (see [Editor in depth](../working-in-the-editor.md#config-nodes)).
+- **poll interval (ms)** — how often to check the connection. Default 5000.
+- **WiFi** — the flow's WiFi network, shared by every WiFi node in the flow (see
+  [Editor in depth](../working-in-the-editor.md#config-nodes)). Pick **unmanaged** to stop this node connecting: use it
+  when something else manages the connection, or to leave the network out of the flow and enter it on the board. See
+  [WiFi provisioning](../wifi-provisioning.md).
+
+## Wiring
+
+**Output** — a message when the connection changes:
+
+| Field | Value |
+| --- | --- |
+| `payload` | `True` when connected, `False` when disconnected |
+| `ip`, `subnet`, `gateway`, `dns` | the connection's addresses; empty strings when disconnected |
+| `rssi` | signal strength in dBm; `None` when disconnected, or when the board can't read it (ESP32 only) |
+
+A [debug](debug.md) node prints only `payload`. Tick **full message** on it to see the other fields.
 
 ## Behavior
 
-This node is optional: other network nodes don't need it. In a flow with MQTT nodes, MQTT manages the WiFi connection and this node only reports on it.
+This node is optional: other network nodes don't need it. In a flow with MQTT nodes, MQTT manages the WiFi connection
+and this node only reports on it.
 
-The payload is `true`/`false` for connected/disconnected. The message also carries `ip`, `subnet`, `gateway`, `dns` (all empty strings when disconnected), and `rssi` (signal strength in dBm, or `null` when disconnected or when the board doesn't support reading it — RSSI is an ESP32-only reading, not available on every board). Use a `debug` node with "full message" checked to see all of these — by default `debug` only prints `payload`.
+It sends a message when the connection changes: a connect or disconnect, or a new `ip`, `subnet`, `gateway` or `dns`.
+It doesn't send on every poll, except the first, which always reports.
 
-It emits when connection identity changes (connect/disconnect, or a change to `ip`/`subnet`/`gateway`/`dns`), not on every poll — except the very first poll, which always reports. `rssi` doesn't trigger a re-emit on its own — it drifts constantly even on an idle connection, so it's included whenever a message fires for another reason, but its own changes don't cause one. It's a snapshot, not a live reading.
+`rssi` drifts constantly, so a change in it sends nothing by itself. It is included, as read at that poll, whenever a
+message goes out for another reason. It is a snapshot, not a live reading.
 
-Pick "unmanaged" on the WiFi config when you don't want this node issuing its own connect — either because something else already manages the connection, or because you want the device to learn its credentials on its own over the air. See [WiFi provisioning](../wifi-provisioning.md) for how that self-provisioning flow works, including the setup network's password and the reprovisioning-fallback option.
+If no connection is ever made, the node reports disconnected, as for any failed connect. Provisioning changes how the
+board gets its credentials, not what this node reports.
 
-If no connection is ever made, this node reports disconnected, the same as any other failed connect — provisioning changes how the interface gets its credentials, not how wifi_status reports on them.
-
-Shows a connection-status dot on the canvas (see [Editor in depth](../working-in-the-editor.md#node-status)) once connected to a device.
-
-While this node has the board on a network, the editor can connect to the board over WiFi. See [Connecting over WiFi](../wifi-connection.md).
+Once the board is connected, the node shows a status dot on the canvas (see
+[node status](../working-in-the-editor.md#node-status)). While the node has the board on a network, the editor can
+connect to the board over WiFi. See [Connecting over WiFi](../wifi-connection.md).

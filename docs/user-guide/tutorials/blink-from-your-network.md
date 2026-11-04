@@ -9,10 +9,9 @@ runs a web server on the board, and the **function** gains a second output for t
 browser.
 
 You can build the flow step by step, or start from the finished flow,
-[http-blink.flow.json](https://github.com/mkarliner/ThingStudio/blob/main/examples/http-blink.flow.json), in the
-[examples folder](../examples.md#where-the-folder-is), with **File → Open…**. Open the file; don't copy it from this
-page. It names a WiFi network, `tutorial wifi`, that your computer doesn't have: the **WiFi** field's ✎ form says so,
-and saving it with your network's details creates it.
+[http-blink.flow.json](https://github.com/mkarliner/ThingStudio/blob/main/tutorials/http-blink.flow.json), in the
+[tutorials folder](../examples.md#where-the-folder-is), with **File → Open…**.
+[Example flows](../examples.md#before-you-deploy) says what to change before you deploy.
 
 If a step misbehaves on the way, start at [Debugging & troubleshooting](../debugging.md).
 
@@ -71,7 +70,7 @@ nothing drives the pin until a request does.
   `.local`; port 9999 and path `/toggle` are the **port** and **path** of the `http in` node.
 - **By IP:** the `debug` node prints the whole **wifi status** message, which includes `ip`. (In the example file,
   tick **full message** on the `debug` node first; it prints only the payload otherwise.) The fields are listed
-  under [wifi status](../nodes/wifi-status.md#behavior). Open `http://<ip>:9999/toggle`.
+  under [wifi status](../nodes/wifi-status.md#wiring). Open `http://<ip>:9999/toggle`.
 
 If `.local` names don't resolve on your network (they don't everywhere, and they don't across VPN tunnels at all —
 multicast doesn't pass), the IP address is the dependable one.
@@ -100,7 +99,5 @@ does and doesn't do.
 - [http in](../nodes/http-in.md) — routes, methods, timeouts and the server's limits.
 - [Blink from anywhere](blink-from-anywhere.md) — the next tutorial: the same LED through an MQTT broker.
 - [mqtt publish](../nodes/mqtt-publish.md) and [mqtt subscribe](../nodes/mqtt-subscribe.md) — the nodes behind it.
-  `examples/basic-mqtt.flow.json`, in the [examples folder](../examples.md#where-the-folder-is), publishes and
-  subscribes on one topic.
 - [Connecting over WiFi](../wifi-connection.md) — the board as an editor peer on your network, not just a web
   server.

@@ -64,7 +64,7 @@
       "id": "httpb0wifi0000001",
       "type": "thingstudio/config/wifi",
       "properties": {
-        "credentialName": "tutorial wifi",
+        "credentialName": "",
         "security": "password"
       }
     }

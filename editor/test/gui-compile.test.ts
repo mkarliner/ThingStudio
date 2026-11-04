@@ -498,8 +498,8 @@ describe.each([
   ["test-flows", "gui-hero-freenove-s3-4in.flow.json"],
   ["test-flows", "gui-hero-freenove-s3-4in-colour.flow.json"],
   ["test-flows", "gui-hero-freenove-s3-4in-landscape.flow.json"],
-  ["examples", "gui-touch-freenove-s3-4in.flow.json"],
-  ["examples", "gui-headliner-sensor-freenove-s3-4in.flow.json"],
+  ["test-flows", "gui-touch-freenove-s3-4in.flow.json"],
+  ["test-flows", "gui-headliner-sensor-freenove-s3-4in.flow.json"],
   ["test-flows", "gui-orientation-test-freenove-s3-4in.flow.json"],
 ])("the example GUI flow %s/%s", (dir, file) => {
   it("loads and compiles without warnings", async () => {

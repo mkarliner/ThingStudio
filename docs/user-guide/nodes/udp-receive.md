@@ -5,9 +5,13 @@ Listens on a UDP port and emits one message per datagram received.
 ## Properties
 
 - **port** — local port to listen on (1–65535).
-- **poll interval (ms)** — internal receive polling cadence. Default 20ms; rarely needs changing.
-- **WiFi** — the flow's WiFi network. Every WiFi node in a flow shares this one setting.
+- **poll interval (ms)** — how often the node checks for datagrams. Default 20.
+- **WiFi** — the flow's WiFi network, shared by every WiFi node in the flow.
 
-## Behavior
+## Wiring
 
-Uses the flow's WiFi network (its **WiFi** field, shared by every WiFi node). The payload is the raw bytes received, unparsed — decode it yourself in a `function` node if you're expecting text or a structured format. `host` and `port` fields on the message carry the sender's address, alongside the payload.
+**Output** — one message per datagram:
+
+- `payload` — the raw bytes received, not parsed. To read text or a structured format, decode it in a
+  [function](function.md) node.
+- `host` and `port` — the sender's address.

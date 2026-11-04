@@ -13,7 +13,7 @@ import { checkFlowText } from "../src/cli/check-flow.js";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const editorDir = join(__dirname, "..");
 const flowsDir = join(__dirname, "..", "..", "test-flows");
-const examplesDir = join(__dirname, "..", "..", "examples");
+const examplesDir = join(__dirname, "..", "..", "tutorials");
 
 function firstExisting(paths: string[]): string {
   for (const p of paths) if (existsSync(p)) return p;
@@ -94,7 +94,7 @@ describe("checkFlowText", () => {
   });
 
   it("says when credentials were stand-ins", () => {
-    const f = readFileSync(join(examplesDir, "gui-headliner-sensor-freenove-s3-4in.flow.json"), "utf8");
+    const f = readFileSync(join(flowsDir, "gui-headliner-sensor-freenove-s3-4in.flow.json"), "utf8");
     const r = checkFlowText(f, { board: "board:freenove-s3-4in" });
     expect(r.ok).toBe(true);
     expect(r.notes.join("\n")).toMatch(/WiFi credentials were not resolved/);
@@ -180,8 +180,8 @@ describe("the command", () => {
   it("describes a node, or all of them, and fails for an unknown one", () => {
     const one = run(["--describe", "timer"]);
     expect(one.status).toBe(0);
-    expect(one.stdout).toMatch(/Type `thingstudio\/timer`/);
-    expect(one.stdout).toMatch(/`intervalMs`, number, default `1000`/);
+    expect(one.stdout).toMatch(/Type: `timer`/);
+    expect(one.stdout).toMatch(/\| `intervalMs` \| [^|]* \| number \| `1000` \|/);
     const all = JSON.parse(run(["--describe-all", "--json"]).stdout);
     expect(all.nodes.length).toBeGreaterThan(30);
     expect(all.configs.length).toBeGreaterThan(2);
@@ -259,7 +259,7 @@ describe("docs/user-guide/ai-authoring.md", () => {
   });
 
   it("every board, example file and page it names exists", () => {
-    for (const f of page.matchAll(/`(?:test-flows\/|examples\/)?([\w-]+\.flow\.json)`/g)) {
+    for (const f of page.matchAll(/`(?:test-flows\/|tutorials\/)?([\w-]+\.flow\.json)`/g)) {
       expect(() => readFileSync(firstExisting([join(examplesDir, f[1]!), join(flowsDir, f[1]!)]), "utf8"), f[1]).not.toThrow();
     }
     for (const l of page.matchAll(/\]\(([\w-]+\.md)\)/g)) {

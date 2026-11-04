@@ -146,7 +146,7 @@
       "id": "3c1d5f10-6b2e-4f7a-9a41-0d2b7e5c8a11",
       "type": "thingstudio/config/wifi",
       "properties": {
-        "credentialName": "tutorial wifi",
+        "credentialName": "",
         "security": "password"
       }
     },
@@ -154,7 +154,7 @@
       "id": "8e47a2b3-1c9d-4e60-b5f2-6a3d9c0e7b24",
       "type": "thingstudio/config/mqtt-broker",
       "properties": {
-        "credentialName": "test-mosquitto"
+        "credentialName": ""
       }
     }
   ]

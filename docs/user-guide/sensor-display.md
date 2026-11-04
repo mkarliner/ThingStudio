@@ -13,7 +13,7 @@ with its own parts, listed under What you need.
 The flow is a **bme280** sensor feeding GUI nodes that draw the readings, with an **mqtt publish** that sends them on.
 
 The finished flow is in the Thingstudio repository:
-[`examples/gui-headliner-sensor-freenove-s3-4in.flow.json`](https://github.com/mkarliner/ThingStudio/blob/main/examples/gui-headliner-sensor-freenove-s3-4in.flow.json).
+[`test-flows/gui-headliner-sensor-freenove-s3-4in.flow.json`](https://github.com/mkarliner/ThingStudio/blob/main/test-flows/gui-headliner-sensor-freenove-s3-4in.flow.json).
 Open it in one of two ways:
 
 - **Open the finished flow.** Download it and open it with **File → Open…**, then set your own WiFi and MQTT
@@ -123,8 +123,8 @@ Until the board has the time, the labels show `--`.
 Add a **gui button** with **mode** `navigate` to each page, so you can turn the pages by touch. See
 [Buttons](nodes/gui.md#buttons).
 
-The example flow also turns the pages every 8 seconds with a **gui navigator** node, which isn't in the palette.
-See [GUI nodes](nodes/gui.md#the-nodes).
+The finished flow also turns the pages by itself every 8 seconds, with a node that isn't in the palette. Skip it when
+you build the flow: the buttons turn the pages by touch.
 
 ## 6. Publish the readings
 

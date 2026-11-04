@@ -1,4 +1,4 @@
-// The trend widget and journal node in a real flow (examples/gui-headliner-sensor-freenove-s3-4in.flow.json):
+// The trend widget and journal node in a real flow (test-flows/gui-headliner-sensor-freenove-s3-4in.flow.json):
 // sizes, the draw call, refused ranges, and the journal's two outputs reaching the right places.
 
 import { readFileSync } from "node:fs";
@@ -13,7 +13,7 @@ import { buildRegistry } from "../src/node-library/registry.js";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 function load() {
-  return parseFlowFile(readFileSync(join(__dirname, "..", "..", "examples", "gui-headliner-sensor-freenove-s3-4in.flow.json"), "utf8"));
+  return parseFlowFile(readFileSync(join(__dirname, "..", "..", "test-flows", "gui-headliner-sensor-freenove-s3-4in.flow.json"), "utf8"));
 }
 
 async function compileFlow(mutate?: (f: ReturnType<typeof load>) => void) {

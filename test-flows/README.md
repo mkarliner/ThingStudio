@@ -3,7 +3,7 @@
 Hand-authored flow JSON files, for manually exercising a real node type on
 real hardware outside the `test/hil/` automated checks -- a human at the
 DUT board watching what happens, not a pass/fail script. Example flows meant
-for users to copy live in [`examples/`](../examples/README.md), not here.
+for users to copy live in [`tutorials/`](../tutorials/README.md), not here.
 
 **Correction:** this doc originally claimed there's no real flow-file
 load/save in the editor yet. Wrong -- there is (`editor/src/flow-file/

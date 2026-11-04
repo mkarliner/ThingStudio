@@ -42,4 +42,4 @@ A sensor reads every 5 seconds.
 2. Journal B, fed from A's second output: rows 156, **seconds per row** 0. Its first output goes to a second
    histogram: the last 2.6 hours, one bar a minute, each with its min to max line.
 
-`examples/gui-headliner-sensor-freenove-s3-4in.flow.json` does this with a BME280.
+`test-flows/gui-headliner-sensor-freenove-s3-4in.flow.json`, in the repository, does this with a BME280.

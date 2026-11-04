@@ -52,7 +52,7 @@ presets, custom nodes and board definitions.
 
 ## Example flows
 
-Every install has an `examples` folder. [Example flows](examples.md#where-the-folder-is) says where it is for each route.
+Every install has a `tutorials` folder. [Example flows](examples.md#where-the-folder-is) says where it is for each route.
 
 ## From source
 

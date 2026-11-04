@@ -243,9 +243,9 @@ No element takes a font, height, width, gap or padding: fonts follow the cells a
 `onValue`, ...) is on the node: see the [catalog](nodes-catalog.md). For a toggle that follows a real device (a smart
 plug), `gui.md` has the wiring.
 
-Read [GUI nodes](nodes/gui.md) for the details, and copy from `examples/`:
-`gui-headliner-sensor-freenove-s3-4in.flow.json` (a sensor display with histograms, a clock and MQTT),
-`gui-touch-freenove-s3-4in.flow.json` (buttons).
+Read [GUI nodes](nodes/gui.md) for the details, and copy from
+`test-flows/gui-headliner-sensor-freenove-s3-4in.flow.json` (a sensor display with histograms, a clock and MQTT) and
+`test-flows/gui-touch-freenove-s3-4in.flow.json` (buttons).
 
 ## Custom nodes
 
@@ -258,16 +258,16 @@ sample messages.
 
 ## Examples to copy
 
-| Task | File in `examples/` |
+| Task | File |
 | --- | --- |
-| Blink an LED | `blink.flow.json` |
+| Blink an LED | `tutorials/blink.flow.json` |
 | Read and set a GPIO pin, keep state in the node | `tutorials/two-more-blinks.flow.json` |
 | Blink an LED from an HTTP request (WiFi, `http in`) | `tutorials/http-blink.flow.json` |
-| Publish to MQTT | `basic-mqtt.flow.json` |
-| Call a web service | `basic-http-request.flow.json` |
-| A BME280 reading | `bmp280-test-flow.flow.json` |
-| A sensor on a display, with histograms and a clock | `gui-headliner-sensor-freenove-s3-4in.flow.json` |
-| Touch buttons | `gui-touch-freenove-s3-4in.flow.json` |
+| Publish to MQTT | `test-flows/basic-mqtt.flow.json` |
+| Call a web service | `test-flows/basic-http-request.flow.json` |
+| A BME280 reading | `test-flows/bmp280-test-flow.flow.json` |
+| A sensor on a display, with histograms and a clock | `test-flows/gui-headliner-sensor-freenove-s3-4in.flow.json` |
+| Touch buttons | `test-flows/gui-touch-freenove-s3-4in.flow.json` |
 
 ## When you hand the flow back
 

@@ -1,19 +1,25 @@
 # wifi gate
 
-Passes a message through unchanged if the WiFi station is currently connected, or drops it if it isn't.
+Passes a message through unchanged while the board's WiFi is connected, and drops it while it isn't.
 
 ## Properties
 
-- **WiFi** — the flow's WiFi network. Every WiFi node in a flow shares this one setting.
+- **WiFi** — the flow's WiFi network, shared by every WiFi node in the flow.
+
+## Wiring
+
+**Input** — any message.
+
+**Output** — the same message, unchanged, while the link is up. While it is down, nothing is sent on, as when a
+[function](function.md) node returns `None`.
 
 ## Behavior
 
-A `transform`, like `function` or `delay` — one input, one output, same `msg` in and out unchanged when the WiFi link is up. When the link is down, the message is dropped: nothing propagates past this node, the same way a `function` node's `return None` stops a message.
+The gate checks the live WiFi link as each message arrives. It doesn't use the last message from
+[wifi status](wifi-status.md), which sends only when the connection changes and can be out of date.
 
-Uses the flow's WiFi network (its **WiFi** field, shared by every WiFi node).
+Put it between a source that fires on its own schedule, such as a timer or a sensor, and a node that sends over the
+network. Messages that arrive while the link is down are dropped instead of failing downstream.
 
-This checks the WiFi station's live link state at the moment each message arrives, not a value read off `wifi status`'s own output messages. `wifi status` only emits when its connection identity changes, so a fast-firing source (a timer or sensor) gated off `wifi status`'s wire could be checking stale state. This node reads the hardware directly, so it always answers "is the link up right now."
-
-A GPIO, timer or sensor source fires on its own schedule with no awareness of whether WiFi is up. Put a `wifi gate` between that source and whatever sends the result over the network: messages that arrive while the link is down are dropped instead of failing downstream (or queuing for a retry a node like `http request` might otherwise attempt).
-
-This only checks the WiFi link itself — not whether a specific MQTT broker or HTTP server is reachable beyond that. `mqtt publish`, `mqtt subscribe` and `http request` already handle their own connection lifecycle on top of a working WiFi link.
+It checks the WiFi link only, not whether a given MQTT broker or HTTP server can be reached. `mqtt publish`,
+`mqtt subscribe` and `http request` handle their own connections on top of a working link.

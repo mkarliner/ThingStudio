@@ -37,17 +37,31 @@ A session that writes or edits the docs:
 - **Leaves Mike's words as they are** once he has written them. They are settled text.
 
 What suits it: a welcome, an opening that says why, the moment a first success lands, an invitation to say how it
-went, a tutorial's title or opening. What doesn't: node pages, troubleshooting steps, error text, anything a reader
-follows step by step.
+went, a tutorial's title or opening. What doesn't: node pages and reference material, troubleshooting and FAQ steps,
+error and console message text (which stays terse), step-by-step install and setup instructions, warnings, safety
+notes and anything about hardware limits. Text people use to get something done stays plain, so it is quick to read
+when something has gone wrong.
 
-Flagged so far:
+This list is the master. Mike keeps a working copy as a document in the ThingStudio project, with the same columns;
+when the two differ, this one wins. (Mike, 2026-11-04.)
 
-- 2026-11-02 `index.md`: the opening paragraphs, which say what Thingstudio is.
-- 2026-11-02 `getting-started.md`: the opening line, and the "Getting help" section.
-- 2026-11-02 `first-flow.md`: the moment the LED blinks (end of "Deploy"), and "Tell us how it went".
-- 2026-11-02 `tutorials/`: the opening paragraph of Web Blink, Blink from anywhere and A sensor display (Two more
-  blinks is written), and the titles of Web Blink and Blink from anywhere.
-- 2026-11-02 `background/` and `coming-from/`: the opening of each page, which says why the page is for the reader.
+Flagged so far, each with neutral text in place until Mike writes his own:
+
+- 2026-11-02 `index.md`: the opening paragraphs, which say what Thingstudio is. First thing a visitor reads; sets
+  the tone for the whole guide.
+- 2026-11-02 `getting-started.md`: the opening line, and the "Getting help" section. A welcome, and a human answer
+  to "who do I ask?".
+- 2026-11-02 `first-flow.md`: the moment the LED blinks (end of "Deploy"), and "Tell us how it went". The payoff of
+  the first hour, and the invitation to report back.
+- 2026-11-02 `tutorials/`: the opening paragraph of Web Blink, Blink from anywhere and A sensor display, and the
+  titles of Web Blink and Blink from anywhere. They set the mood for each project.
+- 2026-11-02 `background/` and `coming-from/`: the opening of each page. It explains why the project exists and
+  speaks to newcomers from other tools.
+
+Written by Mike, so settled text:
+
+- 2026-11-02 `tutorials/two-more-blinks.md`: the opening paragraphs. The worked example for "Tutorial openings",
+  below.
 
 ## Tutorial openings
 

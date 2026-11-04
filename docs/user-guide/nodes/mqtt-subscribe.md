@@ -1,41 +1,61 @@
 # mqtt subscribe
 
-Emits one message per incoming message on a subscribed MQTT topic. With dynamic subscription on, its input changes
-the subscriptions while the flow runs.
+Sends a message for each message that arrives on an MQTT topic.
 
 ## Properties
 
-- **topic** — the topic to subscribe to. Required.
-- **QoS** — `0` or `1`. QoS 2 isn't supported.
-- **dynamic subscription** — accept subscribe/unsubscribe messages on the input (see below). Off by default.
+- **topic** — the topic to subscribe to. Required. `+` matches one level and `#` the rest, as usual in MQTT.
+- **QoS** — `0` or `1`. Default 0. QoS 2 isn't supported.
+- **dynamic subscription** — let messages on the input change the subscriptions (see below). Default off.
 - **MQTT Broker** — the flow's MQTT broker, shared by every MQTT node in the flow: change it on one and it changes on
-  all (see [Editor in depth](../working-in-the-editor.md#config-nodes)). Required — won't compile without one.
+  all (see [Editor in depth](../working-in-the-editor.md#config-nodes)). Required.
+- **WiFi** — the flow's WiFi network, shared by every WiFi node in the flow. **unmanaged** isn't accepted in a flow with
+  MQTT nodes, because they manage the connection themselves.
+
+## Wiring
+
+**Input** — only with dynamic subscription on. See below.
+
+**Output** — one message per message received:
+
+| Field | Value |
+| --- | --- |
+| `payload` | the message body, decoded as UTF-8 text |
+| `topic` | the topic it arrived on, which can differ from the subscription when that has a wildcard |
+| `retained` | `True` when the broker sent it as a retained message |
 
 ## Behavior
 
-The node subscribes to **topic** when the flow starts, and keeps it subscribed.
+The node subscribes to **topic** when the flow starts and keeps the subscription across reconnects. Nodes on the same
+broker share one connection and subscribe independently.
 
-Uses the flow's WiFi network and broker config, same as **mqtt publish**. An "unmanaged" WiFi config isn't accepted here, for the same reason.
+The node holds up to 20 messages that haven't been sent on yet. When more arrive, the oldest is dropped.
 
-The message carries the payload (decoded as text when possible, raw bytes otherwise), the actual topic it arrived on, and whether the broker sent it as a retained message.
+A subscription may not be confirmed by the broker before an [mqtt publish](mqtt-publish.md) node on the same broker
+sends its first message. An early publish can go unheard.
 
-**Dynamic subscription.** With it on, an input message changes what the node listens to:
+The status dot shows this node's own view of the connection, as for mqtt publish.
 
-- `msg.action` is `subscribe` or `unsubscribe`.
-- `msg.topic` is a topic string, a `{topic, qos}` object, or a list of either.
+### Dynamic subscription
 
-`unsubscribe` stops the node receiving that topic. Two nodes subscribed to the same topic are independent: one
-unsubscribing doesn't stop the other. The configured **topic** is subscribed at start, so turning dynamic
-subscription on doesn't interrupt anything; an `unsubscribe` for it takes effect until the next reload.
+With it on, an input message changes what the node listens to:
 
-With dynamic subscription off, a message on the input raises an error rather than being ignored. An unknown action,
-or an action without a topic, raises an error too.
+| Field | Value |
+| --- | --- |
+| `action` | `subscribe` or `unsubscribe` |
+| `topic` | a topic string, a `{topic, qos}` object, or a list of either |
 
-A subscription isn't guaranteed to be fully confirmed before an **mqtt publish** node on the same broker sends its first message. This is usually not an issue, but an early publish can go unheard by a subscriber that was still connecting.
-
-Shows a connection-status dot on the canvas (see [Editor in depth](../working-in-the-editor.md#node-status)) once connected to a device, same as **mqtt publish**.
+An unsubscribe stops this node receiving that topic. Another node subscribed to the same topic keeps receiving it. The
+configured **topic** can be unsubscribed too, until the flow is next reloaded.
 
 ## Errors
 
-A red dot, with a console line starting `mqtt connect to` and ending `failed after 3 attempts`, means the board can't
-reach the broker. See [MQTT broker unreachable](../debugging.md#mqtt-broker-unreachable).
+- **The board can't reach the broker.** The dot turns red and the console shows `mqtt connect to HOST:PORT failed after
+  3 attempts`, with the reason for each attempt. See
+  [MQTT broker unreachable](../debugging.md#mqtt-broker-unreachable).
+- **The subscribe fails.** The console shows `mqtt subscribe to HOST:PORT failed`, with the system's error.
+- **A message arrives on the input with dynamic subscription off.** The node raises an error rather than ignoring it.
+- **An action message has no topic, an unknown action, or a QoS other than 0 or 1.** The node raises an error.
+
+These stop the compile: no MQTT broker or no WiFi network in the flow, an empty topic, a QoS other than 0 or 1, an
+unmanaged WiFi network.
