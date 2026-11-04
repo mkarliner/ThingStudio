@@ -1,41 +1,37 @@
 # display i2c
 
-Pushes an already-rendered frame to an I2C mono OLED panel. The `controller` property selects the display chip;
-[Supported hardware](../supported-hardware.md#displays) lists it. Build the frame upstream (a `function` node
-using `framebuf.FrameBuffer`) and wire it into this node's input.
-
-This node's property panel has a **preset** picker (see [Editor in depth](../working-in-the-editor.md#presets)) —
-save a real panel's pin/address setup under a name once, then load it again on this or another
-**display i2c** node instead of retyping it.
+Shows a frame on an I2C monochrome OLED panel. The frame is drawn upstream, usually in a
+[function](function.md) node with `framebuf`. [Supported hardware](../supported-hardware.md#displays) lists the
+display chips.
 
 ## Properties
 
-- **controller** — the display chip. `SSD1306`.
-- **I2C bus** — the bus the panel is wired to. See [I2C bus](i2c-bus.md).
-- **address** — the I2C address, `addr` in the flow file, as a plain number: `60` is `0x3C`, the usual SSD1306
-  address.
-- **width / height** — panel resolution in pixels. Height must be a multiple of 8.
+The property panel's **preset** picker saves a panel's setup under a name and loads it on another node (see
+[Presets](../working-in-the-editor.md#presets)).
 
-A flow saved before I2C buses existed has its pins on the node. The editor moves them into an I2C bus
-when it opens the flow. Save the flow to keep the change.
+- **controller** — the display chip. Default `SSD1306`.
+- **I2C bus** — the bus the panel is wired to. Required. See [I2C bus](i2c-bus.md).
+- **address** — the I2C address, 0 to 127. Default `0x3C`, the usual SSD1306 address. In the flow file `addr`, a plain
+  number: `60` is `0x3C`.
+- **width (px)** — default 128.
+- **height (px, multiple of 8)** — default 64.
+
+A flow saved before I2C bus settings existed has its pins on the node. The editor moves them into an I2C bus when it
+opens the flow; save the flow to keep the change.
 
 ## Wiring
 
-**Input** — a raw MONO_VLSB-encoded buffer, exactly `width * (height / 8)` bytes, the same format
-`framebuf.FrameBuffer` produces for a 1-bit surface. A wrong-length buffer raises a clear error rather
-than silently corrupting the display's internal buffer indexing.
+**Input** — `payload` is the frame: a `MONO_VLSB` buffer of exactly `width * height / 8` bytes, `bytes` or
+`bytearray`, as `framebuf.FrameBuffer` makes for a 1-bit surface. Send the buffer, not the `FrameBuffer` object.
+
+This node has no output.
 
 ## Behavior
 
-Only I2C wiring is supported — an SSD1306 wired over SPI isn't covered by this node. No drawing primitives here:
-this node only pushes a complete, already-rendered frame on every message.
+Each message replaces the whole picture. The node only shows frames; it has no drawing of its own.
 
-## Text on the panel
-
-Draw in a `function` node with `framebuf` (an `import` inside the function body works) and send the **buffer**, not
-the `FrameBuffer` object. `fb.text()` uses a fixed 8x8 font, so a 128x64 panel holds 16 characters on each of 8
-lines. The node accepts `bytearray` or `bytes`. A panel sharing a bus with a sensor such as a BME280 works at the
-bus's one speed; the default is fine for both.
+`framebuf`'s `text()` draws a fixed 8x8 font, so a 128x64 panel holds 16 characters on each of 8 lines. This
+function node draws a temperature from a [bme280](bme280.md) and sends the frame:
 
 ```python
 import framebuf
@@ -49,3 +45,12 @@ fb.text('%.1f C' % msg['payload']['temperature'], 0, 28, 1)
 msg['payload'] = buf
 return msg
 ```
+
+A panel can share a bus with a sensor, at the bus's one clock; the default 100000 Hz suits both.
+
+## Errors
+
+- **A frame of the wrong size.** The console shows a `[NODE_ERROR]` naming this node and
+  `display_i2c: expected 1024 bytes (128x64 MONO_VLSB), got 1000`. See
+  [Reading a node error](../debugging.md#reading-a-node-error).
+- **No I2C bus, or an address over 127.** Deploy stops and says which.

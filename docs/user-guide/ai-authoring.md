@@ -150,7 +150,7 @@ Things to know before you pick a node:
   latest reading with `flow.set('temp', ...)` in a `function` after the sensor, and read it with `flow.get('temp')`
   in a `function` between `http_in` and `http_response` (send a 503 before the first reading arrives).
 - To print text on a `display_i2c` (SSD1306), draw with `framebuf` in a `function` and send the buffer: see
-  [display i2c](nodes/display-i2c.md#text-on-the-panel). Its address property is `addr`, a plain number (`60` is `0x3C`).
+  [display i2c](nodes/display-i2c.md#behavior). Its address property is `addr`, a plain number (`60` is `0x3C`).
 
 ## Pins: take them from the board
 

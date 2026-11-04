@@ -98,8 +98,8 @@ from aadc import AADC
 _pin = properties['pin']
 _adc = runtime.shared('adc', _pin, (), lambda: machine.ADC(machine.Pin(_pin)))
 _aadc = AADC(_adc)
-if properties['senseInside']:
-    _aadc.sense(False)
+_normal = not properties['senseInside']
+_aadc.sense(_normal)
 _mode = properties['mode']
 _delta = properties['delta']
 _lower = properties['lower']
@@ -107,11 +107,27 @@ _upper = properties['upper']
 _poll = properties['pollMs']
 _node_id = properties['nodeId']
 _last_error = [None]
+# Absolute mode sends once per crossing (Mike, 2026-11-04): after a message, wait for the reading to go back to the
+# other side of the bounds before waiting for the sense side again. Without this, AADC answers at once while the
+# reading stays on the sense side, and the node sends on every poll of the pin.
+_armed = [True]
+
+
+async def _rearm():
+    _aadc.sense(not _normal)
+    try:
+        await _aadc(_lower, _upper)
+    finally:
+        _aadc.sense(_normal)
+    _armed[0] = True
 
 
 async def _bounds():
     if _mode == 'absolute':
+        if not _armed[0]:
+            await _rearm()
         await _aadc(_lower, _upper)
+        _armed[0] = False
     else:
         await _aadc(_delta)
 

@@ -189,3 +189,16 @@ class PWM:
             return getattr(self, "_duty", 0)
         self._duty = value
         print("PWM_DUTY %s %s" % (pin_num, value))
+
+
+class ADC:
+    """Stand-in for machine.ADC, for node-adc.test.ts: read_u16() returns ADC.value, which a test driver sets as
+    the scripted reading changes. No read_uv(), so the node works volts out from raw."""
+
+    value = 0
+
+    def __init__(self, pin):
+        self._pin = pin
+
+    def read_u16(self):
+        return ADC.value

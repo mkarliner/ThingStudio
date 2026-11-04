@@ -170,6 +170,17 @@ ThingStudioMarketing repo, not here.
 
 ## Hardware / rig
 
+- **[P2]** **`neopixel` red and green may be swapped on a GRB strip.** The node's Python reorders each colour
+  for the `order` setting (`(g, r, b)` for GRB), but MicroPython's `NeoPixel` already writes GRB itself
+  (`ORDER = (1, 0, 2, 3)`), so the default `GRB` would put red on green and `RGB` would look right. Hardware check:
+  send `0xff0000` to a WS2812 strip with `order` GRB and note the colour. If it shows green, pass `(r, g, b[, w])`
+  for every order and let `bpp`/the driver's `ORDER` do the rest, or set `ORDER` per order. Found 2026-11-04
+  (user-guide Phase 5, batch 4a); Mike to check later.
+- **[P3]** **Hardware-check `adc` absolute mode's once-per-crossing change** (2026-11-04). It used to send on
+  every poll while the reading stayed on the sense side; it now waits for the reading to cross back before arming
+  again. Covered off-device by `node-adc.test.ts` against a CPython AADC stand-in; check a potentiometer on a
+  board, with and without **poll (ms)**.
+
 - **[P3]** **Does the headless CLI open its serial port more than once per run?** This rig's CH340 takes one
   open per replug (`learnings/hardware-bringup-hil-rig.md`), and the commands that kept wedging were the ones
   that open more than once: `runtime install` opens a `DutLink` to send `STOP_TO_PROMPT`, closes it, lets

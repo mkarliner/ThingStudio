@@ -1,38 +1,47 @@
 # Touch panels
 
-A touch panel is a capacitive touch screen on an I2C bus. Its settings are set once, in a config node, and a
-[gui screen](gui.md) or a [touch](touch-i2c.md) node picks it.
+The settings of a capacitive touch panel on an I2C bus, set once in a config node. A [gui screen](gui.md) or a
+[touch](touch-i2c.md) node picks it.
 
-On a gui screen, pick the panel in the screen's properties. The screen reads it itself and turns touches into
-button presses. There is no wire to draw. If the panel stops answering, the screen's status dot says so, and any
-button being held is let go without sending.
+A gui screen reads its panel itself and turns touches into button presses, with no wire to draw. If the panel stops
+answering, the screen's status dot says so, and a button being held is let go without sending.
 
 ## Settings
 
-- **controller** — the touch chip. [Supported hardware](../supported-hardware.md#touch-panels) lists the chips
-  covered (the FT6336U, as on the Freenove ESP32-S3 displays).
-- **I2C bus** — the bus the panel is wired to. See [I2C bus](i2c-bus.md). On the Freenove 4.0" board: SDA 16,
-  SCL 15.
-- **address** — the chip's I2C address. 0x38 for the FT6336U.
-- **reset pin** — the panel's reset pin, if it has one (Freenove: 18). Blank for none.
-- **poll every (ms)** — how often to look. 20 is smooth; more than 50 starts to feel slow.
-- **panel width / height** — the panel's own size in pixels (Freenove: 320 × 480).
-- **swap x and y / flip x / flip y** — turn the panel's coordinates into the display's. If the display is
-  rotated, tick these until a touch lands where you pressed.
+- **controller** — the touch chip. Default `FT6336U`.
+  [Supported hardware](../supported-hardware.md#touch-panels) lists the chips.
+- **I2C bus** — the bus the panel is wired to. Required. See [I2C bus](i2c-bus.md).
+- **address** — the chip's 7-bit I2C address, from `0x08` to `0x77`. Default `0x38`, the FT6336U's.
+- **reset pin** — the panel's reset pin. Default blank, for none.
+- **poll every (ms)** — how often to read the panel. Default 20; above 50 starts to feel slow.
+- **panel width** / **panel height** — the panel's own size in pixels. Defaults 320 and 480.
+- **swap x and y** / **flip x** / **flip y** — turn the panel's coordinates into the display's. Default off. If the
+  display is turned, tick these until a touch lands where you pressed.
+
+A board definition that has a touch panel labels its pins; see
+[Seeing a board's pins](../boards.md#seeing-a-boards-pins).
 
 ## Presets
 
-The touch panel's edit form has a **preset** control, like the display nodes. Fill in the settings once, press the
-disk button, and give the set a name (for example `freenove-4in`). In another flow, open a new touch panel and pick
-that name to fill the form. The I2C bus is not saved, since it belongs to the flow; pick or add it after loading.
+The edit form has a **preset** control, as the display nodes do. Fill in the settings once, press the disk button and
+give the set a name, such as `freenove-4in`. In another flow, open a new touch panel and pick that name to fill the
+form. The I2C bus isn't saved with it, since it belongs to the flow: pick or add it after loading.
 
 ## Rotated screens
 
-If the display the gui screen is wired to has an [orientation](gui.md#rotating-the-screen), the screen's touch axes are turned to match the picture.
-The raw [touch](touch-i2c.md) node is not turned.
+When the display a gui screen is wired to has an [orientation](gui.md#rotating-the-screen), the screen turns its
+touches to match the picture. A [touch](touch-i2c.md) node turns them by its own **orientation**.
 
 ## Other touch chips
 
-For a chip this node doesn't cover, such as GT911 or CST820, read it from a [function](function.md) node with
+For another chip, such as a GT911 or CST820, read it from a [function](function.md) node with
 `runtime.shared('i2c', 0)`, using the chip's datasheet and a MicroPython driver for it. See
-[docs.micropython.org](https://docs.micropython.org/en/latest/library/machine.I2C.html) for the I2C calls.
+[MicroPython's machine.I2C](https://docs.micropython.org/en/latest/library/machine.I2C.html) for the I2C calls.
+
+## Errors
+
+These stop the deploy:
+
+- No I2C bus: `the touch panel has no I2C bus. Pick one, or add one with +.`
+- An address outside `0x08` to `0x77`.
+- A controller other than FT6336U.

@@ -252,8 +252,19 @@ without suppress, as a table (suppress holds back press and release together, an
 long press sends only `release`). Added: `pwm out` fails on any string, even `"0.5"`; `adc` absolute mode keeps
 sending while the reading stays on the sense side; `neopixel` list and index edge cases. Open for Mike: `neopixel`
 reorders to GRB itself, but MicroPython's `NeoPixel` already writes GRB (`ORDER = (1, 0, 2, 3)`), so red and green
-look swapped on a GRB strip; needs a hardware check before any change. `adc` absolute repeat may be a bug rather
-than behavior.
+look swapped on a GRB strip; needs a hardware check before any change (now in `outstanding-items.md`, Hardware).
+`adc` absolute repeat: Mike chose one message per crossing; `adc.ts` now waits for the reading to cross back before
+re-arming (tested off-device in `node-adc.test.ts`), and the page says so.
+
+Batch 4b done 2026-11-04, buses and displays: `I2C bus`, `i2c device`, `bme280`, `display i2c`, `display spi`,
+`touch`, `Touch panels`, plus `ntp`. Checked against the descriptors, hooks, `i2c-shared.ts`, the drivers and the
+CLI. Defaults added; compile errors quoted. Corrected: `display spi` defaults are 135x240 on pins 12/11/13, not a
+Cheap Yellow Display's, and an orientation is refused on a 135x240 panel; `i2c device` needs an input message for
+every operation (read and scan too); `touch` sends a missed `up` when the panel answers again; Touch panels said the
+touch node isn't turned, but it has its own orientation. Moved: the Freenove pin values on Touch panels are board
+facts, now a link to Seeing a board's pins. Fixed in code: `i2c device` had no `resources` entry, so a missing bus or
+a bus without pins compiled and failed on the board, and its pins weren't claimed; it now has bme280's check
+(`node-i2c.test.ts`). Left for Mike: `display i2c` accepts a height that isn't a multiple of 8.
 
 ### Phase 6 -- structure (review order item 6)
 

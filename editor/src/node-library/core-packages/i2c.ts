@@ -33,6 +33,9 @@ export const descriptor: NodeDescriptor = {
     inputs: [{ name: "msg", type: "any" }],
     outputs: [{ name: "msg", type: "any" }],
   },
+  // The bus is checked and its pins claimed at compile time, as for bme280 (2026-11-04: without this, a flow with no
+  // bus picked, or a bus with no pins, compiled and then failed on the board, and a gpio out on SDA wasn't caught).
+  resources: [{ kind: "i2c", config: "i2cConfigId" }],
   properties: [
     { name: "i2cConfigId", label: "I2C bus", kind: "configRef", configType: "thingstudio/config/i2c-bus", default: "" },
     {

@@ -1,107 +1,110 @@
 # display spi
 
-Pushes an already-rendered frame to an SPI color TFT panel. [Supported hardware](../supported-hardware.md#displays)
-lists the display chips. Build the frame upstream (a `function` node using `framebuf.FrameBuffer`) and wire it into
-this node's input.
-
-This node's property panel has a **preset** picker (see [Editor in depth](../working-in-the-editor.md#presets)) —
-save a real panel's whole setup (pins, bus, resolution, rotation, color order, and so on) under a name once, then
-load it again on this or another **display spi** node instead of retyping every field.
+Shows a frame on an SPI color TFT panel. The frame comes from a [gui screen](gui.md), or from a
+[function](function.md) node that draws with `framebuf`. [Supported hardware](../supported-hardware.md#displays)
+lists the display chips.
 
 ## Properties
 
-- **controller** — the display chip. See [Supported hardware](../supported-hardware.md#displays).
-- **frame format** — `rgb565` (default, full color, `width * height * 2` bytes), or an indexed format: `gs4`
-  (4-bit, a quarter the memory), `gs2` (2-bit, an eighth), or `mono` (1-bit, a sixteenth). Switch away from
-  `rgb565` if a full buffer won't fit in memory; the lower the depth, the smaller the buffer, at the cost of fewer
-  colors. The gui screen wired to the display uses this format.
-- **palette** — 16 RGB565 colors, used by every indexed format (`gs4` reads all 16, `gs2` only the first 4, `mono`
-  only the first 2). Shown as swatches under frame format when an indexed format is picked; click one to change it,
-  or **reset** for the built-in colors. Colors are rounded to the nearest the panel can show. While a
-  [gui screen](gui.md#themes) with a theme is wired to the display, the theme supplies the palette and this one is
-  ignored.
-- **SPI bus** — which hardware SPI peripheral to use. Default 2.
-- **baudrate** — SPI clock speed. Default 40MHz. On an ESP32, use 27MHz or less unless sck and mosi are the bus's
-  fast pins; the compile tells you if the speed is too high for your [board](../boards.md).
-- **sck / mosi / dc pins** — required GPIO pins, checked against your [board](../boards.md).
-- **cs / reset / backlight pins** — optional GPIO pins (−1 for "not wired"). Some boards tie reset or CS high in
-  hardware, or have no backlight control at all.
-- **width / height** — panel resolution in pixels. The gui screen wired to the display takes this size.
-- **orientation** — off by default. Set it to 0, 90, 180 or 270 to turn the picture clockwise; the gui screen wired
-  to the display and its touch follow. With an orientation, set width and height to the panel's own size, `rotation`
-  to how the panel is mounted (0 to 3), and `xstart`/`ystart` to `-1`. See
-  [Rotating the screen](gui.md#rotating-the-screen). A flow that reads touch with a [touch](touch-i2c.md) node
-  rather than a gui screen sets the same angle on that node.
-- **rotation** — 0–7, the panel controller's orientation code. Default `1`.
-- **color order** — `rgb` or `bgr`, matching your panel's own wiring. Default `bgr`.
-- **invert colors** — on or off. Some panels need this flipped to show true colors instead of their negative.
-- **data latch order** — on or off, a separate controller bit (`MH`) some panels need alongside rotation for
-  correct left-right orientation.
-- **xstart / ystart** — the panel's offset into the ST7789 controller's own (larger) frame memory (GRAM). Default
-  `-1` resolves it from the driver's built-in table for the two panel sizes it knows (240×240 → `0, 0`; 135×240 →
-  `52, 40`). Any other resolution needs both set explicitly, or the driver raises an error at flow-boot time.
-  Getting it wrong doesn't error: it blits into the wrong window of GRAM, so content shows up clipped or offset.
-  An ST7796 panel has no offset: leave both at `-1`.
+The property panel's **preset** picker saves a panel's whole setup under a name and loads it on another node (see
+[Presets](../working-in-the-editor.md#presets)). Pins, size, rotation and color settings differ from board to board,
+so check them against your own panel, or use a board's labelled pins (see
+[Seeing a board's pins](../boards.md#seeing-a-boards-pins)).
 
-Pins, bus, resolution, rotation, color order, inversion and data latch order vary board to board — there's no
-sensible default that works for more than one board, so confirm these against your own panel. The defaults above
-match a Cheap Yellow Display (ESP32-2432S028); a different board (or unit) may need different values.
+- **controller** — the display chip: `ST7789` or `ST7796 (320x480)`. Default `ST7789`.
+- **frame format** — the frame the node takes. Default `rgb565`, full color at 2 bytes a pixel. The indexed formats
+  use less memory and fewer colors: `gs4` (16 colors, a quarter of the memory), `gs2` (4 colors, an eighth) and `mono`
+  (2 colors, a sixteenth). A gui screen wired to the display draws in this format.
+- **palette** — the 16 RGB565 colors the indexed formats use: `gs4` all 16, `gs2` the first 4, `mono` the first 2.
+  Shown as swatches under **frame format** when an indexed format is picked; click one to change it, or **reset**
+  for the built-in colors. While a gui screen with a [theme](gui.md#themes) is wired to the display, the theme sets
+  the palette and this one is ignored.
+- **SPI bus** — the hardware SPI peripheral. Default 2.
+- **baudrate** — the SPI clock in Hz. Default 40000000.
+- **sck pin** / **mosi pin** / **dc pin** — required. Defaults 12, 11 and 13.
+- **cs pin** / **reset pin** / **backlight pin** — `-1` when not wired, the default for all three. Some boards tie
+  reset or CS in hardware, or have no backlight control.
+- **width (px)** / **height (px)** — the panel's own size. Defaults 135 and 240. A gui screen wired to the display
+  takes this size.
+- **orientation** — default off. `0`, `90`, `180` or `270` turns the picture clockwise, and a gui screen wired to the
+  display turns its size and touch to match. With an orientation, set **width** and **height** to the panel's own
+  size, **rotation** to how the panel is mounted (0 to 3), and **xstart** and **ystart** to `-1`. See
+  [Rotating the screen](gui.md#rotating-the-screen). A flow that reads touch with a [touch](touch-i2c.md) node sets
+  the same angle on that node.
+- **rotation (0-7)** — the controller's own orientation code. Default 1.
+- **color order** — `BGR` or `RGB`, as the panel is wired. Default `BGR`.
+- **invert colors** — for a panel that shows the negative. Default off.
+- **data latch order (MH bit)** — a controller bit some panels need, with rotation, for the right left-to-right
+  order. Default on.
+- **xstart** / **ystart** — the panel's offset in the ST7789's larger frame memory. Default `-1`, which takes it from
+  the driver's table: `0, 0` for 240x240, `52, 40` for 135x240. Any other ST7789 size needs both set. A wrong offset
+  doesn't raise an error: the picture shows clipped or shifted. An ST7796 has no offset; leave both at `-1`.
 
 ## Wiring
 
-**Input** — a raw RGB565-encoded buffer, exactly `width * height * 2` bytes, the same format
-`framebuf.FrameBuffer` produces for an RGB565 surface. A wrong-length buffer raises a clear error rather than
-silently desyncing the panel.
+**Input** — `payload` is the frame, in the **frame format**. A whole frame is exactly the size the format needs:
+`width * height * 2` bytes for `rgb565`; for the indexed formats, see Indexed formats below.
 
-A message with a `y` key is a strip instead: whole rows, written starting at row `y`. The [gui screen](gui.md) node
-sends strips, so a large display never needs a full frame in memory.
+A message with a `y` field is a strip: whole rows, written from row `y` down. A gui screen sends strips, so a large
+display never needs a whole frame in memory.
+
+This node has no output.
 
 ## Behavior
 
 ### RGB565 byte order
 
-`framebuf.RGB565` stores each pixel in CPU-native (little-endian on ESP32) byte order, but SPI TFT controllers
-including the ST7789 expect big-endian pixel bytes on the wire. This node forwards whatever bytes it's given as-is,
-so a buffer built straight from `framebuf.FrameBuffer(..., framebuf.RGB565)` comes out with red and blue scrambled
-(an intended pure green circle renders red). There's no MicroPython-level flag to pick big-endian storage. Fix:
-byte-swap the buffer before handing it to this node —
+`framebuf.RGB565` stores each pixel in the processor's byte order, little-endian on an ESP32, but the panel expects
+big-endian. The node sends the bytes as they are, so a buffer drawn with `framebuf.FrameBuffer(..., framebuf.RGB565)`
+comes out with its colors wrong: an intended green shows red. Swap each pair of bytes after drawing, before
+`msg['payload'] = buf`:
 
 ```python
 for i in range(0, len(buf), 2):
     buf[i], buf[i + 1] = buf[i + 1], buf[i]
 ```
 
-— right after drawing, before `msg['payload'] = buf`. A color whose two bytes match (pure white `0xFFFF`, pure
-black `0x0000`) is unaffected either way, which is why a swap bug can hide behind text and background colors.
+A color whose two bytes are the same, such as white `0xFFFF` or black `0x0000`, looks right either way, so text on a
+plain background can hide the problem.
 
-### Indexed modes
+### Indexed formats
 
-Build an indexed frame with `framebuf.FrameBuffer(..., framebuf.<FORMAT>)`, where `<FORMAT>` matches the frame
-format property:
+Draw an indexed frame with `framebuf.FrameBuffer(..., framebuf.<FORMAT>)`, with the constant that matches **frame
+format**:
 
-| frame format | `framebuf` constant | bits/pixel | palette indices used | 240×320 frame size |
-|---|---|---|---|---|
-| `rgb565` (default) | `RGB565` | 16 | — (real color) | 153,600 bytes |
-| `gs4` | `GS4_HMSB` | 4 | 0–15 (all 16) | 38,400 bytes |
-| `gs2` | `GS2_HMSB` | 2 | 0–3 (first 4) | 19,200 bytes |
-| `mono` | `MONO_HMSB` | 1 | 0–1 (first 2) | 9,600 bytes |
+| frame format | `framebuf` constant | bits per pixel | palette entries used | 240x320 frame |
+| --- | --- | --- | --- | --- |
+| `rgb565` | `RGB565` | 16 | none, real color | 153,600 bytes |
+| `gs4` | `GS4_HMSB` | 4 | 0–15 | 38,400 bytes |
+| `gs2` | `GS2_HMSB` | 2 | 0–3 | 19,200 bytes |
+| `mono` | `MONO_HMSB` | 1 | 0–1 | 9,600 bytes |
 
-Send the `bytearray` itself as the payload (`msg['payload'] = buf`). `bytes(buf)` makes a second full-size copy the
-board may not have memory for. For a flow that redraws often, keep the buffer in `context` and reuse it.
+Pixel values are palette entries, not colors; the node turns each into its palette color as it writes. The indexed
+formats have no byte-order problem.
 
-Pixel values are palette indices, not colors — this node expands each one to real color using the palette property.
-Indexed modes have no byte-order gotcha: the palette already stores colors in the order this node expects.
+Each row is padded to a whole byte, so a width that isn't a multiple of the pixels per byte (2 for `gs4`, 4 for `gs2`,
+8 for `mono`) needs a little more than `width * height * bits / 8`. On a wrong size the node names the size it
+expects.
 
-The buffer isn't "1/N the size of RGB565": each row is padded to a whole number of bytes, so a width that isn't an
-exact multiple of the format's pixels-per-byte (2 for `gs4`, 4 for `gs2`, 8 for `mono`) needs slightly more than a
-flat `width * height / bitsPerByte` formula gives. This node works out and checks the real size, and names the
-expected byte count on a mismatch.
+`mono` needs `framebuf.MONO_HMSB`. `MONO_VLSB` (the [display i2c](display-i2c.md) layout) and `MONO_HLSB` give a
+garbled picture with no error, because the node can't tell which one was used.
 
-`mono` needs `framebuf.MONO_HMSB` specifically, not `MONO_VLSB` or `MONO_HLSB`. MicroPython's three 1-bit formats
-are not interchangeable — the wrong one silently produces a garbled image, not an error, because this node can't
-tell which you used. `MONO_VLSB` packs pixels into vertical byte columns (the OLED convention **display i2c**
-uses); this node streams rows, so `MONO_VLSB` won't work. `MONO_HLSB` and `MONO_HMSB` pack their 8 pixels-per-byte
-in opposite orders; this node expects `MONO_HMSB`, and `MONO_HLSB` comes out with each row's pixels in the wrong
-order.
+Send the `bytearray` itself (`msg['payload'] = buf`): `bytes(buf)` makes a second copy the board may not have memory
+for. For a flow that redraws often, keep the buffer in `context` and reuse it.
 
-Fewer colors as the depth drops, so these suit a UI with a fixed palette (buttons, status text, icons), not photos.
+## Errors
+
+- **A frame or strip of the wrong size.** The console shows a `[NODE_ERROR]` naming this node, such as
+  `display_spi: expected 64800 bytes (...), got 64000`, or for a strip
+  `display_spi: a strip must be whole rows of 270 bytes inside the 240-row screen, ...`. See
+  [Reading a node error](../debugging.md#reading-a-node-error).
+- **An ST7789 size other than 240x240 or 135x240, with xstart and ystart at -1.** The board reports
+  `Unsupported display. Only 240x240 and 135x240 are supported without xstart and ystart provided` when the flow
+  starts.
+- **An orientation with a panel offset**, including the default 135x240 size. Deploy stops: clear the orientation,
+  or set **rotation** by hand.
+- **An orientation with a rotation of 4 to 7.** Deploy stops; with an orientation, rotation is 0 to 3.
+- **A baudrate too fast for the board or for these pins.** Deploy stops and gives the board's limit.
+- **A changed palette while a themed gui screen is wired.** Deploy warns that the theme sets the palette.
+- **A pin the board can't use, or one another node sets up differently.** Deploy stops and says why. See
+  [What gets checked](../boards.md#what-gets-checked) and [Hardware is shared](index.md#hardware-is-shared).

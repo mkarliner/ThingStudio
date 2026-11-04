@@ -12,6 +12,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+import { checkFlowText } from "../src/cli/check-flow.js";
 import { CompileError } from "../src/compiler/errors.js";
 import type { GraphNode } from "../src/compiler/graph.js";
 import type { CodegenContext } from "../src/compiler/node-definition.js";
@@ -156,5 +157,17 @@ describe("thingstudio/i2c core package", () => {
     expect(() => i2c.codegenTransform!(node({ operation: "read", address: "0x29", register: "0x100" }), ctx())).toThrow(/above its maximum, 255/);
     expect(() => i2c.codegenTransform!(node({ operation: "read", address: "0x29", length: 0 }), ctx())).toThrow(/below its minimum, 1/);
     expect(() => i2c.codegenTransform!(node({ operation: "poke" }), ctx())).toThrow(/not one of the declared options/);
+  });
+
+  it("checks the bus at compile time, as bme280 does: a bus must be picked, have pins, and its pins are claimed", () => {
+    const errors = (nodes: unknown[], edges: unknown[], configs: unknown[] = [BUS0]) =>
+      checkFlowText(JSON.stringify({ formatVersion: 1, flowName: "t", nodes, edges, layout: {}, configs })).errors.map((e) => e.message);
+    const inject = { id: "in", type: "thingstudio/inject", properties: {} };
+    const dev = (p: Record<string, unknown> = {}) => ({ id: "i1", type: "thingstudio/i2c", properties: { i2cConfigId: "bus0", address: "0x29", ...p } });
+    expect(errors([inject, dev()], [["in", 0, "i1", 0]])).toEqual([]);
+    expect(errors([inject, dev({ i2cConfigId: "" })], [["in", 0, "i1", 0]])[0]).toMatch(/has no I2C bus/);
+    expect(errors([inject, dev()], [["in", 0, "i1", 0]], [{ ...BUS0, properties: { bus: 0, scl: null, sda: null, freq: 100000 } }])[0]).toMatch(/no SCL pin set/);
+    const gpio = { id: "g", type: "thingstudio/gpio_out", properties: { pin: 4 } };
+    expect(errors([inject, dev(), gpio], [["in", 0, "i1", 0], ["in", 0, "g", 0]]).join(" ")).toMatch(/GPIO 4/);
   });
 });
