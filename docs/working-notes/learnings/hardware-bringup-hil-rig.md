@@ -258,7 +258,7 @@ committed -- if this VM stays in the loop, `install.sh` should grow the same sin
   for esp32/esp32s2 and 0x0 for everything else, and only offers those two addresses. The C5's ROM wants the
   image at 0x2000 (MicroPython's own `ESP32_GENERIC_C5/board.json`, `flash_offset`), so a Thonny install boot-loops
   with `invalid header`. Mike hit it on the ESP32-C5-340X. User docs: `installing-micropython.md` (Thonny section),
-  `debugging.md` (no-boot row).
+  `debugging.md` (no-boot row). Reported to Thonny by Mike, 2026-11-04: https://github.com/thonny/thonny/issues/3963.
   Reflashed with esptool at 0x2000 the same day: boots to `MicroPython v1.29.0 on 2026-08-24; ESP32C5 module with
   ESP32-C5`, after harmless `quad_psram ... continuing without it` lines (the C5-FH4 module has no PSRAM; the
   generic build enables quad PSRAM). FAQ entry added.
@@ -286,3 +286,24 @@ committed -- if this VM stays in the loop, `install.sh` should grow the same sin
   characteristic show with read/write/notify, a read gives the count (uint16 LE), notify updates every 2 s, and a
   phone's write reaches debug as the decoded value. The UART echo (`ble-uart-echo-c5.flow.json`) works the same day:
   a line written to the Nordic UART RX comes back on TX as `echo: <line>`. Phase 2 passes on hardware.
+- **BLE central: `gattc_discover_descriptors(conn, start, end)` searches strictly after `start` (2026-11-04).**
+  MicroPython hands `start` to NimBLE's `ble_gattc_disc_all_dscs`, whose start is the characteristic's *value
+  handle*. Passing value_handle + 1 (the obvious reading of "descriptors after the value") skips a 0x2902 that sits
+  right after the value: on the ESP32-C5 the central found the service and characteristic, then reported "has no
+  notify switch (0x2902)" against a peer that has one. Pass value_handle. Both test stand-ins (pymock's bluetooth,
+  test_ts_ble.py's) now search strictly after `start`, as NimBLE does, and fail the old call.
+- **BLE central on the C5: `gap_scan` can refuse with `OSError(-519)` (2026-11-04).** -519 is NimBLE passing up
+  an HCI error (0x200 + 0x07, Memory Capacity Exceeded), seen while finding a peer again after a link dropped. It
+  escaped `_find`, ended the peer task, and left every read on "finding" forever. Now any step's failure, this
+  included, is reported once and retried after RETRY_MS (pymock's `fail_scan` covers it). Separately: Mike reports
+  the C5 needs a power cycle to redeploy with BLE flows; cause not yet known (see the BLE outstanding item).
+- **ESP32-C5: switching BLE off and on between flows breaks the next scan (2026-11-04).** With `ble-scan-debug-c5`
+  redeployed, the BLE_TRACE showed `ts_ble`'s cleanup in order -- `gap_scan(None)`, the scan-done event 3 ms later,
+  `gap_advertise(None)`, `active(False)` -- then the new flow's `active(True)` and, 25 ms after it, `gap_scan`
+  refused with `OSError(-519)` (HCI 0x07). Only a power cycle cleared it: the "C5 doesn't reset cleanly" Mike saw.
+  REPL sequences (stop/off/on/scan, active or passive, 1 or 5 s, with or without an IRQ handler) did *not*
+  reproduce it; stop-and-restart without off/on (test A) always worked. Fix: the cleanup leaves the radio on and
+  stops scan, advertising and links, detaching the handler. Cost: the stack keeps its ESP-IDF memory until a reset
+  (FAQ entry). Also seen the same day: a running BLE flow on the C3 left 6 KB of ESP-IDF heap and ~30 KB of
+  MicroPython heap, too little to receive a changed 14 KB `ts_ble` (MemoryError on a 6.8 KB piece); Remove flow +
+  power cycle first. Splitting `ts_ble` into parts is the follow-up.

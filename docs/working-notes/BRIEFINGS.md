@@ -6,6 +6,10 @@ files to re-enter current work. The per-session handoff rules that produce these
 
 ## Live — active handoffs and open threads
 
+- `ble-nodes-and-c5-bringup-briefing.md` — 2026-11-04 — BLE nodes in three phases (scan/advertise, GATT server +
+  UART, central) on `ts_ble`, the ESP32-C5 brought up, package libraries (runtime 15.0.0); phase 3 is PR #10;
+  next: custom firmware images for the ESP32-C5 and C3.
+
 - `user-guide-editing-landed-briefing.md` — 2026-11-01 — user guide editing plan phases 0-3 and the discussion #5
   additions landed with a style lint; next: phase 2a (Examples page, CI compile check), the MQTT tutorial, phases 4-7.
 - `tutorials-and-examples-landed-briefing.md` — 2026-11-01 — tutorials 1-2 written, reviewed live with Mike

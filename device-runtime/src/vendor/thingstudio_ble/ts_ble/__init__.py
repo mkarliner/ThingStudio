@@ -1,13 +1,17 @@
 # SPDX-License-Identifier: Apache-2.0
-# device-runtime/src/vendor/thingstudio_ble/ts_ble.py
+# device-runtime/src/vendor/thingstudio_ble/ts_ble/__init__.py
 #
 # Thingstudio's shared Bluetooth LE radio, a flow dependency (a flow with no BLE node never carries it), written on
 # MicroPython's own `bluetooth` module. Scoping and decisions: docs/working-notes/ble-nodes-scoping.md,
 # decisions/ble-nodes.md.
 #
+# A package of three parts (2026-11-04), so a flow loads only what it uses: this one (the radio, scanning,
+# advertising, advertising data and value encodings), ts_ble.server (the GATT server and Nordic UART), and
+# ts_ble.central (the GATT client). The server and the client plug into the radio's gatt_server and peers.
+#
 # The board has one radio and one IRQ handler, so every BLE node -- built-in or custom -- goes through radio():
 #   - the radio is a keyed singleton (runtime.shared('ble', 0)), so a redeploy, which clears singletons, starts
-#     from a fresh one; its cleanup stops scanning and advertising and turns the radio off;
+#     from a fresh one; its cleanup stops scanning, advertising and links but leaves the radio on (_Radio.stop);
 #   - this module keeps no state of its own between deploys: everything lives on the _Radio object;
 #   - scanning is shared: every scanner sees every advertisement, through its own filters and queue. The scan
 #     settings are a second singleton ('ble_scan'), so two nodes asking for different settings is a loud error
@@ -49,6 +53,13 @@ _ADV_MFR = const(0xFF)
 ADV_LIMIT = 31
 QUEUE_LIMIT = 20
 _DEDUPE_LIMIT = 64
+
+
+def _controller_error(what, e):
+    """A radio call refused by the controller, as a deploy/node error that says what to do."""
+    return OSError(
+        "Bluetooth controller refused to %s (%r): power-cycle the board (a reset button may not be enough)" % (what, e)
+    )
 
 
 def _ticks():
@@ -246,26 +257,10 @@ class Scanner:
         return self.queue.pop(0)
 
 
-# -- the GATT server (BLE phase 2) ---------------------------------------------------------------------------------
-
-_IRQ_CENTRAL_CONNECT = const(1)
-_IRQ_CENTRAL_DISCONNECT = const(2)
-_IRQ_GATTS_WRITE = const(3)
+# Shared by the server (ts_ble.server) and the client (ts_ble.central), which plug into the radio below.
 _IRQ_MTU_EXCHANGED = const(21)
-
-FLAG_READ = const(0x0002)
-FLAG_WRITE_NO_RESPONSE = const(0x0004)
-FLAG_WRITE = const(0x0008)
-FLAG_NOTIFY = const(0x0010)
-
-# The Nordic UART Service: what phone terminal apps (nRF Connect, Serial Bluetooth Terminal, Bluefruit) look for.
-NUS_SERVICE = "6e400001-b5a3-f393-e0a9-e50e24dcca9e"
-NUS_RX = "6e400002-b5a3-f393-e0a9-e50e24dcca9e"  # the phone writes here
-NUS_TX = "6e400003-b5a3-f393-e0a9-e50e24dcca9e"  # the board notifies here
-
-_WRITE_BUFFER = 244  # the largest write a phone can make in one go at MTU 247
-_DEFAULT_MTU = 23
-_ADV_DEFAULT_MS = 500
+_CENTRAL_EVENTS = (7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19)
+DEFAULT_MTU = 23
 
 
 class Writes:
@@ -290,122 +285,6 @@ class Writes:
         return self.queue.pop(0)
 
 
-class _Gatt:
-    """The registered service table: a handle per (service, characteristic), the nodes listening for writes, the
-    connected centrals and their MTUs. Built once per deploy, by whichever GATT node starts first."""
-
-    def __init__(self, radio, table):
-        self.radio = radio
-        self.handles = {}
-        self.writers = {}  # handle -> [Writes]
-        self.conns = {}  # conn handle -> MTU
-        self.nodes = []  # node ids, for connection status
-        ble = radio.ble
-        services = tuple(
-            (bluetooth.UUID(norm_uuid_for_ble(svc)), tuple((bluetooth.UUID(norm_uuid_for_ble(c)), int(f)) for c, f in chars))
-            for svc, chars in table
-        )
-        try:
-            ble.gap_advertise(None)  # registering resets the GATT database; nothing may be connectable meanwhile
-            registered = ble.gatts_register_services(services)
-        except OSError as e:
-            raise OSError("Bluetooth services could not be registered (%r): %d services; hard-reset the board" % (e, len(services)))
-        for (svc, chars), handles in zip(table, registered):
-            for (char, flags), h in zip(chars, handles):
-                self.handles[(norm_uuid(svc), norm_uuid(char))] = h
-                if flags & (FLAG_WRITE | FLAG_WRITE_NO_RESPONSE):
-                    ble.gatts_set_buffer(h, _WRITE_BUFFER)
-        try:
-            ble.config(mtu=_WRITE_BUFFER + 3)  # the size the board asks for; the phone may agree to less
-        except (OSError, ValueError, TypeError):
-            pass
-
-    def handle(self, svc, char):
-        try:
-            return self.handles[(norm_uuid(svc), norm_uuid(char))]
-        except KeyError:
-            raise OSError("characteristic %s in service %s isn't in the registered table" % (char, svc))
-
-    def on_writes(self, node_id, svc, char):
-        w = Writes(node_id)
-        self.writers.setdefault(self.handle(svc, char), []).append(w)
-        self.attach(node_id)
-        return w
-
-    def attach(self, node_id):
-        """Adds a node to the ones whose status follows the connections."""
-        self._node(node_id)
-
-    def _node(self, node_id):
-        if node_id not in self.nodes:
-            self.nodes.append(node_id)
-        self._status(node_id)
-
-    def _status(self, node_id):
-        if self.conns:
-            runtime.report_status(node_id, "connected", "%d connected" % len(self.conns))
-        else:
-            runtime.report_status(node_id, "disconnected", "advertising, no one connected")
-
-    def payload_room(self):
-        """What one notification carries at the smallest connected MTU."""
-        return (min(self.conns.values()) if self.conns else _DEFAULT_MTU) - 3
-
-    def write(self, node_id, svc, char, data, notify):
-        """Sets the value a phone reads, and notifies every connected phone. Returns how many were notified."""
-        h = self.handle(svc, char)
-        ble = self.radio.ble
-        ble.gatts_write(h, data)
-        self._node(node_id)
-        sent = 0
-        if notify:
-            for conn in list(self.conns):
-                try:
-                    ble.gatts_notify(conn, h)
-                    sent += 1
-                except OSError:
-                    pass  # it disconnected meanwhile; the disconnect event follows
-        return sent
-
-    def send_chunks(self, node_id, svc, char, data):
-        """Notifies `data` to every connected phone in pieces that fit each one's MTU (UART). Returns pieces sent."""
-        h = self.handle(svc, char)
-        ble = self.radio.ble
-        self._node(node_id)
-        sent = 0
-        for conn, mtu in list(self.conns.items()):
-            step = mtu - 3
-            for i in range(0, len(data), step):
-                try:
-                    ble.gatts_notify(conn, h, data[i : i + step])
-                    sent += 1
-                except OSError:
-                    break
-        return sent
-
-    def irq(self, event, data):
-        if event == _IRQ_CENTRAL_CONNECT:
-            conn = data[0]
-            self.conns[conn] = _DEFAULT_MTU
-            for n in self.nodes:
-                self._status(n)
-        elif event == _IRQ_CENTRAL_DISCONNECT:
-            self.conns.pop(data[0], None)
-            for n in self.nodes:
-                self._status(n)
-            self.radio.readvertise()  # the stack stops advertising on a connection
-        elif event == _IRQ_GATTS_WRITE:
-            conn, h = data[0], data[1]
-            writers = self.writers.get(h)
-            if writers:
-                value = bytes(self.radio.ble.gatts_read(h))
-                for w in writers:
-                    w.offer(value, conn)
-        elif event == _IRQ_MTU_EXCHANGED:
-            if data[0] in self.conns:
-                self.conns[data[0]] = data[1]
-
-
 def norm_uuid_for_ble(u):
     """norm_uuid form -> what bluetooth.UUID() takes: an int for 16-bit, the dashed string for 128-bit."""
     n = norm_uuid(u)
@@ -424,6 +303,7 @@ class _Radio:
         self.scanning = False
         self.gatt_server = None
         self.adv = None  # (interval_ms, data) the board advertises, kept to restart it
+        self.peers = []  # _Peer, one per ble peer config (phase 3)
         self.ble.irq(self._irq)
 
     def _irq(self, event, data):
@@ -438,8 +318,17 @@ class _Radio:
                 self.scanning = False
                 for s in self.scanners:
                     runtime.report_status(s.node_id, "error", "scan stopped by the radio")
-        elif self.gatt_server is not None:
-            self.gatt_server.irq(event, data)
+            for p in self.peers:
+                p.scan_done()
+        elif event in _CENTRAL_EVENTS:
+            for p in self.peers:
+                p.irq(event, data)
+        else:
+            if self.gatt_server is not None:
+                self.gatt_server.irq(event, data)
+            if event == _IRQ_MTU_EXCHANGED:
+                for p in self.peers:
+                    p.irq(event, data)
 
     def scan(self, node_id, interval_ms, window_ms, active, **filters):
         """Adds a scanner and starts the one shared scan with these settings (the first scanner's; a second with
@@ -450,7 +339,10 @@ class _Radio:
         self.scanners.append(s)
         if not self.scanning:
             self.scan_params = params
-            self.ble.gap_scan(0, params[0], params[1], params[2])
+            try:
+                self.ble.gap_scan(0, params[0], params[1], params[2])
+            except OSError as e:
+                raise _controller_error("start the scan", e)
             self.scanning = True
         runtime.report_status(node_id, "connected", "scanning")
         return s
@@ -458,7 +350,10 @@ class _Radio:
     def advertise(self, node_id, interval_ms, adv):
         """Sends `adv`, connectable when the flow has a GATT server, until the next call."""
         self.adv = (interval_ms, adv)
-        self.readvertise()
+        try:
+            self.readvertise()
+        except OSError as e:
+            raise _controller_error("start advertising", e)
         if node_id is not None:
             runtime.report_status(node_id, "connected", "advertising %d bytes" % len(adv))
 
@@ -468,34 +363,61 @@ class _Radio:
         interval_ms, adv = self.adv
         self.ble.gap_advertise(int(interval_ms * 1000), adv_data=adv, connectable=self.gatt_server is not None)
 
-    def gatt(self, table, name):
-        """The flow's GATT server, registering `table` on first use. Every GATT node passes the same table (the
-        compiler builds it from the whole flow); a different one is a loud error, as for any shared hardware.
-        Without a ble advertise node, the board advertises `name` so phones can find it."""
+    def pause_scan(self):
+        """Stops the shared scan for a moment (a connection attempt can't run beside it); resume_scan restarts it.
+        Cleared first, so the scan-done event isn't reported as the radio stopping the scan."""
+        if not self.scanning:
+            return False
+        self.scanning = False
+        self.ble.gap_scan(None)
+        return True
 
-        def make():
-            g = _Gatt(self, table)
-            self.gatt_server = g
-            if self.adv is None:
-                self.adv = (_ADV_DEFAULT_MS, build_adv(name))
-            self.readvertise()
-            return g
-
-        return runtime.shared("ble_gatt", 0, table, make)
+    def resume_scan(self):
+        if self.scan_params is not None and self.scanners and not self.scanning:
+            p = self.scan_params
+            self.ble.gap_scan(0, p[0], p[1], p[2])
+            self.scanning = True
 
     def stop(self):
-        try:
-            # Cleared before stopping: the radio answers gap_scan(None) with a scan-done event, which must not be
-            # reported as the radio stopping the scan by itself (seen on the ESP32-C5 at every redeploy).
-            was_scanning = self.scanning
-            self.scanning = False
-            self.gatt_server = None
-            self.adv = None
-            if was_scanning:
+        """Redeploy cleanup. Stops scanning and advertising, drops every link and detaches this flow's event handler,
+        but leaves the radio ON: on the ESP32-C5, switching it off and on between flows left the controller refusing
+        the next flow's first scan with OSError(-519) (HCI 0x07) until a power cycle, even though the scan had
+        confirmed stopping (traced 2026-11-04). Cost: after a BLE flow the Bluetooth stack keeps its ESP-IDF memory
+        until the board resets. decisions/ble-nodes.md."""
+        conns = [p.conn for p in self.peers if p.conn is not None]
+        if self.gatt_server is not None:
+            conns.extend(self.gatt_server.conns)
+        peer_scan = any(p.find_op is not None for p in self.peers)
+        for p in self.peers:
+            p.stop()
+        self.peers = []
+        # Cleared before stopping: the radio answers gap_scan(None) with a scan-done event, which must not be
+        # reported as the radio stopping the scan by itself.
+        was_scanning = self.scanning or peer_scan
+        self.scanning = False
+        self.gatt_server = None
+        self.adv = None
+        # Each is best-effort: a step the radio refuses must not stop the others, or the redeploy.
+        if was_scanning:
+            try:
                 self.ble.gap_scan(None)
+            except OSError:
+                pass
+        try:
             self.ble.gap_advertise(None)
-        finally:
-            self.ble.active(False)
+        except OSError:
+            pass
+        for conn in conns:
+            try:
+                self.ble.gap_disconnect(conn)
+            except OSError:
+                pass  # already gone
+        self.ble.irq(_ignore_irq)
+
+
+def _ignore_irq(event, data):
+    """The handler between flows: the old flow's objects are gone, and nothing is scanning or advertising."""
+    return None
 
 
 def radio():
@@ -563,3 +485,4 @@ def decode_value(encoding, data):
     if len(data) != size:
         raise ValueError("%d bytes, but %s is %d" % (len(data), encoding, size))
     return struct.unpack(fmt, bytes(data))[0]
+

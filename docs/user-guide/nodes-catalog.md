@@ -467,6 +467,32 @@ Type `thingstudio/ble_characteristic_out`, kind sink, palette group network.
     - `notify`, boolean, default `true` — also push each value to subscribed phones
     - `bleConfigId`, string, default `""`, the id of a `thingstudio/config/ble` config
 
+### ble notify
+
+Type `thingstudio/ble_notify`, kind source, palette group network.
+
+- Inputs: none
+- Outputs: msg (bytes)
+- Needs hardware: ble (checked against the board at compile time)
+- Properties (name, type, default):
+    - `peerConfigId`, string, default `""`, the id of a `thingstudio/config/ble-peer` config — the ble peer config
+    - `serviceUuid`, string, default `""` — the peer's service: 16-bit or 128-bit
+    - `charUuid`, string, default `""` — the characteristic subscribed to (notify, or indicate if that's all it has)
+    - `encoding`, string, default `"bytes"` — how each value becomes payload; sets the output type
+
+### ble read
+
+Type `thingstudio/ble_read`, kind transform, palette group network.
+
+- Inputs: msg (any)
+- Outputs: msg (bytes)
+- Needs hardware: ble (checked against the board at compile time)
+- Properties (name, type, default):
+    - `peerConfigId`, string, default `""`, the id of a `thingstudio/config/ble-peer` config — the ble peer config: the device to connect to, by address or name
+    - `serviceUuid`, string, default `""` — the peer's service: 16-bit or 128-bit
+    - `charUuid`, string, default `""` — the characteristic read for each message in
+    - `encoding`, string, default `"bytes"` — how the bytes read become payload (bytes, text, int8..uint32, float32 little-endian); sets the output type
+
 ### ble scan
 
 Type `thingstudio/ble_scan`, kind source, palette group network.
@@ -505,6 +531,20 @@ Type `thingstudio/ble_uart_out`, kind sink, palette group network.
 - Properties (name, type, default):
     - `newline`, boolean, default `true` — add \n after each payload
     - `bleConfigId`, string, default `""`, the id of a `thingstudio/config/ble` config
+
+### ble write
+
+Type `thingstudio/ble_write`, kind sink, palette group network.
+
+- Inputs: msg (any)
+- Outputs: none
+- Needs hardware: ble (checked against the board at compile time)
+- Properties (name, type, default):
+    - `peerConfigId`, string, default `""`, the id of a `thingstudio/config/ble-peer` config — the ble peer config
+    - `serviceUuid`, string, default `""` — the peer's service: 16-bit or 128-bit
+    - `charUuid`, string, default `""` — the characteristic written
+    - `encoding`, string, default `"bytes"` — how payload becomes bytes; a value that doesn't fit is reported and dropped
+    - `response`, boolean, default `true` — wait for the peer to confirm each write; off writes without response
 
 ### http in
 
@@ -631,6 +671,16 @@ Type `thingstudio/config/ble`, one per flow.
 - `name`, text: What phone apps show, up to 26 bytes. Shorter leaves more room in an advertisement.
 
 Defaults: `{"name":"thingstudio"}`
+
+### BLE peer
+
+Type `thingstudio/config/ble-peer`.
+
+- `addr`, text: aa:bb:cc:dd:ee:ff. Leave blank to find the device by its name instead.
+- `namePrefix`, text: Used when there's no address. Phones change their address; most sensors don't.
+- `timeoutMs`, number: How long finding and connecting may each take before it tries again.
+
+Defaults: `{"addr":"","namePrefix":"","timeoutMs":10000}`
 
 ### GUI theme
 

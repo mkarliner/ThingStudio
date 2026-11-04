@@ -47,11 +47,12 @@ def compile(ctx, properties):
 `;
 
 export const python = `import ts_ble
+import ts_ble.server
 
 _node_id = properties['nodeId']
 _lines = bool(properties['lines'])
-_gatt = ts_ble.radio().gatt(properties['gattTable'], properties['bleName'])
-_writes = _gatt.on_writes(_node_id, ts_ble.NUS_SERVICE, ts_ble.NUS_RX)
+_gatt = ts_ble.server.gatt(ts_ble.radio(), properties['gattTable'], properties['bleName'])
+_writes = _gatt.on_writes(_node_id, ts_ble.server.NUS_SERVICE, ts_ble.server.NUS_RX)
 _partial = {}  # conn -> bytes of a line not yet ended
 _ready = []  # (bytes, conn) waiting to be sent
 _LINE_MAX = 512

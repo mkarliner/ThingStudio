@@ -120,7 +120,11 @@ nav:
           - ble characteristic out: nodes/ble-characteristic-out.md
           - ble uart in: nodes/ble-uart-in.md
           - ble uart out: nodes/ble-uart-out.md
+          - ble read: nodes/ble-read.md
+          - ble write: nodes/ble-write.md
+          - ble notify: nodes/ble-notify.md
           - BLE config: nodes/ble.md
+          - BLE peer: nodes/ble-peer.md
       - Hardware:
           - interrupt: nodes/interrupt.md
           - eswitch: nodes/eswitch.md

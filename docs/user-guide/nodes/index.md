@@ -46,6 +46,7 @@ See [flows, nodes and messages](../background/flows-and-nodes.md) for how they f
 | broadcast a reading over Bluetooth | [ble advertise](ble-advertise.md) |
 | let a phone read or set a value | [ble characteristic out](ble-characteristic-out.md), [ble characteristic in](ble-characteristic-in.md) |
 | send and receive text with a phone terminal app | [ble uart in](ble-uart-in.md), [ble uart out](ble-uart-out.md) |
+| read from, write to, or listen to a BLE sensor or another board | [ble read](ble-read.md), [ble write](ble-write.md), [ble notify](ble-notify.md) |
 | know when WiFi connects or drops | [wifi status](wifi-status.md) |
 | stop messages while WiFi is down | [wifi gate](wifi-gate.md) |
 
@@ -94,8 +95,12 @@ These nodes need a board with Bluetooth LE: ESP32, ESP32-S3, ESP32-C3 or ESP32-C
 | [ble characteristic out](ble-characteristic-out.md) | sink | Sets a characteristic a phone can read, and notifies it. |
 | [ble uart in](ble-uart-in.md) | source | Receives text lines from a phone terminal app. |
 | [ble uart out](ble-uart-out.md) | sink | Sends text to a phone terminal app. |
+| [ble read](ble-read.md) | transform | Reads a characteristic of another BLE device. |
+| [ble write](ble-write.md) | sink | Writes to a characteristic of another BLE device. |
+| [ble notify](ble-notify.md) | source | Sends each value another BLE device notifies. |
 
-The board's Bluetooth name is set once, in the [BLE config](ble.md).
+The board's Bluetooth name is set once, in the [BLE config](ble.md). The devices the board connects to are
+[BLE peers](ble-peer.md).
 
 ## Hardware
 
@@ -134,6 +139,7 @@ Some settings are set once and shared by the nodes that use them:
   [config nodes](../working-in-the-editor.md#config-nodes).
 - **I2C bus**: the pins and clock for a bus, shared by every I2C node on it. See [I2C bus](i2c-bus.md).
 - **BLE**: the board's Bluetooth name, shared by the ble nodes. See [BLE](ble.md).
+- **BLE peer**: a device the board connects to, shared by the nodes that use it. See [BLE peer](ble-peer.md).
 - **Touch panel**: the controller, bus and size of a touch screen, used by a gui screen or a touch node. See
   [touch panels](touch-panel.md).
 

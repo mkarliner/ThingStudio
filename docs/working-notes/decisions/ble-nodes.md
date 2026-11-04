@@ -44,3 +44,15 @@ maintenance rule. Scoping and reasoning: `../ble-nodes-scoping.md`.
   `struct` (CPython raises `struct.error`, MicroPython may truncate).
 - **2026-11-03 — Unpaired GATT server is tier Accept** (`security-policy.md` §2 and §3.6), per Mike's earlier call
   that phase 2 ships unpaired with a documented warning. Every GATT node page says so.
+- **2026-11-04 — Phase 3's GATT client goes in `ts_ble`, on the raw `bluetooth` module (Mike: "a").** Not
+  `aioble`: it claims the radio's IRQ handler at import, so it can't share the radio with `ts_ble`'s scan and GATT
+  server. Tested with two boards (Mike has them).
+- **2026-11-04 — The radio stays on between flows (session call, from the C5 trace).** `ts_ble`'s redeploy cleanup
+  stops scanning, advertising and links and detaches its handler, but never calls `active(False)`: off-then-on
+  between flows left the C5's controller refusing the next scan (-519) until a power cycle. Cost, documented: the
+  stack keeps its ESP-IDF memory until a reset. Revisit if a port needs the radio off (none found yet).
+- **2026-11-04 — `ts_ble` is a package of three parts** (runtime 15.0.0's package libraries): the core (radio,
+  scan, advertise, advertising data, encodings; 6.3 KB as .mpy for the C5), `ts_ble.server` (GATT server + UART,
+  2.4 KB) and `ts_ble.central` (GATT client, 6.2 KB). Each node imports the part it uses, so a scan-only flow loads
+  6.3 KB, not the 13.4 KB single file -- after a running BLE flow on the C3/C5 left too little RAM to receive a
+  changed `ts_ble`. The temporary BLE_TRACE is removed; the radio-stays-on fix it found stays.

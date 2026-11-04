@@ -45,10 +45,11 @@ def compile(ctx, properties):
 `;
 
 export const python = `import ts_ble
+import ts_ble.server
 
 _node_id = properties['nodeId']
 _newline = bool(properties['newline'])
-_gatt = ts_ble.radio().gatt(properties['gattTable'], properties['bleName'])
+_gatt = ts_ble.server.gatt(ts_ble.radio(), properties['gattTable'], properties['bleName'])
 _gatt.attach(_node_id)
 
 
@@ -57,5 +58,5 @@ async def run(msg, properties):
     data = bytes(p) if isinstance(p, (bytes, bytearray)) else str(p).encode()
     if _newline:
         data += b'\\n'
-    _gatt.send_chunks(_node_id, ts_ble.NUS_SERVICE, ts_ble.NUS_TX, data)
+    _gatt.send_chunks(_node_id, ts_ble.server.NUS_SERVICE, ts_ble.server.NUS_TX, data)
 `;

@@ -39,7 +39,7 @@ function runFlow(nodes: N[], edges: E[], driver: string, configs: unknown[] = []
   const script = join(dir, "_flow.py");
   const prelude = `import bluetooth, struct\nB = bluetooth.BLE()\n`;
   const helpers = `
-import runtime, ts_ble
+import runtime, ts_ble, ts_ble.server
 G = runtime._singletons[('ble_gatt', 0)][1]
 def handle(svc, char):
     return G.handles[(ts_ble.norm_uuid(svc), ts_ble.norm_uuid(char))]
@@ -149,10 +149,10 @@ describe("Nordic UART on the board", () => {
 
   it("registers the Nordic UART Service, joins a phone's writes into lines, and sends text back in MTU-sized pieces", () => {
     const out = runFlow([uartIn, uartOut], [["ui", 0, "uo", 0]], `
-NUS = ts_ble.NUS_SERVICE
+NUS = ts_ble.server.NUS_SERVICE
 print('SERVICES', [(s.value, [(c.value, f) for c, f in chars]) for s, chars in B.services])
-rx = handle(NUS, ts_ble.NUS_RX)
-tx = handle(NUS, ts_ble.NUS_TX)
+rx = handle(NUS, ts_ble.server.NUS_RX)
+tx = handle(NUS, ts_ble.server.NUS_TX)
 B.connect()
 B.phone_write(rx, b'hel')
 B.phone_write(rx, b'lo\\r\\nwor')
@@ -184,7 +184,7 @@ asyncio.run(main())
   it("with lines off, sends each write as it comes", () => {
     const out = runFlow([{ ...uartIn, properties: { lines: false } }, debug], [["ui", 0, "d", 0]], `
 B.connect()
-B.phone_write(handle(ts_ble.NUS_SERVICE, ts_ble.NUS_RX), b'ab')
+B.phone_write(handle(ts_ble.server.NUS_SERVICE, ts_ble.server.NUS_RX), b'ab')
 async def main():
     await _custom_thingstudio_ble_uart_in_wait(_custom_thingstudio_ble_uart_in_props)
     print('MSG', repr((await _custom_thingstudio_ble_uart_in_emit(_custom_thingstudio_ble_uart_in_props))['payload']))

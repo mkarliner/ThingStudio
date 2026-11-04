@@ -3,7 +3,8 @@
 ## Console and compiled source
 
 The **console** shows what the board and Thingstudio report: deploy results, node errors, and what `debug` nodes
-and `print()` send. **Clear** empties it.
+and `print()` send. **Clear** empties it. Scroll up to read or copy: the console stops following new lines until you
+scroll back to the bottom.
 
 Its **Show** menu sets how much it shows:
 
@@ -49,7 +50,9 @@ The [FAQ](faq.md) explains where an ESP32's memory goes.
 ## Commands and the Python prompt
 
 The command box under the console runs Python on the board. Type a line and press Enter; the result appears in the
-console. The up and down arrows bring back earlier commands.
+console. The up and down arrows bring back earlier commands. The box takes one line: a pasted block of several
+lines is joined into one, which Python reads as a `SyntaxError`. Put statements on one line separated by `;`, and
+write a loop as a list comprehension, for example `[print(i) for i in range(3)]`.
 
 ```python
 gc.mem_free()

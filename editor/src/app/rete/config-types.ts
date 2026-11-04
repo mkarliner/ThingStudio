@@ -221,6 +221,19 @@ export const CONFIG_TYPES: Record<string, ConfigTypeDescriptor> = {
     defaults: { name: "thingstudio" },
     summarize: (p) => String(p.name ?? ""),
   },
+  // BLE peer (2026-11-04, BLE phase 3): a device the board connects to as a central, by address or advertised name.
+  // Several per flow (one per device); every central node naming one shares its connection (ts_ble's _Peer).
+  "thingstudio/config/ble-peer": {
+    type: "thingstudio/config/ble-peer",
+    label: "BLE peer",
+    fields: [
+      { name: "addr", label: "address", kind: "text", help: "aa:bb:cc:dd:ee:ff. Leave blank to find the device by its name instead." },
+      { name: "namePrefix", label: "name starts with", kind: "text", help: "Used when there's no address. Phones change their address; most sensors don't." },
+      { name: "timeoutMs", label: "timeout (ms)", kind: "number", help: "How long finding and connecting may each take before it tries again." },
+    ],
+    defaults: { addr: "", namePrefix: "", timeoutMs: 10000 },
+    summarize: (p) => String(p.addr || p.namePrefix || ""),
+  },
   // Touch panel (2026-10-09, button rework): the controller, its I2C bus and the panel's geometry, set once. A gui
   // screen names one and polls it itself; a touch_i2c node can name one for raw {x, y}. Using one panel from two
   // places is a compile error (node-library/touch-panel-shared.ts).

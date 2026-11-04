@@ -172,6 +172,9 @@ import { descriptor as bleCharInCoreDescriptor } from "../../node-library/core-p
 import { descriptor as bleCharOutCoreDescriptor } from "../../node-library/core-packages/ble-characteristic-out.js";
 import { descriptor as bleUartInCoreDescriptor } from "../../node-library/core-packages/ble-uart-in.js";
 import { descriptor as bleUartOutCoreDescriptor } from "../../node-library/core-packages/ble-uart-out.js";
+import { descriptor as bleReadCoreDescriptor } from "../../node-library/core-packages/ble-read.js";
+import { descriptor as bleWriteCoreDescriptor } from "../../node-library/core-packages/ble-write.js";
+import { descriptor as bleNotifyCoreDescriptor } from "../../node-library/core-packages/ble-notify.js";
 import { descriptor as bme280CoreDescriptor } from "../../node-library/core-packages/bme280.js";
 import { descriptor as touchI2cCoreDescriptor } from "../../node-library/core-packages/touch-i2c.js";
 import type { NodeDescriptor } from "../../compiler/node-definition.js";
@@ -467,6 +470,9 @@ export class BleCharacteristicInNode extends buildDescriptorNodeClass(bleCharInC
 export class BleCharacteristicOutNode extends buildDescriptorNodeClass(bleCharOutCoreDescriptor) {}
 export class BleUartInNode extends buildDescriptorNodeClass(bleUartInCoreDescriptor) {}
 export class BleUartOutNode extends buildDescriptorNodeClass(bleUartOutCoreDescriptor) {}
+export class BleReadNode extends buildDescriptorNodeClass(bleReadCoreDescriptor) {}
+export class BleWriteNode extends buildDescriptorNodeClass(bleWriteCoreDescriptor) {}
+export class BleNotifyNode extends buildDescriptorNodeClass(bleNotifyCoreDescriptor) {}
 
 export class UdpSendNode extends buildDescriptorNodeClass(udpSendCoreDescriptor) {}
 
@@ -614,6 +620,9 @@ export const NODE_FACTORIES: Record<NodeKind, () => AnyThingstudioNode> = {
   ble_characteristic_out: () => new BleCharacteristicOutNode(),
   ble_uart_in: () => new BleUartInNode(),
   ble_uart_out: () => new BleUartOutNode(),
+  ble_read: () => new BleReadNode(),
+  ble_write: () => new BleWriteNode(),
+  ble_notify: () => new BleNotifyNode(),
   gui_led: () => new GuiLedNode(),
   gui_button: () => new GuiButtonNode(),
   gui_navigator: () => new GuiNavigatorNode(),

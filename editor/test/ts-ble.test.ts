@@ -1,4 +1,4 @@
-// The shared BLE radio library (device-runtime/src/vendor/thingstudio_ble/ts_ble.py), run in CPython against
+// The shared BLE radio library (device-runtime/src/vendor/thingstudio_ble/ts_ble/, a package), run in CPython against
 // pymock's bluetooth/runtime fixtures (2026-11-03, BLE phase 1). Covers advertising data (build, read, the 31-byte
 // limit, malformed input), the shared scan (one gap_scan, per-node filters and queues, the repeat window, copying the
 // stack's buffers), conflicting settings, and redeploy cleanup.
@@ -36,10 +36,22 @@ OTHER = bytes.fromhex('a4c138000001')
 `;
 
 describe("ts_ble library", () => {
-  it("the pymock fixture is a byte-identical copy of the vendored library", () => {
-    const fixture = readFileSync(join(__dirname, "fixtures", "pymock", "ts_ble.py"));
-    const vendor = readFileSync(join(__dirname, "../../device-runtime/src/vendor/thingstudio_ble/ts_ble.py"));
-    expect(fixture.equals(vendor)).toBe(true);
+  it("the pymock fixture is a byte-identical copy of the vendored library, part by part", () => {
+    for (const part of ["__init__.py", "server.py", "central.py"]) {
+      const fixture = readFileSync(join(__dirname, "fixtures", "pymock", "ts_ble", part));
+      const vendor = readFileSync(join(__dirname, "../../device-runtime/src/vendor/thingstudio_ble/ts_ble", part));
+      expect(fixture.equals(vendor), part).toBe(true);
+    }
+  });
+
+  it("a scan-only flow loads only the core: the server and the client stay out of memory", () => {
+    const out = run(`
+import sys
+r = ts_ble.radio()
+r.scan('n1', 320, 30, False, name_prefix='', addr='', mfr_id=None, svc_uuid='', repeat_ms=0)
+print('LOADED', sorted(m for m in sys.modules if m.startswith('ts_ble')))
+`);
+    expect(out).toContain("LOADED ['ts_ble']");
   });
 
   it("builds advertising data that decodes back to what was put in", () => {
@@ -182,19 +194,21 @@ print('ADV', [c for c in B.calls if c[0] == 'gap_advertise'])
     expect(out).toContain("NODE_STATUS node=a1 state=connected text=advertising 7 bytes");
   });
 
-  it("a redeploy stops the scan and the advertisement, turns the radio off, and the next deploy starts afresh", () => {
+  it("a redeploy stops the scan and the advertisement, leaves the radio on, and the next deploy starts afresh", () => {
+    // Left on, not switched off (2026-11-04): on the ESP32-C5, off-then-on between flows made the next scan fail
+    // with OSError(-519) until a power cycle.
     const out = run(`
 r = ts_ble.radio()
 r.scan('n1', 320, 30, False, name_prefix='', addr='', mfr_id=None, svc_uuid='', repeat_ms=0)
 r.advertise('a1', 500, ts_ble.build_adv('ts'))
 redeploy()
-print('AFTER', B.is_active, B.scanning, B.advertising)
+print('AFTER', B.is_active, B.scanning, B.advertising, ('active', False) in B.calls, B.handler.__name__)
 r2 = ts_ble.radio()
 print('FRESH', r2 is not r, B.is_active, len(r2.scanners))
 r2.scan('n1', 320, 60, True, name_prefix='', addr='', mfr_id=None, svc_uuid='', repeat_ms=0)
 print('NEW SETTINGS OK')
 `);
-    expect(out).toContain("AFTER False False None");
+    expect(out).toContain("AFTER True False None False _ignore_irq");
     // Its own stop is not "the radio stopped the scan".
     expect(out).not.toContain("scan stopped by the radio");
     expect(out).toContain("FRESH True True 0");
