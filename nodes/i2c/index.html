@@ -3548,30 +3548,35 @@
 <p>Talks to an I2C device that has no node of its own. Each message that arrives does one transfer.</p>
 <h2 id="properties">Properties</h2>
 <ul>
-<li><strong>I2C bus</strong> — the bus the device is wired to. See <a href="../i2c-bus/">I2C bus</a>.</li>
-<li><strong>operation</strong> — <code>read</code>, <code>write</code> or <code>scan</code>.</li>
-<li><strong>address</strong> — the device's address, such as <code>0x29</code>. Not used by <code>scan</code>.</li>
-<li><strong>register</strong> — the register to read or write, such as <code>0x80</code>. Leave empty for a device without registers.</li>
-<li><strong>length</strong> — for <code>read</code>, how many bytes.</li>
+<li><strong>I2C bus</strong> — the bus the device is wired to. Required. See <a href="../i2c-bus/">I2C bus</a>.</li>
+<li><strong>operation</strong> — <code>read bytes</code>, <code>write msg.payload</code> or <code>scan the bus</code> (<code>read</code>, <code>write</code>, <code>scan</code> in the flow file).
+  Default <code>read</code>.</li>
+<li><strong>address</strong> — the device's 7-bit address, such as <code>0x29</code> or <code>41</code>. Up to <code>0x7f</code>. Required except for <code>scan</code>.</li>
+<li><strong>register</strong> — the register to read or write, such as <code>0x80</code>. Up to <code>0xff</code>. Leave it empty for a device without
+  registers.</li>
+<li><strong>length (bytes)</strong> — for <code>read</code>, how many bytes, 1 to 256. Default 1.</li>
 </ul>
-<p>Hex (<code>0x29</code>) and decimal (<code>41</code>) both work.</p>
 <h2 id="wiring">Wiring</h2>
-<p><strong>Input</strong> — for <code>write</code>, the bytes to send in <code>payload</code>. <code>read</code> and <code>scan</code> need no input.</p>
-<p><strong>Output</strong> — depends on the operation:</p>
+<p><strong>Input</strong> — any message starts a transfer. For <code>write</code>, <code>payload</code> is what to send: bytes, a list of numbers 0 to 255,
+or one number 0 to 255.</p>
+<p><strong>Output</strong> — the same message, with other fields kept:</p>
 <ul>
-<li><strong>read</strong> — <code>payload</code> is the bytes read. Reading register <code>0x92</code> at address <code>0x29</code> (a TCS34725 ID register)
-  returns <code>b'D'</code>.</li>
-<li><strong>write</strong> — sends <code>payload</code> and passes the message on unchanged. The payload can be bytes, a list of numbers
-  0–255, or one number.</li>
-<li><strong>scan</strong> — <code>payload</code> is the list of addresses that answer.</li>
+<li><code>read</code>: <code>payload</code> is the bytes read. Reading register <code>0x92</code> at address <code>0x29</code> (a TCS34725's ID) gives <code>b'D'</code>.</li>
+<li><code>write</code>: <code>payload</code> is unchanged.</li>
+<li><code>scan</code>: <code>payload</code> is the list of addresses that answer, as numbers.</li>
 </ul>
-<p>Other message fields are kept.</p>
 <h2 id="behavior">Behavior</h2>
-<p>If a transfer fails, the node sends nothing and its status dot says why. The next message tries again.</p>
+<p>The status dot shows whether the device answers. A transfer that fails sends nothing, and the next message tries
+again.</p>
 <h2 id="errors">Errors</h2>
 <ul>
-<li><strong>disconnected</strong> — nothing answers at that address.</li>
-<li><strong>error</strong> — the payload can't be written.</li>
+<li><strong>Nothing answers at the address.</strong> The dot shows <strong>disconnected</strong>, <code>no reply at 0x29 on I2C bus 0</code>, and the
+  message is dropped. For <code>scan</code>, <code>I2C bus 0 not responding</code>.</li>
+<li><strong>A payload that can't be written</strong>, such as a bool or a number over 255. The dot shows <strong>error</strong> with the reason,
+  and the message is dropped.</li>
+<li><strong>No address</strong>, for <code>read</code> or <code>write</code>. The first message fails with a <code>[NODE_ERROR]</code>:
+  <code>i2c: set the device address (7-bit, e.g. 0x29)</code>.</li>
+<li><strong>No bus, a bus without pins, or an address or register out of range.</strong> Deploy stops and says which.</li>
 </ul>
 
 

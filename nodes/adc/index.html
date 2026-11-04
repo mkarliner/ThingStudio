@@ -3551,14 +3551,14 @@
 <li><strong>pin</strong> — the ADC pin. Default 34.</li>
 <li><strong>mode</strong> — what counts as a change. Default <code>relative</code>.<ul>
 <li><code>relative</code> — the reading has moved more than <strong>delta</strong> from the last one sent.</li>
-<li><code>absolute</code> — the reading is outside <strong>lower</strong> to <strong>upper</strong>.</li>
+<li><code>absolute</code> — the reading crosses <strong>lower</strong> or <strong>upper</strong>: out of the range, or back into it (see <strong>sense</strong>).</li>
 </ul>
 </li>
 <li><strong>delta (counts)</strong> — for <code>relative</code>. Default 2000. Must be 1 or more.</li>
 <li><strong>lower</strong> / <strong>upper</strong> — for <code>absolute</code>, in counts from 0 to 65535. Defaults 0 and 50000. <strong>lower</strong> must be less
   than <strong>upper</strong>.</li>
-<li><strong>sense</strong> — <code>outside</code> to send when the reading is outside the bounds, <code>inside</code> to send when it is back inside them.
-  Default <code>outside</code>.</li>
+<li><strong>sense</strong> — for <code>absolute</code>: <code>outside</code> to send when the reading leaves the range, <code>inside</code> to send when it comes
+  back. Default <code>outside</code>. Leave it at <code>outside</code> in <code>relative</code> mode.</li>
 <li><strong>poll (ms)</strong> — also send the reading at least this often. Default 0, which sends only on a change.</li>
 </ul>
 <h2 id="wiring">Wiring</h2>
@@ -3571,9 +3571,9 @@ it is worked out as <code>raw</code> over 65535 times 3.3 V. <code>percent</code
 <h2 id="behavior">Behavior</h2>
 <p>A raw reading is noisy, so <code>relative</code> with a delta of a few thousand counts suits most sensors. <code>absolute</code> suits an
 alarm or a threshold.</p>
-<p>In <code>absolute</code> mode the node sends for as long as the reading stays on the <strong>sense</strong> side of the bounds, not once
-when it crosses: an <code>outside</code> node whose reading stays outside keeps sending. To get one message per crossing, follow
-it with a <a href="../filter/">filter</a>, or use <code>relative</code>.</p>
+<p>In <code>absolute</code> mode the node sends once per crossing. After a message it waits for the reading to go back to the
+other side before it can send again, so a reading that stays outside sends nothing more. If the reading is already on
+the <strong>sense</strong> side when the flow starts, the first message goes out at once.</p>
 <h2 id="errors">Errors</h2>
 <ul>
 <li><strong>The pin can't be read.</strong> The node's status dot turns red with the error, and the reading is dropped. See

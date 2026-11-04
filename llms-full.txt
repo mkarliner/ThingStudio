@@ -3196,13 +3196,18 @@ Sets the board's clock from the internet and sends the time, as text for a displ
 
 ## Properties
 
-- **NTP server** — default `pool.ntp.org`.
-- **UTC offset (hours)** — for standard time in your zone, for example `1` for central Europe or `5.5` for India.
-- **daylight saving** — **UK / EU: automatic** adds an hour from 01:00 UTC on the last Sunday of March to 01:00 UTC
-  on the last Sunday of October. **none** leaves the offset alone. For other countries' rules, set the offset
-  yourself.
-- **format** — what goes in `payload`. Each message also carries every format as a field of the same name.
-- **WiFi** — the flow's WiFi network, shared by every WiFi node.
+- **NTP server** — a host name. Default `pool.ntp.org`.
+- **UTC offset (hours)** — your standard time, from -12 to 14 in half hours: `1` for central Europe, `5.5` for India.
+  Default 0.
+- **daylight saving** — `UK / EU: automatic` adds an hour from 01:00 UTC on the last Sunday of March to 01:00 UTC on
+  the last Sunday of October. `none` adds nothing. Default `UK / EU: automatic`. For other countries' rules, choose
+  `none` and change the offset yourself.
+- **format** — what goes in `payload`. Default `time`. Every message also carries all seven formats, as fields of
+  the same names.
+- **WiFi** — the flow's WiFi network, shared by every WiFi node in the flow (see
+  [Config nodes](../working-in-the-editor.md#config-nodes)). Required.
+
+The seven formats, for 14:05:09 on 14 October 2026 at UTC+1:
 
 | format | `payload` |
 | --- | --- |
@@ -3216,27 +3221,30 @@ Sets the board's clock from the internet and sends the time, as text for a displ
 
 ## Wiring
 
-- **Input** — any message asks for the time now. Wire a [timer](timer.md) in for a clock that ticks: 1 second with
-  seconds shown, otherwise 1 to 5 seconds.
-- **Output** — one message after each sync, and one for each input once the board has the time. Nothing is sent
-  before the first sync, so a [label](gui.md) shows `--` rather than a wrong time.
+**Input** — any message asks for the time now. Wire a [timer](timer.md) in for a clock that ticks: every second for a
+format with seconds, otherwise every 1 to 5 seconds.
 
-To show the time and the date on one screen, use two ntp nodes, one with format `time` and one with `date`.
+**Output** — a new message, not the input one: one after each sync, and one for each input once the board has the
+time. Nothing is sent before the first sync, so a [label](gui.md) shows `--` rather than a wrong time. To show the
+time and the date on one screen, use two `ntp` nodes, one with `time` and one with `date`.
 
 ## Behavior
 
-The ntp node joins the flow's WiFi itself. Once WiFi is up it asks the NTP server for the time, tries again every 30
-seconds until it works, and then every hour. Between syncs the board's own clock keeps time. The request takes up
-to a second and holds up the flow while it runs.
+The node joins the flow's WiFi itself. Once WiFi is up it asks the server for the time, tries again every 30 seconds
+until that works, then syncs every hour. Between syncs the board's own clock keeps time. A sync takes up to a second
+and holds up the flow while it runs.
 
-The board's clock is kept in UTC. The offset and summer time are added to each message, so the hour changes on
-time.
+The board's clock is kept in UTC. The offset and summer hour are added to each message, so the hour changes on time.
+
+The status dot shows **waiting for WiFi** until the first sync, then **synced**.
 
 ## Errors
 
-The node's status shows **waiting for WiFi**, **synced**, or **NTP from *server* failed**. The first failure in a
-row also goes to the console. A board whose MicroPython has no `ntptime` module says so instead of failing at
-start. A flow with no WiFi network doesn't compile.
+- **The sync fails.** The dot shows **NTP from pool.ntp.org failed**, and the first failure in a row also goes to the
+  console as a `[NODE_ERROR]` with the reason. A board whose MicroPython has no `ntptime` module gives the reason
+  `this firmware has no ntptime module`.
+- **No WiFi network, a server that isn't a host name, or an offset outside -12 to 14.** Deploy stops and says which.
+- **The output isn't wired.** Deploy warns `sends the time nowhere: wire its output to something`.
 
 
 ---
@@ -4105,12 +4113,12 @@ Reads an analog pin, and sends the reading when it moves past the set bounds, an
 - **pin** — the ADC pin. Default 34.
 - **mode** — what counts as a change. Default `relative`.
     - `relative` — the reading has moved more than **delta** from the last one sent.
-    - `absolute` — the reading is outside **lower** to **upper**.
+    - `absolute` — the reading crosses **lower** or **upper**: out of the range, or back into it (see **sense**).
 - **delta (counts)** — for `relative`. Default 2000. Must be 1 or more.
 - **lower** / **upper** — for `absolute`, in counts from 0 to 65535. Defaults 0 and 50000. **lower** must be less
   than **upper**.
-- **sense** — `outside` to send when the reading is outside the bounds, `inside` to send when it is back inside them.
-  Default `outside`.
+- **sense** — for `absolute`: `outside` to send when the reading leaves the range, `inside` to send when it comes
+  back. Default `outside`. Leave it at `outside` in `relative` mode.
 - **poll (ms)** — also send the reading at least this often. Default 0, which sends only on a change.
 
 ## Wiring
@@ -4131,9 +4139,9 @@ it is worked out as `raw` over 65535 times 3.3 V. `percent` is `raw` as a percen
 A raw reading is noisy, so `relative` with a delta of a few thousand counts suits most sensors. `absolute` suits an
 alarm or a threshold.
 
-In `absolute` mode the node sends for as long as the reading stays on the **sense** side of the bounds, not once
-when it crosses: an `outside` node whose reading stays outside keeps sending. To get one message per crossing, follow
-it with a [filter](filter.md), or use `relative`.
+In `absolute` mode the node sends once per crossing. After a message it waits for the reading to go back to the
+other side before it can send again, so a reading that stays outside sends nothing more. If the reading is already on
+the **sense** side when the flow starts, the first message goes out at once.
 
 ## Errors
 
@@ -4305,111 +4313,114 @@ Source: https://docs.thingstudio.net/nodes/display-spi/
 
 # display spi
 
-Pushes an already-rendered frame to an SPI color TFT panel. [Supported hardware](../supported-hardware.md#displays)
-lists the display chips. Build the frame upstream (a `function` node using `framebuf.FrameBuffer`) and wire it into
-this node's input.
-
-This node's property panel has a **preset** picker (see [Editor in depth](../working-in-the-editor.md#presets)) —
-save a real panel's whole setup (pins, bus, resolution, rotation, color order, and so on) under a name once, then
-load it again on this or another **display spi** node instead of retyping every field.
+Shows a frame on an SPI color TFT panel. The frame comes from a [gui screen](gui.md), or from a
+[function](function.md) node that draws with `framebuf`. [Supported hardware](../supported-hardware.md#displays)
+lists the display chips.
 
 ## Properties
 
-- **controller** — the display chip. See [Supported hardware](../supported-hardware.md#displays).
-- **frame format** — `rgb565` (default, full color, `width * height * 2` bytes), or an indexed format: `gs4`
-  (4-bit, a quarter the memory), `gs2` (2-bit, an eighth), or `mono` (1-bit, a sixteenth). Switch away from
-  `rgb565` if a full buffer won't fit in memory; the lower the depth, the smaller the buffer, at the cost of fewer
-  colors. The gui screen wired to the display uses this format.
-- **palette** — 16 RGB565 colors, used by every indexed format (`gs4` reads all 16, `gs2` only the first 4, `mono`
-  only the first 2). Shown as swatches under frame format when an indexed format is picked; click one to change it,
-  or **reset** for the built-in colors. Colors are rounded to the nearest the panel can show. While a
-  [gui screen](gui.md#themes) with a theme is wired to the display, the theme supplies the palette and this one is
-  ignored.
-- **SPI bus** — which hardware SPI peripheral to use. Default 2.
-- **baudrate** — SPI clock speed. Default 40MHz. On an ESP32, use 27MHz or less unless sck and mosi are the bus's
-  fast pins; the compile tells you if the speed is too high for your [board](../boards.md).
-- **sck / mosi / dc pins** — required GPIO pins, checked against your [board](../boards.md).
-- **cs / reset / backlight pins** — optional GPIO pins (−1 for "not wired"). Some boards tie reset or CS high in
-  hardware, or have no backlight control at all.
-- **width / height** — panel resolution in pixels. The gui screen wired to the display takes this size.
-- **orientation** — off by default. Set it to 0, 90, 180 or 270 to turn the picture clockwise; the gui screen wired
-  to the display and its touch follow. With an orientation, set width and height to the panel's own size, `rotation`
-  to how the panel is mounted (0 to 3), and `xstart`/`ystart` to `-1`. See
-  [Rotating the screen](gui.md#rotating-the-screen). A flow that reads touch with a [touch](touch-i2c.md) node
-  rather than a gui screen sets the same angle on that node.
-- **rotation** — 0–7, the panel controller's orientation code. Default `1`.
-- **color order** — `rgb` or `bgr`, matching your panel's own wiring. Default `bgr`.
-- **invert colors** — on or off. Some panels need this flipped to show true colors instead of their negative.
-- **data latch order** — on or off, a separate controller bit (`MH`) some panels need alongside rotation for
-  correct left-right orientation.
-- **xstart / ystart** — the panel's offset into the ST7789 controller's own (larger) frame memory (GRAM). Default
-  `-1` resolves it from the driver's built-in table for the two panel sizes it knows (240×240 → `0, 0`; 135×240 →
-  `52, 40`). Any other resolution needs both set explicitly, or the driver raises an error at flow-boot time.
-  Getting it wrong doesn't error: it blits into the wrong window of GRAM, so content shows up clipped or offset.
-  An ST7796 panel has no offset: leave both at `-1`.
+The property panel's **preset** picker saves a panel's whole setup under a name and loads it on another node (see
+[Presets](../working-in-the-editor.md#presets)). Pins, size, rotation and color settings differ from board to board,
+so check them against your own panel, or use a board's labelled pins (see
+[Seeing a board's pins](../boards.md#seeing-a-boards-pins)).
 
-Pins, bus, resolution, rotation, color order, inversion and data latch order vary board to board — there's no
-sensible default that works for more than one board, so confirm these against your own panel. The defaults above
-match a Cheap Yellow Display (ESP32-2432S028); a different board (or unit) may need different values.
+- **controller** — the display chip: `ST7789` or `ST7796 (320x480)`. Default `ST7789`.
+- **frame format** — the frame the node takes. Default `rgb565`, full color at 2 bytes a pixel. The indexed formats
+  use less memory and fewer colors: `gs4` (16 colors, a quarter of the memory), `gs2` (4 colors, an eighth) and `mono`
+  (2 colors, a sixteenth). A gui screen wired to the display draws in this format.
+- **palette** — the 16 RGB565 colors the indexed formats use: `gs4` all 16, `gs2` the first 4, `mono` the first 2.
+  Shown as swatches under **frame format** when an indexed format is picked; click one to change it, or **reset**
+  for the built-in colors. While a gui screen with a [theme](gui.md#themes) is wired to the display, the theme sets
+  the palette and this one is ignored.
+- **SPI bus** — the hardware SPI peripheral. Default 2.
+- **baudrate** — the SPI clock in Hz. Default 40000000.
+- **sck pin** / **mosi pin** / **dc pin** — required. Defaults 12, 11 and 13.
+- **cs pin** / **reset pin** / **backlight pin** — `-1` when not wired, the default for all three. Some boards tie
+  reset or CS in hardware, or have no backlight control.
+- **width (px)** / **height (px)** — the panel's own size. Defaults 135 and 240. A gui screen wired to the display
+  takes this size.
+- **orientation** — default off. `0`, `90`, `180` or `270` turns the picture clockwise, and a gui screen wired to the
+  display turns its size and touch to match. With an orientation, set **width** and **height** to the panel's own
+  size, **rotation** to how the panel is mounted (0 to 3), and **xstart** and **ystart** to `-1`. See
+  [Rotating the screen](gui.md#rotating-the-screen). A flow that reads touch with a [touch](touch-i2c.md) node sets
+  the same angle on that node.
+- **rotation (0-7)** — the controller's own orientation code. Default 1.
+- **color order** — `BGR` or `RGB`, as the panel is wired. Default `BGR`.
+- **invert colors** — for a panel that shows the negative. Default off.
+- **data latch order (MH bit)** — a controller bit some panels need, with rotation, for the right left-to-right
+  order. Default on.
+- **xstart** / **ystart** — the panel's offset in the ST7789's larger frame memory. Default `-1`, which takes it from
+  the driver's table: `0, 0` for 240x240, `52, 40` for 135x240. Any other ST7789 size needs both set. A wrong offset
+  doesn't raise an error: the picture shows clipped or shifted. An ST7796 has no offset; leave both at `-1`.
 
 ## Wiring
 
-**Input** — a raw RGB565-encoded buffer, exactly `width * height * 2` bytes, the same format
-`framebuf.FrameBuffer` produces for an RGB565 surface. A wrong-length buffer raises a clear error rather than
-silently desyncing the panel.
+**Input** — `payload` is the frame, in the **frame format**. A whole frame is exactly the size the format needs:
+`width * height * 2` bytes for `rgb565`; for the indexed formats, see Indexed formats below.
 
-A message with a `y` key is a strip instead: whole rows, written starting at row `y`. The [gui screen](gui.md) node
-sends strips, so a large display never needs a full frame in memory.
+A message with a `y` field is a strip: whole rows, written from row `y` down. A gui screen sends strips, so a large
+display never needs a whole frame in memory.
+
+This node has no output.
 
 ## Behavior
 
 ### RGB565 byte order
 
-`framebuf.RGB565` stores each pixel in CPU-native (little-endian on ESP32) byte order, but SPI TFT controllers
-including the ST7789 expect big-endian pixel bytes on the wire. This node forwards whatever bytes it's given as-is,
-so a buffer built straight from `framebuf.FrameBuffer(..., framebuf.RGB565)` comes out with red and blue scrambled
-(an intended pure green circle renders red). There's no MicroPython-level flag to pick big-endian storage. Fix:
-byte-swap the buffer before handing it to this node —
+`framebuf.RGB565` stores each pixel in the processor's byte order, little-endian on an ESP32, but the panel expects
+big-endian. The node sends the bytes as they are, so a buffer drawn with `framebuf.FrameBuffer(..., framebuf.RGB565)`
+comes out with its colors wrong: an intended green shows red. Swap each pair of bytes after drawing, before
+`msg['payload'] = buf`:
 
 ```python
 for i in range(0, len(buf), 2):
     buf[i], buf[i + 1] = buf[i + 1], buf[i]
 ```
 
-— right after drawing, before `msg['payload'] = buf`. A color whose two bytes match (pure white `0xFFFF`, pure
-black `0x0000`) is unaffected either way, which is why a swap bug can hide behind text and background colors.
+A color whose two bytes are the same, such as white `0xFFFF` or black `0x0000`, looks right either way, so text on a
+plain background can hide the problem.
 
-### Indexed modes
+### Indexed formats
 
-Build an indexed frame with `framebuf.FrameBuffer(..., framebuf.<FORMAT>)`, where `<FORMAT>` matches the frame
-format property:
+Draw an indexed frame with `framebuf.FrameBuffer(..., framebuf.<FORMAT>)`, with the constant that matches **frame
+format**:
 
-| frame format | `framebuf` constant | bits/pixel | palette indices used | 240×320 frame size |
-|---|---|---|---|---|
-| `rgb565` (default) | `RGB565` | 16 | — (real color) | 153,600 bytes |
-| `gs4` | `GS4_HMSB` | 4 | 0–15 (all 16) | 38,400 bytes |
-| `gs2` | `GS2_HMSB` | 2 | 0–3 (first 4) | 19,200 bytes |
-| `mono` | `MONO_HMSB` | 1 | 0–1 (first 2) | 9,600 bytes |
+| frame format | `framebuf` constant | bits per pixel | palette entries used | 240x320 frame |
+| --- | --- | --- | --- | --- |
+| `rgb565` | `RGB565` | 16 | none, real color | 153,600 bytes |
+| `gs4` | `GS4_HMSB` | 4 | 0–15 | 38,400 bytes |
+| `gs2` | `GS2_HMSB` | 2 | 0–3 | 19,200 bytes |
+| `mono` | `MONO_HMSB` | 1 | 0–1 | 9,600 bytes |
 
-Send the `bytearray` itself as the payload (`msg['payload'] = buf`). `bytes(buf)` makes a second full-size copy the
-board may not have memory for. For a flow that redraws often, keep the buffer in `context` and reuse it.
+Pixel values are palette entries, not colors; the node turns each into its palette color as it writes. The indexed
+formats have no byte-order problem.
 
-Pixel values are palette indices, not colors — this node expands each one to real color using the palette property.
-Indexed modes have no byte-order gotcha: the palette already stores colors in the order this node expects.
+Each row is padded to a whole byte, so a width that isn't a multiple of the pixels per byte (2 for `gs4`, 4 for `gs2`,
+8 for `mono`) needs a little more than `width * height * bits / 8`. On a wrong size the node names the size it
+expects.
 
-The buffer isn't "1/N the size of RGB565": each row is padded to a whole number of bytes, so a width that isn't an
-exact multiple of the format's pixels-per-byte (2 for `gs4`, 4 for `gs2`, 8 for `mono`) needs slightly more than a
-flat `width * height / bitsPerByte` formula gives. This node works out and checks the real size, and names the
-expected byte count on a mismatch.
+`mono` needs `framebuf.MONO_HMSB`. `MONO_VLSB` (the [display i2c](display-i2c.md) layout) and `MONO_HLSB` give a
+garbled picture with no error, because the node can't tell which one was used.
 
-`mono` needs `framebuf.MONO_HMSB` specifically, not `MONO_VLSB` or `MONO_HLSB`. MicroPython's three 1-bit formats
-are not interchangeable — the wrong one silently produces a garbled image, not an error, because this node can't
-tell which you used. `MONO_VLSB` packs pixels into vertical byte columns (the OLED convention **display i2c**
-uses); this node streams rows, so `MONO_VLSB` won't work. `MONO_HLSB` and `MONO_HMSB` pack their 8 pixels-per-byte
-in opposite orders; this node expects `MONO_HMSB`, and `MONO_HLSB` comes out with each row's pixels in the wrong
-order.
+Send the `bytearray` itself (`msg['payload'] = buf`): `bytes(buf)` makes a second copy the board may not have memory
+for. For a flow that redraws often, keep the buffer in `context` and reuse it.
 
-Fewer colors as the depth drops, so these suit a UI with a fixed palette (buttons, status text, icons), not photos.
+## Errors
+
+- **A frame or strip of the wrong size.** The console shows a `[NODE_ERROR]` naming this node, such as
+  `display_spi: expected 64800 bytes (...), got 64000`, or for a strip
+  `display_spi: a strip must be whole rows of 270 bytes inside the 240-row screen, ...`. See
+  [Reading a node error](../debugging.md#reading-a-node-error).
+- **An ST7789 size other than 240x240 or 135x240, with xstart and ystart at -1.** The board reports
+  `Unsupported display. Only 240x240 and 135x240 are supported without xstart and ystart provided` when the flow
+  starts.
+- **An orientation with a panel offset**, including the default 135x240 size. Deploy stops: clear the orientation,
+  or set **rotation** by hand.
+- **An orientation with a rotation of 4 to 7.** Deploy stops; with an orientation, rotation is 0 to 3.
+- **A baudrate too fast for the board or for these pins.** Deploy stops and gives the board's limit.
+- **A changed palette while a themed gui screen is wired.** Deploy warns that the theme sets the palette.
+- **A pin the board can't use, or one another node sets up differently.** Deploy stops and says why. See
+  [What gets checked](../boards.md#what-gets-checked) and [Hardware is shared](index.md#hardware-is-shared).
 
 
 ---
@@ -4418,42 +4429,38 @@ Source: https://docs.thingstudio.net/nodes/display-i2c/
 
 # display i2c
 
-Pushes an already-rendered frame to an I2C mono OLED panel. The `controller` property selects the display chip;
-[Supported hardware](../supported-hardware.md#displays) lists it. Build the frame upstream (a `function` node
-using `framebuf.FrameBuffer`) and wire it into this node's input.
-
-This node's property panel has a **preset** picker (see [Editor in depth](../working-in-the-editor.md#presets)) —
-save a real panel's pin/address setup under a name once, then load it again on this or another
-**display i2c** node instead of retyping it.
+Shows a frame on an I2C monochrome OLED panel. The frame is drawn upstream, usually in a
+[function](function.md) node with `framebuf`. [Supported hardware](../supported-hardware.md#displays) lists the
+display chips.
 
 ## Properties
 
-- **controller** — the display chip. `SSD1306`.
-- **I2C bus** — the bus the panel is wired to. See [I2C bus](i2c-bus.md).
-- **address** — the I2C address, `addr` in the flow file, as a plain number: `60` is `0x3C`, the usual SSD1306
-  address.
-- **width / height** — panel resolution in pixels. Height must be a multiple of 8.
+The property panel's **preset** picker saves a panel's setup under a name and loads it on another node (see
+[Presets](../working-in-the-editor.md#presets)).
 
-A flow saved before I2C buses existed has its pins on the node. The editor moves them into an I2C bus
-when it opens the flow. Save the flow to keep the change.
+- **controller** — the display chip. Default `SSD1306`.
+- **I2C bus** — the bus the panel is wired to. Required. See [I2C bus](i2c-bus.md).
+- **address** — the I2C address, 0 to 127. Default `0x3C`, the usual SSD1306 address. In the flow file `addr`, a plain
+  number: `60` is `0x3C`.
+- **width (px)** — default 128.
+- **height (px, multiple of 8)** — default 64.
+
+A flow saved before I2C bus settings existed has its pins on the node. The editor moves them into an I2C bus when it
+opens the flow; save the flow to keep the change.
 
 ## Wiring
 
-**Input** — a raw MONO_VLSB-encoded buffer, exactly `width * (height / 8)` bytes, the same format
-`framebuf.FrameBuffer` produces for a 1-bit surface. A wrong-length buffer raises a clear error rather
-than silently corrupting the display's internal buffer indexing.
+**Input** — `payload` is the frame: a `MONO_VLSB` buffer of exactly `width * height / 8` bytes, `bytes` or
+`bytearray`, as `framebuf.FrameBuffer` makes for a 1-bit surface. Send the buffer, not the `FrameBuffer` object.
+
+This node has no output.
 
 ## Behavior
 
-Only I2C wiring is supported — an SSD1306 wired over SPI isn't covered by this node. No drawing primitives here:
-this node only pushes a complete, already-rendered frame on every message.
+Each message replaces the whole picture. The node only shows frames; it has no drawing of its own.
 
-## Text on the panel
-
-Draw in a `function` node with `framebuf` (an `import` inside the function body works) and send the **buffer**, not
-the `FrameBuffer` object. `fb.text()` uses a fixed 8x8 font, so a 128x64 panel holds 16 characters on each of 8
-lines. The node accepts `bytearray` or `bytes`. A panel sharing a bus with a sensor such as a BME280 works at the
-bus's one speed; the default is fine for both.
+`framebuf`'s `text()` draws a fixed 8x8 font, so a 128x64 panel holds 16 characters on each of 8 lines. This
+function node draws a temperature from a [bme280](bme280.md) and sends the frame:
 
 ```python
 import framebuf
@@ -4468,6 +4475,15 @@ msg['payload'] = buf
 return msg
 ```
 
+A panel can share a bus with a sensor, at the bus's one clock; the default 100000 Hz suits both.
+
+## Errors
+
+- **A frame of the wrong size.** The console shows a `[NODE_ERROR]` naming this node and
+  `display_i2c: expected 1024 bytes (128x64 MONO_VLSB), got 1000`. See
+  [Reading a node error](../debugging.md#reading-a-node-error).
+- **No I2C bus, or an address over 127.** Deploy stops and says which.
+
 
 ---
 
@@ -4480,34 +4496,36 @@ Reads a BME280 or BMP280 temperature, humidity and pressure sensor at a fixed in
 
 ## Properties
 
-- **I2C bus** — the bus the sensor is wired to. See [I2C bus](i2c-bus.md).
-- **address** — `0x76` (most boards) or `0x77`.
-- **interval (ms)** — how often to read. At least 100.
+- **I2C bus** — the bus the sensor is wired to. Required. See [I2C bus](i2c-bus.md).
+- **address** — `0x76` (SDO to ground, most boards) or `0x77` (SDO to VCC). Default `0x76`. In the flow file, a plain
+  number: `118` or `119`.
+- **interval (ms)** — how often to read. Default 5000. Must be 100 or more.
 
 ## Wiring
 
-**Output** — one reading per interval:
+**Input** — none. `bme280` is a source.
+
+**Output** — one reading per interval, with `topic` an empty string:
 
 ```python
-msg = {'payload': {'temperature': 21.43, 'humidity': 48.2, 'pressure': 1012.6}, 'topic': ''}
+msg['payload'] == {'temperature': 21.43, 'humidity': 48.2, 'pressure': 1012.6}
 ```
 
-Temperature is in °C, humidity in %, pressure in hPa. On a BMP280, `humidity` is `None`.
-
-To use one reading, pick it out in a [function](function.md) node:
-`msg['payload'] = msg['payload']['temperature']`.
+Temperature is in °C, humidity in %, pressure in hPa, each to 2 decimal places. On a BMP280, `humidity` is `None`.
+To use one value, pick it out in a [function](function.md) node: `msg['payload'] = msg['payload']['temperature']`.
 
 ## Behavior
 
-The status dot shows whether the sensor is answering. The node tries again at the next interval, and picks up a
-sensor connected after the flow starts.
+The first reading goes out when the flow starts. The status dot shows which chip answered, **BME280** or
+**BMP280**. A failed read sends nothing; the node tries again at the next interval, so a sensor connected after the
+flow starts is picked up.
 
 ## Errors
 
-If a read fails, the node sends nothing and the dot says why:
-
-- **disconnected**, `no reply at 0x76 on I2C bus 0` — nothing answered. Check the wiring, pins and address.
-- **error**, `no BME280/BMP280 at 0x76 (chip id 0x..)` — a different chip is at that address.
+- **Nothing answers.** The dot shows **disconnected**, `no reply at 0x76 on I2C bus 0`. Check the wiring, pins and
+  address; see [I2C device not answering](../debugging.md#i2c-device-not-answering).
+- **A different chip at the address.** The dot shows **error**, `no BME280/BMP280 at 0x76 (chip id 0x..)`.
+- **No I2C bus.** Deploy stops with `bme280 has no I2C bus. Pick one, or add one with +.`
 
 
 ---
@@ -4516,38 +4534,46 @@ Source: https://docs.thingstudio.net/nodes/touch-i2c/
 
 # touch
 
-Raw touch input, for flows that don't use the GUI. It reads a capacitive [touch panel](touch-panel.md) and sends
-a message when a finger lands and when it lifts.
+Raw touch input, for flows that don't use the GUI: sends a message when a finger lands on a
+[touch panel](touch-panel.md) and when it lifts.
 
-A [gui screen](gui.md) reads its panel itself, so you don't need this node to press buttons. One panel can't be
-used by both a gui screen and a touch node: Deploy stops and names them.
+A [gui screen](gui.md) reads its own panel, so buttons on a screen don't need this node. One panel feeds either one
+gui screen or one `touch` node.
 
 ## Properties
 
-- **touch panel** — which [touch panel](touch-panel.md) to read. Pick one, or add one with **+**.
-- **orientation** — the turn of the picture these touches match: 0, 90, 180 or 270 degrees clockwise, the same
-  four angles a display's orientation takes. Set it when the screen is turned and the flow reads touch through this
-  node. Off leaves the panel's own axes alone. A flow with a gui screen sets orientation on the display instead and
-  leaves this off: the screen turns its own touches to match.
+- **Touch panel** — the [touch panel](touch-panel.md) to read. Required. Pick one, or add one with **+**.
+- **orientation** — the turn of the picture the touches should match: `0`, `90`, `180` or `270` degrees clockwise,
+  the angles a [display spi](display-spi.md)'s orientation takes. Default off, which leaves the panel's own axes.
+  Set it when the screen is turned and the flow reads touch through this node; a flow with a gui screen sets the
+  orientation on the display instead.
 
 ## Wiring
 
-**Output** — down and up, each with the touch point:
+**Input** — none. `touch` is a source.
+
+**Output** — one message when a finger lands and one when it lifts:
 
 ```python
-msg = {'payload': {'x': 120, 'y': 340}, 'topic': 'down'}   # a finger lands
-msg = {'payload': {'x': 121, 'y': 338}, 'topic': 'up'}     # it lifts, where it was last seen
+{'payload': {'x': 120, 'y': 340}, 'topic': 'down'}   # a finger lands
+{'payload': {'x': 121, 'y': 338}, 'topic': 'up'}     # it lifts, where it was last seen
 ```
 
-Down and up only: nothing is sent while the finger moves, and only one finger is followed. The coordinates are
-screen pixels in the turned picture, so they match what the display shows when the orientation is set (and in the
-panel's own axes when it is off). There is nothing to calibrate.
+The coordinates are screen pixels in the turned picture when **orientation** is set, and in the panel's own axes when
+it is off. There is nothing to calibrate.
 
 ## Behavior
 
-The status dot shows whether the panel is answering (`FT6336U`, or `no reply from FT6336U at 0x38 on I2C bus 0`).
-A missing panel sends nothing and is picked up when it appears. A panel that disappears mid-touch still sends its
-`up`.
+The node reads the panel at the panel's **poll every (ms)**. Nothing is sent while the finger moves, and only one
+finger is followed. The status dot shows **FT6336U** while the panel answers.
+
+A panel that stops answering sends nothing until it answers again. A touch that was down at the time gets its `up`
+then.
+
+## Errors
+
+- **The panel doesn't answer.** The dot shows **disconnected**, `no reply from FT6336U at 0x38 on I2C bus 0`.
+- **No touch panel, or a panel also used by a gui screen or another touch node.** Deploy stops and names them.
 
 
 ---
@@ -4560,36 +4586,39 @@ Talks to an I2C device that has no node of its own. Each message that arrives do
 
 ## Properties
 
-- **I2C bus** — the bus the device is wired to. See [I2C bus](i2c-bus.md).
-- **operation** — `read`, `write` or `scan`.
-- **address** — the device's address, such as `0x29`. Not used by `scan`.
-- **register** — the register to read or write, such as `0x80`. Leave empty for a device without registers.
-- **length** — for `read`, how many bytes.
-
-Hex (`0x29`) and decimal (`41`) both work.
+- **I2C bus** — the bus the device is wired to. Required. See [I2C bus](i2c-bus.md).
+- **operation** — `read bytes`, `write msg.payload` or `scan the bus` (`read`, `write`, `scan` in the flow file).
+  Default `read`.
+- **address** — the device's 7-bit address, such as `0x29` or `41`. Up to `0x7f`. Required except for `scan`.
+- **register** — the register to read or write, such as `0x80`. Up to `0xff`. Leave it empty for a device without
+  registers.
+- **length (bytes)** — for `read`, how many bytes, 1 to 256. Default 1.
 
 ## Wiring
 
-**Input** — for `write`, the bytes to send in `payload`. `read` and `scan` need no input.
+**Input** — any message starts a transfer. For `write`, `payload` is what to send: bytes, a list of numbers 0 to 255,
+or one number 0 to 255.
 
-**Output** — depends on the operation:
+**Output** — the same message, with other fields kept:
 
-- **read** — `payload` is the bytes read. Reading register `0x92` at address `0x29` (a TCS34725 ID register)
-  returns `b'D'`.
-- **write** — sends `payload` and passes the message on unchanged. The payload can be bytes, a list of numbers
-  0–255, or one number.
-- **scan** — `payload` is the list of addresses that answer.
-
-Other message fields are kept.
+- `read`: `payload` is the bytes read. Reading register `0x92` at address `0x29` (a TCS34725's ID) gives `b'D'`.
+- `write`: `payload` is unchanged.
+- `scan`: `payload` is the list of addresses that answer, as numbers.
 
 ## Behavior
 
-If a transfer fails, the node sends nothing and its status dot says why. The next message tries again.
+The status dot shows whether the device answers. A transfer that fails sends nothing, and the next message tries
+again.
 
 ## Errors
 
-- **disconnected** — nothing answers at that address.
-- **error** — the payload can't be written.
+- **Nothing answers at the address.** The dot shows **disconnected**, `no reply at 0x29 on I2C bus 0`, and the
+  message is dropped. For `scan`, `I2C bus 0 not responding`.
+- **A payload that can't be written**, such as a bool or a number over 255. The dot shows **error** with the reason,
+  and the message is dropped.
+- **No address**, for `read` or `write`. The first message fails with a `[NODE_ERROR]`:
+  `i2c: set the device address (7-bit, e.g. 0x29)`.
+- **No bus, a bus without pins, or an address or register out of range.** Deploy stops and says which.
 
 
 ---
@@ -4598,24 +4627,34 @@ Source: https://docs.thingstudio.net/nodes/i2c-bus/
 
 # I2C bus
 
-An I2C bus is shared by one or more devices. A display and a sensor can sit on the same bus, each at its own
-address.
+The pins and clock of one I2C bus, set once and shared by every node on it. A display and a sensor can sit on the
+same bus, each at its own address.
 
-Each I2C node has an **I2C bus** field. Pick a bus, or add one with **+**. The pins and clock are set once,
-on the bus, and every node on that bus uses them.
+Each I2C node has an **I2C bus** field. Pick a bus, or add one with **+**. A new bus takes the lowest bus number not
+yet used in the flow.
 
 ## Settings
 
-- **bus** — the chip's I2C peripheral number, usually 0. Each bus number can be used once per flow.
-- **scl pin / sda pin** — the GPIO pins. Checked against your [board](../boards.md).
-- **frequency (Hz)** — the clock. 100000 suits most sensors. Displays often run at 400000.
+- **bus** — the chip's I2C peripheral number. Default 0. Each bus number is used once per flow.
+- **scl pin** / **sda pin** — the GPIO pins. Required, and different from each other.
+- **frequency (Hz)** — the clock. Default 100000, which suits most sensors. Displays that can take it run at 400000.
 
-Changing a bus changes it for every node on it. If two buses end up with the same number, Deploy says so.
+## Behavior
 
-## In a function node
+Changing a bus changes it for every node on it. The bus's two pins are claimed like any other pin, so no other node
+can use them (see [Hardware is shared](index.md#hardware-is-shared)).
 
-`runtime.shared('i2c', 0)` returns the flow's bus 0, already set up. Use it to talk to a device that has no
-node of its own. It fails if no node in the flow uses that bus.
+`runtime.shared('i2c', 0)` in a [function](function.md) node returns the flow's bus 0, already set up, to talk to a
+device that has no node of its own. It raises `KeyError` if no node in the flow uses that bus.
+
+## Errors
+
+These stop the deploy:
+
+- No SCL or SDA pin: `I2C bus 0 has no SCL pin set`.
+- The same pin for both: `I2C bus 0 uses pin 5 for both SCL and SDA`.
+- Two bus settings with the same number, both in use: `Two I2C bus settings both say bus 0`.
+- A pin or bus number the board can't use for I2C. See [What gets checked](../boards.md#what-gets-checked).
 
 
 ---
@@ -4624,42 +4663,51 @@ Source: https://docs.thingstudio.net/nodes/touch-panel/
 
 # Touch panels
 
-A touch panel is a capacitive touch screen on an I2C bus. Its settings are set once, in a config node, and a
-[gui screen](gui.md) or a [touch](touch-i2c.md) node picks it.
+The settings of a capacitive touch panel on an I2C bus, set once in a config node. A [gui screen](gui.md) or a
+[touch](touch-i2c.md) node picks it.
 
-On a gui screen, pick the panel in the screen's properties. The screen reads it itself and turns touches into
-button presses. There is no wire to draw. If the panel stops answering, the screen's status dot says so, and any
-button being held is let go without sending.
+A gui screen reads its panel itself and turns touches into button presses, with no wire to draw. If the panel stops
+answering, the screen's status dot says so, and a button being held is let go without sending.
 
 ## Settings
 
-- **controller** — the touch chip. [Supported hardware](../supported-hardware.md#touch-panels) lists the chips
-  covered (the FT6336U, as on the Freenove ESP32-S3 displays).
-- **I2C bus** — the bus the panel is wired to. See [I2C bus](i2c-bus.md). On the Freenove 4.0" board: SDA 16,
-  SCL 15.
-- **address** — the chip's I2C address. 0x38 for the FT6336U.
-- **reset pin** — the panel's reset pin, if it has one (Freenove: 18). Blank for none.
-- **poll every (ms)** — how often to look. 20 is smooth; more than 50 starts to feel slow.
-- **panel width / height** — the panel's own size in pixels (Freenove: 320 × 480).
-- **swap x and y / flip x / flip y** — turn the panel's coordinates into the display's. If the display is
-  rotated, tick these until a touch lands where you pressed.
+- **controller** — the touch chip. Default `FT6336U`.
+  [Supported hardware](../supported-hardware.md#touch-panels) lists the chips.
+- **I2C bus** — the bus the panel is wired to. Required. See [I2C bus](i2c-bus.md).
+- **address** — the chip's 7-bit I2C address, from `0x08` to `0x77`. Default `0x38`, the FT6336U's.
+- **reset pin** — the panel's reset pin. Default blank, for none.
+- **poll every (ms)** — how often to read the panel. Default 20; above 50 starts to feel slow.
+- **panel width** / **panel height** — the panel's own size in pixels. Defaults 320 and 480.
+- **swap x and y** / **flip x** / **flip y** — turn the panel's coordinates into the display's. Default off. If the
+  display is turned, tick these until a touch lands where you pressed.
+
+A board definition that has a touch panel labels its pins; see
+[Seeing a board's pins](../boards.md#seeing-a-boards-pins).
 
 ## Presets
 
-The touch panel's edit form has a **preset** control, like the display nodes. Fill in the settings once, press the
-disk button, and give the set a name (for example `freenove-4in`). In another flow, open a new touch panel and pick
-that name to fill the form. The I2C bus is not saved, since it belongs to the flow; pick or add it after loading.
+The edit form has a **preset** control, as the display nodes do. Fill in the settings once, press the disk button and
+give the set a name, such as `freenove-4in`. In another flow, open a new touch panel and pick that name to fill the
+form. The I2C bus isn't saved with it, since it belongs to the flow: pick or add it after loading.
 
 ## Rotated screens
 
-If the display the gui screen is wired to has an [orientation](gui.md#rotating-the-screen), the screen's touch axes are turned to match the picture.
-The raw [touch](touch-i2c.md) node is not turned.
+When the display a gui screen is wired to has an [orientation](gui.md#rotating-the-screen), the screen turns its
+touches to match the picture. A [touch](touch-i2c.md) node turns them by its own **orientation**.
 
 ## Other touch chips
 
-For a chip this node doesn't cover, such as GT911 or CST820, read it from a [function](function.md) node with
+For another chip, such as a GT911 or CST820, read it from a [function](function.md) node with
 `runtime.shared('i2c', 0)`, using the chip's datasheet and a MicroPython driver for it. See
-[docs.micropython.org](https://docs.micropython.org/en/latest/library/machine.I2C.html) for the I2C calls.
+[MicroPython's machine.I2C](https://docs.micropython.org/en/latest/library/machine.I2C.html) for the I2C calls.
+
+## Errors
+
+These stop the deploy:
+
+- No I2C bus: `the touch panel has no I2C bus. Pick one, or add one with +.`
+- An address outside `0x08` to `0x77`.
+- A controller other than FT6336U.
 
 
 ---
@@ -5604,7 +5652,7 @@ Things to know before you pick a node:
   latest reading with `flow.set('temp', ...)` in a `function` after the sensor, and read it with `flow.get('temp')`
   in a `function` between `http_in` and `http_response` (send a 503 before the first reading arrives).
 - To print text on a `display_i2c` (SSD1306), draw with `framebuf` in a `function` and send the buffer: see
-  [display i2c](nodes/display-i2c.md#text-on-the-panel). Its address property is `addr`, a plain number (`60` is `0x3C`).
+  [display i2c](nodes/display-i2c.md#behavior). Its address property is `addr`, a plain number (`60` is `0x3C`).
 
 ## Pins: take them from the board
 

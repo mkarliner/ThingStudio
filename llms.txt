@@ -105,13 +105,13 @@
 - [neopixel](https://docs.thingstudio.net/nodes/neopixel/): Lights a WS2812 (NeoPixel) strip: sets its pixels from each message, then writes the strip.
 - [gpio out](https://docs.thingstudio.net/nodes/gpio-out/): Sets a pin high or low from each message.
 - [pwm out](https://docs.thingstudio.net/nodes/pwm-out/): Drives a PWM signal on a pin, for dimming an LED, setting a motor's speed, or any other variable duty cycle.
-- [display spi](https://docs.thingstudio.net/nodes/display-spi/): Pushes an already-rendered frame to an SPI color TFT panel.
-- [display i2c](https://docs.thingstudio.net/nodes/display-i2c/): Pushes an already-rendered frame to an I2C mono OLED panel.
+- [display spi](https://docs.thingstudio.net/nodes/display-spi/): Shows a frame on an SPI color TFT panel.
+- [display i2c](https://docs.thingstudio.net/nodes/display-i2c/): Shows a frame on an I2C monochrome OLED panel.
 - [bme280](https://docs.thingstudio.net/nodes/bme280/): Reads a BME280 or BMP280 temperature, humidity and pressure sensor at a fixed interval.
-- [touch](https://docs.thingstudio.net/nodes/touch-i2c/): Raw touch input, for flows that don't use the GUI.
+- [touch](https://docs.thingstudio.net/nodes/touch-i2c/): Raw touch input, for flows that don't use the GUI: sends a message when a finger lands on a touch panel and when it lifts.
 - [i2c device](https://docs.thingstudio.net/nodes/i2c/): Talks to an I2C device that has no node of its own.
-- [I2C bus](https://docs.thingstudio.net/nodes/i2c-bus/): An I2C bus is shared by one or more devices.
-- [Touch panels](https://docs.thingstudio.net/nodes/touch-panel/): A touch panel is a capacitive touch screen on an I2C bus.
+- [I2C bus](https://docs.thingstudio.net/nodes/i2c-bus/): The pins and clock of one I2C bus, set once and shared by every node on it.
+- [Touch panels](https://docs.thingstudio.net/nodes/touch-panel/): The settings of a capacitive touch panel on an I2C bus, set once in a config node.
 - [GUI](https://docs.thingstudio.net/nodes/gui/): The GUI nodes are provisional: their properties and the page layout may change between releases.
 
 ## Extending and automating

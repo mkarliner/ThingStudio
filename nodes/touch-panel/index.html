@@ -3060,6 +3060,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Errors
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -3524,6 +3535,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Errors
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -3545,35 +3567,42 @@
 
 
 <h1 id="touch-panels">Touch panels</h1>
-<p>A touch panel is a capacitive touch screen on an I2C bus. Its settings are set once, in a config node, and a
-<a href="../gui/">gui screen</a> or a <a href="../touch-i2c/">touch</a> node picks it.</p>
-<p>On a gui screen, pick the panel in the screen's properties. The screen reads it itself and turns touches into
-button presses. There is no wire to draw. If the panel stops answering, the screen's status dot says so, and any
-button being held is let go without sending.</p>
+<p>The settings of a capacitive touch panel on an I2C bus, set once in a config node. A <a href="../gui/">gui screen</a> or a
+<a href="../touch-i2c/">touch</a> node picks it.</p>
+<p>A gui screen reads its panel itself and turns touches into button presses, with no wire to draw. If the panel stops
+answering, the screen's status dot says so, and a button being held is let go without sending.</p>
 <h2 id="settings">Settings</h2>
 <ul>
-<li><strong>controller</strong> — the touch chip. <a href="../../supported-hardware/#touch-panels">Supported hardware</a> lists the chips
-  covered (the FT6336U, as on the Freenove ESP32-S3 displays).</li>
-<li><strong>I2C bus</strong> — the bus the panel is wired to. See <a href="../i2c-bus/">I2C bus</a>. On the Freenove 4.0" board: SDA 16,
-  SCL 15.</li>
-<li><strong>address</strong> — the chip's I2C address. 0x38 for the FT6336U.</li>
-<li><strong>reset pin</strong> — the panel's reset pin, if it has one (Freenove: 18). Blank for none.</li>
-<li><strong>poll every (ms)</strong> — how often to look. 20 is smooth; more than 50 starts to feel slow.</li>
-<li><strong>panel width / height</strong> — the panel's own size in pixels (Freenove: 320 × 480).</li>
-<li><strong>swap x and y / flip x / flip y</strong> — turn the panel's coordinates into the display's. If the display is
-  rotated, tick these until a touch lands where you pressed.</li>
+<li><strong>controller</strong> — the touch chip. Default <code>FT6336U</code>.
+  <a href="../../supported-hardware/#touch-panels">Supported hardware</a> lists the chips.</li>
+<li><strong>I2C bus</strong> — the bus the panel is wired to. Required. See <a href="../i2c-bus/">I2C bus</a>.</li>
+<li><strong>address</strong> — the chip's 7-bit I2C address, from <code>0x08</code> to <code>0x77</code>. Default <code>0x38</code>, the FT6336U's.</li>
+<li><strong>reset pin</strong> — the panel's reset pin. Default blank, for none.</li>
+<li><strong>poll every (ms)</strong> — how often to read the panel. Default 20; above 50 starts to feel slow.</li>
+<li><strong>panel width</strong> / <strong>panel height</strong> — the panel's own size in pixels. Defaults 320 and 480.</li>
+<li><strong>swap x and y</strong> / <strong>flip x</strong> / <strong>flip y</strong> — turn the panel's coordinates into the display's. Default off. If the
+  display is turned, tick these until a touch lands where you pressed.</li>
 </ul>
+<p>A board definition that has a touch panel labels its pins; see
+<a href="../../boards/#seeing-a-boards-pins">Seeing a board's pins</a>.</p>
 <h2 id="presets">Presets</h2>
-<p>The touch panel's edit form has a <strong>preset</strong> control, like the display nodes. Fill in the settings once, press the
-disk button, and give the set a name (for example <code>freenove-4in</code>). In another flow, open a new touch panel and pick
-that name to fill the form. The I2C bus is not saved, since it belongs to the flow; pick or add it after loading.</p>
+<p>The edit form has a <strong>preset</strong> control, as the display nodes do. Fill in the settings once, press the disk button and
+give the set a name, such as <code>freenove-4in</code>. In another flow, open a new touch panel and pick that name to fill the
+form. The I2C bus isn't saved with it, since it belongs to the flow: pick or add it after loading.</p>
 <h2 id="rotated-screens">Rotated screens</h2>
-<p>If the display the gui screen is wired to has an <a href="../gui/#rotating-the-screen">orientation</a>, the screen's touch axes are turned to match the picture.
-The raw <a href="../touch-i2c/">touch</a> node is not turned.</p>
+<p>When the display a gui screen is wired to has an <a href="../gui/#rotating-the-screen">orientation</a>, the screen turns its
+touches to match the picture. A <a href="../touch-i2c/">touch</a> node turns them by its own <strong>orientation</strong>.</p>
 <h2 id="other-touch-chips">Other touch chips</h2>
-<p>For a chip this node doesn't cover, such as GT911 or CST820, read it from a <a href="../function/">function</a> node with
+<p>For another chip, such as a GT911 or CST820, read it from a <a href="../function/">function</a> node with
 <code>runtime.shared('i2c', 0)</code>, using the chip's datasheet and a MicroPython driver for it. See
-<a href="https://docs.micropython.org/en/latest/library/machine.I2C.html">docs.micropython.org</a> for the I2C calls.</p>
+<a href="https://docs.micropython.org/en/latest/library/machine.I2C.html">MicroPython's machine.I2C</a> for the I2C calls.</p>
+<h2 id="errors">Errors</h2>
+<p>These stop the deploy:</p>
+<ul>
+<li>No I2C bus: <code>the touch panel has no I2C bus. Pick one, or add one with +.</code></li>
+<li>An address outside <code>0x08</code> to <code>0x77</code>.</li>
+<li>A controller other than FT6336U.</li>
+</ul>
 
 
 

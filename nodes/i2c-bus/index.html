@@ -3000,10 +3000,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#in-a-function-node" class="md-nav__link">
+  <a href="#behavior" class="md-nav__link">
     <span class="md-ellipsis">
       
-        In a function node
+        Behavior
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Errors
       
     </span>
   </a>
@@ -3470,10 +3481,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#in-a-function-node" class="md-nav__link">
+  <a href="#behavior" class="md-nav__link">
     <span class="md-ellipsis">
       
-        In a function node
+        Behavior
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Errors
       
     </span>
   </a>
@@ -3501,20 +3523,29 @@
 
 
 <h1 id="i2c-bus">I2C bus</h1>
-<p>An I2C bus is shared by one or more devices. A display and a sensor can sit on the same bus, each at its own
-address.</p>
-<p>Each I2C node has an <strong>I2C bus</strong> field. Pick a bus, or add one with <strong>+</strong>. The pins and clock are set once,
-on the bus, and every node on that bus uses them.</p>
+<p>The pins and clock of one I2C bus, set once and shared by every node on it. A display and a sensor can sit on the
+same bus, each at its own address.</p>
+<p>Each I2C node has an <strong>I2C bus</strong> field. Pick a bus, or add one with <strong>+</strong>. A new bus takes the lowest bus number not
+yet used in the flow.</p>
 <h2 id="settings">Settings</h2>
 <ul>
-<li><strong>bus</strong> — the chip's I2C peripheral number, usually 0. Each bus number can be used once per flow.</li>
-<li><strong>scl pin / sda pin</strong> — the GPIO pins. Checked against your <a href="../../boards/">board</a>.</li>
-<li><strong>frequency (Hz)</strong> — the clock. 100000 suits most sensors. Displays often run at 400000.</li>
+<li><strong>bus</strong> — the chip's I2C peripheral number. Default 0. Each bus number is used once per flow.</li>
+<li><strong>scl pin</strong> / <strong>sda pin</strong> — the GPIO pins. Required, and different from each other.</li>
+<li><strong>frequency (Hz)</strong> — the clock. Default 100000, which suits most sensors. Displays that can take it run at 400000.</li>
 </ul>
-<p>Changing a bus changes it for every node on it. If two buses end up with the same number, Deploy says so.</p>
-<h2 id="in-a-function-node">In a function node</h2>
-<p><code>runtime.shared('i2c', 0)</code> returns the flow's bus 0, already set up. Use it to talk to a device that has no
-node of its own. It fails if no node in the flow uses that bus.</p>
+<h2 id="behavior">Behavior</h2>
+<p>Changing a bus changes it for every node on it. The bus's two pins are claimed like any other pin, so no other node
+can use them (see <a href="../#hardware-is-shared">Hardware is shared</a>).</p>
+<p><code>runtime.shared('i2c', 0)</code> in a <a href="../function/">function</a> node returns the flow's bus 0, already set up, to talk to a
+device that has no node of its own. It raises <code>KeyError</code> if no node in the flow uses that bus.</p>
+<h2 id="errors">Errors</h2>
+<p>These stop the deploy:</p>
+<ul>
+<li>No SCL or SDA pin: <code>I2C bus 0 has no SCL pin set</code>.</li>
+<li>The same pin for both: <code>I2C bus 0 uses pin 5 for both SCL and SDA</code>.</li>
+<li>Two bus settings with the same number, both in use: <code>Two I2C bus settings both say bus 0</code>.</li>
+<li>A pin or bus number the board can't use for I2C. See <a href="../../boards/#what-gets-checked">What gets checked</a>.</li>
+</ul>
 
 
 

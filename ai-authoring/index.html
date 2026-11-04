@@ -3917,7 +3917,7 @@ a touch panel config's <code>address</code> is text (<code>"0x38"</code>). The <
   latest reading with <code>flow.set('temp', ...)</code> in a <code>function</code> after the sensor, and read it with <code>flow.get('temp')</code>
   in a <code>function</code> between <code>http_in</code> and <code>http_response</code> (send a 503 before the first reading arrives).</li>
 <li>To print text on a <code>display_i2c</code> (SSD1306), draw with <code>framebuf</code> in a <code>function</code> and send the buffer: see
-  <a href="../nodes/display-i2c/#text-on-the-panel">display i2c</a>. Its address property is <code>addr</code>, a plain number (<code>60</code> is <code>0x3C</code>).</li>
+  <a href="../nodes/display-i2c/#behavior">display i2c</a>. Its address property is <code>addr</code>, a plain number (<code>60</code> is <code>0x3C</code>).</li>
 </ul>
 <h2 id="pins-take-them-from-the-board">Pins: take them from the board</h2>
 <p>Never guess a pin. List the boards with <code>--list-boards</code>, run <code>--board-info board:&lt;id&gt;</code> for what each pin does (the
