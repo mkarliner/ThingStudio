@@ -124,6 +124,16 @@ old one working" branch is a cost with no beneficiary. The one-way-door rule sti
 open, so walk through the one that leads to the clean design. Mike, 2026-10-25. Recorded with its first
 application in `decisions/architecture.md`.
 
+**Scope is not shape.** When a decision limits work to one instance (one board, one firmware image, one
+transport, one peer), the code is still shaped for N: the instance is a folder, an entry or a parameter, never a
+constant, a path or a name built into the shared tooling. Before merging, write down what adding a second one
+would change; if the answer is more than "a new folder or entry with its own facts", the shape is wrong. A
+decision note that narrows scope to one instance carries a line **"A second one would need: …"**, so the
+question is asked when the decision is made, not when the second one arrives. Where there is a registry (target
+folders, board files, catalogue entries), tests iterate over it rather than naming its first member, so a new
+entry that is missing a part fails the build. Mike, 2026-11-04, after the classic-ESP32 image was built as the
+only image although its decision said the technique would apply to other boards: `decisions/custom-firmware.md`.
+
 ## Node format parity: built-in and custom nodes are one thing
 
 The end state is the Node-RED model — a node is one package (descriptor + device-side Python behavior), core nodes

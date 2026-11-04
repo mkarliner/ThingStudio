@@ -285,6 +285,12 @@ refusing; the image stays **optional, not the recommended route** for the moment
 (2026-10-22, second and third passes). 1 entry:
 `docs/working-notes/decisions/classic-esp32-firmware.md`.
 
+## Custom firmware images (all targets)
+
+Scope is not shape: one image per target chip, each a folder, never a constant in the shared tooling (rule in
+`AGENTS.md`); every image is rebuilt, flashed and recorded at each runtime bump, enforced at release, not at merge
+(2026-11-04). `docs/working-notes/decisions/custom-firmware.md`.
+
 ## MCP server
 
 Build an MCP server that talks to the running backend (check, describe, board info, console, node status, and
