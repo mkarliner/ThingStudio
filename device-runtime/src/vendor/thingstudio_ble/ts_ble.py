@@ -714,7 +714,10 @@ class _Peer:
             raise PeerError("%s: characteristic %s doesn't notify or indicate" % (self.label, char))
         ble = self.radio.ble
         conn = self.conn
-        descs = (await self._step(lambda: ble.gattc_discover_descriptors(conn, value_handle + 1, end_handle), "finding the notify switch of " + char)).items
+        # The start is the value handle itself: NimBLE (ble_gattc_disc_all_dscs) treats it as the characteristic's value
+        # and searches after it. value_handle + 1 skipped the 0x2902 right after the value (found on the C5,
+        # 2026-11-04: "has no notify switch" against a peer that has one).
+        descs = (await self._step(lambda: ble.gattc_discover_descriptors(conn, value_handle, end_handle), "finding the notify switch of " + char)).items
         cccd = [h for h, u in descs if u == bluetooth.UUID(_CCCD)]
         if not cccd:
             raise PeerError("%s: characteristic %s has no notify switch (0x2902)" % (self.label, char))

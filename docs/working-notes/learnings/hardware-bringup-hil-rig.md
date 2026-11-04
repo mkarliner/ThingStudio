@@ -286,3 +286,9 @@ committed -- if this VM stays in the loop, `install.sh` should grow the same sin
   characteristic show with read/write/notify, a read gives the count (uint16 LE), notify updates every 2 s, and a
   phone's write reaches debug as the decoded value. The UART echo (`ble-uart-echo-c5.flow.json`) works the same day:
   a line written to the Nordic UART RX comes back on TX as `echo: <line>`. Phase 2 passes on hardware.
+- **BLE central: `gattc_discover_descriptors(conn, start, end)` searches strictly after `start` (2026-11-04).**
+  MicroPython hands `start` to NimBLE's `ble_gattc_disc_all_dscs`, whose start is the characteristic's *value
+  handle*. Passing value_handle + 1 (the obvious reading of "descriptors after the value") skips a 0x2902 that sits
+  right after the value: on the ESP32-C5 the central found the service and characteristic, then reported "has no
+  notify switch (0x2902)" against a peer that has one. Pass value_handle. Both test stand-ins (pymock's bluetooth,
+  test_ts_ble.py's) now search strictly after `start`, as NimBLE does, and fail the old call.

@@ -95,7 +95,9 @@ class _FakeBLE:
         self.handler(12, (conn, 0))
 
     def gattc_discover_descriptors(self, conn, start, end):
-        self.handler(13, (conn, 4, _UUID(0x2902)))
+        # As NimBLE: the search runs strictly after `start`, the value handle (3); the 0x2902 is handle 4.
+        if start < 4 <= end:
+            self.handler(13, (conn, 4, _UUID(0x2902)))
         self.handler(14, (conn, 0))
 
     def gattc_read(self, conn, handle):

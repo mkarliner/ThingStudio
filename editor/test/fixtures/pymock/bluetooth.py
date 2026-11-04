@@ -201,8 +201,10 @@ class BLE:
         self.handler(12, (conn, 0))
 
     def gattc_discover_descriptors(self, conn, start, end):
+        # As NimBLE's ble_gattc_disc_all_dscs: `start` is the characteristic's value handle, and the search runs
+        # strictly after it. (A caller passing value_handle + 1 misses a descriptor right after the value.)
         for c in self._chars():
-            if start <= c["cccd"] <= end:
+            if start < c["cccd"] <= end:
                 self.handler(13, (conn, c["cccd"], UUID(0x2902)))
         self.handler(14, (conn, 0))
 
