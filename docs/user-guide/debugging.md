@@ -3,7 +3,8 @@
 ## Console and compiled source
 
 The **console** shows what the board and Thingstudio report: deploy results, node errors, and what `debug` nodes
-and `print()` send. **Clear** empties it.
+and `print()` send. **Clear** empties it. Scroll up to read or copy: the console stops following new lines until you
+scroll back to the bottom.
 
 Its **Show** menu sets how much it shows:
 

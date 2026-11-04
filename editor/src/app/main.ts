@@ -874,8 +874,11 @@ function logLine(text: string, cls?: "ok" | "err" | "", nodeId?: string): void {
     msgSpan.setAttribute("title", "click to locate this node on the canvas");
     msgSpan.addEventListener("click", () => locateNode(nodeId));
   }
+  // Follow new lines only while the reader is at the bottom: scrolled up to read or copy, the console holds still
+  // (2026-11-04: a busy BLE scan flow left unplugging the board as the only way to stop it scrolling).
+  const following = consoleEl.scrollHeight - consoleEl.scrollTop - consoleEl.clientHeight < 24;
   consoleEl.appendChild(row);
-  consoleEl.scrollTop = consoleEl.scrollHeight;
+  if (following) consoleEl.scrollTop = consoleEl.scrollHeight;
 }
 
 /** URL of a docs page on the backend's locally served copy (docs_site.py) -- works offline. Falls
