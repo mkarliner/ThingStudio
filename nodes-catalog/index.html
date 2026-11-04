@@ -6738,7 +6738,7 @@ a flow file without the editor, see <a href="../check-a-flow/">Check a flow with
 </tbody>
 </table>
 <h3 id="ble-characteristic-in">ble characteristic in</h3>
-<p>Sends a message each time a connected phone writes a Bluetooth LE characteristic.</p>
+<p>Sends a message each time a connected device writes a Bluetooth LE characteristic.</p>
 <p>Type: <code>ble_characteristic_in</code>. Kind: source. Palette group: network.</p>
 <p>Properties explained: <a href="../nodes/ble-characteristic-in/">ble characteristic in</a></p>
 <ul>
@@ -6769,7 +6769,7 @@ a flow file without the editor, see <a href="../check-a-flow/">Check a flow with
 <td>characteristic UUID</td>
 <td>string</td>
 <td><code>""</code></td>
-<td>the characteristic a phone writes: 16-bit or 128-bit</td>
+<td>the characteristic a connected device writes: 16-bit or 128-bit</td>
 </tr>
 <tr>
 <td><code>encoding</code></td>
@@ -6788,7 +6788,7 @@ a flow file without the editor, see <a href="../check-a-flow/">Check a flow with
 </tbody>
 </table>
 <h3 id="ble-characteristic-out">ble characteristic out</h3>
-<p>Sets a Bluetooth LE characteristic to each message's payload for a phone to read, and notifies subscribed phones.</p>
+<p>Sets a Bluetooth LE characteristic to each message's payload for a connected device to read, and notifies subscribed devices.</p>
 <p>Type: <code>ble_characteristic_out</code>. Kind: sink. Palette group: network.</p>
 <p>Properties explained: <a href="../nodes/ble-characteristic-out/">ble characteristic out</a></p>
 <ul>
@@ -6819,7 +6819,7 @@ a flow file without the editor, see <a href="../check-a-flow/">Check a flow with
 <td>characteristic UUID</td>
 <td>string</td>
 <td><code>""</code></td>
-<td>the characteristic a phone reads: 16-bit or 128-bit; one out node per characteristic</td>
+<td>the characteristic a connected device reads: 16-bit or 128-bit; one out node per characteristic</td>
 </tr>
 <tr>
 <td><code>encoding</code></td>
@@ -6833,7 +6833,7 @@ a flow file without the editor, see <a href="../check-a-flow/">Check a flow with
 <td>notify</td>
 <td>boolean</td>
 <td><code>true</code></td>
-<td>also push each value to subscribed phones</td>
+<td>also push each value to subscribed devices</td>
 </tr>
 <tr>
 <td><code>bleConfigId</code></td>
@@ -7023,7 +7023,7 @@ a flow file without the editor, see <a href="../check-a-flow/">Check a flow with
 </tbody>
 </table>
 <h3 id="ble-uart-in">ble uart in</h3>
-<p>Receives text from a phone over Bluetooth LE, through the Nordic UART Service.</p>
+<p>Receives text from a connected device over Bluetooth LE, through the Nordic UART Service.</p>
 <p>Type: <code>ble_uart_in</code>. Kind: source. Palette group: network.</p>
 <p>Properties explained: <a href="../nodes/ble-uart-in/">ble uart in</a></p>
 <ul>
@@ -7047,7 +7047,7 @@ a flow file without the editor, see <a href="../check-a-flow/">Check a flow with
 <td>one message per line</td>
 <td>boolean</td>
 <td><code>true</code></td>
-<td>one message per line the phone sends (\n ends a line, \r is dropped); off: one per write</td>
+<td>one message per line the connected device sends (\n ends a line, \r is dropped); off: one per write</td>
 </tr>
 <tr>
 <td><code>bleConfigId</code></td>
@@ -7059,7 +7059,7 @@ a flow file without the editor, see <a href="../check-a-flow/">Check a flow with
 </tbody>
 </table>
 <h3 id="ble-uart-out">ble uart out</h3>
-<p>Sends text to the phones connected over Bluetooth LE, through the Nordic UART Service.</p>
+<p>Sends text to the devices connected over Bluetooth LE, through the Nordic UART Service.</p>
 <p>Type: <code>ble_uart_out</code>. Kind: sink. Palette group: network.</p>
 <p>Properties explained: <a href="../nodes/ble-uart-out/">ble uart out</a></p>
 <ul>
@@ -7592,7 +7592,7 @@ a flow file without the editor, see <a href="../check-a-flow/">Check a flow with
 <h3 id="ble">BLE</h3>
 <p>Type: <code>thingstudio/config/ble</code> (one per flow).</p>
 <ul>
-<li><code>name</code>, text: What phone apps show, up to 26 bytes. Shorter leaves more room in an advertisement.</li>
+<li><code>name</code>, text: What other devices show when they find the board, up to 26 bytes. Shorter leaves more room in an advertisement.</li>
 </ul>
 <p>Defaults: <code>{"name":"thingstudio"}</code></p>
 <h3 id="ble-peer">BLE peer</h3>

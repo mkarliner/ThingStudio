@@ -3545,13 +3545,13 @@
 
 
 <h1 id="ble-characteristic-in">ble characteristic in</h1>
-<p>Sends a message each time a connected phone writes a Bluetooth LE characteristic.</p>
+<p>Sends a message each time a connected device writes a Bluetooth LE characteristic.</p>
 <h2 id="properties">Properties</h2>
 <ul>
 <li><strong>service UUID</strong> — the service the characteristic belongs to: 16-bit (<code>181a</code>) or 128-bit. Use the same service on
   the nodes for its other characteristics.</li>
 <li><strong>characteristic UUID</strong> — 16-bit (<code>2a6e</code>) or 128-bit.</li>
-<li><strong>encoding</strong> — how the bytes a phone writes become <code>payload</code>: <strong>bytes</strong>, <strong>text</strong> (UTF-8), <strong>int8</strong>, <strong>uint8</strong>,
+<li><strong>encoding</strong> — how the bytes written become <code>payload</code>: <strong>bytes</strong>, <strong>text</strong> (UTF-8), <strong>int8</strong>, <strong>uint8</strong>,
   <strong>int16</strong>, <strong>uint16</strong>, <strong>int32</strong>, <strong>uint32</strong> or <strong>float32</strong>, little-endian. It also sets the output's type, so a
   number encoding can wire into a number input.</li>
 <li><strong>BLE</strong> — the flow's <a href="../ble/">BLE config</a>, for the board's name.</li>
@@ -3565,10 +3565,12 @@ print(uuid.uuid4())"</code>). 16-bit UUIDs belong to services the Bluetooth SIG 
 </ul>
 <h2 id="behavior">Behavior</h2>
 <p>The board becomes a GATT server when a flow has any characteristic or UART node. It advertises its name, accepts
-connections, and starts advertising again when a phone disconnects. All the flow's characteristics are registered
-once, when the flow starts. Pair a <a href="../ble-characteristic-out/">ble characteristic out</a> with the same UUIDs to make
-one characteristic a phone can read, write and subscribe to.</p>
-<p>A phone can write up to 244 bytes at a time. A node keeps up to 20 writes waiting; if they come faster than the
+connections, and starts advertising again when a device disconnects. Any Bluetooth LE device that can connect and
+write works: an app on a phone or a computer, such as nRF Connect, or another board's <a href="../ble-write/">ble write</a> node.
+All the flow's characteristics are registered once, when the flow starts. Pair a
+<a href="../ble-characteristic-out/">ble characteristic out</a> with the same UUIDs to make one characteristic a connected device
+can read, write and subscribe to.</p>
+<p>A connected device can write up to 244 bytes at a time. A node keeps up to 20 writes waiting; if they come faster than the
 flow handles them, the oldest are dropped.</p>
 <p>The node's status shows <strong>advertising, no one connected</strong> or <strong>1 connected</strong>.</p>
 <h2 id="errors">Errors</h2>

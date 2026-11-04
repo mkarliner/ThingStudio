@@ -1625,10 +1625,32 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#wiring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Wiring
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#behavior" class="md-nav__link">
     <span class="md-ellipsis">
       
         Behavior
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Errors
       
     </span>
   </a>
@@ -3470,10 +3492,32 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#wiring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Wiring
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#behavior" class="md-nav__link">
     <span class="md-ellipsis">
       
         Behavior
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Errors
       
     </span>
   </a>
@@ -3501,14 +3545,38 @@
 
 
 <h1 id="inject">inject</h1>
-<p>Fires once, with a fixed payload, when you click its "▶" icon while connected to a board. Click anywhere else on the node to open its property panel instead.</p>
+<p>Sends one message with a fixed payload each time you click its ▶ icon while the editor is connected to the board.</p>
 <h2 id="properties">Properties</h2>
 <ul>
-<li><strong>payload type</strong> — <code>bool</code>, <code>number</code>, or <code>string</code>.</li>
-<li><strong>value</strong> — the fixed value to send, matching the chosen type.</li>
+<li><strong>payload type</strong> — <code>bool</code>, <code>number</code> or <code>string</code>. Default <code>bool</code>. The output's type follows it, so the editor
+  checks the wire against the input it feeds (see <a href="../../working-in-the-editor/#wiring">Wiring</a>).</li>
+<li><strong>value</strong> — the value to send, read as the payload type. Default <code>true</code>.</li>
 </ul>
+<p>The value is read in one of three ways, by payload type:</p>
+<ul>
+<li><code>bool</code>: <code>true</code> sends <code>True</code>. Anything else sends <code>False</code>, including <code>True</code> and <code>1</code>.</li>
+<li><code>number</code>: a whole number is sent as an <code>int</code>, any other number as a <code>float</code>. An empty value sends <code>0</code>.</li>
+<li><code>string</code>: sent as typed.</li>
+</ul>
+<h2 id="wiring">Wiring</h2>
+<p><strong>Input</strong> — none. <code>inject</code> is a source.</p>
+<p><strong>Output</strong> — a message with <code>payload</code> set to the value and <code>topic</code> set to an empty string.</p>
 <h2 id="behavior">Behavior</h2>
-<p>The "▶" icon and the rest of the node are two separate click targets. The icon fires — only while live-connected, and only that one message; there's no periodic firing and no automatic fire-at-boot. The node body opens the property panel, live or not, so you can edit a flow's inject values without disconnecting first. A freshly deployed flow with only <code>inject</code> sources does nothing until you click one. To send a message automatically when the flow starts, use <a href="../startup/">startup</a>.</p>
+<p>The ▶ icon and the rest of the node are separate click targets. The ▶ fires the node. A click anywhere else on the
+node opens its property panel, connected or not.</p>
+<p>Each click sends one message. <code>inject</code> never fires on its own, neither on a schedule nor when the flow starts, so a
+flow whose only sources are <code>inject</code> nodes does nothing until you click one. To send a message when the flow starts,
+use <a href="../startup/">startup</a>. To send one repeatedly, use <a href="../timer/">timer</a>.</p>
+<h2 id="errors">Errors</h2>
+<ul>
+<li><strong>The editor isn't connected.</strong> The console shows <code>[inject: connect to a device first -- clicking only fires while
+  live]</code> and nothing is sent.</li>
+<li><strong>The value isn't a number,</strong> with payload type <code>number</code>. The deploy goes through; the click fails on the board with
+  a <code>[NODE_ERROR]</code> naming this node and <code>inject value 'abc' is not a valid number</code>. See
+  <a href="../../debugging/#reading-a-node-error">Reading a node error</a>.</li>
+<li><strong>A node error in this node's chain</strong> stops the chain. See
+  <a href="../../debugging/#reading-a-node-error">Reading a node error</a>.</li>
+</ul>
 
 
 

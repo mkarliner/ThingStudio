@@ -1840,22 +1840,16 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Behavior">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#cascading-two-journals" class="md-nav__link">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#errors" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Cascading two journals
+        Errors
       
     </span>
   </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -3517,22 +3511,16 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Behavior">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#cascading-two-journals" class="md-nav__link">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#errors" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Cascading two journals
+        Errors
       
     </span>
   </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -3561,39 +3549,38 @@
 it to a <a href="../gui/#histogram">histogram</a> to see the history, and to another journal for a longer time scale.</p>
 <h2 id="properties">Properties</h2>
 <ul>
-<li><strong>rows kept</strong> — how many rows the history holds, 1 to 256. At 12 bytes a row, 156 rows is under 2 KB.</li>
-<li><strong>seconds per row</strong> — a row is closed once this much time has passed, and holds the average, min and max of the
-  readings in it. <strong>0</strong> makes every message one row, which is what a journal fed by another journal wants.</li>
-<li><strong>rows per roll-up</strong> — 0 sends no roll-up.</li>
-<li><strong>gaps allowed in a roll-up</strong> — from 0 to 1, default 0.5. If more than this fraction of the rows in a roll-up
-  are gaps, the roll-up is a gap too (<code>payload</code> of <code>None</code>). Averages use the known rows only; a gap is never
-  counted as zero.</li>
+<li><strong>rows kept</strong> — how many rows the history holds, 1 to 256. Default 60. At 12 bytes a row, 156 rows is under 2 KB.</li>
+<li><strong>seconds per row</strong> — a row closes once this much time has passed, and holds the average, minimum and maximum of
+  the readings in it. Default 60. <strong>0</strong> makes every message one row, which is what a journal fed by another journal
+  wants.</li>
+<li><strong>rows per roll-up</strong> — how many rows go into each roll-up on output 2. Default 0, which sends no roll-up.</li>
+<li><strong>gaps allowed in a roll-up</strong> — shown when <strong>rows per roll-up</strong> is above 0. From 0 to 1, default 0.5. If more
+  than this fraction of the rows in a roll-up are gaps, the roll-up is a gap too. Averages use the known rows only;
+  a gap is never counted as zero.</li>
 </ul>
 <h2 id="wiring">Wiring</h2>
-<ul>
-<li><strong>Input</strong> — <code>msg.payload</code> is a number. <code>None</code> records a gap. A message that carries <code>min</code> and <code>max</code> (the
-  roll-up of another journal) is folded in with them, so a longer time scale keeps the spikes.</li>
-<li><strong>Output 1, series</strong> — sent each time a row is added. The payload is the journal itself, to wire to a histogram. It
-  is the live history, not a copy, so it costs no memory per row.</li>
-<li><strong>Output 2, roll-up</strong> — sent every <strong>rows per roll-up</strong> rows: <code>payload</code> the average, <code>min</code>, <code>max</code>, and the
-  input's <code>topic</code>. Wire it to another journal, a readout or MQTT.</li>
-</ul>
+<p><strong>Input</strong> — <code>msg.payload</code> is a number. Text such as <code>"21.5"</code> is read as a number, and <code>True</code> and <code>False</code> as 1 and 0.
+A message that also carries <code>min</code> and <code>max</code>, such as another journal's roll-up, is folded in with them, so a longer
+time scale keeps the spikes. With <strong>seconds per row</strong> at 0, a payload of <code>None</code> records a gap.</p>
+<p><strong>Output 1, series</strong> — sent each time a row is added. The payload is the journal itself, to wire to a histogram. It
+is the live history, not a copy, so it costs no memory per row.</p>
+<p><strong>Output 2, roll-up</strong> — sent every <strong>rows per roll-up</strong> rows: <code>payload</code> the average, <code>min</code>, <code>max</code>, and the input's
+<code>topic</code>. A gap roll-up has <code>None</code> in all three. Wire it to another journal, a readout or MQTT.</p>
 <h2 id="behavior">Behavior</h2>
-<p>A gap is empty, never a copy of the last value. The history starts empty each time the flow starts.</p>
-<p>With <strong>seconds per row</strong> set, a row closes when a message arrives after its time is up, so a sensor that has gone
-quiet adds no gaps until it speaks again. Set the histogram's <strong>stale after</strong> to dim it meanwhile. Choose a row longer
-than your sensor's interval (10 seconds for a reading every 5): a row that happens to catch no reading is a gap.</p>
-<p>A payload that isn't a number is dropped. The first time that happens, the node reports an error; the flow keeps
-running.</p>
-<h3 id="cascading-two-journals">Cascading two journals</h3>
-<p>A sensor reads every 5 seconds.</p>
-<ol>
-<li>Journal A: rows 156, <strong>seconds per row</strong> 10, <strong>rows per roll-up</strong> 6. Its first output goes to a histogram: the
-   last 26 minutes.</li>
-<li>Journal B, fed from A's second output: rows 156, <strong>seconds per row</strong> 0. Its first output goes to a second
-   histogram: the last 2.6 hours, one bar a minute, each with its min to max line.</li>
-</ol>
-<p><code>test-flows/gui-headliner-sensor-freenove-s3-4in.flow.json</code>, in the repository, does this with a BME280.</p>
+<p>A gap is empty, never a copy of the last value. A row with no readings in it is a gap, so choose a row longer than
+your sensor's interval: 10 seconds for a reading every 5.</p>
+<p>With <strong>seconds per row</strong> set, a row closes when a message arrives after its time is up. A sensor that has gone quiet
+adds no rows until it sends again; then the rows it missed are added as gaps, at most one full history's worth. Set
+the histogram's <strong>stale after</strong> to dim it meanwhile.</p>
+<p><a href="../../sensor-display/#3-add-the-history">A sensor display</a> wires two journals in a row, for a 26-minute and a
+2.6-hour history.</p>
+<h2 id="errors">Errors</h2>
+<ul>
+<li><strong>The payload isn't a number.</strong> The message is dropped and the console shows a <code>[NODE_ERROR]</code> naming this node and
+  <code>journal needs a number, got str 'abc'</code>. It is reported once, then again only after a number has arrived. The
+  chain keeps running.</li>
+<li><strong>Rows kept outside 1 to 256, or a negative seconds per row.</strong> Deploy stops, naming the node and the property.</li>
+</ul>
 
 
 

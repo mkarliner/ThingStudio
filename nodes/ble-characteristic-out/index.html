@@ -3545,14 +3545,14 @@
 
 
 <h1 id="ble-characteristic-out">ble characteristic out</h1>
-<p>Sets a Bluetooth LE characteristic to each message's payload, for a phone to read, and notifies the phones that
-subscribed.</p>
+<p>Sets a Bluetooth LE characteristic to each message's payload, for a connected device to read, and notifies the
+devices that subscribed.</p>
 <h2 id="properties">Properties</h2>
 <ul>
 <li><strong>service UUID</strong> / <strong>characteristic UUID</strong> — as for <a href="../ble-characteristic-in/">ble characteristic in</a>.</li>
 <li><strong>encoding</strong> — how <code>payload</code> becomes bytes: the same choices. A number must fit: <code>70000</code> doesn't fit an
   <strong>int16</strong>.</li>
-<li><strong>notify</strong> — also push each new value to the phones subscribed to it. On by default.</li>
+<li><strong>notify</strong> — also push each new value to the devices subscribed to it. On by default.</li>
 <li><strong>BLE</strong> — the flow's <a href="../ble/">BLE config</a>.</li>
 </ul>
 <h2 id="wiring">Wiring</h2>
@@ -3560,8 +3560,8 @@ subscribed.</p>
 <li><strong>Input</strong> — <code>payload</code> is the new value. Unwired, the characteristic exists but stays empty.</li>
 </ul>
 <h2 id="behavior">Behavior</h2>
-<p>Each message replaces the value. A phone that reads gets the whole value; a notification carries up to 20 bytes
-unless the phone has agreed a larger MTU (most do, up to 244). Only phones connected at the time are notified.</p>
+<p>Each message replaces the value. A device that reads gets the whole value; a notification carries up to 20 bytes
+unless the device has agreed a larger MTU (most do, up to 244). Only devices connected at the time are notified.</p>
 <p>One characteristic out node per characteristic: two would fight over its value. A
 <a href="../ble-characteristic-in/">ble characteristic in</a> on the same UUIDs makes it writable too.</p>
 <h2 id="errors">Errors</h2>

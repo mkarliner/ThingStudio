@@ -3629,6 +3629,10 @@ An <code>any</code> output, such as the output of a <a href="../nodes/function/"
 <code>bytes</code> inputs.</p>
 <p>An input can take any number of wires. The node runs once for each message that arrives, whichever wire it came
 on. An output can feed any number of inputs.</p>
+<p>When an output feeds more than one wire, the first wire gets the message itself and each other wire gets a copy,
+made before any of them runs. The wires then run one after another, in the order they were drawn. The copy is
+shallow: a list or dict inside the message is shared, so a node that changes <code>msg['payload']</code> in place, rather than
+replacing it, changes it for the other wires too.</p>
 <h2 id="giving-a-node-a-flow-label">Giving a node a flow label</h2>
 <p>Every node has a <strong>flow label</strong> field at the top of its property panel. Type something, say <code>Fire!</code>, and the canvas
 shows it instead of the node's name. Leave it blank to show the name again. Console messages and errors that name

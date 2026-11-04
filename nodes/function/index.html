@@ -1747,6 +1747,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Errors
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -3536,6 +3547,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Errors
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -3557,44 +3579,58 @@
 
 
 <h1 id="function">function</h1>
-<p>Runs your own MicroPython on each message. Use it for anything a dedicated node type doesn't cover.</p>
+<p>Runs your own MicroPython on each message, for anything no other node does.</p>
 <h2 id="properties">Properties</h2>
 <ul>
-<li><strong>code</strong> — the function body, run once per incoming message. <code>msg</code> is a dict; <code>msg['payload']</code> is what you'll
-  usually read and write. Return the (possibly modified) message to pass it on, or nothing to stop it there.</li>
-<li><strong>outputs</strong> — how many outputs the node has (<code>outputCount</code> in the flow file, up to 10).</li>
+<li><strong>code</strong> — the body of a Python function, run once for each message. Default <code>msg['payload'] = msg['payload']</code>
+  followed by <code>return msg</code>. Required.</li>
+<li><strong>outputs</strong> — how many outputs the node has, 1 to 10. Default 1. <code>outputCount</code> in the flow file.</li>
 </ul>
 <h2 id="wiring">Wiring</h2>
-<p>One input, any message. With more than one output, return an array to route to specific outputs, Node-RED style:</p>
+<p><strong>Input</strong> — any message, as <code>msg</code>: a dict with the main value in <code>msg['payload']</code>.</p>
+<p><strong>Output</strong> — what the code returns. Return the message to pass it on, or return <code>None</code> or nothing to stop it. Every
+output has type <code>any</code> (see <a href="../../working-in-the-editor/#wiring">Wiring</a>).</p>
+<p>With more than one output, return a list with one entry per output, as in Node-RED:</p>
 <div class="highlight"><pre><span></span><code><span class="k">if</span> <span class="n">msg</span><span class="p">[</span><span class="s1">'payload'</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">100</span><span class="p">:</span>
     <span class="k">return</span> <span class="p">[</span><span class="n">msg</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>   <span class="c1"># output 1 only</span>
-<span class="k">else</span><span class="p">:</span>
-    <span class="k">return</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">msg</span><span class="p">]</span>   <span class="c1"># output 2 only</span>
+<span class="k">return</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">msg</span><span class="p">]</span>       <span class="c1"># output 2 only</span>
 </code></pre></div>
+<p>The returned list is read entry by entry:</p>
 <ul>
-<li><code>None</code> in a slot sends nothing out that output.</li>
-<li>A plain <code>return msg</code> (no array) always targets output 1.</li>
-<li>A slot holding a list of messages sends all of them out that one output, in order:
-  <code>return [[msg1, msg2], None]</code>.</li>
-<li>Returning fewer elements than the node has outputs leaves the missing ones as <code>None</code>; returning more ignores the
-  extras.</li>
+<li><code>None</code> sends nothing on that output.</li>
+<li>A list of messages sends each of them on that output, in order: <code>return [[msg1, msg2], None]</code>.</li>
+<li>A list shorter than the number of outputs leaves the rest empty. Entries past the last output are ignored.</li>
+<li>A plain <code>return msg</code>, not in a list, goes to output 1.</li>
 </ul>
+<p>With one output, a returned list is passed on as the message itself. Set <strong>outputs</strong> to 2 or more to use the list.</p>
 <h2 id="behavior">Behavior</h2>
+<p>The code is the body of an <code>async def</code>, so <code>return</code> and <code>await</code> work at its top level. <code>asyncio</code> and <code>runtime</code> are
+already defined; import anything else in the code, such as <code>import machine</code>. A library Thingstudio provides, such as
+<code>mqtt_as</code>, is installed on the board when you deploy (see <a href="../../flow-lifecycle/#libraries">Libraries</a>).</p>
+<p>Don't call <code>time.sleep()</code> or run a long loop: either stops every other chain while it runs. Use
+<code>await asyncio.sleep(1)</code> instead (see <a href="../../background/event-driven/#the-one-rule-dont-block">The one rule: don't block</a>).</p>
+<p>Local variables start again for every message. Keep values between messages in <code>context</code>, <code>flow</code> or <code>settings</code>.</p>
 <h3 id="context-flow-and-settings">Context, flow and settings</h3>
-<p>Three ways to keep state across messages, all available as plain objects inside your code:</p>
+<p>Three stores keep values between messages, each with <code>get(name, default)</code> and <code>set(name, value)</code>:</p>
 <ul>
-<li><strong><code>context</code></strong> — private to this one <code>function</code> node. Use it for a counter or running total only this node needs.</li>
-<li><strong><code>flow</code></strong> — shared across the whole flow. <code>flow.set('name', value)</code> / <code>flow.get('name')</code> works from any function
-  node, and reads/writes the same store a <a href="../change/">change</a> node uses by name.</li>
-<li><strong><code>settings</code></strong> — saved on the board and survives a reboot. Use it for a value the user changes, such as units or a
-  colour scheme. It is namespaced by the flow's name, so a different flow cannot read or overwrite it.
-  <code>settings.get('units', 'kg')</code> / <code>settings.set('units', 'lbs')</code>.</li>
+<li><strong><code>context</code></strong> — this node only. Two <code>function</code> nodes using the same name don't share it.</li>
+<li><strong><code>flow</code></strong> — shared by every <code>function</code> and <a href="../change/">change</a> node in the flow, by name.</li>
+<li><strong><code>settings</code></strong> — saved on the board, so it survives a restart and a redeploy of the same flow. It is
+  <code>runtime.settings</code>; see <a href="../../custom-nodes/#persisting-values">Persisting values</a> for what else it does.</li>
 </ul>
+<p><code>context</code> and <code>flow</code> start empty each time the flow starts.</p>
 <div class="highlight"><pre><span></span><code><span class="n">count</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'count'</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
 <span class="n">context</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">'count'</span><span class="p">,</span> <span class="n">count</span><span class="p">)</span>
 <span class="n">msg</span><span class="p">[</span><span class="s1">'payload'</span><span class="p">]</span> <span class="o">=</span> <span class="n">count</span>
 <span class="k">return</span> <span class="n">msg</span>
 </code></pre></div>
+<h2 id="errors">Errors</h2>
+<ul>
+<li><strong>The code is empty.</strong> Deploy stops with <code>function node's code is empty</code>.</li>
+<li><strong>The code has a syntax error.</strong> Deploy stops and highlights the node.</li>
+<li><strong>The code raises an exception.</strong> The console shows a <code>[NODE_ERROR]</code> naming this node and the exception, and the
+  chain stops. See <a href="../../debugging/#reading-a-node-error">Reading a node error</a>.</li>
+</ul>
 
 
 

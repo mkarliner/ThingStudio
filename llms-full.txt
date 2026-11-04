@@ -1737,6 +1737,11 @@ An `any` output, such as the output of a [function](nodes/function.md) node, con
 An input can take any number of wires. The node runs once for each message that arrives, whichever wire it came
 on. An output can feed any number of inputs.
 
+When an output feeds more than one wire, the first wire gets the message itself and each other wire gets a copy,
+made before any of them runs. The wires then run one after another, in the order they were drawn. The copy is
+shallow: a list or dict inside the message is shared, so a node that changes `msg['payload']` in place, rather than
+replacing it, changes it for the other wires too.
+
 ## Giving a node a flow label
 
 Every node has a **flow label** field at the top of its property panel. Type something, say `Fire!`, and the canvas
@@ -1854,16 +1859,20 @@ name from a config node is never written into the `.flow.json` file. See
 **Compile → Deploy** compiles the current canvas to MicroPython bytecode and sends it to the connected board,
 replacing whatever flow is currently running there.
 
-A successful deploy shows a confirmation in the console and the new flow starts running immediately. A failed deploy
-leaves the board's current flow running and shows a specific error:
+A successful deploy shows a confirmation in the console and the new flow starts running immediately. The board keeps
+the deployed flow and starts it again each time the board starts, with or without the editor. Each start begins every
+node afresh: counts, filters, journals, flow variables and a function node's `context` start empty. Only `settings`
+keeps its values (see [function](nodes/function.md#context-flow-and-settings)).
+
+A failed deploy leaves the board's current flow running and shows a specific error:
 
 - a compile error — something in the flow itself, such as a missing required property
 - a space error — the compiled flow doesn't fit in the board's available flash/RAM
 - a library error — see below
 
 After a successful deploy the button grays out: the board is already running exactly what's on the canvas. It
-re-enables the moment you change anything (a property, a node, a wire). A failed deploy leaves it enabled so you can
-fix the problem and retry.
+re-enables the moment you change anything (a property, a node, a wire). A change reaches the board only with the
+next deploy. A failed deploy leaves it enabled so you can fix the problem and retry.
 
 ### Libraries
 
@@ -2572,8 +2581,8 @@ See [flows, nodes and messages](../background/flows-and-nodes.md) for how they f
 | send or receive UDP packets | [udp send](udp-send.md), [udp receive](udp-receive.md) |
 | read BLE beacons and sensors | [ble scan](ble-scan.md) |
 | broadcast a reading over Bluetooth | [ble advertise](ble-advertise.md) |
-| let a phone read or set a value | [ble characteristic out](ble-characteristic-out.md), [ble characteristic in](ble-characteristic-in.md) |
-| send and receive text with a phone terminal app | [ble uart in](ble-uart-in.md), [ble uart out](ble-uart-out.md) |
+| let a phone, computer or another board read or set a value | [ble characteristic out](ble-characteristic-out.md), [ble characteristic in](ble-characteristic-in.md) |
+| send and receive text with a Bluetooth terminal app | [ble uart in](ble-uart-in.md), [ble uart out](ble-uart-out.md) |
 | read from, write to, or listen to a BLE sensor or another board | [ble read](ble-read.md), [ble write](ble-write.md), [ble notify](ble-notify.md) |
 | know when WiFi connects or drops | [wifi status](wifi-status.md) |
 | stop messages while WiFi is down | [wifi gate](wifi-gate.md) |
@@ -2619,10 +2628,10 @@ These nodes need a board with Bluetooth LE: ESP32, ESP32-S3, ESP32-C3 or ESP32-C
 | --- | --- | --- |
 | [ble scan](ble-scan.md) | source | Sends a message for each Bluetooth LE advertisement nearby. |
 | [ble advertise](ble-advertise.md) | sink | Advertises the board's name and a payload over Bluetooth LE. |
-| [ble characteristic in](ble-characteristic-in.md) | source | Sends a message when a phone writes a characteristic. |
-| [ble characteristic out](ble-characteristic-out.md) | sink | Sets a characteristic a phone can read, and notifies it. |
-| [ble uart in](ble-uart-in.md) | source | Receives text lines from a phone terminal app. |
-| [ble uart out](ble-uart-out.md) | sink | Sends text to a phone terminal app. |
+| [ble characteristic in](ble-characteristic-in.md) | source | Sends a message when a connected device writes a characteristic. |
+| [ble characteristic out](ble-characteristic-out.md) | sink | Sets a characteristic a connected device can read, and notifies it. |
+| [ble uart in](ble-uart-in.md) | source | Receives text lines from a Bluetooth terminal app. |
+| [ble uart out](ble-uart-out.md) | sink | Sends text to a Bluetooth terminal app. |
 | [ble read](ble-read.md) | transform | Reads a characteristic of another BLE device. |
 | [ble write](ble-write.md) | sink | Writes to a characteristic of another BLE device. |
 | [ble notify](ble-notify.md) | source | Sends each value another BLE device notifies. |
@@ -2683,16 +2692,44 @@ Source: https://docs.thingstudio.net/nodes/inject/
 
 # inject
 
-Fires once, with a fixed payload, when you click its "▶" icon while connected to a board. Click anywhere else on the node to open its property panel instead.
+Sends one message with a fixed payload each time you click its ▶ icon while the editor is connected to the board.
 
 ## Properties
 
-- **payload type** — `bool`, `number`, or `string`.
-- **value** — the fixed value to send, matching the chosen type.
+- **payload type** — `bool`, `number` or `string`. Default `bool`. The output's type follows it, so the editor
+  checks the wire against the input it feeds (see [Wiring](../working-in-the-editor.md#wiring)).
+- **value** — the value to send, read as the payload type. Default `true`.
+
+The value is read in one of three ways, by payload type:
+
+- `bool`: `true` sends `True`. Anything else sends `False`, including `True` and `1`.
+- `number`: a whole number is sent as an `int`, any other number as a `float`. An empty value sends `0`.
+- `string`: sent as typed.
+
+## Wiring
+
+**Input** — none. `inject` is a source.
+
+**Output** — a message with `payload` set to the value and `topic` set to an empty string.
 
 ## Behavior
 
-The "▶" icon and the rest of the node are two separate click targets. The icon fires — only while live-connected, and only that one message; there's no periodic firing and no automatic fire-at-boot. The node body opens the property panel, live or not, so you can edit a flow's inject values without disconnecting first. A freshly deployed flow with only `inject` sources does nothing until you click one. To send a message automatically when the flow starts, use [startup](startup.md).
+The ▶ icon and the rest of the node are separate click targets. The ▶ fires the node. A click anywhere else on the
+node opens its property panel, connected or not.
+
+Each click sends one message. `inject` never fires on its own, neither on a schedule nor when the flow starts, so a
+flow whose only sources are `inject` nodes does nothing until you click one. To send a message when the flow starts,
+use [startup](startup.md). To send one repeatedly, use [timer](timer.md).
+
+## Errors
+
+- **The editor isn't connected.** The console shows `[inject: connect to a device first -- clicking only fires while
+  live]` and nothing is sent.
+- **The value isn't a number,** with payload type `number`. The deploy goes through; the click fails on the board with
+  a `[NODE_ERROR]` naming this node and `inject value 'abc' is not a valid number`. See
+  [Reading a node error](../debugging.md#reading-a-node-error).
+- **A node error in this node's chain** stops the chain. See
+  [Reading a node error](../debugging.md#reading-a-node-error).
 
 
 ---
@@ -2705,13 +2742,16 @@ Sends one message with a fixed payload each time the flow starts.
 
 ## Properties
 
-- **payload type** — `bool`, `number`, `string`, or `start reason`.
-- **value** — the fixed value to send, matching the chosen type. Not used with `start reason`.
+- **payload type** — `bool`, `number`, `string` or `start reason`. Default `bool`.
+- **value** — the value to send, read as the payload type. Default `true`. Hidden with `start reason`. A `bool` is
+  true only for `true`. A whole number is sent as an `int`, and an empty `number` as `0`.
 
 ## Wiring
 
-**Output** — the fixed value, with a `reason` field saying why the flow started. With payload type
-`start reason`, the payload is that same string.
+**Input** — none. `startup` is a source.
+
+**Output** — a message with `payload` set to the value, `topic` set to an empty string, and `reason` saying why the
+flow started. With payload type `start reason`, the payload is that same string.
 
 | reason | the flow started because |
 | --- | --- |
@@ -2728,12 +2768,17 @@ chips the button cuts power to the core.
 
 ## Behavior
 
-The flow starts after every Deploy, and again whenever the board resets or powers up with a saved flow.
-So `startup` runs even when the editor isn't connected. Use it for setup work, such as setting an output
-to a known state or drawing a first screen.
+The flow starts after every deploy and each time the board starts (see [Deploy](../flow-lifecycle.md#deploy)), so
+`startup` fires even when the editor isn't connected. Use it for setup work, such as setting an output to a known
+state or drawing a first screen.
 
-It fires once per start and never repeats. For a message you trigger by hand, use [inject](inject.md).
-For a repeating one, use [timer](timer.md).
+It fires once per start and never repeats. For a message you send by hand, use [inject](inject.md). For a repeating
+one, use [timer](timer.md).
+
+## Errors
+
+- **The value isn't a number,** with payload type `number`. The deploy goes through; when the flow starts, the
+  console shows a `[NODE_ERROR]` naming this node and `startup value 'abc' is not a valid number`.
 
 
 ---
@@ -2742,15 +2787,34 @@ Source: https://docs.thingstudio.net/nodes/timer/
 
 # timer
 
-Emits an increasing count on a fixed interval — a heartbeat with a sequence number, not a repeated value.
+Sends a count that goes up by one at a fixed interval.
 
 ## Properties
 
-- **interval (ms)** — how often to emit. Must be a positive number.
+- **interval (ms)** — the time between messages, in milliseconds. Default 1000. A whole number, 1 or more.
+
+## Wiring
+
+**Input** — none. `timer` is a source.
+
+**Output** — a message with `payload` set to the count, an `int`: 1, 2, 3 and so on. `topic` is an empty string.
 
 ## Behavior
 
-The payload is a whole number that starts at 1 and increases by one on every tick — not a fixed constant. Each `timer` node keeps its own independent counter, even if two of them share the same interval.
+The first message goes out as soon as the flow starts, then one each interval. The interval starts once the previous
+message has finished going through the chain, so a slow node after the timer, such as a [delay](delay.md), adds its
+time to every interval.
+
+Each `timer` node keeps its own count, starting at 1 when the flow starts, even when two share an interval.
+
+## Errors
+
+- **The interval is less than 1.** Deploy stops with `property "intervalMs" 0 is below its minimum, 1`, naming the
+  node.
+- **The interval isn't a whole number.** Deploy stops with `"intervalMs" must be a whole number of milliseconds`,
+  naming the node.
+- **A node error in this node's chain** stops the chain. See
+  [Reading a node error](../debugging.md#reading-a-node-error).
 
 
 ---
@@ -2759,44 +2823,59 @@ Source: https://docs.thingstudio.net/nodes/function/
 
 # function
 
-Runs your own MicroPython on each message. Use it for anything a dedicated node type doesn't cover.
+Runs your own MicroPython on each message, for anything no other node does.
 
 ## Properties
 
-- **code** — the function body, run once per incoming message. `msg` is a dict; `msg['payload']` is what you'll
-  usually read and write. Return the (possibly modified) message to pass it on, or nothing to stop it there.
-- **outputs** — how many outputs the node has (`outputCount` in the flow file, up to 10).
+- **code** — the body of a Python function, run once for each message. Default `msg['payload'] = msg['payload']`
+  followed by `return msg`. Required.
+- **outputs** — how many outputs the node has, 1 to 10. Default 1. `outputCount` in the flow file.
 
 ## Wiring
 
-One input, any message. With more than one output, return an array to route to specific outputs, Node-RED style:
+**Input** — any message, as `msg`: a dict with the main value in `msg['payload']`.
+
+**Output** — what the code returns. Return the message to pass it on, or return `None` or nothing to stop it. Every
+output has type `any` (see [Wiring](../working-in-the-editor.md#wiring)).
+
+With more than one output, return a list with one entry per output, as in Node-RED:
 
 ```python
 if msg['payload'] > 100:
     return [msg, None]   # output 1 only
-else:
-    return [None, msg]   # output 2 only
+return [None, msg]       # output 2 only
 ```
 
-- `None` in a slot sends nothing out that output.
-- A plain `return msg` (no array) always targets output 1.
-- A slot holding a list of messages sends all of them out that one output, in order:
-  `return [[msg1, msg2], None]`.
-- Returning fewer elements than the node has outputs leaves the missing ones as `None`; returning more ignores the
-  extras.
+The returned list is read entry by entry:
+
+- `None` sends nothing on that output.
+- A list of messages sends each of them on that output, in order: `return [[msg1, msg2], None]`.
+- A list shorter than the number of outputs leaves the rest empty. Entries past the last output are ignored.
+- A plain `return msg`, not in a list, goes to output 1.
+
+With one output, a returned list is passed on as the message itself. Set **outputs** to 2 or more to use the list.
 
 ## Behavior
 
+The code is the body of an `async def`, so `return` and `await` work at its top level. `asyncio` and `runtime` are
+already defined; import anything else in the code, such as `import machine`. A library Thingstudio provides, such as
+`mqtt_as`, is installed on the board when you deploy (see [Libraries](../flow-lifecycle.md#libraries)).
+
+Don't call `time.sleep()` or run a long loop: either stops every other chain while it runs. Use
+`await asyncio.sleep(1)` instead (see [The one rule: don't block](../background/event-driven.md#the-one-rule-dont-block)).
+
+Local variables start again for every message. Keep values between messages in `context`, `flow` or `settings`.
+
 ### Context, flow and settings
 
-Three ways to keep state across messages, all available as plain objects inside your code:
+Three stores keep values between messages, each with `get(name, default)` and `set(name, value)`:
 
-- **`context`** — private to this one `function` node. Use it for a counter or running total only this node needs.
-- **`flow`** — shared across the whole flow. `flow.set('name', value)` / `flow.get('name')` works from any function
-  node, and reads/writes the same store a [change](change.md) node uses by name.
-- **`settings`** — saved on the board and survives a reboot. Use it for a value the user changes, such as units or a
-  colour scheme. It is namespaced by the flow's name, so a different flow cannot read or overwrite it.
-  `settings.get('units', 'kg')` / `settings.set('units', 'lbs')`.
+- **`context`** — this node only. Two `function` nodes using the same name don't share it.
+- **`flow`** — shared by every `function` and [change](change.md) node in the flow, by name.
+- **`settings`** — saved on the board, so it survives a restart and a redeploy of the same flow. It is
+  `runtime.settings`; see [Persisting values](../custom-nodes.md#persisting-values) for what else it does.
+
+`context` and `flow` start empty each time the flow starts.
 
 ```python
 count = context.get('count', 0) + 1
@@ -2805,6 +2884,13 @@ msg['payload'] = count
 return msg
 ```
 
+## Errors
+
+- **The code is empty.** Deploy stops with `function node's code is empty`.
+- **The code has a syntax error.** Deploy stops and highlights the node.
+- **The code raises an exception.** The console shows a `[NODE_ERROR]` naming this node and the exception, and the
+  chain stops. See [Reading a node error](../debugging.md#reading-a-node-error).
+
 
 ---
 
@@ -2812,34 +2898,44 @@ Source: https://docs.thingstudio.net/nodes/change/
 
 # change
 
-Sets or deletes one value on each message, then passes the message on.
-
-Use it to hold a value between messages (a last reading, a counter set elsewhere) or to copy one into a message.
-It is the no-code way to work with the flow store that a **function** node's `flow.get`/`flow.set` uses.
+Sets or deletes one value, on the message or in a flow variable, then passes the message on.
 
 ## Properties
 
-- **operation** — `set` or `delete`.
-- **target** — `msg property` or `flow variable`.
-- **property / name** — the message property or flow variable to change.
-- **value from** (set only) — `a literal value`, `another msg property`, or `a flow variable`.
-- **literal type** (set from a literal) — `string`, `number` or `bool`.
-- **value / source property** — the literal, or the name of the message property / flow variable to copy.
+- **operation** — `set` or `delete`. Default `set`.
+- **target** — `msg property` or `flow variable`. Default `msg property`.
+- **property / name** — the message property or flow variable to change. Default `payload`. Required. A leading
+  `msg.` or `flow.` is dropped. The name is one top-level key: `payload.temp` names a property called
+  `payload.temp`, not `temp` inside `payload`.
+- **value from** — with `set`: `a literal value`, `another msg property` or `a flow variable`. Default
+  `a literal value`.
+- **literal type** — with a literal: `string`, `number` or `bool`. Default `string`.
+- **value / source property** — with `set`: the literal, or the name of the message property or flow variable to
+  copy. Default empty. A `bool` literal is true only for `true`. An empty `number` literal is `0`.
+
+## Wiring
+
+**Input** — any message.
+
+**Output** — the same message, changed when the target is a message property.
 
 ## Behavior
 
-One rule per node. Chain **change** nodes for more than one change.
+One rule per node. Chain `change` nodes for more than one change.
 
-A flow variable is shared by name across the whole flow: another **change** node and a **function** node using
-`flow.get`/`flow.set` see the same value. Flow variables are in RAM and are cleared when the flow is redeployed.
+A flow variable is shared by name with every other `change` node and with a [function](function.md) node's
+`flow.get` and `flow.set`. There is no node-private store here; use a `function` node's `context` for that.
 
-Node context is not offered here; use a **function** node for a value private to that one node.
+Copying a property or flow variable that doesn't exist sets the target to `None`. Deleting one that doesn't exist
+does nothing.
 
-```text
-inject "hello" → change (flow.last = msg.payload) → change (msg.payload = flow.last) → debug
-```
+## Errors
 
-The second node reads the value the first one stored, and the debug node prints `hello`.
+These stop the deploy:
+
+- No property or flow variable name: `change needs a property or variable name`.
+- No source name when copying: `change needs a source property or variable name`.
+- A `number` literal that isn't a number: `change value "abc" is not a valid number`.
 
 
 ---
@@ -2848,18 +2944,30 @@ Source: https://docs.thingstudio.net/nodes/delay/
 
 # delay
 
-Passes a message through unchanged, after waiting a configured interval.
+Passes each message on unchanged, after a wait.
 
 ## Properties
 
-- **delay (ms)** — how long to hold the message before releasing it. Must be a positive number.
+- **delay (ms)** — how long to hold each message, in milliseconds. Default 1000. Must be 1 or more. A fraction is
+  rounded down.
+
+## Wiring
+
+**Input** — any message.
+
+**Output** — the same message, after the wait.
 
 ## Behavior
 
-**The wait blocks the message's own source, not only this one message.** A `timer` node ticking every 200ms feeding
-a `delay` of 5000ms stops ticking every 200ms once a message reaches the delay: the timer's next tick can't fire
-until the whole chain, including the delay, finishes. Any slow node has the same effect on its own source, but
-`delay`'s entire job is waiting, so it pays to know this up front.
+The wait holds the whole chain the message is in, back to its source. The source sends nothing new until the
+message has gone all the way through. A [timer](timer.md) set to 200 ms, wired into a 5000 ms `delay`, sends a
+message every 5.2 seconds, not every 200 ms.
+
+Messages from different chains don't wait for each other, even when they pass through the same `delay` node.
+
+## Errors
+
+- **The delay is less than 1.** Deploy stops with `property "delayMs" 0 is below its minimum, 1`, naming the node.
 
 
 ---
@@ -2872,34 +2980,43 @@ Passes a message on only when it's worth sending, and drops the rest. Messages t
 
 ## Properties
 
-- **mode** — what counts as worth sending:
+- **mode** — what counts as worth sending. Default `change`.
     - `change` — the payload differs from the last one passed.
-    - `deadband` — the payload is a number that has moved at least **threshold** from the last one passed,
-      up or down.
+    - `deadband` — the payload is a number that has moved at least **threshold** from the last one passed, up or
+      down.
     - `rate` — at least **interval** has passed since the last message passed.
-- **threshold** — for `deadband`. A number of 0 or more. 0 passes any change.
-- **interval (ms)** — for `rate`.
-- **ignore first message** — for `change` and `deadband`. The first message only sets the starting value.
-- **separately for each topic** — on by default. Each `msg.topic` is filtered on its own.
+- **threshold** — for `deadband`. Default 1. Must be 0 or more. With 0, every number passes, changed or not.
+- **interval (ms)** — for `rate`. Default 1000. Must be 1 or more.
+- **ignore first message** — for `change` and `deadband`. Default off. When on, the first message only sets the
+  starting value.
+- **separately for each topic** — default on. Each `msg.topic` is filtered on its own, with its own last value and
+  its own first message.
+
+## Wiring
+
+**Input** — any message.
+
+**Output** — the message, unchanged, when it passes.
 
 ## Behavior
 
-Deadband compares with the last value it let through, not the last one it received. A slow drift is
-passed once it adds up to the threshold.
+`change` compares payloads with Python's `==`, so `1` and `1.0` count as the same.
 
-Deadband reads text such as `"21.5"` as a number, so it works on MQTT payloads. The message still goes
-out as the original text. Anything else, including `true`/`false`, is dropped. The first time that
-happens, the node reports an error; the flow keeps running.
+`deadband` compares with the last value it let through, not the last one it received, so a slow drift passes once it
+adds up to the threshold. It reads text such as `"21.5"` as a number, so it works on MQTT payloads; the message still
+goes out as the original text. Anything else, including `true` and `false`, is dropped.
 
-`rate` drops extra messages. It doesn't queue them or send them later.
+`rate` drops extra messages. It doesn't queue them or send them later. The first message always passes.
 
-A node tracks up to 32 topics. After that it forgets them all and starts again, and says so once in
-the console.
+The node tracks up to 32 topics. After that it forgets them all and starts again, and prints
+`FILTER_INFO node=ID more than 32 topics, starting again` once.
 
-Everything resets when you deploy or the board restarts.
+## Errors
 
-A temperature sensor read every second, into `filter` in `deadband` mode with threshold `0.5`, into
-`mqtt publish`, tells the broker only about changes of half a degree or more.
+- **`deadband` gets something that isn't a number.** The message is dropped and the console shows a `[NODE_ERROR]`
+  naming this node and `deadband needs a number, got str 'abc'`. It is reported once, then again only after a number
+  has arrived. The chain keeps running.
+- **A threshold below 0 or an interval below 1.** Deploy stops, naming the node and the property.
 
 
 ---
@@ -2913,44 +3030,45 @@ it to a [histogram](gui.md#histogram) to see the history, and to another journal
 
 ## Properties
 
-- **rows kept** — how many rows the history holds, 1 to 256. At 12 bytes a row, 156 rows is under 2 KB.
-- **seconds per row** — a row is closed once this much time has passed, and holds the average, min and max of the
-  readings in it. **0** makes every message one row, which is what a journal fed by another journal wants.
-- **rows per roll-up** — 0 sends no roll-up.
-- **gaps allowed in a roll-up** — from 0 to 1, default 0.5. If more than this fraction of the rows in a roll-up
-  are gaps, the roll-up is a gap too (`payload` of `None`). Averages use the known rows only; a gap is never
-  counted as zero.
+- **rows kept** — how many rows the history holds, 1 to 256. Default 60. At 12 bytes a row, 156 rows is under 2 KB.
+- **seconds per row** — a row closes once this much time has passed, and holds the average, minimum and maximum of
+  the readings in it. Default 60. **0** makes every message one row, which is what a journal fed by another journal
+  wants.
+- **rows per roll-up** — how many rows go into each roll-up on output 2. Default 0, which sends no roll-up.
+- **gaps allowed in a roll-up** — shown when **rows per roll-up** is above 0. From 0 to 1, default 0.5. If more
+  than this fraction of the rows in a roll-up are gaps, the roll-up is a gap too. Averages use the known rows only;
+  a gap is never counted as zero.
 
 ## Wiring
 
-- **Input** — `msg.payload` is a number. `None` records a gap. A message that carries `min` and `max` (the
-  roll-up of another journal) is folded in with them, so a longer time scale keeps the spikes.
-- **Output 1, series** — sent each time a row is added. The payload is the journal itself, to wire to a histogram. It
-  is the live history, not a copy, so it costs no memory per row.
-- **Output 2, roll-up** — sent every **rows per roll-up** rows: `payload` the average, `min`, `max`, and the
-  input's `topic`. Wire it to another journal, a readout or MQTT.
+**Input** — `msg.payload` is a number. Text such as `"21.5"` is read as a number, and `True` and `False` as 1 and 0.
+A message that also carries `min` and `max`, such as another journal's roll-up, is folded in with them, so a longer
+time scale keeps the spikes. With **seconds per row** at 0, a payload of `None` records a gap.
+
+**Output 1, series** — sent each time a row is added. The payload is the journal itself, to wire to a histogram. It
+is the live history, not a copy, so it costs no memory per row.
+
+**Output 2, roll-up** — sent every **rows per roll-up** rows: `payload` the average, `min`, `max`, and the input's
+`topic`. A gap roll-up has `None` in all three. Wire it to another journal, a readout or MQTT.
 
 ## Behavior
 
-A gap is empty, never a copy of the last value. The history starts empty each time the flow starts.
+A gap is empty, never a copy of the last value. A row with no readings in it is a gap, so choose a row longer than
+your sensor's interval: 10 seconds for a reading every 5.
 
-With **seconds per row** set, a row closes when a message arrives after its time is up, so a sensor that has gone
-quiet adds no gaps until it speaks again. Set the histogram's **stale after** to dim it meanwhile. Choose a row longer
-than your sensor's interval (10 seconds for a reading every 5): a row that happens to catch no reading is a gap.
+With **seconds per row** set, a row closes when a message arrives after its time is up. A sensor that has gone quiet
+adds no rows until it sends again; then the rows it missed are added as gaps, at most one full history's worth. Set
+the histogram's **stale after** to dim it meanwhile.
 
-A payload that isn't a number is dropped. The first time that happens, the node reports an error; the flow keeps
-running.
+[A sensor display](../sensor-display.md#3-add-the-history) wires two journals in a row, for a 26-minute and a
+2.6-hour history.
 
-### Cascading two journals
+## Errors
 
-A sensor reads every 5 seconds.
-
-1. Journal A: rows 156, **seconds per row** 10, **rows per roll-up** 6. Its first output goes to a histogram: the
-   last 26 minutes.
-2. Journal B, fed from A's second output: rows 156, **seconds per row** 0. Its first output goes to a second
-   histogram: the last 2.6 hours, one bar a minute, each with its min to max line.
-
-`test-flows/gui-headliner-sensor-freenove-s3-4in.flow.json`, in the repository, does this with a BME280.
+- **The payload isn't a number.** The message is dropped and the console shows a `[NODE_ERROR]` naming this node and
+  `journal needs a number, got str 'abc'`. It is reported once, then again only after a number has arrived. The
+  chain keeps running.
+- **Rows kept outside 1 to 256, or a negative seconds per row.** Deploy stops, naming the node and the property.
 
 
 ---
@@ -2959,15 +3077,26 @@ Source: https://docs.thingstudio.net/nodes/debug/
 
 # debug
 
-Prints a message's payload to the device's console — the way to see what's actually flowing through a wire.
+Prints each message's payload to the console, to see what is flowing through a wire.
 
 ## Properties
 
-- **full message** — off by default. Prints the whole message (topic, and any other fields a source node adds — for example `wifi status`'s `ip`/`subnet`/`gateway`/`dns`/`rssi`) instead of only `payload`.
+- **full message** — default off. When on, prints the whole message, with `topic` and any other fields the source
+  adds, instead of only `payload`.
+
+## Wiring
+
+**Input** — any message.
+
+This node has no output.
 
 ## Behavior
 
-Output goes to the device's serial console, visible in the editor's console panel once connected. Use it to see a value flowing through a wire without guessing.
+Each message prints one line: `DEBUG node=ID payload=VALUE`, or `DEBUG node=ID msg=MESSAGE` with **full message** on.
+The value is printed as Python shows it, so a string is in quotes: `payload='hello'`. Click the line in the console
+to find the node on the canvas.
+
+The board prints the line, so the console shows it only while the editor is connected.
 
 
 ---
@@ -3511,9 +3640,9 @@ The node needs no input: unwired, it advertises the name only.
 ## Behavior
 
 The board advertises the name from the moment the flow starts. Each message replaces the data, and the board sends
-the new advertisement until the next one. Phones (nRF Connect, for example) and other boards with a
+the new advertisement until the next one. Phones and computers (nRF Connect, for example) and other boards with a
 [ble scan](ble-scan.md) node see it without connecting. When the flow also has characteristic or UART nodes, the
-advertisement accepts connections, so phones can connect to them.
+advertisement accepts connections, so other devices can connect to them.
 
 An advertisement holds 31 bytes. The flags take 3, the name its length plus 2, and the data's header 4 (manufacturer
 or 16-bit service) or 18 (128-bit service). The node's status says how many are left for the payload.
@@ -3535,14 +3664,14 @@ Source: https://docs.thingstudio.net/nodes/ble-characteristic-in/
 
 # ble characteristic in
 
-Sends a message each time a connected phone writes a Bluetooth LE characteristic.
+Sends a message each time a connected device writes a Bluetooth LE characteristic.
 
 ## Properties
 
 - **service UUID** — the service the characteristic belongs to: 16-bit (`181a`) or 128-bit. Use the same service on
   the nodes for its other characteristics.
 - **characteristic UUID** — 16-bit (`2a6e`) or 128-bit.
-- **encoding** — how the bytes a phone writes become `payload`: **bytes**, **text** (UTF-8), **int8**, **uint8**,
+- **encoding** — how the bytes written become `payload`: **bytes**, **text** (UTF-8), **int8**, **uint8**,
   **int16**, **uint16**, **int32**, **uint32** or **float32**, little-endian. It also sets the output's type, so a
   number encoding can wire into a number input.
 - **BLE** — the flow's [BLE config](ble.md), for the board's name.
@@ -3558,11 +3687,13 @@ print(uuid.uuid4())"`). 16-bit UUIDs belong to services the Bluetooth SIG has de
 ## Behavior
 
 The board becomes a GATT server when a flow has any characteristic or UART node. It advertises its name, accepts
-connections, and starts advertising again when a phone disconnects. All the flow's characteristics are registered
-once, when the flow starts. Pair a [ble characteristic out](ble-characteristic-out.md) with the same UUIDs to make
-one characteristic a phone can read, write and subscribe to.
+connections, and starts advertising again when a device disconnects. Any Bluetooth LE device that can connect and
+write works: an app on a phone or a computer, such as nRF Connect, or another board's [ble write](ble-write.md) node.
+All the flow's characteristics are registered once, when the flow starts. Pair a
+[ble characteristic out](ble-characteristic-out.md) with the same UUIDs to make one characteristic a connected device
+can read, write and subscribe to.
 
-A phone can write up to 244 bytes at a time. A node keeps up to 20 writes waiting; if they come faster than the
+A connected device can write up to 244 bytes at a time. A node keeps up to 20 writes waiting; if they come faster than the
 flow handles them, the oldest are dropped.
 
 The node's status shows **advertising, no one connected** or **1 connected**.
@@ -3582,15 +3713,15 @@ Source: https://docs.thingstudio.net/nodes/ble-characteristic-out/
 
 # ble characteristic out
 
-Sets a Bluetooth LE characteristic to each message's payload, for a phone to read, and notifies the phones that
-subscribed.
+Sets a Bluetooth LE characteristic to each message's payload, for a connected device to read, and notifies the
+devices that subscribed.
 
 ## Properties
 
 - **service UUID** / **characteristic UUID** — as for [ble characteristic in](ble-characteristic-in.md).
 - **encoding** — how `payload` becomes bytes: the same choices. A number must fit: `70000` doesn't fit an
   **int16**.
-- **notify** — also push each new value to the phones subscribed to it. On by default.
+- **notify** — also push each new value to the devices subscribed to it. On by default.
 - **BLE** — the flow's [BLE config](ble.md).
 
 ## Wiring
@@ -3599,8 +3730,8 @@ subscribed.
 
 ## Behavior
 
-Each message replaces the value. A phone that reads gets the whole value; a notification carries up to 20 bytes
-unless the phone has agreed a larger MTU (most do, up to 244). Only phones connected at the time are notified.
+Each message replaces the value. A device that reads gets the whole value; a notification carries up to 20 bytes
+unless the device has agreed a larger MTU (most do, up to 244). Only devices connected at the time are notified.
 
 One characteristic out node per characteristic: two would fight over its value. A
 [ble characteristic in](ble-characteristic-in.md) on the same UUIDs makes it writable too.
@@ -3619,12 +3750,12 @@ Source: https://docs.thingstudio.net/nodes/ble-uart-in/
 
 # ble uart in
 
-Receives text from a phone over Bluetooth LE, through the Nordic UART Service that terminal apps use.
+Receives text from a connected device over Bluetooth LE, through the Nordic UART Service that terminal apps use.
 
 ## Properties
 
 - **one message per line** — on by default: text is gathered until a newline, and the line is sent without its
-  line ending. Off: one message per write the phone makes.
+  line ending. Off: one message per write.
 - **BLE** — the flow's [BLE config](ble.md).
 
 ## Wiring
@@ -3633,11 +3764,12 @@ Receives text from a phone over Bluetooth LE, through the Nordic UART Service th
 
 ## Behavior
 
-Any UART node adds the Nordic UART Service to the board's GATT server. Phone apps that speak it, such as
-nRF Connect, Serial Bluetooth Terminal and Adafruit Bluefruit, find the board by its name and connect. Pair it with
+Any UART node adds the Nordic UART Service to the board's GATT server. Terminal apps that speak it, on phones and
+computers, such as nRF Connect, Serial Bluetooth Terminal and Adafruit Bluefruit, find the board by its name and
+connect. Pair it with
 [ble uart out](ble-uart-out.md) to answer.
 
-A line over 512 bytes is sent as it is, so a phone that never sends a newline still gets through.
+A line over 512 bytes is sent as it is, so a device that never sends a newline still gets through.
 
 ## Errors
 
@@ -3651,7 +3783,7 @@ Source: https://docs.thingstudio.net/nodes/ble-uart-out/
 
 # ble uart out
 
-Sends text to the phones connected over Bluetooth LE, through the Nordic UART Service.
+Sends text to the devices connected over Bluetooth LE, through the Nordic UART Service.
 
 ## Properties
 
@@ -3664,8 +3796,8 @@ Sends text to the phones connected over Bluetooth LE, through the Nordic UART Se
 
 ## Behavior
 
-The text goes to every connected phone, split into pieces that fit each connection: 20 bytes until the phone agrees
-a larger MTU. With no phone connected, nothing is sent and nothing is kept.
+The text goes to every connected device, split into pieces that fit each connection: 20 bytes until the device
+agrees a larger MTU. With no device connected, nothing is sent and nothing is kept.
 
 ## Errors
 
@@ -3783,7 +3915,7 @@ has one radio.
 
 ## Settings
 
-- **name** — what phone apps show, up to 26 bytes. A [ble advertise](ble-advertise.md) node shares the 31 bytes of
+- **name** — what other devices show when they find the board, up to 26 bytes. A [ble advertise](ble-advertise.md) node shares the 31 bytes of
   an advertisement between the name and its payload, so a shorter name leaves more room.
 
 ## Behavior
@@ -4870,7 +5002,7 @@ the node is selected:
   `notEquals`, `in` (an array), `gt`, `gte`, `lt`, `lte`.
 
 A polled `source` node must declare a numeric property named `intervalMs` — it
-sets the poll interval. An `eventSource` or `runOnce` source does not need one.
+sets the poll interval, a whole number of milliseconds, 1 or more. An `eventSource` or `runOnce` source does not need one.
 
 **`requires`** (optional) — hardware the node needs, as `{ "capabilities": ["ble"] }`. The words are the board
 definitions' capabilities (`wifi`, `ble`, `espnow`, `pio`, see [Boards](boards.md)). On a board without one, the
@@ -6311,7 +6443,7 @@ Properties explained: [ble advertise](nodes/ble-advertise.md)
 
 ### ble characteristic in
 
-Sends a message each time a connected phone writes a Bluetooth LE characteristic.
+Sends a message each time a connected device writes a Bluetooth LE characteristic.
 
 Type: `ble_characteristic_in`. Kind: source. Palette group: network.
 
@@ -6324,13 +6456,13 @@ Properties explained: [ble characteristic in](nodes/ble-characteristic-in.md)
 | Property | Editor label | Type | Default | Allowed values and notes |
 | --- | --- | --- | --- | --- |
 | `serviceUuid` | service UUID | string | `""` | the service it belongs to: 16-bit (181a) or 128-bit; nodes for one service's characteristics share it |
-| `charUuid` | characteristic UUID | string | `""` | the characteristic a phone writes: 16-bit or 128-bit |
+| `charUuid` | characteristic UUID | string | `""` | the characteristic a connected device writes: 16-bit or 128-bit |
 | `encoding` | encoding | string | `"bytes"` | one of `bytes`, `text`, `int8`, `uint8`, `int16`, `uint16`, `int32`, `uint32`, `float32`; how the written bytes become payload: bytes, text, int8/uint8/int16/uint16/int32/uint32 or float32 (little-endian); sets the output type |
 | `bleConfigId` | BLE | string | `""` | the id of a `thingstudio/config/ble` config |
 
 ### ble characteristic out
 
-Sets a Bluetooth LE characteristic to each message's payload for a phone to read, and notifies subscribed phones.
+Sets a Bluetooth LE characteristic to each message's payload for a connected device to read, and notifies subscribed devices.
 
 Type: `ble_characteristic_out`. Kind: sink. Palette group: network.
 
@@ -6343,9 +6475,9 @@ Properties explained: [ble characteristic out](nodes/ble-characteristic-out.md)
 | Property | Editor label | Type | Default | Allowed values and notes |
 | --- | --- | --- | --- | --- |
 | `serviceUuid` | service UUID | string | `""` | the service it belongs to: 16-bit (181a) or 128-bit |
-| `charUuid` | characteristic UUID | string | `""` | the characteristic a phone reads: 16-bit or 128-bit; one out node per characteristic |
+| `charUuid` | characteristic UUID | string | `""` | the characteristic a connected device reads: 16-bit or 128-bit; one out node per characteristic |
 | `encoding` | encoding | string | `"bytes"` | one of `bytes`, `text`, `int8`, `uint8`, `int16`, `uint16`, `int32`, `uint32`, `float32`; how payload becomes bytes: as for ble_characteristic_in; a value that doesn't fit is reported and dropped |
-| `notify` | notify | boolean | `true` | also push each value to subscribed phones |
+| `notify` | notify | boolean | `true` | also push each value to subscribed devices |
 | `bleConfigId` | BLE | string | `""` | the id of a `thingstudio/config/ble` config |
 
 ### ble notify
@@ -6411,7 +6543,7 @@ Properties explained: [ble scan](nodes/ble-scan.md)
 
 ### ble uart in
 
-Receives text from a phone over Bluetooth LE, through the Nordic UART Service.
+Receives text from a connected device over Bluetooth LE, through the Nordic UART Service.
 
 Type: `ble_uart_in`. Kind: source. Palette group: network.
 
@@ -6423,12 +6555,12 @@ Properties explained: [ble uart in](nodes/ble-uart-in.md)
 
 | Property | Editor label | Type | Default | Allowed values and notes |
 | --- | --- | --- | --- | --- |
-| `lines` | one message per line | boolean | `true` | one message per line the phone sends (\n ends a line, \r is dropped); off: one per write |
+| `lines` | one message per line | boolean | `true` | one message per line the connected device sends (\n ends a line, \r is dropped); off: one per write |
 | `bleConfigId` | BLE | string | `""` | the id of a `thingstudio/config/ble` config |
 
 ### ble uart out
 
-Sends text to the phones connected over Bluetooth LE, through the Nordic UART Service.
+Sends text to the devices connected over Bluetooth LE, through the Nordic UART Service.
 
 Type: `ble_uart_out`. Kind: sink. Palette group: network.
 
@@ -6643,7 +6775,7 @@ A config node is listed under `configs` in a flow file as `{id, type, properties
 
 Type: `thingstudio/config/ble` (one per flow).
 
-- `name`, text: What phone apps show, up to 26 bytes. Shorter leaves more room in an advertisement.
+- `name`, text: What other devices show when they find the board, up to 26 bytes. Shorter leaves more room in an advertisement.
 
 Defaults: `{"name":"thingstudio"}`
 
@@ -7015,6 +7147,9 @@ is highlighted on the canvas. Network nodes (`udp send`, `udp receive`, `http re
 `mqtt subscribe`) also name the operation and the host and port. A network node error without them is worth
 [reporting](https://github.com/mkarliner/ThingStudio/issues).
 
+A node error stops the chain the node is in, from its source onward, until the next deploy: a `timer` sends nothing
+more, an `inject` ignores clicks. The flow's other chains keep running.
+
 ## I2C device not answering
 
 A sensor node's status dot shows **disconnected**, with "no reply at 0x76", when nothing answers at its address.
@@ -7294,15 +7429,15 @@ On an ESP32 the WiFi and Bluetooth share one radio, taking turns. The longer the
 interval**, the less time WiFi gets. The default listens 30 ms in every 320 ms; lower the window, or raise the
 interval, if MQTT or HTTP become slow. See [ble scan](nodes/ble-scan.md).
 
-## My phone still shows the old characteristics after I changed the flow. Why?
+## A phone or computer still shows the old characteristics after I changed the flow. Why?
 
-Phones remember a device's services between connections. After a deploy that changes the characteristics, turn the
-phone's Bluetooth off and on, or forget the device in its Bluetooth settings, then connect again. In nRF Connect,
+Phones and computers remember a device's services between connections. After a deploy that changes the
+characteristics, turn Bluetooth off and on, or forget the board in the Bluetooth settings, then connect again. In nRF Connect,
 **Refresh services** in the device's menu does it too.
 
-## A phone connects, but no new values arrive. Why?
+## A device connects, but no new values arrive. Why?
 
-Reading shows the value once; to get each new one, the phone has to subscribe. In nRF Connect, tap the
+Reading shows the value once; to get each new one, the connected device has to subscribe. In nRF Connect, tap the
 characteristic's arrow icon (notify). The [ble characteristic out](nodes/ble-characteristic-out.md) node's
 **notify** must be on.
 

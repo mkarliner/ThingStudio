@@ -3943,7 +3943,7 @@ the node is selected:</p>
   <code>notEquals</code>, <code>in</code> (an array), <code>gt</code>, <code>gte</code>, <code>lt</code>, <code>lte</code>.</li>
 </ul>
 <p>A polled <code>source</code> node must declare a numeric property named <code>intervalMs</code> — it
-sets the poll interval. An <code>eventSource</code> or <code>runOnce</code> source does not need one.</p>
+sets the poll interval, a whole number of milliseconds, 1 or more. An <code>eventSource</code> or <code>runOnce</code> source does not need one.</p>
 <p><strong><code>requires</code></strong> (optional) — hardware the node needs, as <code>{ "capabilities": ["ble"] }</code>. The words are the board
 definitions' capabilities (<code>wifi</code>, <code>ble</code>, <code>espnow</code>, <code>pio</code>, see <a href="../boards/">Boards</a>). On a board without one, the
 palette grays the node out and the compile refuses it, naming the missing capability.</p>

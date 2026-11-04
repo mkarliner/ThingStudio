@@ -1737,10 +1737,32 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#wiring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Wiring
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#behavior" class="md-nav__link">
     <span class="md-ellipsis">
       
         Behavior
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Errors
       
     </span>
   </a>
@@ -3470,10 +3492,32 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#wiring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Wiring
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#behavior" class="md-nav__link">
     <span class="md-ellipsis">
       
         Behavior
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Errors
       
     </span>
   </a>
@@ -3501,26 +3545,36 @@
 
 
 <h1 id="change">change</h1>
-<p>Sets or deletes one value on each message, then passes the message on.</p>
-<p>Use it to hold a value between messages (a last reading, a counter set elsewhere) or to copy one into a message.
-It is the no-code way to work with the flow store that a <strong>function</strong> node's <code>flow.get</code>/<code>flow.set</code> uses.</p>
+<p>Sets or deletes one value, on the message or in a flow variable, then passes the message on.</p>
 <h2 id="properties">Properties</h2>
 <ul>
-<li><strong>operation</strong> — <code>set</code> or <code>delete</code>.</li>
-<li><strong>target</strong> — <code>msg property</code> or <code>flow variable</code>.</li>
-<li><strong>property / name</strong> — the message property or flow variable to change.</li>
-<li><strong>value from</strong> (set only) — <code>a literal value</code>, <code>another msg property</code>, or <code>a flow variable</code>.</li>
-<li><strong>literal type</strong> (set from a literal) — <code>string</code>, <code>number</code> or <code>bool</code>.</li>
-<li><strong>value / source property</strong> — the literal, or the name of the message property / flow variable to copy.</li>
+<li><strong>operation</strong> — <code>set</code> or <code>delete</code>. Default <code>set</code>.</li>
+<li><strong>target</strong> — <code>msg property</code> or <code>flow variable</code>. Default <code>msg property</code>.</li>
+<li><strong>property / name</strong> — the message property or flow variable to change. Default <code>payload</code>. Required. A leading
+  <code>msg.</code> or <code>flow.</code> is dropped. The name is one top-level key: <code>payload.temp</code> names a property called
+  <code>payload.temp</code>, not <code>temp</code> inside <code>payload</code>.</li>
+<li><strong>value from</strong> — with <code>set</code>: <code>a literal value</code>, <code>another msg property</code> or <code>a flow variable</code>. Default
+  <code>a literal value</code>.</li>
+<li><strong>literal type</strong> — with a literal: <code>string</code>, <code>number</code> or <code>bool</code>. Default <code>string</code>.</li>
+<li><strong>value / source property</strong> — with <code>set</code>: the literal, or the name of the message property or flow variable to
+  copy. Default empty. A <code>bool</code> literal is true only for <code>true</code>. An empty <code>number</code> literal is <code>0</code>.</li>
 </ul>
+<h2 id="wiring">Wiring</h2>
+<p><strong>Input</strong> — any message.</p>
+<p><strong>Output</strong> — the same message, changed when the target is a message property.</p>
 <h2 id="behavior">Behavior</h2>
-<p>One rule per node. Chain <strong>change</strong> nodes for more than one change.</p>
-<p>A flow variable is shared by name across the whole flow: another <strong>change</strong> node and a <strong>function</strong> node using
-<code>flow.get</code>/<code>flow.set</code> see the same value. Flow variables are in RAM and are cleared when the flow is redeployed.</p>
-<p>Node context is not offered here; use a <strong>function</strong> node for a value private to that one node.</p>
-<div class="highlight"><pre><span></span><code>inject "hello" → change (flow.last = msg.payload) → change (msg.payload = flow.last) → debug
-</code></pre></div>
-<p>The second node reads the value the first one stored, and the debug node prints <code>hello</code>.</p>
+<p>One rule per node. Chain <code>change</code> nodes for more than one change.</p>
+<p>A flow variable is shared by name with every other <code>change</code> node and with a <a href="../function/">function</a> node's
+<code>flow.get</code> and <code>flow.set</code>. There is no node-private store here; use a <code>function</code> node's <code>context</code> for that.</p>
+<p>Copying a property or flow variable that doesn't exist sets the target to <code>None</code>. Deleting one that doesn't exist
+does nothing.</p>
+<h2 id="errors">Errors</h2>
+<p>These stop the deploy:</p>
+<ul>
+<li>No property or flow variable name: <code>change needs a property or variable name</code>.</li>
+<li>No source name when copying: <code>change needs a source property or variable name</code>.</li>
+<li>A <code>number</code> literal that isn't a number: <code>change value "abc" is not a valid number</code>.</li>
+</ul>
 
 
 

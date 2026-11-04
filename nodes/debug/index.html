@@ -1849,6 +1849,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#wiring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Wiring
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#behavior" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3470,6 +3481,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#wiring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Wiring
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#behavior" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3501,13 +3523,20 @@
 
 
 <h1 id="debug">debug</h1>
-<p>Prints a message's payload to the device's console — the way to see what's actually flowing through a wire.</p>
+<p>Prints each message's payload to the console, to see what is flowing through a wire.</p>
 <h2 id="properties">Properties</h2>
 <ul>
-<li><strong>full message</strong> — off by default. Prints the whole message (topic, and any other fields a source node adds — for example <code>wifi status</code>'s <code>ip</code>/<code>subnet</code>/<code>gateway</code>/<code>dns</code>/<code>rssi</code>) instead of only <code>payload</code>.</li>
+<li><strong>full message</strong> — default off. When on, prints the whole message, with <code>topic</code> and any other fields the source
+  adds, instead of only <code>payload</code>.</li>
 </ul>
+<h2 id="wiring">Wiring</h2>
+<p><strong>Input</strong> — any message.</p>
+<p>This node has no output.</p>
 <h2 id="behavior">Behavior</h2>
-<p>Output goes to the device's serial console, visible in the editor's console panel once connected. Use it to see a value flowing through a wire without guessing.</p>
+<p>Each message prints one line: <code>DEBUG node=ID payload=VALUE</code>, or <code>DEBUG node=ID msg=MESSAGE</code> with <strong>full message</strong> on.
+The value is printed as Python shows it, so a string is in quotes: <code>payload='hello'</code>. Click the line in the console
+to find the node on the canvas.</p>
+<p>The board prints the line, so the console shows it only while the editor is connected.</p>
 
 
 

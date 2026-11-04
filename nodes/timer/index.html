@@ -1681,10 +1681,32 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#wiring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Wiring
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#behavior" class="md-nav__link">
     <span class="md-ellipsis">
       
         Behavior
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Errors
       
     </span>
   </a>
@@ -3470,10 +3492,32 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#wiring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Wiring
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#behavior" class="md-nav__link">
     <span class="md-ellipsis">
       
         Behavior
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Errors
       
     </span>
   </a>
@@ -3501,13 +3545,28 @@
 
 
 <h1 id="timer">timer</h1>
-<p>Emits an increasing count on a fixed interval — a heartbeat with a sequence number, not a repeated value.</p>
+<p>Sends a count that goes up by one at a fixed interval.</p>
 <h2 id="properties">Properties</h2>
 <ul>
-<li><strong>interval (ms)</strong> — how often to emit. Must be a positive number.</li>
+<li><strong>interval (ms)</strong> — the time between messages, in milliseconds. Default 1000. A whole number, 1 or more.</li>
 </ul>
+<h2 id="wiring">Wiring</h2>
+<p><strong>Input</strong> — none. <code>timer</code> is a source.</p>
+<p><strong>Output</strong> — a message with <code>payload</code> set to the count, an <code>int</code>: 1, 2, 3 and so on. <code>topic</code> is an empty string.</p>
 <h2 id="behavior">Behavior</h2>
-<p>The payload is a whole number that starts at 1 and increases by one on every tick — not a fixed constant. Each <code>timer</code> node keeps its own independent counter, even if two of them share the same interval.</p>
+<p>The first message goes out as soon as the flow starts, then one each interval. The interval starts once the previous
+message has finished going through the chain, so a slow node after the timer, such as a <a href="../delay/">delay</a>, adds its
+time to every interval.</p>
+<p>Each <code>timer</code> node keeps its own count, starting at 1 when the flow starts, even when two share an interval.</p>
+<h2 id="errors">Errors</h2>
+<ul>
+<li><strong>The interval is less than 1.</strong> Deploy stops with <code>property "intervalMs" 0 is below its minimum, 1</code>, naming the
+  node.</li>
+<li><strong>The interval isn't a whole number.</strong> Deploy stops with <code>"intervalMs" must be a whole number of milliseconds</code>,
+  naming the node.</li>
+<li><strong>A node error in this node's chain</strong> stops the chain. See
+  <a href="../../debugging/#reading-a-node-error">Reading a node error</a>.</li>
+</ul>
 
 
 

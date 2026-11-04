@@ -1793,10 +1793,32 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#wiring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Wiring
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#behavior" class="md-nav__link">
     <span class="md-ellipsis">
       
         Behavior
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Errors
       
     </span>
   </a>
@@ -3470,10 +3492,32 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#wiring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Wiring
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#behavior" class="md-nav__link">
     <span class="md-ellipsis">
       
         Behavior
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Errors
       
     </span>
   </a>
@@ -3504,30 +3548,38 @@
 <p>Passes a message on only when it's worth sending, and drops the rest. Messages that pass are unchanged.</p>
 <h2 id="properties">Properties</h2>
 <ul>
-<li><strong>mode</strong> — what counts as worth sending:<ul>
+<li><strong>mode</strong> — what counts as worth sending. Default <code>change</code>.<ul>
 <li><code>change</code> — the payload differs from the last one passed.</li>
-<li><code>deadband</code> — the payload is a number that has moved at least <strong>threshold</strong> from the last one passed,
-  up or down.</li>
+<li><code>deadband</code> — the payload is a number that has moved at least <strong>threshold</strong> from the last one passed, up or
+  down.</li>
 <li><code>rate</code> — at least <strong>interval</strong> has passed since the last message passed.</li>
 </ul>
 </li>
-<li><strong>threshold</strong> — for <code>deadband</code>. A number of 0 or more. 0 passes any change.</li>
-<li><strong>interval (ms)</strong> — for <code>rate</code>.</li>
-<li><strong>ignore first message</strong> — for <code>change</code> and <code>deadband</code>. The first message only sets the starting value.</li>
-<li><strong>separately for each topic</strong> — on by default. Each <code>msg.topic</code> is filtered on its own.</li>
+<li><strong>threshold</strong> — for <code>deadband</code>. Default 1. Must be 0 or more. With 0, every number passes, changed or not.</li>
+<li><strong>interval (ms)</strong> — for <code>rate</code>. Default 1000. Must be 1 or more.</li>
+<li><strong>ignore first message</strong> — for <code>change</code> and <code>deadband</code>. Default off. When on, the first message only sets the
+  starting value.</li>
+<li><strong>separately for each topic</strong> — default on. Each <code>msg.topic</code> is filtered on its own, with its own last value and
+  its own first message.</li>
 </ul>
+<h2 id="wiring">Wiring</h2>
+<p><strong>Input</strong> — any message.</p>
+<p><strong>Output</strong> — the message, unchanged, when it passes.</p>
 <h2 id="behavior">Behavior</h2>
-<p>Deadband compares with the last value it let through, not the last one it received. A slow drift is
-passed once it adds up to the threshold.</p>
-<p>Deadband reads text such as <code>"21.5"</code> as a number, so it works on MQTT payloads. The message still goes
-out as the original text. Anything else, including <code>true</code>/<code>false</code>, is dropped. The first time that
-happens, the node reports an error; the flow keeps running.</p>
-<p><code>rate</code> drops extra messages. It doesn't queue them or send them later.</p>
-<p>A node tracks up to 32 topics. After that it forgets them all and starts again, and says so once in
-the console.</p>
-<p>Everything resets when you deploy or the board restarts.</p>
-<p>A temperature sensor read every second, into <code>filter</code> in <code>deadband</code> mode with threshold <code>0.5</code>, into
-<code>mqtt publish</code>, tells the broker only about changes of half a degree or more.</p>
+<p><code>change</code> compares payloads with Python's <code>==</code>, so <code>1</code> and <code>1.0</code> count as the same.</p>
+<p><code>deadband</code> compares with the last value it let through, not the last one it received, so a slow drift passes once it
+adds up to the threshold. It reads text such as <code>"21.5"</code> as a number, so it works on MQTT payloads; the message still
+goes out as the original text. Anything else, including <code>true</code> and <code>false</code>, is dropped.</p>
+<p><code>rate</code> drops extra messages. It doesn't queue them or send them later. The first message always passes.</p>
+<p>The node tracks up to 32 topics. After that it forgets them all and starts again, and prints
+<code>FILTER_INFO node=ID more than 32 topics, starting again</code> once.</p>
+<h2 id="errors">Errors</h2>
+<ul>
+<li><strong><code>deadband</code> gets something that isn't a number.</strong> The message is dropped and the console shows a <code>[NODE_ERROR]</code>
+  naming this node and <code>deadband needs a number, got str 'abc'</code>. It is reported once, then again only after a number
+  has arrived. The chain keeps running.</li>
+<li><strong>A threshold below 0 or an interval below 1.</strong> Deploy stops, naming the node and the property.</li>
+</ul>
 
 
 

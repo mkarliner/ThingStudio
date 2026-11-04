@@ -4261,6 +4261,8 @@ Thingstudio, not something you did. Deploy carries on or fails cleanly either wa
 is highlighted on the canvas. Network nodes (<code>udp send</code>, <code>udp receive</code>, <code>http request</code>, <code>mqtt publish</code>,
 <code>mqtt subscribe</code>) also name the operation and the host and port. A network node error without them is worth
 <a href="https://github.com/mkarliner/ThingStudio/issues">reporting</a>.</p>
+<p>A node error stops the chain the node is in, from its source onward, until the next deploy: a <code>timer</code> sends nothing
+more, an <code>inject</code> ignores clicks. The flow's other chains keep running.</p>
 <h2 id="i2c-device-not-answering">I2C device not answering</h2>
 <p>A sensor node's status dot shows <strong>disconnected</strong>, with "no reply at 0x76", when nothing answers at its address.
 Scan the bus to see what is there. Type these two lines in the command box, one at a time, with your bus and pins:</p>

@@ -1765,10 +1765,32 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#wiring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Wiring
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#behavior" class="md-nav__link">
     <span class="md-ellipsis">
       
         Behavior
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Errors
       
     </span>
   </a>
@@ -3470,10 +3492,32 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#wiring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Wiring
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#behavior" class="md-nav__link">
     <span class="md-ellipsis">
       
         Behavior
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Errors
       
     </span>
   </a>
@@ -3501,16 +3545,24 @@
 
 
 <h1 id="delay">delay</h1>
-<p>Passes a message through unchanged, after waiting a configured interval.</p>
+<p>Passes each message on unchanged, after a wait.</p>
 <h2 id="properties">Properties</h2>
 <ul>
-<li><strong>delay (ms)</strong> — how long to hold the message before releasing it. Must be a positive number.</li>
+<li><strong>delay (ms)</strong> — how long to hold each message, in milliseconds. Default 1000. Must be 1 or more. A fraction is
+  rounded down.</li>
 </ul>
+<h2 id="wiring">Wiring</h2>
+<p><strong>Input</strong> — any message.</p>
+<p><strong>Output</strong> — the same message, after the wait.</p>
 <h2 id="behavior">Behavior</h2>
-<p><strong>The wait blocks the message's own source, not only this one message.</strong> A <code>timer</code> node ticking every 200ms feeding
-a <code>delay</code> of 5000ms stops ticking every 200ms once a message reaches the delay: the timer's next tick can't fire
-until the whole chain, including the delay, finishes. Any slow node has the same effect on its own source, but
-<code>delay</code>'s entire job is waiting, so it pays to know this up front.</p>
+<p>The wait holds the whole chain the message is in, back to its source. The source sends nothing new until the
+message has gone all the way through. A <a href="../timer/">timer</a> set to 200 ms, wired into a 5000 ms <code>delay</code>, sends a
+message every 5.2 seconds, not every 200 ms.</p>
+<p>Messages from different chains don't wait for each other, even when they pass through the same <code>delay</code> node.</p>
+<h2 id="errors">Errors</h2>
+<ul>
+<li><strong>The delay is less than 1.</strong> Deploy stops with <code>property "delayMs" 0 is below its minimum, 1</code>, naming the node.</li>
+</ul>
 
 
 

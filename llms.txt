@@ -58,15 +58,15 @@
 
 ## General
 
-- [inject](https://docs.thingstudio.net/nodes/inject/): Fires once, with a fixed payload, when you click its "▶" icon while connected to a board.
+- [inject](https://docs.thingstudio.net/nodes/inject/): Sends one message with a fixed payload each time you click its ▶ icon while the editor is connected to the board.
 - [startup](https://docs.thingstudio.net/nodes/startup/): Sends one message with a fixed payload each time the flow starts.
-- [timer](https://docs.thingstudio.net/nodes/timer/): Emits an increasing count on a fixed interval — a heartbeat with a sequence number, not a repeated value.
-- [function](https://docs.thingstudio.net/nodes/function/): Runs your own MicroPython on each message.
-- [change](https://docs.thingstudio.net/nodes/change/): Sets or deletes one value on each message, then passes the message on.
-- [delay](https://docs.thingstudio.net/nodes/delay/): Passes a message through unchanged, after waiting a configured interval.
+- [timer](https://docs.thingstudio.net/nodes/timer/): Sends a count that goes up by one at a fixed interval.
+- [function](https://docs.thingstudio.net/nodes/function/): Runs your own MicroPython on each message, for anything no other node does.
+- [change](https://docs.thingstudio.net/nodes/change/): Sets or deletes one value, on the message or in a flow variable, then passes the message on.
+- [delay](https://docs.thingstudio.net/nodes/delay/): Passes each message on unchanged, after a wait.
 - [filter](https://docs.thingstudio.net/nodes/filter/): Passes a message on only when it's worth sending, and drops the rest.
 - [journal](https://docs.thingstudio.net/nodes/journal/): Keeps the recent history of a number, as rows of average, minimum and maximum, the way RRDtool and Cacti do.
-- [debug](https://docs.thingstudio.net/nodes/debug/): Prints a message's payload to the device's console — the way to see what's actually flowing through a wire.
+- [debug](https://docs.thingstudio.net/nodes/debug/): Prints each message's payload to the console, to see what is flowing through a wire.
 
 ## Network
 
@@ -85,10 +85,10 @@
 
 - [ble scan](https://docs.thingstudio.net/nodes/ble-scan/): Listens for Bluetooth LE advertisements, such as beacons and BLE sensors, and sends one message per advertisement.
 - [ble advertise](https://docs.thingstudio.net/nodes/ble-advertise/): Advertises over Bluetooth LE: the board's name, and each message's payload as manufacturer or service data.
-- [ble characteristic in](https://docs.thingstudio.net/nodes/ble-characteristic-in/): Sends a message each time a connected phone writes a Bluetooth LE characteristic.
-- [ble characteristic out](https://docs.thingstudio.net/nodes/ble-characteristic-out/): Sets a Bluetooth LE characteristic to each message's payload, for a phone to read, and notifies the phones that subscribed.
-- [ble uart in](https://docs.thingstudio.net/nodes/ble-uart-in/): Receives text from a phone over Bluetooth LE, through the Nordic UART Service that terminal apps use.
-- [ble uart out](https://docs.thingstudio.net/nodes/ble-uart-out/): Sends text to the phones connected over Bluetooth LE, through the Nordic UART Service.
+- [ble characteristic in](https://docs.thingstudio.net/nodes/ble-characteristic-in/): Sends a message each time a connected device writes a Bluetooth LE characteristic.
+- [ble characteristic out](https://docs.thingstudio.net/nodes/ble-characteristic-out/): Sets a Bluetooth LE characteristic to each message's payload, for a connected device to read, and notifies the devices that subscribed.
+- [ble uart in](https://docs.thingstudio.net/nodes/ble-uart-in/): Receives text from a connected device over Bluetooth LE, through the Nordic UART Service that terminal apps use.
+- [ble uart out](https://docs.thingstudio.net/nodes/ble-uart-out/): Sends text to the devices connected over Bluetooth LE, through the Nordic UART Service.
 - [ble read](https://docs.thingstudio.net/nodes/ble-read/): Reads a characteristic of another Bluetooth LE device for each message that arrives, and sends the value on.
 - [ble write](https://docs.thingstudio.net/nodes/ble-write/): Writes each message's payload to a characteristic of another Bluetooth LE device.
 - [ble notify](https://docs.thingstudio.net/nodes/ble-notify/): Subscribes to a characteristic of another Bluetooth LE device and sends a message each time it sends a new value.

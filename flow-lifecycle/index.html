@@ -3561,16 +3561,19 @@ name from a config node is never written into the <code>.flow.json</code> file. 
 <h2 id="deploy">Deploy</h2>
 <p><strong>Compile → Deploy</strong> compiles the current canvas to MicroPython bytecode and sends it to the connected board,
 replacing whatever flow is currently running there.</p>
-<p>A successful deploy shows a confirmation in the console and the new flow starts running immediately. A failed deploy
-leaves the board's current flow running and shows a specific error:</p>
+<p>A successful deploy shows a confirmation in the console and the new flow starts running immediately. The board keeps
+the deployed flow and starts it again each time the board starts, with or without the editor. Each start begins every
+node afresh: counts, filters, journals, flow variables and a function node's <code>context</code> start empty. Only <code>settings</code>
+keeps its values (see <a href="../nodes/function/#context-flow-and-settings">function</a>).</p>
+<p>A failed deploy leaves the board's current flow running and shows a specific error:</p>
 <ul>
 <li>a compile error — something in the flow itself, such as a missing required property</li>
 <li>a space error — the compiled flow doesn't fit in the board's available flash/RAM</li>
 <li>a library error — see below</li>
 </ul>
 <p>After a successful deploy the button grays out: the board is already running exactly what's on the canvas. It
-re-enables the moment you change anything (a property, a node, a wire). A failed deploy leaves it enabled so you can
-fix the problem and retry.</p>
+re-enables the moment you change anything (a property, a node, a wire). A change reaches the board only with the
+next deploy. A failed deploy leaves it enabled so you can fix the problem and retry.</p>
 <h3 id="libraries">Libraries</h3>
 <p>Some nodes need a library on the board, such as MQTT or a display driver. Deploy installs the libraries your flow uses
 and removes ones it no longer uses, so a board holds only what its flow needs. The console lists them on each deploy.
