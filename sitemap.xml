@@ -41,10 +41,6 @@
          <lastmod>2026-11-04</lastmod>
     </url>
     <url>
-         <loc>https://docs.thingstudio.net/examples/</loc>
-         <lastmod>2026-11-04</lastmod>
-    </url>
-    <url>
          <loc>https://docs.thingstudio.net/faq/</loc>
          <lastmod>2026-11-04</lastmod>
     </url>
@@ -90,6 +86,10 @@
     </url>
     <url>
          <loc>https://docs.thingstudio.net/thingstudio-folder/</loc>
+         <lastmod>2026-11-04</lastmod>
+    </url>
+    <url>
+         <loc>https://docs.thingstudio.net/tutorial-flows/</loc>
          <lastmod>2026-11-04</lastmod>
     </url>
     <url>

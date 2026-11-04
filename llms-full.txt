@@ -34,7 +34,7 @@ will start again after a reset or power cycle.
        [custom image](custom-firmware.md).
     4. [Connect your board](connecting.md), then [install the runtime](installing-runtime.md).
     5. [Blink an LED](first-flow.md) — three nodes and deploy. Not in a building mood? Open
-       `tutorials/blink.flow.json` (the [tutorials folder](examples.md#where-the-folder-is)) with
+       `tutorials/blink.flow.json` (the [tutorials folder](tutorial-flows.md#where-the-folder-is)) with
        **File → Open…**, point the pin at your board's own LED, deploy.
 
     When something doesn't work, [Debugging](debugging.md) and the [FAQ](faq.md) go by what you see on screen.
@@ -980,7 +980,7 @@ Don't leave out the resistor. Without it, the LED draws too much current and can
 3. Drag a **gpio out** onto the canvas. Set **pin** to your LED's GPIO number.
 4. Wire **timer** → **function** → **gpio out**.
 
-This flow is `tutorials/blink.flow.json`, in the [tutorials folder](examples.md#where-the-folder-is). Opened from
+This flow is `tutorials/blink.flow.json`, in the [tutorials folder](tutorial-flows.md#where-the-folder-is). Opened from
 there, it needs only **pin** set to your LED's GPIO number.
 
 ## Deploy
@@ -1096,9 +1096,9 @@ Upgrading and removing never touch `~/.thingstudio` (`%USERPROFILE%\.thingstudio
 are saved wherever you chose. To start again as a new user, move that folder aside as well: it holds your credentials,
 presets, custom nodes and board definitions.
 
-## Example flows
+## Tutorial flows
 
-Every install has a `tutorials` folder. [Example flows](examples.md#where-the-folder-is) says where it is for each route.
+Every install has a `tutorials` folder. [Tutorial flows](tutorial-flows.md#where-the-folder-is) says where it is for each route.
 
 ## From source
 
@@ -1137,7 +1137,7 @@ project.
 4. [A sensor display](../sensor-display.md) — read a sensor and show it on a touch display. It is a work in
    progress.
 
-The finished flow for each tutorial is in the tutorials folder. [Example flows](../examples.md) says where the folder
+The finished flow for each tutorial is in the tutorials folder. [Tutorial flows](../tutorial-flows.md) says where the folder
 is and what to change in each flow.
 
 If you've built something past the tutorials, what worked and what stalled is a useful report: what you tried next,
@@ -1146,9 +1146,9 @@ and what happened. [File it on the issue tracker](https://github.com/mkarliner/T
 
 ---
 
-Source: https://docs.thingstudio.net/examples/
+Source: https://docs.thingstudio.net/tutorial-flows/
 
-# Example flows
+# Tutorial flows
 
 If you'd rather not build the tutorial flows from scratch, or you get stuck, their finished flow files are in the
 tutorials folder, [below](#where-the-folder-is). Open one with **File → Open…**. Each entry below says what the flow shows
@@ -1251,7 +1251,7 @@ The second variant is **Keep the state in the node**: the state lives inside the
 
 You can build this flow up yourself or start from the finished flow,
 [two-more-blinks.flow.json](https://github.com/mkarliner/ThingStudio/blob/main/tutorials/two-more-blinks.flow.json),
-in the [tutorials folder](../examples.md#where-the-folder-is), with **File → Open…**. It carries the first of the two
+in the [tutorials folder](../tutorial-flows.md#where-the-folder-is), with **File → Open…**. It carries the first of the two
 blinks: change `15` in `machine.Pin(15)` to your LED's GPIO number.
 
 If a step misbehaves on the way, start at [Debugging & troubleshooting](../debugging.md).
@@ -1341,8 +1341,8 @@ browser.
 
 You can build the flow step by step, or start from the finished flow,
 [http-blink.flow.json](https://github.com/mkarliner/ThingStudio/blob/main/tutorials/http-blink.flow.json), in the
-[tutorials folder](../examples.md#where-the-folder-is), with **File → Open…**.
-[Example flows](../examples.md#before-you-deploy) says what to change before you deploy.
+[tutorials folder](../tutorial-flows.md#where-the-folder-is), with **File → Open…**.
+[Tutorial flows](../tutorial-flows.md#before-you-deploy) says what to change before you deploy.
 
 If a step misbehaves on the way, start at [Debugging & troubleshooting](../debugging.md).
 
@@ -1455,9 +1455,9 @@ arrives on another topic. The board joins your WiFi with the saved credential fr
 
 You can build the flow step by step, or start from the finished flow,
 [blink-from-anywhere.flow.json](https://github.com/mkarliner/ThingStudio/blob/main/tutorials/blink-from-anywhere.flow.json),
-in the [tutorials folder](../examples.md#where-the-folder-is), with **File → Open…**. Before you deploy, replace
+in the [tutorials folder](../tutorial-flows.md#where-the-folder-is), with **File → Open…**. Before you deploy, replace
 `change-this-number` in both topics (see below), and set the WiFi network and broker as
-[Example flows](../examples.md#before-you-deploy) describes.
+[Tutorial flows](../tutorial-flows.md#before-you-deploy) describes.
 
 If a step misbehaves on the way, start at [Debugging & troubleshooting](../debugging.md).
 
@@ -1549,7 +1549,7 @@ the broker form instead. The nodes work the same way.
 
 - [mqtt publish](../nodes/mqtt-publish.md) and [mqtt subscribe](../nodes/mqtt-subscribe.md) — every property, including
   QoS and retain.
-- [Example flows](../examples.md) — the finished flows for the tutorials, and what to change in each.
+- [Tutorial flows](../tutorial-flows.md) — the finished flows for the tutorials, and what to change in each.
 - [Tutorials](index.md) — the other tutorials.
 
 
