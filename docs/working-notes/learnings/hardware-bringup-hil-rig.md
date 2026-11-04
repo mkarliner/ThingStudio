@@ -297,3 +297,13 @@ committed -- if this VM stays in the loop, `install.sh` should grow the same sin
   escaped `_find`, ended the peer task, and left every read on "finding" forever. Now any step's failure, this
   included, is reported once and retried after RETRY_MS (pymock's `fail_scan` covers it). Separately: Mike reports
   the C5 needs a power cycle to redeploy with BLE flows; cause not yet known (see the BLE outstanding item).
+- **ESP32-C5: switching BLE off and on between flows breaks the next scan (2026-11-04).** With `ble-scan-debug-c5`
+  redeployed, the BLE_TRACE showed `ts_ble`'s cleanup in order -- `gap_scan(None)`, the scan-done event 3 ms later,
+  `gap_advertise(None)`, `active(False)` -- then the new flow's `active(True)` and, 25 ms after it, `gap_scan`
+  refused with `OSError(-519)` (HCI 0x07). Only a power cycle cleared it: the "C5 doesn't reset cleanly" Mike saw.
+  REPL sequences (stop/off/on/scan, active or passive, 1 or 5 s, with or without an IRQ handler) did *not*
+  reproduce it; stop-and-restart without off/on (test A) always worked. Fix: the cleanup leaves the radio on and
+  stops scan, advertising and links, detaching the handler. Cost: the stack keeps its ESP-IDF memory until a reset
+  (FAQ entry). Also seen the same day: a running BLE flow on the C3 left 6 KB of ESP-IDF heap and ~30 KB of
+  MicroPython heap, too little to receive a changed 14 KB `ts_ble` (MemoryError on a 6.8 KB piece); Remove flow +
+  power cycle first. Splitting `ts_ble` into parts is the follow-up.

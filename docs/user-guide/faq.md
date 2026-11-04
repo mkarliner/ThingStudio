@@ -213,3 +213,10 @@ characteristic's arrow icon (notify). The [ble characteristic out](nodes/ble-cha
 The board hasn't seen the device advertise. Check that it's on, in range, and not already connected to something
 else, such as a phone app: most devices stop advertising while connected. A phone changes its address, so find a
 phone by name. A [ble scan](nodes/ble-scan.md) node into a debug node shows what the board can see.
+
+## After a Bluetooth flow, why does the board have less memory for the next one?
+
+The Bluetooth radio stays on between flows once a ble node has started it: switching it off and on again can leave
+the ESP32-C5's radio unable to scan until a power cycle. The radio keeps its share of ESP-IDF memory, the memory WiFi
+and displays also use, even if the next flow has no ble nodes. **Tools → Reset board (hard)** gives it back. See
+[Memory](debugging.md#memory).

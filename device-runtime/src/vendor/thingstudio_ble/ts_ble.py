@@ -907,29 +907,49 @@ class _Radio:
         return runtime.shared("ble_peer", key, (addr, name_prefix, int(timeout_ms)), make)
 
     def stop(self):
+        """Redeploy cleanup. Stops scanning and advertising, drops every link and detaches this flow's event handler,
+        but leaves the radio ON: on the ESP32-C5, switching it off and on between flows left the controller refusing
+        the next flow's first scan with OSError(-519) (HCI 0x07) until a power cycle, even though the scan had
+        confirmed stopping (BLE_TRACE, 2026-11-04). Cost: after a BLE flow the Bluetooth stack keeps its ESP-IDF memory
+        until the board resets. decisions/ble-nodes.md."""
         _trace("stop: scanning=%r peers=%d server=%r adv=%r" % (self.scanning, len(self.peers), self.gatt_server is not None, self.adv is not None))
+        conns = [p.conn for p in self.peers if p.conn is not None]
+        if self.gatt_server is not None:
+            conns.extend(self.gatt_server.conns)
+        peer_scan = any(p.find_op is not None for p in self.peers)
         for p in self.peers:
             p.stop()
         self.peers = []
-        try:
-            # Cleared before stopping: the radio answers gap_scan(None) with a scan-done event, which must not be
-            # reported as the radio stopping the scan by itself (seen on the ESP32-C5 at every redeploy).
-            was_scanning = self.scanning
-            self.scanning = False
-            self.gatt_server = None
-            self.adv = None
-            if was_scanning:
-                _trace("stop: gap_scan(None)")
-                self.ble.gap_scan(None)
-            _trace("stop: gap_advertise(None)")
-            self.ble.gap_advertise(None)
-        except OSError as e:
-            _trace("stop: raised %r" % (e,))
-            raise
-        finally:
-            _trace("stop: active(False)")
-            self.ble.active(False)
-            _trace("stop: done")
+        # Cleared before stopping: the radio answers gap_scan(None) with a scan-done event, which must not be
+        # reported as the radio stopping the scan by itself.
+        was_scanning = self.scanning or peer_scan
+        self.scanning = False
+        self.gatt_server = None
+        self.adv = None
+        for step, call in (
+            ("gap_scan(None)", (lambda: self.ble.gap_scan(None)) if was_scanning else None),
+            ("gap_advertise(None)", lambda: self.ble.gap_advertise(None)),
+        ):
+            if call is None:
+                continue
+            _trace("stop: " + step)
+            try:
+                call()
+            except OSError as e:
+                _trace("stop: %s raised %r" % (step, e))
+        for conn in conns:
+            _trace("stop: gap_disconnect(%r)" % (conn,))
+            try:
+                self.ble.gap_disconnect(conn)
+            except OSError as e:
+                _trace("stop: gap_disconnect raised %r" % (e,))
+        self.ble.irq(_ignore_irq)
+        _trace("stop: done (radio left on)")
+
+
+def _ignore_irq(event, data):
+    """The handler between flows: the old flow's objects are gone, and nothing is scanning or advertising."""
+    return None
 
 
 def radio():

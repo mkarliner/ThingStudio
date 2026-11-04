@@ -306,7 +306,7 @@ def test_central_finds_connects_reads_and_gets_notified():
     assert r.peers == [] and p.task is None
 
 
-def test_redeploy_turns_the_radio_off_and_the_next_deploy_starts_fresh():
+def test_redeploy_leaves_the_radio_on_and_the_next_deploy_starts_fresh():
     r = ts_ble.radio()
     r.scan("n1", 320, 30, False, name_prefix="", addr="", mfr_id=None, svc_uuid="", repeat_ms=0)
     r.advertise("a1", 500, ts_ble.build_adv("ts"))
@@ -318,7 +318,8 @@ def test_redeploy_turns_the_radio_off_and_the_next_deploy_starts_fresh():
     finally:
         runtime.report_status = saved
     assert reported == [], reported
-    assert _BLE.on is False
+    assert _BLE.on is True, "left on: off-then-on broke the C5's next scan (2026-11-04)"
+    assert ("active", False) not in _BLE.calls
     r2 = ts_ble.radio()
     assert r2 is not r and _BLE.on is True and r2.scanners == []
     _redeploy()
@@ -337,6 +338,6 @@ minitest.run(
         test_encode_and_decode_values,
         test_gatt_registers_once_and_routes_writes,
         test_central_finds_connects_reads_and_gets_notified,
-        test_redeploy_turns_the_radio_off_and_the_next_deploy_starts_fresh,
+        test_redeploy_leaves_the_radio_on_and_the_next_deploy_starts_fresh,
     ]
 )

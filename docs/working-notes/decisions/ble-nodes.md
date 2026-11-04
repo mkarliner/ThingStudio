@@ -47,3 +47,7 @@ maintenance rule. Scoping and reasoning: `../ble-nodes-scoping.md`.
 - **2026-11-04 — Phase 3's GATT client goes in `ts_ble`, on the raw `bluetooth` module (Mike: "a").** Not
   `aioble`: it claims the radio's IRQ handler at import, so it can't share the radio with `ts_ble`'s scan and GATT
   server. Tested with two boards (Mike has them).
+- **2026-11-04 — The radio stays on between flows (session call, from the C5 trace).** `ts_ble`'s redeploy cleanup
+  stops scanning, advertising and links and detaches its handler, but never calls `active(False)`: off-then-on
+  between flows left the C5's controller refusing the next scan (-519) until a power cycle. Cost, documented: the
+  stack keeps its ESP-IDF memory until a reset. Revisit if a port needs the radio off (none found yet).

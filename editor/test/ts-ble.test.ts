@@ -182,19 +182,21 @@ print('ADV', [c for c in B.calls if c[0] == 'gap_advertise'])
     expect(out).toContain("NODE_STATUS node=a1 state=connected text=advertising 7 bytes");
   });
 
-  it("a redeploy stops the scan and the advertisement, turns the radio off, and the next deploy starts afresh", () => {
+  it("a redeploy stops the scan and the advertisement, leaves the radio on, and the next deploy starts afresh", () => {
+    // Left on, not switched off (2026-11-04): on the ESP32-C5, off-then-on between flows made the next scan fail
+    // with OSError(-519) until a power cycle.
     const out = run(`
 r = ts_ble.radio()
 r.scan('n1', 320, 30, False, name_prefix='', addr='', mfr_id=None, svc_uuid='', repeat_ms=0)
 r.advertise('a1', 500, ts_ble.build_adv('ts'))
 redeploy()
-print('AFTER', B.is_active, B.scanning, B.advertising)
+print('AFTER', B.is_active, B.scanning, B.advertising, ('active', False) in B.calls, B.handler.__name__)
 r2 = ts_ble.radio()
 print('FRESH', r2 is not r, B.is_active, len(r2.scanners))
 r2.scan('n1', 320, 60, True, name_prefix='', addr='', mfr_id=None, svc_uuid='', repeat_ms=0)
 print('NEW SETTINGS OK')
 `);
-    expect(out).toContain("AFTER False False None");
+    expect(out).toContain("AFTER True False None False _ignore_irq");
     // Its own stop is not "the radio stopped the scan".
     expect(out).not.toContain("scan stopped by the radio");
     expect(out).toContain("FRESH True True 0");

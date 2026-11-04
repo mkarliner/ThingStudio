@@ -11,6 +11,12 @@ has one radio.
 - **name** — what phone apps show, up to 26 bytes. A [ble advertise](ble-advertise.md) node shares the 31 bytes of
   an advertisement between the name and its payload, so a shorter name leaves more room.
 
+## Behavior
+
+Once a ble node has started the radio, it stays on until the board resets, through every redeploy. A deploy stops
+the old flow's scans, advertising and connections, not the radio. It keeps some ESP-IDF memory meanwhile: a hard
+reset gives it back.
+
 ## Errors
 
 A name over 26 bytes, or two BLE configs in a flow, stops the compile.
