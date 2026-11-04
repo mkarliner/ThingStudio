@@ -3548,26 +3548,26 @@
 <p>Listens for Bluetooth LE advertisements, such as beacons and BLE sensors, and sends one message per advertisement.</p>
 <h2 id="properties">Properties</h2>
 <ul>
-<li><strong>name starts with</strong> — only devices whose advertised name starts with this. Many devices send their name only
-  in reply to an active scan.</li>
-<li><strong>address</strong> — only this device, as <code>aa:bb:cc:dd:ee:ff</code>.</li>
-<li><strong>manufacturer id</strong> — only advertisements with this manufacturer id, in decimal or hex (<code>0x0499</code> is Ruuvi).</li>
+<li><strong>name starts with</strong> — only devices whose advertised name starts with this. Default blank. Many devices send their
+  name only in reply to an active scan.</li>
+<li><strong>address</strong> — only this device, as <code>aa:bb:cc:dd:ee:ff</code>. Default blank.</li>
+<li><strong>manufacturer id</strong> — only advertisements with this manufacturer id, in decimal or hex (<code>0x0499</code> is Ruuvi). Default
+  blank.</li>
 <li><strong>service UUID</strong> — only advertisements that list this service or carry data for it: 16-bit (<code>fcd2</code> is BTHome)
-  or 128-bit.</li>
-<li><strong>active scan</strong> — also ask each device for its scan response, which usually holds its name.</li>
+  or 128-bit. Default blank.</li>
+<li><strong>active scan</strong> — also ask each device for its scan response, which usually holds its name. Default off.</li>
 <li><strong>repeat window (ms)</strong> — drops an advertisement identical to the same device's last one within this time.
   Default 1000. <code>0</code> sends every one; a changed advertisement is always sent.</li>
-<li><strong>scan interval (ms)</strong> / <strong>scan window (ms)</strong> — the radio listens for the window once every interval. Default
-  30 ms every 320 ms. A longer window misses fewer advertisements and leaves WiFi less time.</li>
+<li><strong>scan interval (ms)</strong> / <strong>scan window (ms)</strong> — the radio listens for the window once every interval, from 2.5 to
+  10240 ms. Defaults 320 and 30. A longer window misses fewer advertisements and leaves WiFi less time.</li>
 </ul>
-<p>The filters combine: an advertisement must pass every one that is set.</p>
+<p>A blank filter lets everything through. The filters combine: an advertisement must pass every one that is set.</p>
 <p>With <strong>active scan</strong> on, a device's scan response arrives as a second message, usually a few milliseconds after its
 advertisement, with <code>scanResponse</code> set. That's where most devices put their name. Empty scan responses are
 dropped.</p>
 <h2 id="wiring">Wiring</h2>
-<ul>
-<li><strong>Output</strong> — <code>payload</code> is the advertising data as bytes. The message also carries:</li>
-</ul>
+<p><strong>Input</strong> — none. <code>ble scan</code> is a source.</p>
+<p><strong>Output</strong> — <code>payload</code> is the advertising data as bytes. The message also carries:</p>
 <table>
 <thead>
 <tr>
@@ -3620,10 +3620,10 @@ dropped.</p>
 scan settings. Each node applies its own filters. A node keeps up to 20 advertisements waiting; if they come faster
 than the flow handles them, the oldest are dropped.</p>
 <p>The radio is shared with WiFi on an ESP32. A long scan window slows WiFi and MQTT.</p>
-<p>Needs a board with Bluetooth LE: ESP32, ESP32-S3, ESP32-C3 or ESP32-C5. The ESP32-S2 has none.</p>
+<p>It runs on the processors <a href="../../supported-hardware/#processors-without-a-board-definition">Supported hardware</a> lists for the ble nodes.</p>
 <h2 id="errors">Errors</h2>
-<p>A bad address, manufacturer id, UUID or scan setting stops the compile, naming the value. So do two ble scan
-nodes with different scan settings, and a board without Bluetooth LE. The status shows <strong>scanning</strong>, or <strong>scan
+<p>A bad address, manufacturer id, UUID or scan setting stops the deploy, naming the value. So do two ble scan
+nodes with different scan settings, and a board without the ble nodes. The status shows <strong>scanning</strong>, or <strong>scan
 stopped by the radio</strong> if the radio ends the scan. If the radio can't start, often because the board is short of
 memory, the console says so: hard-reset the board.</p>
 <p>An advertisement is untrusted input: anyone nearby can send one, with any name or address.</p>

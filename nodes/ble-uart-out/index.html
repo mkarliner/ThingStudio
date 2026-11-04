@@ -3548,18 +3548,17 @@
 <p>Sends text to the devices connected over Bluetooth LE, through the Nordic UART Service.</p>
 <h2 id="properties">Properties</h2>
 <ul>
-<li><strong>end with a newline</strong> — add <code>\n</code> after each payload. On by default.</li>
+<li><strong>end with a newline</strong> — add <code>\n</code> after each payload. Default on.</li>
 <li><strong>BLE</strong> — the flow's <a href="../ble/">BLE config</a>.</li>
 </ul>
 <h2 id="wiring">Wiring</h2>
-<ul>
-<li><strong>Input</strong> — <code>payload</code> as text. Bytes are sent as they are; anything else is sent as <code>str(payload)</code>.</li>
-</ul>
+<p><strong>Input</strong> — <code>payload</code> as text. Bytes are sent as they are; anything else is sent as <code>str(payload)</code>.</p>
+<p>This node has no output.</p>
 <h2 id="behavior">Behavior</h2>
 <p>The text goes to every connected device, split into pieces that fit each connection: 20 bytes until the device
 agrees a larger MTU. With no device connected, nothing is sent and nothing is kept.</p>
 <h2 id="errors">Errors</h2>
-<p>None at run time. Anyone in range can connect and read what's sent: there's no pairing yet.</p>
+<p>A board without the ble nodes stops the deploy. Anyone in range can connect and read what's sent: there's no pairing.</p>
 
 
 

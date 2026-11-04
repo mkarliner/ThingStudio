@@ -3548,16 +3548,16 @@
 <p>Writes each message's payload to a characteristic of another Bluetooth LE device.</p>
 <h2 id="properties">Properties</h2>
 <ul>
-<li><strong>BLE peer</strong> — the <a href="../ble-peer/">device to write to</a>.</li>
-<li><strong>service UUID</strong> / <strong>characteristic UUID</strong> — the characteristic to write: 16-bit or 128-bit.</li>
-<li><strong>encoding</strong> — how <code>payload</code> becomes bytes: the same choices as <a href="../ble-read/">ble read</a>. A number must fit.</li>
-<li><strong>wait for the peer's response</strong> — on by default: the device confirms each write, and a write it refuses is
+<li><strong>BLE peer</strong> — the <a href="../ble-peer/">device to write to</a>. Required.</li>
+<li><strong>service UUID</strong> / <strong>characteristic UUID</strong> — the characteristic to write: 16-bit or 128-bit. Required.</li>
+<li><strong>encoding</strong> — how <code>payload</code> becomes bytes: the same choices as <a href="../ble-read/">ble read</a>. Default
+  <strong>bytes</strong>. A number must fit.</li>
+<li><strong>wait for the peer's response</strong> — default on: the device confirms each write, and a write it refuses is
   reported. Off: write without response, which is faster; the characteristic must allow it.</li>
 </ul>
 <h2 id="wiring">Wiring</h2>
-<ul>
-<li><strong>Input</strong> — <code>payload</code> is the value to write.</li>
-</ul>
+<p><strong>Input</strong> — <code>payload</code> is the value to write.</p>
+<p>This node has no output.</p>
 <h2 id="behavior">Behavior</h2>
 <p>Nothing is queued: a message that arrives while the peer isn't connected is reported and dropped, so a stale value
 is never written after a reconnect.</p>

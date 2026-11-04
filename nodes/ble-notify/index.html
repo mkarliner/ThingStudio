@@ -3548,16 +3548,16 @@
 <p>Subscribes to a characteristic of another Bluetooth LE device and sends a message each time it sends a new value.</p>
 <h2 id="properties">Properties</h2>
 <ul>
-<li><strong>BLE peer</strong> — the <a href="../ble-peer/">device to listen to</a>.</li>
-<li><strong>service UUID</strong> / <strong>characteristic UUID</strong> — the characteristic: 16-bit or 128-bit. It must support notify or
+<li><strong>BLE peer</strong> — the <a href="../ble-peer/">device to listen to</a>. Required.</li>
+<li><strong>service UUID</strong> / <strong>characteristic UUID</strong> — the characteristic: 16-bit or 128-bit. Required. It must support notify or
   indicate; nRF Connect shows which.</li>
-<li><strong>encoding</strong> — how each value becomes <code>payload</code>, as for <a href="../ble-read/">ble read</a>. It also sets the output's type.</li>
+<li><strong>encoding</strong> — how each value becomes <code>payload</code>, as for <a href="../ble-read/">ble read</a>. Default <strong>bytes</strong>.
+  It also sets the output's type.</li>
 </ul>
 <h2 id="wiring">Wiring</h2>
-<ul>
-<li><strong>Output</strong> — <code>payload</code> is the value. The message also carries <code>peer</code>, the device's address or name, and <code>uuid</code>,
-  the characteristic.</li>
-</ul>
+<p><strong>Input</strong> — none. <code>ble notify</code> is a source.</p>
+<p><strong>Output</strong> — <code>payload</code> is the value. The message also carries <code>peer</code>, the device's address or name, and <code>uuid</code>, the
+characteristic.</p>
 <h2 id="behavior">Behavior</h2>
 <p>The board turns notifications on when it connects, and again after each reconnect. It uses indications when the
 characteristic offers no notifications. Up to 20 values wait if they come faster than the flow handles them; then

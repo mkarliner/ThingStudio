@@ -3529,9 +3529,9 @@
 device. Nodes that name the same peer share one connection.</p>
 <h2 id="settings">Settings</h2>
 <ul>
-<li><strong>address</strong> — the device's address, <code>aa:bb:cc:dd:ee:ff</code>. A <a href="../ble-scan/">ble scan</a> node into a debug node shows
+<li><strong>address</strong> — the device's address, <code>aa:bb:cc:dd:ee:ff</code>. Default blank. A <a href="../ble-scan/">ble scan</a> node into a debug node shows
   the addresses nearby.</li>
-<li><strong>name starts with</strong> — used when the address is blank: the first device whose advertised name starts with this.
+<li><strong>name starts with</strong> — default blank. Used when the address is blank: the first device whose advertised name starts with this.
   Phones change their address every few minutes, so find a phone by name; most sensors and boards keep theirs.</li>
 <li><strong>timeout (ms)</strong> — how long finding the device and connecting to it may each take. Default 10000.</li>
 </ul>
@@ -3542,7 +3542,7 @@ notifications for the ble notify nodes. The nodes' status follows each step: <st
 from finding after 10 seconds. It never connects to a different device instead.</p>
 <h2 id="errors">Errors</h2>
 <p>A peer with neither an address nor a name, a malformed address, or a timeout outside 1000 to 60000 ms stops the
-compile. A step that fails on the board, such as the device not being found or a service it doesn't have, is
+deploy. A step that fails on the board, such as the device not being found or a service it doesn't have, is
 reported once on the console, naming the device and the step.</p>
 
 

@@ -3548,21 +3548,20 @@
 <p>Advertises over Bluetooth LE: the board's name, and each message's payload as manufacturer or service data.</p>
 <h2 id="properties">Properties</h2>
 <ul>
-<li><strong>payload goes in</strong> — <strong>manufacturer data</strong>, <strong>service data</strong>, or <strong>nothing (name only)</strong>.</li>
+<li><strong>payload goes in</strong> — <strong>manufacturer data</strong>, <strong>service data</strong>, or <strong>nothing (name only)</strong>. Default <strong>manufacturer
+  data</strong>.</li>
 <li><strong>manufacturer id</strong> — for manufacturer data, in decimal or hex. Default <code>0xFFFF</code>, which is reserved for testing;
   a product uses its maker's id from the Bluetooth SIG.</li>
-<li><strong>service UUID</strong> — for service data: 16-bit (<code>fcd2</code> is BTHome) or 128-bit.</li>
+<li><strong>service UUID</strong> — for service data: 16-bit (<code>fcd2</code> is BTHome) or 128-bit. Default <code>fcd2</code>.</li>
 <li><strong>interval (ms)</strong> — how often the advertisement is sent, 20 to 10240. Default 500. Shorter is found faster and
   uses more power.</li>
 <li><strong>BLE</strong> — the flow's <a href="../ble/">BLE config</a>, whose name is advertised. Without one, the name is <code>thingstudio</code>.</li>
 </ul>
 <h2 id="wiring">Wiring</h2>
-<ul>
-<li><strong>Input</strong> — <code>payload</code> replaces the data: bytes as they are, text as UTF-8. With <strong>nothing (name only)</strong> it's
-  ignored. Pack a number with <code>struct.pack</code> in a
-  <a href="../function/">function</a> node first, for example <code>struct.pack('&lt;h', round(t * 100))</code>.</li>
-</ul>
-<p>The node needs no input: unwired, it advertises the name only.</p>
+<p><strong>Input</strong> — <code>payload</code> replaces the data: bytes as they are, text as UTF-8. With <strong>nothing (name only)</strong> it's
+ignored. Pack a number with <code>struct.pack</code> in a <a href="../function/">function</a> node first, for example
+<code>struct.pack('&lt;h', round(t * 100))</code>. Unwired, the node advertises the name only.</p>
+<p>This node has no output.</p>
 <h2 id="behavior">Behavior</h2>
 <p>The board advertises the name from the moment the flow starts. Each message replaces the data, and the board sends
 the new advertisement until the next one. Phones and computers (nRF Connect, for example) and other boards with a
@@ -3570,10 +3569,10 @@ the new advertisement until the next one. Phones and computers (nRF Connect, for
 advertisement accepts connections, so other devices can connect to them.</p>
 <p>An advertisement holds 31 bytes. The flags take 3, the name its length plus 2, and the data's header 4 (manufacturer
 or 16-bit service) or 18 (128-bit service). The node's status says how many are left for the payload.</p>
-<p>A flow has one ble advertise node. Needs a board with Bluetooth LE: ESP32, ESP32-S3, ESP32-C3 or ESP32-C5.</p>
+<p>A flow has one ble advertise node. It runs on the processors <a href="../../supported-hardware/#processors-without-a-board-definition">Supported hardware</a> lists for the ble nodes.</p>
 <h2 id="errors">Errors</h2>
-<p>A name with no room left for data, a bad id or UUID, a second ble advertise node, or a board without Bluetooth LE
-stops the compile. A payload that isn't bytes or text, or that doesn't fit, is reported on the console with its
+<p>A name with no room left for data, a bad id or UUID, a second ble advertise node, or a board without the ble nodes
+stops the deploy. A payload that isn't bytes or text, or that doesn't fit, is reported on the console with its
 size, and the board keeps sending the last advertisement.</p>
 <p>Anyone nearby can read an advertisement. Don't put anything private in it.</p>
 

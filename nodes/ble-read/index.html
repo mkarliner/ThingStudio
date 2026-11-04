@@ -3548,19 +3548,17 @@
 <p>Reads a characteristic of another Bluetooth LE device for each message that arrives, and sends the value on.</p>
 <h2 id="properties">Properties</h2>
 <ul>
-<li><strong>BLE peer</strong> — the <a href="../ble-peer/">device to read from</a>.</li>
-<li><strong>service UUID</strong> / <strong>characteristic UUID</strong> — the characteristic to read: 16-bit (<code>2a6e</code>) or 128-bit. Phone apps
-  such as nRF Connect list a device's UUIDs.</li>
+<li><strong>BLE peer</strong> — the <a href="../ble-peer/">device to read from</a>. Required.</li>
+<li><strong>service UUID</strong> / <strong>characteristic UUID</strong> — the characteristic to read: 16-bit (<code>2a6e</code>) or 128-bit. Required.
+  Apps such as nRF Connect list a device's UUIDs.</li>
 <li><strong>encoding</strong> — how the bytes read become <code>payload</code>: <strong>bytes</strong>, <strong>text</strong>, <strong>int8</strong> to <strong>uint32</strong>, or <strong>float32</strong>,
-  little-endian. It also sets the output's type.</li>
+  little-endian. Default <strong>bytes</strong>. It also sets the output's type.</li>
 </ul>
 <h2 id="wiring">Wiring</h2>
-<ul>
-<li><strong>Input</strong> — any message starts a read. Wire a <a href="../timer/">timer</a> in to read at an interval.</li>
-<li><strong>Output</strong> — the incoming message, with <code>payload</code> set to the value read.</li>
-</ul>
+<p><strong>Input</strong> — any message starts a read. Wire a <a href="../timer/">timer</a> in to read at an interval.</p>
+<p><strong>Output</strong> — the incoming message, with <code>payload</code> set to the value read.</p>
 <h2 id="behavior">Behavior</h2>
-<p>The read waits up to 5 seconds for the device's answer, and holds up the flow meanwhile. For a device that pushes
+<p>The read waits up to 5 seconds for the device's answer, and the message's chain waits with it. For a device that pushes
 its values, a <a href="../ble-notify/">ble notify</a> node needs no polling.</p>
 <h2 id="errors">Errors</h2>
 <p>A message that arrives while the peer isn't connected, a read that times out or fails, or a value that doesn't

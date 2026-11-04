@@ -3548,21 +3548,20 @@
 <p>Sends a message each time a connected device writes a Bluetooth LE characteristic.</p>
 <h2 id="properties">Properties</h2>
 <ul>
-<li><strong>service UUID</strong> — the service the characteristic belongs to: 16-bit (<code>181a</code>) or 128-bit. Use the same service on
-  the nodes for its other characteristics.</li>
-<li><strong>characteristic UUID</strong> — 16-bit (<code>2a6e</code>) or 128-bit.</li>
+<li><strong>service UUID</strong> — the service the characteristic belongs to: 16-bit (<code>181a</code>) or 128-bit. Required. Use the same
+  service on the nodes for its other characteristics.</li>
+<li><strong>characteristic UUID</strong> — 16-bit (<code>2a6e</code>) or 128-bit. Required.</li>
 <li><strong>encoding</strong> — how the bytes written become <code>payload</code>: <strong>bytes</strong>, <strong>text</strong> (UTF-8), <strong>int8</strong>, <strong>uint8</strong>,
-  <strong>int16</strong>, <strong>uint16</strong>, <strong>int32</strong>, <strong>uint32</strong> or <strong>float32</strong>, little-endian. It also sets the output's type, so a
-  number encoding can wire into a number input.</li>
-<li><strong>BLE</strong> — the flow's <a href="../ble/">BLE config</a>, for the board's name.</li>
+  <strong>int16</strong>, <strong>uint16</strong>, <strong>int32</strong>, <strong>uint32</strong> or <strong>float32</strong>, little-endian. Default <strong>bytes</strong>. It also sets the
+  output's type, so a number encoding can wire into a number input.</li>
+<li><strong>BLE</strong> — the flow's <a href="../ble/">BLE config</a>, for the board's name. Optional.</li>
 </ul>
 <p>For your own service, pick a random 128-bit UUID (an online UUID generator, or <code>python3 -c "import uuid;
 print(uuid.uuid4())"</code>). 16-bit UUIDs belong to services the Bluetooth SIG has defined.</p>
 <h2 id="wiring">Wiring</h2>
-<ul>
-<li><strong>Output</strong> — <code>payload</code> is the value. The message also carries <code>conn</code>, the connection's number, and <code>uuid</code>, the
-  characteristic.</li>
-</ul>
+<p><strong>Input</strong> — none. <code>ble characteristic in</code> is a source.</p>
+<p><strong>Output</strong> — <code>payload</code> is the value. The message also carries <code>conn</code>, the connection's number, and <code>uuid</code>, the
+characteristic.</p>
 <h2 id="behavior">Behavior</h2>
 <p>The board becomes a GATT server when a flow has any characteristic or UART node. It advertises its name, accepts
 connections, and starts advertising again when a device disconnects. Any Bluetooth LE device that can connect and
@@ -3574,10 +3573,11 @@ can read, write and subscribe to.</p>
 flow handles them, the oldest are dropped.</p>
 <p>The node's status shows <strong>advertising, no one connected</strong> or <strong>1 connected</strong>.</p>
 <h2 id="errors">Errors</h2>
-<p>A missing or malformed UUID, or two nodes using one characteristic with different encodings, stops the compile.
+<p>A missing or malformed UUID, two nodes using one characteristic with different encodings, or a board without the
+ble nodes stops the deploy.
 A write that doesn't decode (2 bytes sent to an <code>int32</code>, text that isn't UTF-8) is reported on the console with its
 size and dropped.</p>
-<p>Anyone in range can connect and write: there's no pairing yet. Treat what arrives as untrusted input.</p>
+<p>Anyone in range can connect and write: there's no pairing. Treat what arrives as untrusted input.</p>
 
 
 
