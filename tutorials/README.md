@@ -1,7 +1,7 @@
 # Tutorial flows
 
 The flows for the tutorials, to open with **File → Open…** and make yours: each one runs as shipped once you set your own
-pin, WiFi network and broker. [Example flows](https://docs.thingstudio.net/examples/) in the user guide says what each
+pin, WiFi network and broker. [Tutorial flows](https://docs.thingstudio.net/tutorial-flows/) in the user guide says what each
 one shows and what to change first.
 
 - `blink.flow.json` — the three-node first flow: timer, function, gpio out. Walked by

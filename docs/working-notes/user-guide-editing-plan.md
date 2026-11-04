@@ -118,7 +118,7 @@ referenced from 5 pages, no index, layout-tested but not compile-tested.
   (`compileWithHooks` over one example) to all of them. They get a layout check today; a broken example is a
   silent failure at the scavenger's front door.
 
-Phase 2a done, 2026-11-02. `docs/user-guide/examples.md` ("Example flows", in the nav under Tutorials) leads with
+Phase 2a done, 2026-11-02. `docs/user-guide/tutorial-flows.md` ("Example flows", in the nav under Tutorials) leads with
 File -> Open..., has one entry per shipped flow (what it does, what to change first, each pointer landing on a node page),
 and now owns the examples-folder table; Installation details keeps one sentence and a link, and every other link was
 updated. `editor/test/examples-compile.test.ts` runs `checkFlowText` and the editor's mpy-cross syntax check over every
@@ -208,8 +208,8 @@ Batch 2 done 2026-11-04: `http in`, `http response`, `udp send`, `mqtt publish`,
 the code, not just reformatted. Facts corrected, not only moved: `udp send` timeout only covers a full send buffer, so
 an unreachable IP raises nothing, and `None` sends the text `None` (also for `mqtt publish`); `http in` never reads
 a POST body and answers 404 for any other path or method; `http response` doesn't raise on a second reply. Dropped as
-unverifiable: `http in` queues same-route requests. Open: `mqtt subscribe`'s descriptor says the payload is bytes if it
-isn't text, but the code only decodes it. The node catalog is now lean (type, ports, defaults, allowed values) and
+unverifiable: `http in` queues same-route requests. Fixed: `mqtt subscribe`'s descriptor claimed the payload is bytes if it
+isn't text; the code only decodes it, so the description now says UTF-8 text. A bytes fallback is a later change (runtime bump). The node catalog is now lean (type, ports, defaults, allowed values) and
 links to the node pages for meanings.
 
 ### Phase 6 -- structure (review order item 6)

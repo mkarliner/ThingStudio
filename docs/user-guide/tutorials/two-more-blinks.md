@@ -12,7 +12,7 @@ The second variant is **Keep the state in the node**: the state lives inside the
 
 You can build this flow up yourself or start from the finished flow,
 [two-more-blinks.flow.json](https://github.com/mkarliner/ThingStudio/blob/main/tutorials/two-more-blinks.flow.json),
-in the [tutorials folder](../examples.md#where-the-folder-is), with **File → Open…**. It carries the first of the two
+in the [tutorials folder](../tutorial-flows.md#where-the-folder-is), with **File → Open…**. It carries the first of the two
 blinks: change `15` in `machine.Pin(15)` to your LED's GPIO number.
 
 If a step misbehaves on the way, start at [Debugging & troubleshooting](../debugging.md).

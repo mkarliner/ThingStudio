@@ -75,7 +75,7 @@ nav:
       - Installation details: installation-details.md
   - Tutorials:
       - Overview: tutorials/index.md
-      - Example flows: examples.md
+      - Tutorial flows: tutorial-flows.md
       - Two more blinks: tutorials/two-more-blinks.md
       - Web Blink: tutorials/blink-from-your-network.md
       - Blink from anywhere: tutorials/blink-from-anywhere.md

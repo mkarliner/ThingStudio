@@ -27,7 +27,7 @@ export const descriptor: NodeDescriptor = {
   width: 132,
   description:
     "Subscribes to an MQTT topic and sends on everything the broker delivers for it. msg.payload is the content " +
-    "(text if it decodes, otherwise bytes), msg.topic the topic it arrived on, and msg.retained whether the " +
+    "decoded as UTF-8 text, msg.topic the topic it arrived on, and msg.retained whether the " +
     "broker held it as a retained message.",
   ports: {
     inputs: [{ name: "msg", type: "any" }],

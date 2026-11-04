@@ -18,7 +18,7 @@ project.
 4. [A sensor display](../sensor-display.md) — read a sensor and show it on a touch display. It is a work in
    progress.
 
-The finished flow for each tutorial is in the tutorials folder. [Example flows](../examples.md) says where the folder
+The finished flow for each tutorial is in the tutorials folder. [Tutorial flows](../tutorial-flows.md) says where the folder
 is and what to change in each flow.
 
 If you've built something past the tutorials, what worked and what stalled is a useful report: what you tried next,

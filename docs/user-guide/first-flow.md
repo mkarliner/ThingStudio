@@ -29,7 +29,7 @@ Don't leave out the resistor. Without it, the LED draws too much current and can
 3. Drag a **gpio out** onto the canvas. Set **pin** to your LED's GPIO number.
 4. Wire **timer** → **function** → **gpio out**.
 
-This flow is `tutorials/blink.flow.json`, in the [tutorials folder](examples.md#where-the-folder-is). Opened from
+This flow is `tutorials/blink.flow.json`, in the [tutorials folder](tutorial-flows.md#where-the-folder-is). Opened from
 there, it needs only **pin** set to your LED's GPIO number.
 
 ## Deploy

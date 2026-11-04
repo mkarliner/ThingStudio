@@ -50,9 +50,9 @@ Upgrading and removing never touch `~/.thingstudio` (`%USERPROFILE%\.thingstudio
 are saved wherever you chose. To start again as a new user, move that folder aside as well: it holds your credentials,
 presets, custom nodes and board definitions.
 
-## Example flows
+## Tutorial flows
 
-Every install has a `tutorials` folder. [Example flows](examples.md#where-the-folder-is) says where it is for each route.
+Every install has a `tutorials` folder. [Tutorial flows](tutorial-flows.md#where-the-folder-is) says where it is for each route.
 
 ## From source
 

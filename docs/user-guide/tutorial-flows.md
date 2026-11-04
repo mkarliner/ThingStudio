@@ -1,4 +1,4 @@
-# Example flows
+# Tutorial flows
 
 If you'd rather not build the tutorial flows from scratch, or you get stuck, their finished flow files are in the
 tutorials folder, [below](#where-the-folder-is). Open one with **File → Open…**. Each entry below says what the flow shows

@@ -37,5 +37,5 @@ the rest from `test-flows/`. The skill build's check fails on the `test-flows/ai
 iterable"), unrelated to this change.
 
 Mike, later the same day: the folder is `tutorials/`, not `examples/`. `tools/make_bundle.py` copies it to the bundle
-root as `tutorials/`; the tests, the AI-skill build and the guide follow. The guide page is still `examples.md`
-("Example flows"); its name is open.
+root as `tutorials/`; the tests, the AI-skill build and the guide follow. The guide page follows: `tutorial-flows.md`, "Tutorial flows"
+(not `tutorials.md`, which would collide with the tutorials section's URL).

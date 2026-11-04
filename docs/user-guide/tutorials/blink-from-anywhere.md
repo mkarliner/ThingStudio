@@ -15,9 +15,9 @@ arrives on another topic. The board joins your WiFi with the saved credential fr
 
 You can build the flow step by step, or start from the finished flow,
 [blink-from-anywhere.flow.json](https://github.com/mkarliner/ThingStudio/blob/main/tutorials/blink-from-anywhere.flow.json),
-in the [tutorials folder](../examples.md#where-the-folder-is), with **File → Open…**. Before you deploy, replace
+in the [tutorials folder](../tutorial-flows.md#where-the-folder-is), with **File → Open…**. Before you deploy, replace
 `change-this-number` in both topics (see below), and set the WiFi network and broker as
-[Example flows](../examples.md#before-you-deploy) describes.
+[Tutorial flows](../tutorial-flows.md#before-you-deploy) describes.
 
 If a step misbehaves on the way, start at [Debugging & troubleshooting](../debugging.md).
 
@@ -109,5 +109,5 @@ the broker form instead. The nodes work the same way.
 
 - [mqtt publish](../nodes/mqtt-publish.md) and [mqtt subscribe](../nodes/mqtt-subscribe.md) — every property, including
   QoS and retain.
-- [Example flows](../examples.md) — the finished flows for the tutorials, and what to change in each.
+- [Tutorial flows](../tutorial-flows.md) — the finished flows for the tutorials, and what to change in each.
 - [Tutorials](index.md) — the other tutorials.

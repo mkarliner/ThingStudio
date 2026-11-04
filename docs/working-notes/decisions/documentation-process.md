@@ -146,6 +146,6 @@ Three decisions on the back of `reviews/2026-11-01-user-guide.md`'s second-pass 
   last flow in one line of node names, says once what changes, offers both routes, and gives each paragraph one job.
   Rules in the style guide ("Tutorial openings"). Mike writes these openings; a session follows the rules and flags.
 - **One home for the example-file text (Mike, 2026-11-04):** "open the file, don't copy it" and the explanation of the
-  placeholder WiFi network and broker live on `examples.md`. Tutorials link to it and keep only what is their own.
+  placeholder WiFi network and broker live on `tutorial-flows.md`. Tutorials link to it and keep only what is their own.
 - **The repo's voice list is the master (Mike, 2026-11-04):** the style guide's "Places for Mike's own voice" list
   carries each place's reason and a Written section; Mike's project doc is a working copy and loses to the repo.

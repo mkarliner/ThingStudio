@@ -42,7 +42,7 @@ of the rest.
   ("Tutorial openings"). A session follows them and flags the place. Neutral openings in that shape are in place for
   Web Blink, Blink from anywhere and A sensor display, as a baseline for Mike to rewrite.
 - **Repeats removed:** the "open the file, don't copy it" text and the "names a WiFi network" explanation live only on
-  `examples.md`. Each tutorial links to `examples.md#before-you-deploy`, and keeps only what is its own (the pin in
+  `tutorial-flows.md`. Each tutorial links to `examples.md#before-you-deploy`, and keeps only what is its own (the pin in
   Two more blinks, the `change-this-number` topics in Blink from anywhere).
 - **Banners:** the tutorials index has a "More tutorials coming" banner inside the Web Blink entry (inside the list item,
   so the numbering stays 1-4), and Blink from anywhere and A sensor display carry a "Work in progress" note. The lint
@@ -75,9 +75,9 @@ of the rest.
 - **Example folder paths per install route** are a table on the Examples page ("Where the folder is"), from the
   installer scripts. `topic` is not required on a message. `http in` takes GET or POST only and never reads a body. The node
   status list includes `ntp`, `adc`, `neopixel`.
-- **Phase 2a:** `examples.md` owns the examples-folder table (Installation details points at it);
+- **Phase 2a:** `tutorial-flows.md` owns the examples-folder table (Installation details points at it);
   `editor/test/examples-compile.test.ts` checks every `examples/*.flow.json`, so a new example is covered automatically; it
-  still needs an entry on `examples.md` and a line in `examples/README.md`.
+  still needs an entry on `tutorial-flows.md` and a line in `examples/README.md`.
 - **Phase 4:** `gui-layout.md` is gone, merged into `nodes/gui.md` "Laying out pages" (one model: cell grid, **panel**).
   The `gui modal` bullet and the "Modals in the flow file" section are HTML-commented, not deleted (decision 2); `gui
   navigator` is removed. Anchors other pages use stay: `#laying-out-pages`, `#themes`, `#rotating-the-screen`, `#buttons`.
@@ -90,7 +90,7 @@ of the rest.
   Mike's own voice" list (the first five are there). AGENTS.md and `decisions/documentation-process.md` carry the rule.
 - **Refusal wording:** one short attributing clause on troubleshooting pages, none on reference pages (style guide,
   "A refusal says it is deliberate, once").
-- **Tutorials:** the example-file text lives on `examples.md` only (see "Landed"); the "Next" pointers stay; the index
+- **Tutorials:** the example-file text lives on `tutorial-flows.md` only (see "Landed"); the "Next" pointers stay; the index
   lists four tutorials, with a banner for the ones still in progress.
   "Blink from your network" is titled **Web Blink** (Mike, 2026-11-02); its file is still `blink-from-your-network.md`, so
   the published URL and the README link keep working. Use the new title in any text that names it.

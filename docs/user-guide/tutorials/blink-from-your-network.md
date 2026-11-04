@@ -10,8 +10,8 @@ browser.
 
 You can build the flow step by step, or start from the finished flow,
 [http-blink.flow.json](https://github.com/mkarliner/ThingStudio/blob/main/tutorials/http-blink.flow.json), in the
-[tutorials folder](../examples.md#where-the-folder-is), with **File → Open…**.
-[Example flows](../examples.md#before-you-deploy) says what to change before you deploy.
+[tutorials folder](../tutorial-flows.md#where-the-folder-is), with **File → Open…**.
+[Tutorial flows](../tutorial-flows.md#before-you-deploy) says what to change before you deploy.
 
 If a step misbehaves on the way, start at [Debugging & troubleshooting](../debugging.md).
 
