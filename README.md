@@ -45,8 +45,6 @@ Thingstudio has three parts:
 3. **Device runtime:** a MicroPython program on the board. It receives the compiled flow, saves it, and runs it.
    The editor installs it on a board that has MicroPython (**Tools → Install runtime…**).
 
-How this compares to Node-RED MCU Edition, MicroBlocks, XOD and ESPHome/Tasmota: design doc §1–§2.
-
 ## Build from source
 
 You need Python 3.10 or later, Node.js 22.12 or later, and `make`. In the repository folder:
