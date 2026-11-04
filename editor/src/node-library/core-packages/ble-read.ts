@@ -67,12 +67,13 @@ export { CENTRAL_HOOK };
 export const compileHook = CENTRAL_HOOK("ble_read");
 
 export const python = `import ts_ble
+import ts_ble.central
 
 _node_id = properties['nodeId']
 _encoding = properties['encoding']
 _svc = properties['serviceUuid']
 _char = properties['charUuid']
-_peer = ts_ble.radio().peer(properties['peerKey'], properties['peerAddr'], properties['peerName'], properties['peerTimeoutMs'])
+_peer = ts_ble.central.peer(ts_ble.radio(), properties['peerKey'], properties['peerAddr'], properties['peerName'], properties['peerTimeoutMs'])
 _peer.need(_node_id, _svc, _char)
 
 
@@ -80,7 +81,7 @@ async def run(msg, properties):
     try:
         data = await _peer.read(_svc, _char)
         msg['payload'] = ts_ble.decode_value(_encoding, data)
-    except ts_ble.PeerError as e:
+    except ts_ble.central.PeerError as e:
         runtime._report_error(_node_id, e)
         return None
     except ValueError as e:

@@ -40,10 +40,11 @@ export const descriptor: NodeDescriptor = {
 export const compileHook = CENTRAL_HOOK("ble_notify");
 
 export const python = `import ts_ble
+import ts_ble.central
 
 _node_id = properties['nodeId']
 _encoding = properties['encoding']
-_peer = ts_ble.radio().peer(properties['peerKey'], properties['peerAddr'], properties['peerName'], properties['peerTimeoutMs'])
+_peer = ts_ble.central.peer(ts_ble.radio(), properties['peerKey'], properties['peerAddr'], properties['peerName'], properties['peerTimeoutMs'])
 _values = _peer.notifications(_node_id, properties['serviceUuid'], properties['charUuid'])
 _msg = None
 

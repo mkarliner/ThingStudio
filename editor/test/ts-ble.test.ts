@@ -1,4 +1,4 @@
-// The shared BLE radio library (device-runtime/src/vendor/thingstudio_ble/ts_ble.py), run in CPython against
+// The shared BLE radio library (device-runtime/src/vendor/thingstudio_ble/ts_ble/, a package), run in CPython against
 // pymock's bluetooth/runtime fixtures (2026-11-03, BLE phase 1). Covers advertising data (build, read, the 31-byte
 // limit, malformed input), the shared scan (one gap_scan, per-node filters and queues, the repeat window, copying the
 // stack's buffers), conflicting settings, and redeploy cleanup.
@@ -36,10 +36,22 @@ OTHER = bytes.fromhex('a4c138000001')
 `;
 
 describe("ts_ble library", () => {
-  it("the pymock fixture is a byte-identical copy of the vendored library", () => {
-    const fixture = readFileSync(join(__dirname, "fixtures", "pymock", "ts_ble.py"));
-    const vendor = readFileSync(join(__dirname, "../../device-runtime/src/vendor/thingstudio_ble/ts_ble.py"));
-    expect(fixture.equals(vendor)).toBe(true);
+  it("the pymock fixture is a byte-identical copy of the vendored library, part by part", () => {
+    for (const part of ["__init__.py", "server.py", "central.py"]) {
+      const fixture = readFileSync(join(__dirname, "fixtures", "pymock", "ts_ble", part));
+      const vendor = readFileSync(join(__dirname, "../../device-runtime/src/vendor/thingstudio_ble/ts_ble", part));
+      expect(fixture.equals(vendor), part).toBe(true);
+    }
+  });
+
+  it("a scan-only flow loads only the core: the server and the client stay out of memory", () => {
+    const out = run(`
+import sys
+r = ts_ble.radio()
+r.scan('n1', 320, 30, False, name_prefix='', addr='', mfr_id=None, svc_uuid='', repeat_ms=0)
+print('LOADED', sorted(m for m in sys.modules if m.startswith('ts_ble')))
+`);
+    expect(out).toContain("LOADED ['ts_ble']");
   });
 
   it("builds advertising data that decodes back to what was put in", () => {

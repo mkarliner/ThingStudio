@@ -40,13 +40,14 @@ export const descriptor: NodeDescriptor = {
 export const compileHook = CENTRAL_HOOK("ble_write");
 
 export const python = `import ts_ble
+import ts_ble.central
 
 _node_id = properties['nodeId']
 _encoding = properties['encoding']
 _svc = properties['serviceUuid']
 _char = properties['charUuid']
 _response = bool(properties['response'])
-_peer = ts_ble.radio().peer(properties['peerKey'], properties['peerAddr'], properties['peerName'], properties['peerTimeoutMs'])
+_peer = ts_ble.central.peer(ts_ble.radio(), properties['peerKey'], properties['peerAddr'], properties['peerName'], properties['peerTimeoutMs'])
 _peer.need(_node_id, _svc, _char)
 
 
@@ -58,6 +59,6 @@ async def run(msg, properties):
         return
     try:
         await _peer.write(_svc, _char, data, _response)
-    except ts_ble.PeerError as e:
+    except ts_ble.central.PeerError as e:
         runtime._report_error(_node_id, e)
 `;

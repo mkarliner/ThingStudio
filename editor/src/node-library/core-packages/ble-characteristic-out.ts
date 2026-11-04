@@ -61,13 +61,14 @@ def compile(ctx, properties):
 `;
 
 export const python = `import ts_ble
+import ts_ble.server
 
 _node_id = properties['nodeId']
 _encoding = properties['encoding']
 _notify = bool(properties['notify'])
 _svc = properties['serviceUuid']
 _char = properties['charUuid']
-_gatt = ts_ble.radio().gatt(properties['gattTable'], properties['bleName'])
+_gatt = ts_ble.server.gatt(ts_ble.radio(), properties['gattTable'], properties['bleName'])
 _gatt.attach(_node_id)
 
 

@@ -32,7 +32,8 @@ function runFlow(nodes: N[], edges: E[], driver: string, configs: unknown[] = [p
   expect(r.errors).toEqual([]);
   const source = r.source!.split("\n").filter((l) => !l.startsWith("runtime.spawn(")).join("\n");
   const prelude = `import bluetooth, struct, ts_ble
-ts_ble.RETRY_MS = 100
+import ts_ble.central
+ts_ble.central.RETRY_MS = 100
 B = bluetooth.BLE()
 B.fake_peripheral(bytes.fromhex('a4c138000001'), ts_ble.build_adv('ts-peer'),
     [('${SVC}', [('${CHAR}', 0x02 | 0x08 | 0x10, struct.pack('<H', 7))])]${peripheral})

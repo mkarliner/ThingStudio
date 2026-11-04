@@ -60,10 +60,11 @@ def compile(ctx, properties):
 `;
 
 export const python = `import ts_ble
+import ts_ble.server
 
 _node_id = properties['nodeId']
 _encoding = properties['encoding']
-_gatt = ts_ble.radio().gatt(properties['gattTable'], properties['bleName'])
+_gatt = ts_ble.server.gatt(ts_ble.radio(), properties['gattTable'], properties['bleName'])
 _writes = _gatt.on_writes(_node_id, properties['serviceUuid'], properties['charUuid'])
 _msg = None
 

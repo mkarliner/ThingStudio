@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # device-runtime/test/test_ts_ble.py
 #
-# ts_ble (device-runtime/src/vendor/thingstudio_ble/ts_ble.py, BLE phase 1, 2026-11-03) under the real MicroPython
+# ts_ble (device-runtime/src/vendor/thingstudio_ble/ts_ble/, a package since 2026-11-04) under the real MicroPython
 # unix port, with the real runtime.py. The unix port has no `bluetooth` module, so a small stand-in is put in
 # sys.modules first; what this file proves is that ts_ble's own code (bytes handling, the advertising-data walk,
 # ThreadSafeFlag, ticks, the singleton and cleanup path) runs on MicroPython, not just CPython. The editor's
@@ -143,6 +143,8 @@ sys.modules["bluetooth"] = _BluetoothModule()
 import uasyncio as asyncio  # noqa: E402
 import runtime  # noqa: E402
 import ts_ble  # noqa: E402
+import ts_ble.server  # noqa: E402
+import ts_ble.central  # noqa: E402
 
 MAC = b"\xd0\xcf\x13\xf9\xb7\xb2"
 
@@ -255,10 +257,10 @@ def test_encode_and_decode_values():
 def test_gatt_registers_once_and_routes_writes():
     svc = "6e400010-b5a3-f393-e0a9-e50e24dcca9e"
     char = "6e400011-b5a3-f393-e0a9-e50e24dcca9e"
-    table = [[svc, [[char, 0x1E]]], [ts_ble.NUS_SERVICE, [[ts_ble.NUS_RX, 0x0C], [ts_ble.NUS_TX, 0x10]]]]
+    table = [[svc, [[char, 0x1E]]], [ts_ble.server.NUS_SERVICE, [[ts_ble.server.NUS_RX, 0x0C], [ts_ble.server.NUS_TX, 0x10]]]]
     r = ts_ble.radio()
-    g = r.gatt(table, "ts")
-    assert r.gatt(table, "ts") is g
+    g = ts_ble.server.gatt(r, table, "ts")
+    assert ts_ble.server.gatt(r, table, "ts") is g
     assert len([c for c in _BLE.calls if c[0] == "register"]) == 1
     w = g.on_writes("n1", svc, char)
     h = g.handle(svc, char)
@@ -267,7 +269,7 @@ def test_gatt_registers_once_and_routes_writes():
     _BLE.handler(3, (5, h))
     assert w.queue == [(b"\x01\x02", 5)], w.queue
     assert g.write("n2", svc, char, b"\x09", True) == 1
-    assert g.send_chunks("n3", ts_ble.NUS_SERVICE, ts_ble.NUS_TX, b"x" * 45) == 3
+    assert g.send_chunks("n3", ts_ble.server.NUS_SERVICE, ts_ble.server.NUS_TX, b"x" * 45) == 3
     _BLE.handler(2, (5, 1, memoryview(bytearray(6))))
     assert g.conns == {}
     _redeploy()
@@ -275,9 +277,9 @@ def test_gatt_registers_once_and_routes_writes():
 
 def test_central_finds_connects_reads_and_gets_notified():
     """BLE phase 3: the peer path under real uasyncio -- wait_for, Lock, a task created before the loop runs."""
-    ts_ble.RETRY_MS = 50
+    ts_ble.central.RETRY_MS = 50
     r = ts_ble.radio()
-    p = r.peer("p1", "", "ts-peer", 1000)
+    p = ts_ble.central.peer(r, "p1", "", "ts-peer", 1000)
     notes = p.notifications("n1", _FakeBLE.SVC, _FakeBLE.CHAR)
     p.need("r1", _FakeBLE.SVC, _FakeBLE.CHAR)
 

@@ -51,3 +51,8 @@ maintenance rule. Scoping and reasoning: `../ble-nodes-scoping.md`.
   stops scanning, advertising and links and detaches its handler, but never calls `active(False)`: off-then-on
   between flows left the C5's controller refusing the next scan (-519) until a power cycle. Cost, documented: the
   stack keeps its ESP-IDF memory until a reset. Revisit if a port needs the radio off (none found yet).
+- **2026-11-04 — `ts_ble` is a package of three parts** (runtime 15.0.0's package libraries): the core (radio,
+  scan, advertise, advertising data, encodings; 6.3 KB as .mpy for the C5), `ts_ble.server` (GATT server + UART,
+  2.4 KB) and `ts_ble.central` (GATT client, 6.2 KB). Each node imports the part it uses, so a scan-only flow loads
+  6.3 KB, not the 13.4 KB single file -- after a running BLE flow on the C3/C5 left too little RAM to receive a
+  changed `ts_ble`. The temporary BLE_TRACE is removed; the radio-stays-on fix it found stays.
