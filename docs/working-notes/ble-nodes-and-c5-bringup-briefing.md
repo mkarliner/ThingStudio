@@ -2,7 +2,7 @@
 
 Status: handoff, 2026-11-04. Two days with Mike (2026-11-03/04, one cloud session): Bluetooth LE nodes in three
 phases, the ESP32-C5 brought up as a board, package libraries (runtime 15.0.0), and the fixes those turned up.
-Phase 3 is the open PR. **Next: custom firmware images for the ESP32-C5 and C3** (section "Next").
+Phase 3 is PR #10, open. **Next: custom firmware images for the ESP32-C5 and C3** (section "Next").
 
 Read first: `ble-nodes-scoping.md` (the design, phase by phase) and `decisions/ble-nodes.md` (every call, Mike's
 and the session's, dated). Hardware evidence: `learnings/hardware-bringup-hil-rig.md` (the C5 entries).
@@ -14,7 +14,7 @@ and the session's, dated). Hardware evidence: `learnings/hardware-bringup-hil-ri
 | PR #6 — BLE phase 1 (`ble scan`, `ble advertise`), ESP32-C5 processor + ESP32-C5-340X board, CLI checks custom nodes, inject re-type fix | merged |
 | PR #7 — flow libraries may be packages (`aioble/core.py`), runtime **15.0.0** | merged |
 | PR #8 → #9 — BLE phase 2 (GATT server: `ble characteristic in/out`, `ble uart in/out`, `ble` config) | merged (#8 merged into `ble-nodes` by mistake; #9 carried it to `main`) |
-| Branch `ble-phase-3` — phase 3 (central: `ble peer` config, `ble read/write/notify`), `ts_ble` split into a package, radio-stays-on fix, console scroll fix | **open PR** (see `outstanding-items.md`, BLE entry) |
+| Branch `ble-phase-3` — phase 3 (central: `ble peer` config, `ble read/write/notify`), `ts_ble` split into a package, radio-stays-on fix, console scroll fix | **PR #10, open** |
 
 Branches `ble-nodes`, `ble-phase-2`, `dep-catalog-packages` are merged and can be deleted.
 
