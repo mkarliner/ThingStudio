@@ -13,10 +13,10 @@
         <link rel="canonical" href="https://docs.thingstudio.net/nodes/ble/">
       
       
-        <link rel="prev" href="../ble-uart-out/">
+        <link rel="prev" href="../ble-notify/">
       
       
-        <link rel="next" href="../interrupt/">
+        <link rel="next" href="../ble-peer/">
       
       
         
@@ -2365,6 +2365,90 @@
                 
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="../ble-read/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ble read
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ble-write/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ble write
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ble-notify/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ble notify
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
     
   
   
@@ -2439,6 +2523,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Behavior
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#errors" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2453,6 +2548,34 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ble-peer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    BLE peer
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -3358,6 +3481,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Behavior
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#errors" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3398,6 +3532,10 @@ has one radio.</p>
 <li><strong>name</strong> — what phone apps show, up to 26 bytes. A <a href="../ble-advertise/">ble advertise</a> node shares the 31 bytes of
   an advertisement between the name and its payload, so a shorter name leaves more room.</li>
 </ul>
+<h2 id="behavior">Behavior</h2>
+<p>Once a ble node has started the radio, it stays on until the board resets, through every redeploy. A deploy stops
+the old flow's scans, advertising and connections, not the radio. It keeps some ESP-IDF memory meanwhile: a hard
+reset gives it back.</p>
 <h2 id="errors">Errors</h2>
 <p>A name over 26 bytes, or two BLE configs in a flow, stops the compile.</p>
 

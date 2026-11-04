@@ -854,7 +854,7 @@ When it's done, close Thonny. Like esptool, it needs the board's port to itself.
 
 Thonny can't install MicroPython on an ESP32-C5. It writes the image at `0`, but a C5 needs `0x2000`, and Thonny
 doesn't offer that address. The board then restarts in a loop printing `invalid header`. Use Thingstudio or
-esptool instead.
+esptool instead. ([Thonny issue #3963](https://github.com/thonny/thonny/issues/3963))
 
 ### Other microcontrollers
 
@@ -1819,6 +1819,8 @@ and **+** makes a new one. The config nodes are:
 - **MQTT Broker:** a saved credential holding the host, port and optional username and password. One per flow.
 - **I2C bus:** the bus number, SCL and SDA pins, and frequency. See [I2C bus](nodes/i2c-bus.md).
 - **BLE:** the board's Bluetooth name. Optional; one per flow. See [BLE](nodes/ble.md).
+- **BLE peer:** a Bluetooth LE device the board connects to, by address or name. One per device. See
+  [BLE peer](nodes/ble-peer.md).
 - **Touch panel:** the touch controller, its I2C bus and address, and its size and orientation. See
   [Touch panels](nodes/touch-panel.md).
 
@@ -2620,6 +2622,7 @@ See [flows, nodes and messages](../background/flows-and-nodes.md) for how they f
 | broadcast a reading over Bluetooth | [ble advertise](ble-advertise.md) |
 | let a phone read or set a value | [ble characteristic out](ble-characteristic-out.md), [ble characteristic in](ble-characteristic-in.md) |
 | send and receive text with a phone terminal app | [ble uart in](ble-uart-in.md), [ble uart out](ble-uart-out.md) |
+| read from, write to, or listen to a BLE sensor or another board | [ble read](ble-read.md), [ble write](ble-write.md), [ble notify](ble-notify.md) |
 | know when WiFi connects or drops | [wifi status](wifi-status.md) |
 | stop messages while WiFi is down | [wifi gate](wifi-gate.md) |
 
@@ -2668,8 +2671,12 @@ These nodes need a board with Bluetooth LE: ESP32, ESP32-S3, ESP32-C3 or ESP32-C
 | [ble characteristic out](ble-characteristic-out.md) | sink | Sets a characteristic a phone can read, and notifies it. |
 | [ble uart in](ble-uart-in.md) | source | Receives text lines from a phone terminal app. |
 | [ble uart out](ble-uart-out.md) | sink | Sends text to a phone terminal app. |
+| [ble read](ble-read.md) | transform | Reads a characteristic of another BLE device. |
+| [ble write](ble-write.md) | sink | Writes to a characteristic of another BLE device. |
+| [ble notify](ble-notify.md) | source | Sends each value another BLE device notifies. |
 
-The board's Bluetooth name is set once, in the [BLE config](ble.md).
+The board's Bluetooth name is set once, in the [BLE config](ble.md). The devices the board connects to are
+[BLE peers](ble-peer.md).
 
 ## Hardware
 
@@ -2708,6 +2715,7 @@ Some settings are set once and shared by the nodes that use them:
   [config nodes](../working-in-the-editor.md#config-nodes).
 - **I2C bus**: the pins and clock for a bus, shared by every I2C node on it. See [I2C bus](i2c-bus.md).
 - **BLE**: the board's Bluetooth name, shared by the ble nodes. See [BLE](ble.md).
+- **BLE peer**: a device the board connects to, shared by the nodes that use it. See [BLE peer](ble-peer.md).
 - **Touch panel**: the controller, bus and size of a touch screen, used by a gui screen or a touch node. See
   [touch panels](touch-panel.md).
 
@@ -3575,6 +3583,103 @@ None at run time. Anyone in range can connect and read what's sent: there's no p
 
 ---
 
+Source: https://docs.thingstudio.net/nodes/ble-read/
+
+# ble read
+
+Reads a characteristic of another Bluetooth LE device for each message that arrives, and sends the value on.
+
+## Properties
+
+- **BLE peer** — the [device to read from](ble-peer.md).
+- **service UUID** / **characteristic UUID** — the characteristic to read: 16-bit (`2a6e`) or 128-bit. Phone apps
+  such as nRF Connect list a device's UUIDs.
+- **encoding** — how the bytes read become `payload`: **bytes**, **text**, **int8** to **uint32**, or **float32**,
+  little-endian. It also sets the output's type.
+
+## Wiring
+
+- **Input** — any message starts a read. Wire a [timer](timer.md) in to read at an interval.
+- **Output** — the incoming message, with `payload` set to the value read.
+
+## Behavior
+
+The read waits up to 5 seconds for the device's answer, and holds up the flow meanwhile. For a device that pushes
+its values, a [ble notify](ble-notify.md) node needs no polling.
+
+## Errors
+
+A message that arrives while the peer isn't connected, a read that times out or fails, or a value that doesn't
+decode (1 byte for a uint16) is reported on the console and the message is dropped.
+
+What a device sends is untrusted input: check it before acting on it.
+
+
+---
+
+Source: https://docs.thingstudio.net/nodes/ble-write/
+
+# ble write
+
+Writes each message's payload to a characteristic of another Bluetooth LE device.
+
+## Properties
+
+- **BLE peer** — the [device to write to](ble-peer.md).
+- **service UUID** / **characteristic UUID** — the characteristic to write: 16-bit or 128-bit.
+- **encoding** — how `payload` becomes bytes: the same choices as [ble read](ble-read.md). A number must fit.
+- **wait for the peer's response** — on by default: the device confirms each write, and a write it refuses is
+  reported. Off: write without response, which is faster; the characteristic must allow it.
+
+## Wiring
+
+- **Input** — `payload` is the value to write.
+
+## Behavior
+
+Nothing is queued: a message that arrives while the peer isn't connected is reported and dropped, so a stale value
+is never written after a reconnect.
+
+## Errors
+
+Not connected, a write the device refuses or doesn't confirm within 5 seconds, or a payload that doesn't fit the
+encoding is reported on the console.
+
+
+---
+
+Source: https://docs.thingstudio.net/nodes/ble-notify/
+
+# ble notify
+
+Subscribes to a characteristic of another Bluetooth LE device and sends a message each time it sends a new value.
+
+## Properties
+
+- **BLE peer** — the [device to listen to](ble-peer.md).
+- **service UUID** / **characteristic UUID** — the characteristic: 16-bit or 128-bit. It must support notify or
+  indicate; nRF Connect shows which.
+- **encoding** — how each value becomes `payload`, as for [ble read](ble-read.md). It also sets the output's type.
+
+## Wiring
+
+- **Output** — `payload` is the value. The message also carries `peer`, the device's address or name, and `uuid`,
+  the characteristic.
+
+## Behavior
+
+The board turns notifications on when it connects, and again after each reconnect. It uses indications when the
+characteristic offers no notifications. Up to 20 values wait if they come faster than the flow handles them; then
+the oldest are dropped.
+
+## Errors
+
+A characteristic that can't notify or indicate is reported when the board connects. A value that doesn't decode is
+reported and dropped.
+
+
+---
+
 Source: https://docs.thingstudio.net/nodes/ble/
 
 # BLE
@@ -3590,9 +3695,49 @@ has one radio.
 - **name** — what phone apps show, up to 26 bytes. A [ble advertise](ble-advertise.md) node shares the 31 bytes of
   an advertisement between the name and its payload, so a shorter name leaves more room.
 
+## Behavior
+
+Once a ble node has started the radio, it stays on until the board resets, through every redeploy. A deploy stops
+the old flow's scans, advertising and connections, not the radio. It keeps some ESP-IDF memory meanwhile: a hard
+reset gives it back.
+
 ## Errors
 
 A name over 26 bytes, or two BLE configs in a flow, stops the compile.
+
+
+---
+
+Source: https://docs.thingstudio.net/nodes/ble-peer/
+
+# BLE peer
+
+Another Bluetooth LE device the board connects to, such as a sensor or another board. The
+[ble read](ble-read.md), [ble write](ble-write.md) and [ble notify](ble-notify.md) nodes name one.
+
+Each of those nodes has a **BLE peer** field. Pick a peer, or add one with **+**. A flow can have several, one per
+device. Nodes that name the same peer share one connection.
+
+## Settings
+
+- **address** — the device's address, `aa:bb:cc:dd:ee:ff`. A [ble scan](ble-scan.md) node into a debug node shows
+  the addresses nearby.
+- **name starts with** — used when the address is blank: the first device whose advertised name starts with this.
+  Phones change their address every few minutes, so find a phone by name; most sensors and boards keep theirs.
+- **timeout (ms)** — how long finding the device and connecting to it may each take. Default 10000.
+
+## Behavior
+
+The board finds the device, connects, finds the services and characteristics the flow's nodes use, and turns on
+notifications for the ble notify nodes. The nodes' status follows each step: **finding**, **connecting**,
+**discovering**, **connected**. If a step fails or the link drops, the status says why, and the board starts again
+from finding after 10 seconds. It never connects to a different device instead.
+
+## Errors
+
+A peer with neither an address nor a name, a malformed address, or a timeout outside 1000 to 60000 ms stops the
+compile. A step that fails on the board, such as the device not being found or a service it doesn't have, is
+reported once on the console, naming the device and the step.
 
 
 ---
@@ -5900,6 +6045,32 @@ Type `thingstudio/ble_characteristic_out`, kind sink, palette group network.
     - `notify`, boolean, default `true` — also push each value to subscribed phones
     - `bleConfigId`, string, default `""`, the id of a `thingstudio/config/ble` config
 
+### ble notify
+
+Type `thingstudio/ble_notify`, kind source, palette group network.
+
+- Inputs: none
+- Outputs: msg (bytes)
+- Needs hardware: ble (checked against the board at compile time)
+- Properties (name, type, default):
+    - `peerConfigId`, string, default `""`, the id of a `thingstudio/config/ble-peer` config — the ble peer config
+    - `serviceUuid`, string, default `""` — the peer's service: 16-bit or 128-bit
+    - `charUuid`, string, default `""` — the characteristic subscribed to (notify, or indicate if that's all it has)
+    - `encoding`, string, default `"bytes"` — how each value becomes payload; sets the output type
+
+### ble read
+
+Type `thingstudio/ble_read`, kind transform, palette group network.
+
+- Inputs: msg (any)
+- Outputs: msg (bytes)
+- Needs hardware: ble (checked against the board at compile time)
+- Properties (name, type, default):
+    - `peerConfigId`, string, default `""`, the id of a `thingstudio/config/ble-peer` config — the ble peer config: the device to connect to, by address or name
+    - `serviceUuid`, string, default `""` — the peer's service: 16-bit or 128-bit
+    - `charUuid`, string, default `""` — the characteristic read for each message in
+    - `encoding`, string, default `"bytes"` — how the bytes read become payload (bytes, text, int8..uint32, float32 little-endian); sets the output type
+
 ### ble scan
 
 Type `thingstudio/ble_scan`, kind source, palette group network.
@@ -5938,6 +6109,20 @@ Type `thingstudio/ble_uart_out`, kind sink, palette group network.
 - Properties (name, type, default):
     - `newline`, boolean, default `true` — add \n after each payload
     - `bleConfigId`, string, default `""`, the id of a `thingstudio/config/ble` config
+
+### ble write
+
+Type `thingstudio/ble_write`, kind sink, palette group network.
+
+- Inputs: msg (any)
+- Outputs: none
+- Needs hardware: ble (checked against the board at compile time)
+- Properties (name, type, default):
+    - `peerConfigId`, string, default `""`, the id of a `thingstudio/config/ble-peer` config — the ble peer config
+    - `serviceUuid`, string, default `""` — the peer's service: 16-bit or 128-bit
+    - `charUuid`, string, default `""` — the characteristic written
+    - `encoding`, string, default `"bytes"` — how payload becomes bytes; a value that doesn't fit is reported and dropped
+    - `response`, boolean, default `true` — wait for the peer to confirm each write; off writes without response
 
 ### http in
 
@@ -6065,6 +6250,16 @@ Type `thingstudio/config/ble`, one per flow.
 
 Defaults: `{"name":"thingstudio"}`
 
+### BLE peer
+
+Type `thingstudio/config/ble-peer`.
+
+- `addr`, text: aa:bb:cc:dd:ee:ff. Leave blank to find the device by its name instead.
+- `namePrefix`, text: Used when there's no address. Phones change their address; most sensors don't.
+- `timeoutMs`, number: How long finding and connecting may each take before it tries again.
+
+Defaults: `{"addr":"","namePrefix":"","timeoutMs":10000}`
+
 ### GUI theme
 
 Type `thingstudio/config/gui-theme`.
@@ -6139,7 +6334,8 @@ Source: https://docs.thingstudio.net/debugging/
 ## Console and compiled source
 
 The **console** shows what the board and Thingstudio report: deploy results, node errors, and what `debug` nodes
-and `print()` send. **Clear** empties it.
+and `print()` send. **Clear** empties it. Scroll up to read or copy: the console stops following new lines until you
+scroll back to the bottom.
 
 Its **Show** menu sets how much it shows:
 
@@ -6185,7 +6381,9 @@ The [FAQ](faq.md) explains where an ESP32's memory goes.
 ## Commands and the Python prompt
 
 The command box under the console runs Python on the board. Type a line and press Enter; the result appears in the
-console. The up and down arrows bring back earlier commands.
+console. The up and down arrows bring back earlier commands. The box takes one line: a pasted block of several
+lines is joined into one, which Python reads as a `SyntaxError`. Put statements on one line separated by `;`, and
+write a loop as a list comprehension, for example `[print(i) for i in range(3)]`.
 
 ```python
 gc.mem_free()
@@ -6710,3 +6908,16 @@ phone's Bluetooth off and on, or forget the device in its Bluetooth settings, th
 Reading shows the value once; to get each new one, the phone has to subscribe. In nRF Connect, tap the
 characteristic's arrow icon (notify). The [ble characteristic out](nodes/ble-characteristic-out.md) node's
 **notify** must be on.
+
+## Why does a ble peer stay on "finding"?
+
+The board hasn't seen the device advertise. Check that it's on, in range, and not already connected to something
+else, such as a phone app: most devices stop advertising while connected. A phone changes its address, so find a
+phone by name. A [ble scan](nodes/ble-scan.md) node into a debug node shows what the board can see.
+
+## After a Bluetooth flow, why does the board have less memory for the next one?
+
+The Bluetooth radio stays on between flows once a ble node has started it: switching it off and on again can leave
+the ESP32-C5's radio unable to scan until a power cycle. The radio keeps its share of ESP-IDF memory, the memory WiFi
+and displays also use, even if the next flow has no ble nodes. **Tools → Reset board (hard)** gives it back. See
+[Memory](debugging.md#memory).

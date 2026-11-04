@@ -2518,6 +2518,90 @@
   
   
     <li class="md-nav__item">
+      <a href="ble-read/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ble read
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="ble-write/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ble write
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="ble-notify/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ble notify
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="ble/" class="md-nav__link">
         
   
@@ -2526,6 +2610,34 @@
     
   
     BLE config
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="ble-peer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    BLE peer
   
 
     
@@ -3689,6 +3801,10 @@ all, grouped as in the editor's palette: General, Network and Hardware.</p>
 <td><a href="ble-uart-in/">ble uart in</a>, <a href="ble-uart-out/">ble uart out</a></td>
 </tr>
 <tr>
+<td>read from, write to, or listen to a BLE sensor or another board</td>
+<td><a href="ble-read/">ble read</a>, <a href="ble-write/">ble write</a>, <a href="ble-notify/">ble notify</a></td>
+</tr>
+<tr>
 <td>know when WiFi connects or drops</td>
 <td><a href="wifi-status/">wifi status</a></td>
 </tr>
@@ -3860,9 +3976,25 @@ all, grouped as in the editor's palette: General, Network and Hardware.</p>
 <td>sink</td>
 <td>Sends text to a phone terminal app.</td>
 </tr>
+<tr>
+<td><a href="ble-read/">ble read</a></td>
+<td>transform</td>
+<td>Reads a characteristic of another BLE device.</td>
+</tr>
+<tr>
+<td><a href="ble-write/">ble write</a></td>
+<td>sink</td>
+<td>Writes to a characteristic of another BLE device.</td>
+</tr>
+<tr>
+<td><a href="ble-notify/">ble notify</a></td>
+<td>source</td>
+<td>Sends each value another BLE device notifies.</td>
+</tr>
 </tbody>
 </table>
-<p>The board's Bluetooth name is set once, in the <a href="ble/">BLE config</a>.</p>
+<p>The board's Bluetooth name is set once, in the <a href="ble/">BLE config</a>. The devices the board connects to are
+<a href="ble-peer/">BLE peers</a>.</p>
 <h2 id="hardware">Hardware</h2>
 <p>Pin numbers are checked against your board before a deploy. See <a href="../boards/">boards and processors</a>.</p>
 <table>
@@ -3950,6 +4082,7 @@ stops and names both.</p>
   <a href="../working-in-the-editor/#config-nodes">config nodes</a>.</li>
 <li><strong>I2C bus</strong>: the pins and clock for a bus, shared by every I2C node on it. See <a href="i2c-bus/">I2C bus</a>.</li>
 <li><strong>BLE</strong>: the board's Bluetooth name, shared by the ble nodes. See <a href="ble/">BLE</a>.</li>
+<li><strong>BLE peer</strong>: a device the board connects to, shared by the nodes that use it. See <a href="ble-peer/">BLE peer</a>.</li>
 <li><strong>Touch panel</strong>: the controller, bus and size of a touch screen, used by a gui screen or a touch node. See
   <a href="touch-panel/">touch panels</a>.</li>
 </ul>

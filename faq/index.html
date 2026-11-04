@@ -2362,6 +2362,90 @@
   
   
     <li class="md-nav__item">
+      <a href="../nodes/ble-read/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ble read
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/ble-write/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ble write
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/ble-notify/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ble notify
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../nodes/ble/" class="md-nav__link">
         
   
@@ -2370,6 +2454,34 @@
     
   
     BLE config
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/ble-peer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    BLE peer
   
 
     
@@ -3641,6 +3753,28 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#why-does-a-ble-peer-stay-on-finding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why does a ble peer stay on "finding"?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#after-a-bluetooth-flow-why-does-the-board-have-less-memory-for-the-next-one" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        After a Bluetooth flow, why does the board have less memory for the next one?
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -4046,6 +4180,28 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#why-does-a-ble-peer-stay-on-finding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why does a ble peer stay on "finding"?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#after-a-bluetooth-flow-why-does-the-board-have-less-memory-for-the-next-one" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        After a Bluetooth flow, why does the board have less memory for the next one?
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -4226,6 +4382,15 @@ phone's Bluetooth off and on, or forget the device in its Bluetooth settings, th
 <p>Reading shows the value once; to get each new one, the phone has to subscribe. In nRF Connect, tap the
 characteristic's arrow icon (notify). The <a href="../nodes/ble-characteristic-out/">ble characteristic out</a> node's
 <strong>notify</strong> must be on.</p>
+<h2 id="why-does-a-ble-peer-stay-on-finding">Why does a ble peer stay on "finding"?</h2>
+<p>The board hasn't seen the device advertise. Check that it's on, in range, and not already connected to something
+else, such as a phone app: most devices stop advertising while connected. A phone changes its address, so find a
+phone by name. A <a href="../nodes/ble-scan/">ble scan</a> node into a debug node shows what the board can see.</p>
+<h2 id="after-a-bluetooth-flow-why-does-the-board-have-less-memory-for-the-next-one">After a Bluetooth flow, why does the board have less memory for the next one?</h2>
+<p>The Bluetooth radio stays on between flows once a ble node has started it: switching it off and on again can leave
+the ESP32-C5's radio unable to scan until a power cycle. The radio keeps its share of ESP-IDF memory, the memory WiFi
+and displays also use, even if the next flow has no ble nodes. <strong>Tools → Reset board (hard)</strong> gives it back. See
+<a href="../debugging/#memory">Memory</a>.</p>
 
 
 

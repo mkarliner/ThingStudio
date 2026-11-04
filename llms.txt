@@ -89,7 +89,11 @@
 - [ble characteristic out](https://docs.thingstudio.net/nodes/ble-characteristic-out/): Sets a Bluetooth LE characteristic to each message's payload, for a phone to read, and notifies the phones that subscribed.
 - [ble uart in](https://docs.thingstudio.net/nodes/ble-uart-in/): Receives text from a phone over Bluetooth LE, through the Nordic UART Service that terminal apps use.
 - [ble uart out](https://docs.thingstudio.net/nodes/ble-uart-out/): Sends text to the phones connected over Bluetooth LE, through the Nordic UART Service.
+- [ble read](https://docs.thingstudio.net/nodes/ble-read/): Reads a characteristic of another Bluetooth LE device for each message that arrives, and sends the value on.
+- [ble write](https://docs.thingstudio.net/nodes/ble-write/): Writes each message's payload to a characteristic of another Bluetooth LE device.
+- [ble notify](https://docs.thingstudio.net/nodes/ble-notify/): Subscribes to a characteristic of another Bluetooth LE device and sends a message each time it sends a new value.
 - [BLE config](https://docs.thingstudio.net/nodes/ble/): The board's Bluetooth name, shared by every ble node in a flow.
+- [BLE peer](https://docs.thingstudio.net/nodes/ble-peer/): Another Bluetooth LE device the board connects to, such as a sensor or another board.
 
 ## Hardware
 

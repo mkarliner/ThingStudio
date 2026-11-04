@@ -2364,6 +2364,90 @@
   
   
     <li class="md-nav__item">
+      <a href="../nodes/ble-read/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ble read
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/ble-write/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ble write
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/ble-notify/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ble notify
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../nodes/ble/" class="md-nav__link">
         
   
@@ -2372,6 +2456,34 @@
     
   
     BLE config
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/ble-peer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    BLE peer
   
 
     
@@ -3843,7 +3955,8 @@
 <h1 id="debugging-troubleshooting">Debugging &amp; troubleshooting</h1>
 <h2 id="console-and-compiled-source">Console and compiled source</h2>
 <p>The <strong>console</strong> shows what the board and Thingstudio report: deploy results, node errors, and what <code>debug</code> nodes
-and <code>print()</code> send. <strong>Clear</strong> empties it.</p>
+and <code>print()</code> send. <strong>Clear</strong> empties it. Scroll up to read or copy: the console stops following new lines until you
+scroll back to the bottom.</p>
 <p>Its <strong>Show</strong> menu sets how much it shows:</p>
 <ul>
 <li><strong>Normal:</strong> your flow's output, warnings, errors, and the results of what you do, such as a deploy.</li>
@@ -3880,7 +3993,9 @@ broker or host, memory isn't the cause. For an MQTT broker, see <a href="#mqtt-b
 The <a href="../faq/">FAQ</a> explains where an ESP32's memory goes.</p>
 <h2 id="commands-and-the-python-prompt">Commands and the Python prompt</h2>
 <p>The command box under the console runs Python on the board. Type a line and press Enter; the result appears in the
-console. The up and down arrows bring back earlier commands.</p>
+console. The up and down arrows bring back earlier commands. The box takes one line: a pasted block of several
+lines is joined into one, which Python reads as a <code>SyntaxError</code>. Put statements on one line separated by <code>;</code>, and
+write a loop as a list comprehension, for example <code>[print(i) for i in range(3)]</code>.</p>
 <div class="highlight"><pre><span></span><code><span class="n">gc</span><span class="o">.</span><span class="n">mem_free</span><span class="p">()</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">machine</span><span class="p">;</span> <span class="n">machine</span><span class="o">.</span><span class="n">Pin</span><span class="p">(</span><span class="mi">15</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">()</span>
 <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">()</span>

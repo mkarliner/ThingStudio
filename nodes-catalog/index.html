@@ -2364,6 +2364,90 @@
   
   
     <li class="md-nav__item">
+      <a href="../nodes/ble-read/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ble read
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/ble-write/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ble write
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/ble-notify/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ble notify
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../nodes/ble/" class="md-nav__link">
         
   
@@ -2372,6 +2456,34 @@
     
   
     BLE config
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/ble-peer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    BLE peer
   
 
     
@@ -3603,6 +3715,28 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#ble-notify" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ble notify
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ble-read" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ble read
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#ble-scan" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3629,6 +3763,17 @@
     <span class="md-ellipsis">
       
         ble uart out
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ble-write" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ble write
       
     </span>
   </a>
@@ -3767,6 +3912,17 @@
     <span class="md-ellipsis">
       
         BLE
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ble-peer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BLE peer
       
     </span>
   </a>
@@ -4428,6 +4584,28 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#ble-notify" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ble notify
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ble-read" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ble read
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#ble-scan" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4454,6 +4632,17 @@
     <span class="md-ellipsis">
       
         ble uart out
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ble-write" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ble write
       
     </span>
   </a>
@@ -4592,6 +4781,17 @@
     <span class="md-ellipsis">
       
         BLE
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ble-peer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BLE peer
       
     </span>
   </a>
@@ -5174,6 +5374,34 @@ checked when the flow is compiled, and the error says what is allowed. See <a hr
 </ul>
 </li>
 </ul>
+<h3 id="ble-notify">ble notify</h3>
+<p>Type <code>thingstudio/ble_notify</code>, kind source, palette group network.</p>
+<ul>
+<li>Inputs: none</li>
+<li>Outputs: msg (bytes)</li>
+<li>Needs hardware: ble (checked against the board at compile time)</li>
+<li>Properties (name, type, default):<ul>
+<li><code>peerConfigId</code>, string, default <code>""</code>, the id of a <code>thingstudio/config/ble-peer</code> config — the ble peer config</li>
+<li><code>serviceUuid</code>, string, default <code>""</code> — the peer's service: 16-bit or 128-bit</li>
+<li><code>charUuid</code>, string, default <code>""</code> — the characteristic subscribed to (notify, or indicate if that's all it has)</li>
+<li><code>encoding</code>, string, default <code>"bytes"</code> — how each value becomes payload; sets the output type</li>
+</ul>
+</li>
+</ul>
+<h3 id="ble-read">ble read</h3>
+<p>Type <code>thingstudio/ble_read</code>, kind transform, palette group network.</p>
+<ul>
+<li>Inputs: msg (any)</li>
+<li>Outputs: msg (bytes)</li>
+<li>Needs hardware: ble (checked against the board at compile time)</li>
+<li>Properties (name, type, default):<ul>
+<li><code>peerConfigId</code>, string, default <code>""</code>, the id of a <code>thingstudio/config/ble-peer</code> config — the ble peer config: the device to connect to, by address or name</li>
+<li><code>serviceUuid</code>, string, default <code>""</code> — the peer's service: 16-bit or 128-bit</li>
+<li><code>charUuid</code>, string, default <code>""</code> — the characteristic read for each message in</li>
+<li><code>encoding</code>, string, default <code>"bytes"</code> — how the bytes read become payload (bytes, text, int8..uint32, float32 little-endian); sets the output type</li>
+</ul>
+</li>
+</ul>
 <h3 id="ble-scan">ble scan</h3>
 <p>Type <code>thingstudio/ble_scan</code>, kind source, palette group network.</p>
 <ul>
@@ -5213,6 +5441,21 @@ checked when the flow is compiled, and the error says what is allowed. See <a hr
 <li>Properties (name, type, default):<ul>
 <li><code>newline</code>, boolean, default <code>true</code> — add \n after each payload</li>
 <li><code>bleConfigId</code>, string, default <code>""</code>, the id of a <code>thingstudio/config/ble</code> config</li>
+</ul>
+</li>
+</ul>
+<h3 id="ble-write">ble write</h3>
+<p>Type <code>thingstudio/ble_write</code>, kind sink, palette group network.</p>
+<ul>
+<li>Inputs: msg (any)</li>
+<li>Outputs: none</li>
+<li>Needs hardware: ble (checked against the board at compile time)</li>
+<li>Properties (name, type, default):<ul>
+<li><code>peerConfigId</code>, string, default <code>""</code>, the id of a <code>thingstudio/config/ble-peer</code> config — the ble peer config</li>
+<li><code>serviceUuid</code>, string, default <code>""</code> — the peer's service: 16-bit or 128-bit</li>
+<li><code>charUuid</code>, string, default <code>""</code> — the characteristic written</li>
+<li><code>encoding</code>, string, default <code>"bytes"</code> — how payload becomes bytes; a value that doesn't fit is reported and dropped</li>
+<li><code>response</code>, boolean, default <code>true</code> — wait for the peer to confirm each write; off writes without response</li>
 </ul>
 </li>
 </ul>
@@ -5346,6 +5589,14 @@ checked when the flow is compiled, and the error says what is allowed. See <a hr
 <li><code>name</code>, text: What phone apps show, up to 26 bytes. Shorter leaves more room in an advertisement.</li>
 </ul>
 <p>Defaults: <code>{"name":"thingstudio"}</code></p>
+<h3 id="ble-peer">BLE peer</h3>
+<p>Type <code>thingstudio/config/ble-peer</code>.</p>
+<ul>
+<li><code>addr</code>, text: aa:bb:cc:dd:ee:ff. Leave blank to find the device by its name instead.</li>
+<li><code>namePrefix</code>, text: Used when there's no address. Phones change their address; most sensors don't.</li>
+<li><code>timeoutMs</code>, number: How long finding and connecting may each take before it tries again.</li>
+</ul>
+<p>Defaults: <code>{"addr":"","namePrefix":"","timeoutMs":10000}</code></p>
 <h3 id="gui-theme">GUI theme</h3>
 <p>Type <code>thingstudio/config/gui-theme</code>.</p>
 <ul>

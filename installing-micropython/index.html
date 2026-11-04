@@ -2507,6 +2507,90 @@
   
   
     <li class="md-nav__item">
+      <a href="../nodes/ble-read/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ble read
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/ble-write/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ble write
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/ble-notify/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ble notify
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../nodes/ble/" class="md-nav__link">
         
   
@@ -2515,6 +2599,34 @@
     
   
     BLE config
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/ble-peer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    BLE peer
   
 
     
@@ -3671,7 +3783,7 @@ a different port afterwards.</p>
 <p>When it's done, close Thonny. Like esptool, it needs the board's port to itself.</p>
 <p>Thonny can't install MicroPython on an ESP32-C5. It writes the image at <code>0</code>, but a C5 needs <code>0x2000</code>, and Thonny
 doesn't offer that address. The board then restarts in a loop printing <code>invalid header</code>. Use Thingstudio or
-esptool instead.</p>
+esptool instead. (<a href="https://github.com/thonny/thonny/issues/3963">Thonny issue #3963</a>)</p>
 <h3 id="other-microcontrollers">Other microcontrollers</h3>
 <p>Other chips, such as STM32, nRF or SAMD, each have their own way of installing MicroPython. See your board's page
 on <a href="https://micropython.org/download/">micropython.org/download</a> and the
