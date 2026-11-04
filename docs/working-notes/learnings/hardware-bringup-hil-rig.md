@@ -292,3 +292,8 @@ committed -- if this VM stays in the loop, `install.sh` should grow the same sin
   right after the value: on the ESP32-C5 the central found the service and characteristic, then reported "has no
   notify switch (0x2902)" against a peer that has one. Pass value_handle. Both test stand-ins (pymock's bluetooth,
   test_ts_ble.py's) now search strictly after `start`, as NimBLE does, and fail the old call.
+- **BLE central on the C5: `gap_scan` can refuse with `OSError(-519)` (2026-11-04).** -519 is NimBLE passing up
+  an HCI error (0x200 + 0x07, Memory Capacity Exceeded), seen while finding a peer again after a link dropped. It
+  escaped `_find`, ended the peer task, and left every read on "finding" forever. Now any step's failure, this
+  included, is reported once and retried after RETRY_MS (pymock's `fail_scan` covers it). Separately: Mike reports
+  the C5 needs a power cycle to redeploy with BLE flows; cause not yet known (see the BLE outstanding item).

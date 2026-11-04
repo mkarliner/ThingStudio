@@ -74,6 +74,9 @@ class BLE:
     def gap_scan(self, duration_ms, interval_us=1280000, window_us=11250, active=False):
         if not self.is_active:
             raise OSError(19)  # ENODEV: the radio is off
+        if duration_ms is not None and getattr(self, "fail_scan", None) is not None:
+            e, self.fail_scan = self.fail_scan, None  # once, as the C5's controller did just after a link dropped
+            raise e
         self.calls.append(("gap_scan", duration_ms, interval_us, window_us, active))
         was = self.scanning
         self.scanning = duration_ms is not None

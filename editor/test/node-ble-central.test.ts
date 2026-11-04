@@ -130,6 +130,20 @@ asyncio.run(main())
     expect(out.match(/NODE_ERROR node=r type=PeerError msg=ts-peer: no service/g)?.length).toBe(1);
   });
 
+  it("keeps going when the radio refuses a scan: reports it, retries, connects", () => {
+    // Seen on the ESP32-C5 (2026-11-04): OSError(-519) from gap_scan killed the peer task, leaving it on "finding".
+    const out = runFlow([at("ble_notify", "n"), debug], [["n", 0, "d", 0]], `
+B.fail_scan = OSError(-519)
+async def main():
+    await connected()
+    print('STATE', P.state)
+    P.stop()
+asyncio.run(main())
+`);
+    expect(out).toMatch(/ts-peer: the radio refused to scan for it \(OSError\(-519/);
+    expect(out).toContain("STATE connected");
+  });
+
   it("gives up connecting after the timeout and says so", () => {
     const out = runFlow([at("ble_notify", "n"), debug], [["n", 0, "d", 0]], `
 async def main():

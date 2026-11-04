@@ -595,8 +595,10 @@ class _Peer:
                 self._set("connected")
                 await self.lost._wait()
                 self._fail("%s disconnected" % self.label)
-            except PeerError as e:
-                self._fail(str(e))
+            except runtime.asyncio.CancelledError:
+                raise  # a redeploy: not a failure
+            except Exception as e:  # noqa: BLE001 -- the path must keep going; any step's failure is reported, then retried
+                self._fail(str(e) if isinstance(e, PeerError) else "%s: %s failed (%r)" % (self.label, self.state, e))
                 if self.conn is not None:
                     try:
                         self.radio.ble.gap_disconnect(self.conn)
@@ -624,7 +626,13 @@ class _Peer:
         self.radio.scanners.append(s)
         started_own = False
         if not self.radio.scanning:
-            self.radio.ble.gap_scan(self.timeout_ms, 30000, 30000, True)
+            try:
+                self.radio.ble.gap_scan(self.timeout_ms, 30000, 30000, True)
+            except OSError as e:
+                # Seen on the C5 as OSError(-519) (HCI 0x07) just after a link dropped: the controller still busy.
+                self.radio.scanners.remove(s)
+                self.find_op = None
+                raise PeerError("%s: the radio refused to scan for it (%r); trying again" % (self.label, e))
             started_own = True
         try:
             await op.wait(self.timeout_ms + 500, "finding %s" % self.label)
