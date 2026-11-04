@@ -1,0 +1,143 @@
+{
+  "formatVersion": 1,
+  "flowName": "ble-central-c5",
+  "notes": "The ESP32-C5-340X as a BLE central, against a second board running ble-peer-counter. Check: ble notify's debug lines count up every 2 s; ble read's debug line every 5 s; clicking the inject writes 1234, which the peer board's debug shows. Turn the peer off and on: the status goes to disconnected, then finding, then connected, and notifications resume.",
+  "nodes": [
+    {
+      "id": "1",
+      "type": "thingstudio/ble_notify",
+      "properties": {
+        "peerConfigId": "peer1",
+        "serviceUuid": "6e400010-b5a3-f393-e0a9-e50e24dcca9e",
+        "charUuid": "6e400011-b5a3-f393-e0a9-e50e24dcca9e",
+        "encoding": "uint16"
+      }
+    },
+    {
+      "id": "2",
+      "type": "thingstudio/debug",
+      "properties": {}
+    },
+    {
+      "id": "3",
+      "type": "thingstudio/timer",
+      "properties": {
+        "intervalMs": 5000
+      }
+    },
+    {
+      "id": "4",
+      "type": "thingstudio/ble_read",
+      "properties": {
+        "peerConfigId": "peer1",
+        "serviceUuid": "6e400010-b5a3-f393-e0a9-e50e24dcca9e",
+        "charUuid": "6e400011-b5a3-f393-e0a9-e50e24dcca9e",
+        "encoding": "uint16"
+      }
+    },
+    {
+      "id": "5",
+      "type": "thingstudio/debug",
+      "properties": {}
+    },
+    {
+      "id": "6",
+      "type": "thingstudio/inject",
+      "properties": {
+        "payloadType": "number",
+        "payloadValue": "1234"
+      }
+    },
+    {
+      "id": "7",
+      "type": "thingstudio/ble_write",
+      "properties": {
+        "peerConfigId": "peer1",
+        "serviceUuid": "6e400010-b5a3-f393-e0a9-e50e24dcca9e",
+        "charUuid": "6e400011-b5a3-f393-e0a9-e50e24dcca9e",
+        "encoding": "uint16"
+      }
+    }
+  ],
+  "edges": [
+    [
+      "1",
+      0,
+      "2",
+      0
+    ],
+    [
+      "3",
+      0,
+      "4",
+      0
+    ],
+    [
+      "4",
+      0,
+      "5",
+      0
+    ],
+    [
+      "6",
+      0,
+      "7",
+      0
+    ]
+  ],
+  "configs": [
+    {
+      "id": "peer1",
+      "type": "thingstudio/config/ble-peer",
+      "properties": {
+        "namePrefix": "ts-peer",
+        "addr": "",
+        "timeoutMs": 10000
+      }
+    }
+  ],
+  "layout": {
+    "1": {
+      "pos": [
+        80,
+        80
+      ]
+    },
+    "2": {
+      "pos": [
+        300,
+        80
+      ]
+    },
+    "3": {
+      "pos": [
+        80,
+        180
+      ]
+    },
+    "4": {
+      "pos": [
+        300,
+        180
+      ]
+    },
+    "5": {
+      "pos": [
+        520,
+        180
+      ]
+    },
+    "6": {
+      "pos": [
+        80,
+        280
+      ]
+    },
+    "7": {
+      "pos": [
+        300,
+        280
+      ]
+    }
+  }
+}

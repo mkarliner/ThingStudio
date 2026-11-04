@@ -40,6 +40,9 @@ import { descriptor as bleCharInCoreDescriptor, python as bleCharInCorePython, c
 import { descriptor as bleCharOutCoreDescriptor, python as bleCharOutCorePython, compileHook as bleCharOutCompileHook } from "./core-packages/ble-characteristic-out.js";
 import { descriptor as bleUartInCoreDescriptor, python as bleUartInCorePython, compileHook as bleUartInCompileHook } from "./core-packages/ble-uart-in.js";
 import { descriptor as bleUartOutCoreDescriptor, python as bleUartOutCorePython, compileHook as bleUartOutCompileHook } from "./core-packages/ble-uart-out.js";
+import { descriptor as bleReadCoreDescriptor, python as bleReadCorePython, compileHook as bleReadCompileHook } from "./core-packages/ble-read.js";
+import { descriptor as bleWriteCoreDescriptor, python as bleWriteCorePython, compileHook as bleWriteCompileHook } from "./core-packages/ble-write.js";
+import { descriptor as bleNotifyCoreDescriptor, python as bleNotifyCorePython, compileHook as bleNotifyCompileHook } from "./core-packages/ble-notify.js";
 import { GUI_NODES } from "./gui.js";
 
 /**
@@ -122,6 +125,10 @@ export function buildRegistry(): Map<string, NodeDefinition> {
     corePackage(bleCharOutCoreDescriptor, bleCharOutCorePython, bleCharOutCompileHook),
     corePackage(bleUartInCoreDescriptor, bleUartInCorePython, bleUartInCompileHook),
     corePackage(bleUartOutCoreDescriptor, bleUartOutCorePython, bleUartOutCompileHook),
+    // BLE phase 3: the board as a central.
+    corePackage(bleReadCoreDescriptor, bleReadCorePython, bleReadCompileHook),
+    corePackage(bleWriteCoreDescriptor, bleWriteCorePython, bleWriteCompileHook),
+    corePackage(bleNotifyCoreDescriptor, bleNotifyCorePython, bleNotifyCompileHook),
     // A core package (phase 4): descriptor + .node.py, no TypeScript hook. See core-packages/delay.ts.
     corePackage(changeCoreDescriptor, changeCorePython, changeCompileHook),
     buildCoreNodeDefinition(delayCoreDescriptor, delayCorePython),

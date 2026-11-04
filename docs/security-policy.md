@@ -163,6 +163,10 @@ Each entry: what crosses, the rule, status, stance. "Gap" marks something known 
   untrusted input to the flow; `ts_ble` copies and bounds them (244 bytes a write, 20 queued per node, a malformed
   value reported and dropped). It exposes only the characteristics the flow declares: the board link, deploy and
   the runtime are not reachable over Bluetooth. Pairing and bonding are a later item (`decisions/ble-nodes.md`).
+- The GATT client (BLE phase 3: `ble read/write/notify`, 2026-11-04) connects out only to the peer a flow names, by
+  address or name prefix. A name can be spoofed by anyone in range, so a name-matched peer is as trusted as an
+  advertisement: what it returns is untrusted input, decoded with bounds and dropped when malformed. No new tier;
+  the board accepts nothing it didn't ask for.
 
 ### 3.7 Supply chain -- Defend
 

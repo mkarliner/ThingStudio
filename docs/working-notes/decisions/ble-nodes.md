@@ -44,3 +44,6 @@ maintenance rule. Scoping and reasoning: `../ble-nodes-scoping.md`.
   `struct` (CPython raises `struct.error`, MicroPython may truncate).
 - **2026-11-03 — Unpaired GATT server is tier Accept** (`security-policy.md` §2 and §3.6), per Mike's earlier call
   that phase 2 ships unpaired with a documented warning. Every GATT node page says so.
+- **2026-11-04 — Phase 3's GATT client goes in `ts_ble`, on the raw `bluetooth` module (Mike: "a").** Not
+  `aioble`: it claims the radio's IRQ handler at import, so it can't share the radio with `ts_ble`'s scan and GATT
+  server. Tested with two boards (Mike has them).

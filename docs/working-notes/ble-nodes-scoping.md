@@ -81,7 +81,11 @@ on the board; `characteristic in`'s output follows the encoding. Checked on the 
 
 ### Phase 3 — the board as a central (GATT client)
 
-Scoped 2026-11-03, after phases 1–2 merged (PRs #6, #8/#9). Proposal, not agreed.
+Scoped 2026-11-03, after phases 1–2 merged (PRs #6, #8/#9). Library call (a) agreed by Mike 2026-11-04 and built
+on branch `ble-phase-3` the same day: `ts_ble`'s `_Peer`, the `ble peer` config, `ble read/write/notify`. Tested
+off-board (pymock's scripted peripheral; MicroPython 1.29.0 unix port); two-board hardware test next. The
+connection limit check (below) is not built: the C5's limit is unconfirmed, so a flow over it fails on the board,
+reported per peer.
 
 **Nodes.**
 

@@ -71,6 +71,42 @@ class _FakeBLE:
     def config(self, *args, **kwargs):
         return None
 
+    # A scripted peripheral for the central side (phase 3): one service, one notify characteristic.
+    PEER = b"\xa4\xc1\x38\x00\x00\x01"
+    SVC = "6e400010-b5a3-f393-e0a9-e50e24dcca9e"
+    CHAR = "6e400011-b5a3-f393-e0a9-e50e24dcca9e"
+
+    def gap_connect(self, addr_type, addr=None, scan_ms=2000):
+        if addr_type is not None:
+            self.handler(7, (64, addr_type, memoryview(bytearray(addr))))
+
+    def gap_disconnect(self, conn):
+        self.handler(8, (conn, 1, memoryview(bytearray(self.PEER))))
+
+    def gattc_exchange_mtu(self, conn):
+        self.handler(21, (conn, 100))
+
+    def gattc_discover_services(self, conn, uuid=None):
+        self.handler(9, (conn, 1, 4, _UUID(self.SVC)))
+        self.handler(10, (conn, 0))
+
+    def gattc_discover_characteristics(self, conn, start, end, uuid=None):
+        self.handler(11, (conn, 4, 3, 0x1A, _UUID(self.CHAR)))
+        self.handler(12, (conn, 0))
+
+    def gattc_discover_descriptors(self, conn, start, end):
+        self.handler(13, (conn, 4, _UUID(0x2902)))
+        self.handler(14, (conn, 0))
+
+    def gattc_read(self, conn, handle):
+        self.handler(15, (conn, handle, memoryview(bytearray(b"\x07\x00"))))
+        self.handler(16, (conn, handle, 0))
+
+    def gattc_write(self, conn, handle, data, mode=0):
+        self.calls.append(("gattc_write", handle, bytes(data), mode))
+        if mode == 1:
+            self.handler(17, (conn, handle, 0))
+
     def deliver(self, addr, adv, rssi=-50, adv_type=0):
         a = bytearray(addr)
         d = bytearray(adv)
@@ -86,7 +122,10 @@ _BLE = _FakeBLE()
 
 class _UUID:
     def __init__(self, value):
-        self.value = value
+        self.value = value.value if isinstance(value, _UUID) else value
+
+    def __eq__(self, other):
+        return isinstance(other, _UUID) and self.value == other.value
 
 
 class _BluetoothModule:
@@ -232,6 +271,39 @@ def test_gatt_registers_once_and_routes_writes():
     _redeploy()
 
 
+def test_central_finds_connects_reads_and_gets_notified():
+    """BLE phase 3: the peer path under real uasyncio -- wait_for, Lock, a task created before the loop runs."""
+    ts_ble.RETRY_MS = 50
+    r = ts_ble.radio()
+    p = r.peer("p1", "", "ts-peer", 1000)
+    notes = p.notifications("n1", _FakeBLE.SVC, _FakeBLE.CHAR)
+    p.need("r1", _FakeBLE.SVC, _FakeBLE.CHAR)
+
+    async def scenario():
+        p.start()
+        # The peer is found by its advertisement, while the peer task's own scan runs.
+        for _ in range(50):
+            if p.find_op is not None:
+                break
+            await asyncio.sleep_ms(5)
+        _BLE.deliver(_FakeBLE.PEER, ts_ble.build_adv("ts-peer"))
+        for _ in range(100):
+            if p.state == "connected":
+                break
+            await asyncio.sleep_ms(5)
+        assert p.state == "connected", p.state
+        assert ("gattc_write", 4, b"\x01\x00", 1) in _BLE.calls, "notifications turned on"
+        assert await p.read(_FakeBLE.SVC, _FakeBLE.CHAR) == b"\x07\x00"
+        await p.write(_FakeBLE.SVC, _FakeBLE.CHAR, b"\x09\x00", True)
+        _BLE.handler(18, (64, 3, memoryview(bytearray(b"\x05\x00"))))
+        data, conn = await notes.next()
+        assert data == b"\x05\x00" and conn == 64, (data, conn)
+
+    asyncio.run(scenario())
+    _redeploy()
+    assert r.peers == [] and p.task is None
+
+
 def test_redeploy_turns_the_radio_off_and_the_next_deploy_starts_fresh():
     r = ts_ble.radio()
     r.scan("n1", 320, 30, False, name_prefix="", addr="", mfr_id=None, svc_uuid="", repeat_ms=0)
@@ -262,6 +334,7 @@ minitest.run(
         test_different_scan_settings_refused,
         test_encode_and_decode_values,
         test_gatt_registers_once_and_routes_writes,
+        test_central_finds_connects_reads_and_gets_notified,
         test_redeploy_turns_the_radio_off_and_the_next_deploy_starts_fresh,
     ]
 )

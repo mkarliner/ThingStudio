@@ -140,3 +140,48 @@ export const ENCODING_PORT_MAP: Record<string, "bytes" | "string" | "int" | "num
   uint32: "int",
   float32: "number",
 };
+
+// BLE phase 3 (2026-11-04): the device a central node connects to, one config per peer.
+export const BLE_PEER_CONFIG_TYPE = "thingstudio/config/ble-peer";
+
+export const BLE_PEER_FIELD = {
+  name: "peerConfigId",
+  label: "BLE peer",
+  kind: "configRef" as const,
+  configType: BLE_PEER_CONFIG_TYPE,
+  default: "",
+  help: "The device to connect to, by address or name. Nodes that name the same peer share one connection.",
+};
+
+/** _ble_peer(ctx, properties, label): the node's peer config, checked, as the keys the package Python reads. */
+export const BLE_PEER_DERIVATION = `${BLE_NAME_DERIVATION}
+
+def _ble_addr(text):
+    hexs = ''.join(c for c in str(text or '').lower() if c not in ':-. ')
+    if len(hexs) != 12 or re.match('^[0-9a-f]+$', hexs) is None:
+        return None
+    return ':'.join(hexs[i:i + 2] for i in range(0, 12, 2))
+
+
+def _ble_peer(ctx, properties, label):
+    pid = properties.get('peerConfigId') or ''
+    cfg = (ctx.get('referencedConfigs') or {}).get(pid)
+    if not pid or cfg is None:
+        return None, label + ' needs a BLE peer: pick or add one in its "BLE peer" field (the device to connect to)'
+    raw_addr = str(cfg.get('addr') or '').strip()
+    prefix = str(cfg.get('namePrefix') or '').strip()
+    addr = ''
+    if raw_addr:
+        addr = _ble_addr(raw_addr)
+        if addr is None:
+            return None, 'BLE peer address "' + raw_addr + '" is not a Bluetooth address: six bytes, like aa:bb:cc:dd:ee:ff'
+    if not addr and not prefix:
+        return None, 'the BLE peer config needs an address or a name to find the device by'
+    try:
+        timeout = int(cfg.get('timeoutMs') or 10000)
+    except (TypeError, ValueError):
+        timeout = -1
+    if timeout < 1000 or timeout > 60000:
+        return None, 'BLE peer timeout must be 1000-60000 ms'
+    return {'peerKey': pid, 'peerAddr': addr, 'peerName': prefix, 'peerTimeoutMs': timeout}, None
+`;

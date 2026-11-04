@@ -1,0 +1,88 @@
+{
+  "formatVersion": 1,
+  "flowName": "ble-peer-counter",
+  "notes": "The peripheral for the BLE central test, on any ESP32 board with BLE (not the C5 that runs ble-central-c5): advertises as ts-peer, a uint16 count every 2 s that a central reads and is notified of; what the central writes shows in debug.",
+  "nodes": [
+    {
+      "id": "1",
+      "type": "thingstudio/timer",
+      "properties": {
+        "intervalMs": 2000
+      }
+    },
+    {
+      "id": "2",
+      "type": "thingstudio/ble_characteristic_out",
+      "properties": {
+        "serviceUuid": "6e400010-b5a3-f393-e0a9-e50e24dcca9e",
+        "charUuid": "6e400011-b5a3-f393-e0a9-e50e24dcca9e",
+        "encoding": "uint16",
+        "bleConfigId": "ble1"
+      }
+    },
+    {
+      "id": "3",
+      "type": "thingstudio/ble_characteristic_in",
+      "properties": {
+        "serviceUuid": "6e400010-b5a3-f393-e0a9-e50e24dcca9e",
+        "charUuid": "6e400011-b5a3-f393-e0a9-e50e24dcca9e",
+        "encoding": "uint16",
+        "bleConfigId": "ble1"
+      }
+    },
+    {
+      "id": "4",
+      "type": "thingstudio/debug",
+      "properties": {}
+    }
+  ],
+  "edges": [
+    [
+      "1",
+      0,
+      "2",
+      0
+    ],
+    [
+      "3",
+      0,
+      "4",
+      0
+    ]
+  ],
+  "configs": [
+    {
+      "id": "ble1",
+      "type": "thingstudio/config/ble",
+      "properties": {
+        "name": "ts-peer"
+      }
+    }
+  ],
+  "layout": {
+    "1": {
+      "pos": [
+        80,
+        80
+      ]
+    },
+    "2": {
+      "pos": [
+        300,
+        80
+      ]
+    },
+    "3": {
+      "pos": [
+        80,
+        180
+      ]
+    },
+    "4": {
+      "pos": [
+        300,
+        180
+      ]
+    }
+  }
+}

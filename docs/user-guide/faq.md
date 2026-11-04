@@ -207,3 +207,9 @@ phone's Bluetooth off and on, or forget the device in its Bluetooth settings, th
 Reading shows the value once; to get each new one, the phone has to subscribe. In nRF Connect, tap the
 characteristic's arrow icon (notify). The [ble characteristic out](nodes/ble-characteristic-out.md) node's
 **notify** must be on.
+
+## Why does a ble peer stay on "finding"?
+
+The board hasn't seen the device advertise. Check that it's on, in range, and not already connected to something
+else, such as a phone app: most devices stop advertising while connected. A phone changes its address, so find a
+phone by name. A [ble scan](nodes/ble-scan.md) node into a debug node shows what the board can see.

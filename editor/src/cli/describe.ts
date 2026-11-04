@@ -58,6 +58,7 @@ const CONFIG_BY_PROPERTY: Record<string, string> = {
   brokerConfigId: "thingstudio/config/mqtt-broker",
   touchPanelConfigId: "thingstudio/config/touch-panel",
   bleConfigId: "thingstudio/config/ble",
+  peerConfigId: "thingstudio/config/ble-peer",
 };
 
 function ports(list: PortDefinition[] | undefined, props: Record<string, unknown>): PortInfo[] {
@@ -140,6 +141,19 @@ export const PROPERTY_NOTES: Record<string, string> = {
   "ble_characteristic_out.notify": "also push each value to subscribed phones",
   "ble_uart_in.lines": "one message per line the phone sends (\\n ends a line, \\r is dropped); off: one per write",
   "ble_uart_out.newline": "add \\n after each payload",
+  "ble_read.peerConfigId": "the ble peer config: the device to connect to, by address or name",
+  "ble_read.serviceUuid": "the peer's service: 16-bit or 128-bit",
+  "ble_read.charUuid": "the characteristic read for each message in",
+  "ble_read.encoding": "how the bytes read become payload (bytes, text, int8..uint32, float32 little-endian); sets the output type",
+  "ble_write.peerConfigId": "the ble peer config",
+  "ble_write.serviceUuid": "the peer's service: 16-bit or 128-bit",
+  "ble_write.charUuid": "the characteristic written",
+  "ble_write.encoding": "how payload becomes bytes; a value that doesn't fit is reported and dropped",
+  "ble_write.response": "wait for the peer to confirm each write; off writes without response",
+  "ble_notify.peerConfigId": "the ble peer config",
+  "ble_notify.serviceUuid": "the peer's service: 16-bit or 128-bit",
+  "ble_notify.charUuid": "the characteristic subscribed to (notify, or indicate if that's all it has)",
+  "ble_notify.encoding": "how each value becomes payload; sets the output type",
   "ble_advertise.field": "manufacturer (payload after a 2-byte manufacturer id), service (after a service UUID) or none (name only)",
   "ble_advertise.mfrId": "manufacturer id, decimal or hex with 0x; 0xFFFF is for testing",
   "ble_advertise.serviceUuid": "service UUID for service data: 16-bit (fcd2, BTHome) or 128-bit",

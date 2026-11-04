@@ -110,7 +110,9 @@ ThingStudioMarketing repo, not here.
   `ts_ble`) checked on the ESP32-C5-340X: scan into debug, advertise read by nRF Connect; PR #6. Phase 2 (GATT
   peripheral: `ble characteristic in/out`, `ble uart in/out`, the `ble` config) built on branch `ble-phase-2` and
   tested off-board (pymock, MicroPython 1.29.0 unix port), then on the C5 (counter characteristic and UART echo
-  with nRF Connect); its PR is stacked on #6. Next: phase 3 (central). `ble-nodes-scoping.md`, `decisions/ble-nodes.md`.
+  with nRF Connect); merged via #9. Phase 3 (central: `ble peer`, `ble read/write/notify`) built 2026-11-04 on
+  `ble-phase-3`, tested off-board; next: the two-board test (`test-flows/ble-peer-counter.flow.json` on a second
+  board, `ble-central-c5.flow.json` on the C5), then its PR. `ble-nodes-scoping.md`, `decisions/ble-nodes.md`.
 
 - **Board forgets its WiFi-transport password on a power cycle -- new bug, 2026-09-27 (Mike, Pico W).**
   Password set over USB, WiFi worked; after replugging the board reported no password set. **Not reproduced
