@@ -287,6 +287,9 @@ is highlighted on the canvas. Network nodes (`udp send`, `udp receive`, `http re
 `mqtt subscribe`) also name the operation and the host and port. A network node error without them is worth
 [reporting](https://github.com/mkarliner/ThingStudio/issues).
 
+A node error stops the chain the node is in, from its source onward, until the next deploy: a `timer` sends nothing
+more, an `inject` ignores clicks. The flow's other chains keep running.
+
 ## I2C device not answering
 
 A sensor node's status dot shows **disconnected**, with "no reply at 0x76", when nothing answers at its address.

@@ -1,11 +1,11 @@
 # ble uart in
 
-Receives text from a phone over Bluetooth LE, through the Nordic UART Service that terminal apps use.
+Receives text from a connected device over Bluetooth LE, through the Nordic UART Service that terminal apps use.
 
 ## Properties
 
 - **one message per line** — on by default: text is gathered until a newline, and the line is sent without its
-  line ending. Off: one message per write the phone makes.
+  line ending. Off: one message per write.
 - **BLE** — the flow's [BLE config](ble.md).
 
 ## Wiring
@@ -14,11 +14,12 @@ Receives text from a phone over Bluetooth LE, through the Nordic UART Service th
 
 ## Behavior
 
-Any UART node adds the Nordic UART Service to the board's GATT server. Phone apps that speak it, such as
-nRF Connect, Serial Bluetooth Terminal and Adafruit Bluefruit, find the board by its name and connect. Pair it with
+Any UART node adds the Nordic UART Service to the board's GATT server. Terminal apps that speak it, on phones and
+computers, such as nRF Connect, Serial Bluetooth Terminal and Adafruit Bluefruit, find the board by its name and
+connect. Pair it with
 [ble uart out](ble-uart-out.md) to answer.
 
-A line over 512 bytes is sent as it is, so a phone that never sends a newline still gets through.
+A line over 512 bytes is sent as it is, so a device that never sends a newline still gets through.
 
 ## Errors
 

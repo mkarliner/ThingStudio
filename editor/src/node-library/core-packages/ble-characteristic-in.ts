@@ -22,7 +22,8 @@ export const descriptor: NodeDescriptor = {
   icon: "ᛒ",
   width: 116,
   description:
-    "Sends a message each time a connected phone writes this Bluetooth LE characteristic. msg.payload is the value, " +
+    "Sends a message each time a connected device (a phone, a computer, another board) writes this Bluetooth LE " +
+    "characteristic. msg.payload is the value, " +
     "decoded by the encoding. The board accepts connections from anyone in range: no pairing.",
   requires: { capabilities: ["ble"] },
   ports: {
@@ -31,7 +32,7 @@ export const descriptor: NodeDescriptor = {
   properties: [
     { name: "serviceUuid", label: "service UUID", kind: "text", default: "", placeholder: "128-bit, or 16-bit like 181a", help: "The service this characteristic belongs to. Use the same one on the nodes for its other characteristics." },
     { name: "charUuid", label: "characteristic UUID", kind: "text", default: "", placeholder: "128-bit, or 16-bit like 2a6e" },
-    { name: "encoding", label: "encoding", kind: "select", default: "bytes", options: ENCODING_OPTIONS, retype: true, help: "How the bytes a phone writes become msg.payload." },
+    { name: "encoding", label: "encoding", kind: "select", default: "bytes", options: ENCODING_OPTIONS, retype: true, help: "How the bytes a connected device writes become msg.payload." },
     BLE_CONFIG_FIELD,
     { name: "nodeId", label: "node id", kind: "nodeId", default: "" },
   ],
@@ -76,7 +77,7 @@ async def wait(properties):
         try:
             value = ts_ble.decode_value(_encoding, data)
         except ValueError as e:
-            runtime._report_error(_node_id, ValueError('ble_characteristic_in: a phone wrote %s' % e))
+            runtime._report_error(_node_id, ValueError('ble_characteristic_in: a connected device wrote %s' % e))
             continue
         _msg = {'payload': value, 'topic': '', 'conn': conn, 'uuid': properties['charUuid']}
         return

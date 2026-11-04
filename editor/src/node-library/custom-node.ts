@@ -719,13 +719,19 @@ function targetLiteral(ctx: CodegenContext): string {
  * `emit()` -- see the "intervalMs" requirement in
  * validateCustomNodeDescriptor(). Read directly from the raw node
  * properties (not the Python literal above) since compile.ts's
- * SourceCodegenResult.repeatMs is a JS number, not generated code. */
+ * SourceCodegenResult.repeatMs is a JS number, not generated code. A whole number, since it is spliced into
+ * `asyncio.sleep_ms()`. */
 function resolveIntervalMs(descriptor: { properties?: PropertyFieldDescriptor[] }, rawProperties: Record<string, unknown>, contextLabel: string): number {
   const field = descriptor.properties?.find((p) => p.name === "intervalMs");
   const raw = "intervalMs" in rawProperties ? rawProperties.intervalMs : field?.default;
   const n = Number(raw);
   if (!Number.isFinite(n) || n <= 0) {
     throw new CompileError(`${contextLabel} "intervalMs" must be a positive number, got ${JSON.stringify(raw)}`);
+  }
+  // asyncio.sleep_ms() takes a whole number: a fraction would compile and then fail on the board at the first wait
+  // (Mike, 2026-11-04: whole numbers only, refused at compile time).
+  if (!Number.isInteger(n)) {
+    throw new CompileError(`${contextLabel} "intervalMs" must be a whole number of milliseconds, got ${JSON.stringify(raw)}`);
   }
   return n;
 }

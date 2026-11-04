@@ -21,6 +21,11 @@ An `any` output, such as the output of a [function](nodes/function.md) node, con
 An input can take any number of wires. The node runs once for each message that arrives, whichever wire it came
 on. An output can feed any number of inputs.
 
+When an output feeds more than one wire, the first wire gets the message itself and each other wire gets a copy,
+made before any of them runs. The wires then run one after another, in the order they were drawn. The copy is
+shallow: a list or dict inside the message is shared, so a node that changes `msg['payload']` in place, rather than
+replacing it, changes it for the other wires too.
+
 ## Giving a node a flow label
 
 Every node has a **flow label** field at the top of its property panel. Type something, say `Fire!`, and the canvas

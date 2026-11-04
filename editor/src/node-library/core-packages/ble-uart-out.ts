@@ -19,7 +19,7 @@ export const descriptor: NodeDescriptor = {
   icon: "ᛒ",
   width: 96,
   description:
-    "Sends msg.payload as text to the phones connected over Bluetooth LE, through the Nordic UART Service that " +
+    "Sends msg.payload as text to the devices connected over Bluetooth LE, through the Nordic UART Service that " +
     "terminal apps use. The board accepts connections from anyone in range.",
   requires: { capabilities: ["ble"] },
   ports: {

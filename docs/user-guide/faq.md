@@ -196,15 +196,15 @@ On an ESP32 the WiFi and Bluetooth share one radio, taking turns. The longer the
 interval**, the less time WiFi gets. The default listens 30 ms in every 320 ms; lower the window, or raise the
 interval, if MQTT or HTTP become slow. See [ble scan](nodes/ble-scan.md).
 
-## My phone still shows the old characteristics after I changed the flow. Why?
+## A phone or computer still shows the old characteristics after I changed the flow. Why?
 
-Phones remember a device's services between connections. After a deploy that changes the characteristics, turn the
-phone's Bluetooth off and on, or forget the device in its Bluetooth settings, then connect again. In nRF Connect,
+Phones and computers remember a device's services between connections. After a deploy that changes the
+characteristics, turn Bluetooth off and on, or forget the board in the Bluetooth settings, then connect again. In nRF Connect,
 **Refresh services** in the device's menu does it too.
 
-## A phone connects, but no new values arrive. Why?
+## A device connects, but no new values arrive. Why?
 
-Reading shows the value once; to get each new one, the phone has to subscribe. In nRF Connect, tap the
+Reading shows the value once; to get each new one, the connected device has to subscribe. In nRF Connect, tap the
 characteristic's arrow icon (notify). The [ble characteristic out](nodes/ble-characteristic-out.md) node's
 **notify** must be on.
 

@@ -8,7 +8,7 @@ has one radio.
 
 ## Settings
 
-- **name** — what phone apps show, up to 26 bytes. A [ble advertise](ble-advertise.md) node shares the 31 bytes of
+- **name** — what other devices show when they find the board, up to 26 bytes. A [ble advertise](ble-advertise.md) node shares the 31 bytes of
   an advertisement between the name and its payload, so a shorter name leaves more room.
 
 ## Behavior

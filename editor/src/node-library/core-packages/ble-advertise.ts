@@ -26,7 +26,7 @@ export const descriptor: NodeDescriptor = {
   width: 116,
   description:
     "Advertises over Bluetooth LE: the board's name from flow start, and msg.payload as manufacturer or service " +
-    "data. Phones and other boards (a ble scan node) see it without connecting. Name and payload share 31 bytes.",
+    "data. Phones, computers and other boards (a ble scan node) see it without connecting. Name and payload share 31 bytes.",
   requires: { capabilities: ["ble"] },
   allowUnwired: true,
   ports: {
@@ -47,7 +47,7 @@ export const descriptor: NodeDescriptor = {
     { name: "mfrId", label: "manufacturer id", kind: "text", default: "0xFFFF", help: "Hex with 0x, or decimal. 0xFFFF is reserved for testing; a product uses its maker's Bluetooth SIG id.", visibleWhen: { field: "field", equals: "manufacturer" } },
     { name: "serviceUuid", label: "service UUID", kind: "text", default: "fcd2", help: "16-bit (fcd2 is BTHome) or 128-bit.", visibleWhen: { field: "field", equals: "service" } },
     { name: "advIntervalMs", label: "interval (ms)", kind: "number", default: 500, min: 20, max: 10240, help: "How often the advertisement is sent. Shorter is found faster and uses more power." },
-    { ...BLE_CONFIG_FIELD, help: "The board's Bluetooth name, which phone apps show. Every byte of it is a byte less for the payload. Without one, the board is called thingstudio." },
+    { ...BLE_CONFIG_FIELD, help: "The board's Bluetooth name, which other devices show when they find it. Every byte of it is a byte less for the payload. Without one, the board is called thingstudio." },
     { name: "nodeId", label: "node id", kind: "nodeId", default: "" },
   ],
 };

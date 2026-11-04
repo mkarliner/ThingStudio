@@ -216,7 +216,7 @@ export const CONFIG_TYPES: Record<string, ConfigTypeDescriptor> = {
     label: "BLE",
     singleton: true,
     fields: [
-      { name: "name", label: "name", kind: "text", help: "What phone apps show, up to 26 bytes. Shorter leaves more room in an advertisement." },
+      { name: "name", label: "name", kind: "text", help: "What other devices show when they find the board, up to 26 bytes. Shorter leaves more room in an advertisement." },
     ],
     defaults: { name: "thingstudio" },
     summarize: (p) => String(p.name ?? ""),

@@ -150,6 +150,40 @@ Hardware support (boards, processors, display, touch and sensor chips, and what'
 - Good: "**controller** — the display chip. See Supported hardware."
 - Bad: "`ST7789` (240x240, 135x240, 240x320) or `ST7796` (320x480)" on the node page.
 
+## One home for facts shared by many nodes
+
+A fact that holds for every node, or for every node of one kind (every source, every network node), lives on one
+page. A node page links to it in one line where the reader needs it, or leaves it out. The node page keeps only what
+is specific to that node. (Mike, 2026-11-04.)
+
+- Good, on `timer`: "A node error in this node's chain stops the chain. See Reading a node error."
+- Bad, on `inject`: "The board sends the value from the last deploy. After changing value or payload type, deploy
+  again." True of every node's properties; Flow lifecycle says it once.
+
+Homes so far:
+
+- What the board runs and when a change reaches it: [Flow lifecycle](../user-guide/flow-lifecycle.md), Deploy.
+- What a node error does, including stopping its chain: [Debugging](../user-guide/debugging.md), Reading a node
+  error.
+- Which outputs feed which inputs: [Editor in depth](../user-guide/working-in-the-editor.md), Wiring.
+- Status dots: [Editor in depth](../user-guide/working-in-the-editor.md), Node status.
+
+## Quote console messages exactly
+
+A message the editor or the board prints is quoted as printed, in backticks: same case, same punctuation, `--`
+included, so a reader can search for it. Shorten only by cutting the variable part to a placeholder such as `HOST:PORT`.
+(Mike, 2026-11-04.)
+
+- Good: `[inject: connect to a device first -- clicking only fires while live]`
+- Bad: "The console says to connect to a device first."
+
+## Defaults on node pages
+
+Every property in a node page's Properties list gives its default as "Default X.", or says "Required." when it has
+none. (Mike, 2026-11-04.)
+
+- Good: "**interval (ms)** — the time between messages, in milliseconds. Default 1000."
+
 ## Page types
 
 - **Tutorial / task guide:** one job, in the order you do it. Getting started, Blink an LED, A sensor display.

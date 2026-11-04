@@ -152,7 +152,7 @@ the node is selected:
   `notEquals`, `in` (an array), `gt`, `gte`, `lt`, `lte`.
 
 A polled `source` node must declare a numeric property named `intervalMs` — it
-sets the poll interval. An `eventSource` or `runOnce` source does not need one.
+sets the poll interval, a whole number of milliseconds, 1 or more. An `eventSource` or `runOnce` source does not need one.
 
 **`requires`** (optional) — hardware the node needs, as `{ "capabilities": ["ble"] }`. The words are the board
 definitions' capabilities (`wifi`, `ble`, `espnow`, `pio`, see [Boards](boards.md)). On a board without one, the

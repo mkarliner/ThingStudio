@@ -1,43 +1,58 @@
 # function
 
-Runs your own MicroPython on each message. Use it for anything a dedicated node type doesn't cover.
+Runs your own MicroPython on each message, for anything no other node does.
 
 ## Properties
 
-- **code** — the function body, run once per incoming message. `msg` is a dict; `msg['payload']` is what you'll
-  usually read and write. Return the (possibly modified) message to pass it on, or nothing to stop it there.
-- **outputs** — how many outputs the node has (`outputCount` in the flow file, up to 10).
+- **code** — the body of a Python function, run once for each message. Default `msg['payload'] = msg['payload']`
+  followed by `return msg`. Required.
+- **outputs** — how many outputs the node has, 1 to 10. Default 1. `outputCount` in the flow file.
 
 ## Wiring
 
-One input, any message. With more than one output, return an array to route to specific outputs, Node-RED style:
+**Input** — any message, as `msg`: a dict with the main value in `msg['payload']`.
+
+**Output** — what the code returns. Return the message to pass it on, or return `None` or nothing to stop it. Every
+output has type `any` (see [Wiring](../working-in-the-editor.md#wiring)).
+
+With more than one output, return a list with one entry per output, as in Node-RED:
 
 ```python
 if msg['payload'] > 100:
     return [msg, None]   # output 1 only
-else:
-    return [None, msg]   # output 2 only
+return [None, msg]       # output 2 only
 ```
 
-- `None` in a slot sends nothing out that output.
-- A plain `return msg` (no array) always targets output 1.
-- A slot holding a list of messages sends all of them out that one output, in order:
-  `return [[msg1, msg2], None]`.
-- Returning fewer elements than the node has outputs leaves the missing ones as `None`; returning more ignores the
-  extras.
+The returned list is read entry by entry:
+
+- `None` sends nothing on that output.
+- A list of messages sends each of them on that output, in order: `return [[msg1, msg2], None]`.
+- A list shorter than the number of outputs leaves the rest empty. Entries past the last output are ignored.
+- A plain `return msg`, not in a list, goes to output 1.
+
+With one output, a returned list is passed on as the message itself. Set **outputs** to 2 or more to use the list.
 
 ## Behavior
 
+The code is the body of an `async def`, so `return` and `await` work at its top level. `asyncio` and `runtime` are
+already defined; import anything else in the code, such as `import machine`. A library Thingstudio provides, such as
+`mqtt_as`, is installed on the board when you deploy (see [Libraries](../flow-lifecycle.md#libraries)).
+
+Don't call `time.sleep()` or run a long loop: either stops every other chain while it runs. Use
+`await asyncio.sleep(1)` instead (see [The one rule: don't block](../background/event-driven.md#the-one-rule-dont-block)).
+
+Local variables start again for every message. Keep values between messages in `context`, `flow` or `settings`.
+
 ### Context, flow and settings
 
-Three ways to keep state across messages, all available as plain objects inside your code:
+Three stores keep values between messages, each with `get(name, default)` and `set(name, value)`:
 
-- **`context`** — private to this one `function` node. Use it for a counter or running total only this node needs.
-- **`flow`** — shared across the whole flow. `flow.set('name', value)` / `flow.get('name')` works from any function
-  node, and reads/writes the same store a [change](change.md) node uses by name.
-- **`settings`** — saved on the board and survives a reboot. Use it for a value the user changes, such as units or a
-  colour scheme. It is namespaced by the flow's name, so a different flow cannot read or overwrite it.
-  `settings.get('units', 'kg')` / `settings.set('units', 'lbs')`.
+- **`context`** — this node only. Two `function` nodes using the same name don't share it.
+- **`flow`** — shared by every `function` and [change](change.md) node in the flow, by name.
+- **`settings`** — saved on the board, so it survives a restart and a redeploy of the same flow. It is
+  `runtime.settings`; see [Persisting values](../custom-nodes.md#persisting-values) for what else it does.
+
+`context` and `flow` start empty each time the flow starts.
 
 ```python
 count = context.get('count', 0) + 1
@@ -45,3 +60,10 @@ context.set('count', count)
 msg['payload'] = count
 return msg
 ```
+
+## Errors
+
+- **The code is empty.** Deploy stops with `function node's code is empty`.
+- **The code has a syntax error.** Deploy stops and highlights the node.
+- **The code raises an exception.** The console shows a `[NODE_ERROR]` naming this node and the exception, and the
+  chain stops. See [Reading a node error](../debugging.md#reading-a-node-error).

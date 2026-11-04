@@ -109,6 +109,11 @@ describe("thingstudio/timer node", () => {
     expect(() => timerNode.codegenSource!(node({ intervalMs: -5 }), freshCtx())).toThrow(CompileError);
   });
 
+  it("rejects a fractional intervalMs, which asyncio.sleep_ms() can't take", () => {
+    expect(() => timerNode.codegenSource!(node({ intervalMs: 1.5 }), freshCtx())).toThrow(/must be a whole number of milliseconds/);
+    expect(timerNode.codegenSource!(node({ intervalMs: "250" }), freshCtx()).repeatMs).toBe(250);
+  });
+
   it("compiles into a full flow with the expected structure (source text only -- not executed, see header)", () => {
     const graph: GraphData = {
       nodes: [

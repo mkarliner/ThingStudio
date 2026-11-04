@@ -23,9 +23,9 @@ The node needs no input: unwired, it advertises the name only.
 ## Behavior
 
 The board advertises the name from the moment the flow starts. Each message replaces the data, and the board sends
-the new advertisement until the next one. Phones (nRF Connect, for example) and other boards with a
+the new advertisement until the next one. Phones and computers (nRF Connect, for example) and other boards with a
 [ble scan](ble-scan.md) node see it without connecting. When the flow also has characteristic or UART nodes, the
-advertisement accepts connections, so phones can connect to them.
+advertisement accepts connections, so other devices can connect to them.
 
 An advertisement holds 31 bytes. The flags take 3, the name its length plus 2, and the data's header 4 (manufacturer
 or 16-bit service) or 18 (128-bit service). The node's status says how many are left for the payload.

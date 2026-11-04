@@ -22,7 +22,7 @@ export const descriptor: NodeDescriptor = {
   icon: "ᛒ",
   width: 116,
   description:
-    "Sets a Bluetooth LE characteristic to msg.payload, which a connected phone can read, and notifies the phones " +
+    "Sets a Bluetooth LE characteristic to msg.payload, which a connected device can read, and notifies the devices " +
     "subscribed to it. The board accepts connections from anyone in range: no pairing.",
   requires: { capabilities: ["ble"] },
   ports: {
@@ -31,8 +31,8 @@ export const descriptor: NodeDescriptor = {
   properties: [
     { name: "serviceUuid", label: "service UUID", kind: "text", default: "", placeholder: "128-bit, or 16-bit like 181a", help: "The service this characteristic belongs to. Use the same one on the nodes for its other characteristics." },
     { name: "charUuid", label: "characteristic UUID", kind: "text", default: "", placeholder: "128-bit, or 16-bit like 2a6e" },
-    { name: "encoding", label: "encoding", kind: "select", default: "bytes", options: ENCODING_OPTIONS, help: "How msg.payload becomes the bytes a phone reads." },
-    { name: "notify", label: "notify", kind: "boolean", default: true, help: "Also push each new value to the phones subscribed to it." },
+    { name: "encoding", label: "encoding", kind: "select", default: "bytes", options: ENCODING_OPTIONS, help: "How msg.payload becomes the bytes a connected device reads." },
+    { name: "notify", label: "notify", kind: "boolean", default: true, help: "Also push each new value to the devices subscribed to it." },
     BLE_CONFIG_FIELD,
     { name: "nodeId", label: "node id", kind: "nodeId", default: "" },
   ],

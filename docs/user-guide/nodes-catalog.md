@@ -642,7 +642,7 @@ Properties explained: [ble advertise](nodes/ble-advertise.md)
 
 ### ble characteristic in
 
-Sends a message each time a connected phone writes a Bluetooth LE characteristic.
+Sends a message each time a connected device writes a Bluetooth LE characteristic.
 
 Type: `ble_characteristic_in`. Kind: source. Palette group: network.
 
@@ -655,13 +655,13 @@ Properties explained: [ble characteristic in](nodes/ble-characteristic-in.md)
 | Property | Editor label | Type | Default | Allowed values and notes |
 | --- | --- | --- | --- | --- |
 | `serviceUuid` | service UUID | string | `""` | the service it belongs to: 16-bit (181a) or 128-bit; nodes for one service's characteristics share it |
-| `charUuid` | characteristic UUID | string | `""` | the characteristic a phone writes: 16-bit or 128-bit |
+| `charUuid` | characteristic UUID | string | `""` | the characteristic a connected device writes: 16-bit or 128-bit |
 | `encoding` | encoding | string | `"bytes"` | one of `bytes`, `text`, `int8`, `uint8`, `int16`, `uint16`, `int32`, `uint32`, `float32`; how the written bytes become payload: bytes, text, int8/uint8/int16/uint16/int32/uint32 or float32 (little-endian); sets the output type |
 | `bleConfigId` | BLE | string | `""` | the id of a `thingstudio/config/ble` config |
 
 ### ble characteristic out
 
-Sets a Bluetooth LE characteristic to each message's payload for a phone to read, and notifies subscribed phones.
+Sets a Bluetooth LE characteristic to each message's payload for a connected device to read, and notifies subscribed devices.
 
 Type: `ble_characteristic_out`. Kind: sink. Palette group: network.
 
@@ -674,9 +674,9 @@ Properties explained: [ble characteristic out](nodes/ble-characteristic-out.md)
 | Property | Editor label | Type | Default | Allowed values and notes |
 | --- | --- | --- | --- | --- |
 | `serviceUuid` | service UUID | string | `""` | the service it belongs to: 16-bit (181a) or 128-bit |
-| `charUuid` | characteristic UUID | string | `""` | the characteristic a phone reads: 16-bit or 128-bit; one out node per characteristic |
+| `charUuid` | characteristic UUID | string | `""` | the characteristic a connected device reads: 16-bit or 128-bit; one out node per characteristic |
 | `encoding` | encoding | string | `"bytes"` | one of `bytes`, `text`, `int8`, `uint8`, `int16`, `uint16`, `int32`, `uint32`, `float32`; how payload becomes bytes: as for ble_characteristic_in; a value that doesn't fit is reported and dropped |
-| `notify` | notify | boolean | `true` | also push each value to subscribed phones |
+| `notify` | notify | boolean | `true` | also push each value to subscribed devices |
 | `bleConfigId` | BLE | string | `""` | the id of a `thingstudio/config/ble` config |
 
 ### ble notify
@@ -742,7 +742,7 @@ Properties explained: [ble scan](nodes/ble-scan.md)
 
 ### ble uart in
 
-Receives text from a phone over Bluetooth LE, through the Nordic UART Service.
+Receives text from a connected device over Bluetooth LE, through the Nordic UART Service.
 
 Type: `ble_uart_in`. Kind: source. Palette group: network.
 
@@ -754,12 +754,12 @@ Properties explained: [ble uart in](nodes/ble-uart-in.md)
 
 | Property | Editor label | Type | Default | Allowed values and notes |
 | --- | --- | --- | --- | --- |
-| `lines` | one message per line | boolean | `true` | one message per line the phone sends (\n ends a line, \r is dropped); off: one per write |
+| `lines` | one message per line | boolean | `true` | one message per line the connected device sends (\n ends a line, \r is dropped); off: one per write |
 | `bleConfigId` | BLE | string | `""` | the id of a `thingstudio/config/ble` config |
 
 ### ble uart out
 
-Sends text to the phones connected over Bluetooth LE, through the Nordic UART Service.
+Sends text to the devices connected over Bluetooth LE, through the Nordic UART Service.
 
 Type: `ble_uart_out`. Kind: sink. Palette group: network.
 
@@ -974,7 +974,7 @@ A config node is listed under `configs` in a flow file as `{id, type, properties
 
 Type: `thingstudio/config/ble` (one per flow).
 
-- `name`, text: What phone apps show, up to 26 bytes. Shorter leaves more room in an advertisement.
+- `name`, text: What other devices show when they find the board, up to 26 bytes. Shorter leaves more room in an advertisement.
 
 Defaults: `{"name":"thingstudio"}`
 

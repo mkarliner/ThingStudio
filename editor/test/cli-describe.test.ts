@@ -75,7 +75,7 @@ describe("node catalog", () => {
     expect(lines[0]).toMatch(/^### wifi status$/i);
     expect(lines[2]).toBe(findNode(catalog, "wifi_status")!.purpose);
     expect(lines[4]).toMatch(/^Type: `wifi_status`\. Kind: source\./);
-    expect(lines[6]).toBe("Properties explained: https://docs.thingstudio.net/nodes/wifi-status/");
+    expect(lines[6]).toBe("Properties explained: [wifi status](nodes/wifi-status.md)");
     expect(md).toContain("- Outputs: message, payload bool");
     expect(md).not.toContain("thingstudio/wifi_status");
     expect(md).toMatch(/\| `pollMs` \| poll interval \(ms\) \| number \| `5000` \|/);

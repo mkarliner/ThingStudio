@@ -1,11 +1,22 @@
 # debug
 
-Prints a message's payload to the device's console — the way to see what's actually flowing through a wire.
+Prints each message's payload to the console, to see what is flowing through a wire.
 
 ## Properties
 
-- **full message** — off by default. Prints the whole message (topic, and any other fields a source node adds — for example `wifi status`'s `ip`/`subnet`/`gateway`/`dns`/`rssi`) instead of only `payload`.
+- **full message** — default off. When on, prints the whole message, with `topic` and any other fields the source
+  adds, instead of only `payload`.
+
+## Wiring
+
+**Input** — any message.
+
+This node has no output.
 
 ## Behavior
 
-Output goes to the device's serial console, visible in the editor's console panel once connected. Use it to see a value flowing through a wire without guessing.
+Each message prints one line: `DEBUG node=ID payload=VALUE`, or `DEBUG node=ID msg=MESSAGE` with **full message** on.
+The value is printed as Python shows it, so a string is in quotes: `payload='hello'`. Click the line in the console
+to find the node on the canvas.
+
+The board prints the line, so the console shows it only while the editor is connected.

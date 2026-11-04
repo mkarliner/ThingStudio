@@ -21,14 +21,14 @@ export const descriptor: NodeDescriptor = {
   icon: "ᛒ",
   width: 96,
   description:
-    "Receives text from a phone over Bluetooth LE, through the Nordic UART Service that terminal apps (nRF Connect, " +
+    "Receives text from a connected device over Bluetooth LE, through the Nordic UART Service that terminal apps (nRF Connect, " +
     "Serial Bluetooth Terminal) use. One message per line. The board accepts connections from anyone in range.",
   requires: { capabilities: ["ble"] },
   ports: {
     outputs: [{ name: "msg", type: "string" }],
   },
   properties: [
-    { name: "lines", label: "one message per line", kind: "boolean", default: true, help: "Off: one message per write the phone makes, as it arrives." },
+    { name: "lines", label: "one message per line", kind: "boolean", default: true, help: "Off: one message per write the connected device makes, as it arrives." },
     BLE_CONFIG_FIELD,
     { name: "nodeId", label: "node id", kind: "nodeId", default: "" },
   ],
@@ -83,7 +83,7 @@ async def wait(properties):
         try:
             text = data.decode()
         except UnicodeError:
-            runtime._report_error(_node_id, ValueError('ble_uart_in: a phone sent %d bytes that aren\\'t UTF-8 text' % len(data)))
+            runtime._report_error(_node_id, ValueError('ble_uart_in: a connected device sent %d bytes that aren\\'t UTF-8 text' % len(data)))
             continue
         _msg = {'payload': text, 'topic': '', 'conn': conn}
         return

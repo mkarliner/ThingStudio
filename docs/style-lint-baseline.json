@@ -22,11 +22,6 @@
       "snippet": "on the device — units, a colour scheme — not for"
     },
     {
-      "file": "docs/user-guide/nodes/function.md",
-      "rule": "uk-spelling",
-      "snippet": "colour scheme. It is namespaced"
-    },
-    {
       "file": "docs/user-guide/nodes/index.md",
       "rule": "opening",
       "snippet": "its properties and its output. This page lists them all, grouped as in the"

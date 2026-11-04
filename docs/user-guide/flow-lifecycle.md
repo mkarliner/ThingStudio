@@ -36,16 +36,20 @@ name from a config node is never written into the `.flow.json` file. See
 **Compile → Deploy** compiles the current canvas to MicroPython bytecode and sends it to the connected board,
 replacing whatever flow is currently running there.
 
-A successful deploy shows a confirmation in the console and the new flow starts running immediately. A failed deploy
-leaves the board's current flow running and shows a specific error:
+A successful deploy shows a confirmation in the console and the new flow starts running immediately. The board keeps
+the deployed flow and starts it again each time the board starts, with or without the editor. Each start begins every
+node afresh: counts, filters, journals, flow variables and a function node's `context` start empty. Only `settings`
+keeps its values (see [function](nodes/function.md#context-flow-and-settings)).
+
+A failed deploy leaves the board's current flow running and shows a specific error:
 
 - a compile error — something in the flow itself, such as a missing required property
 - a space error — the compiled flow doesn't fit in the board's available flash/RAM
 - a library error — see below
 
 After a successful deploy the button grays out: the board is already running exactly what's on the canvas. It
-re-enables the moment you change anything (a property, a node, a wire). A failed deploy leaves it enabled so you can
-fix the problem and retry.
+re-enables the moment you change anything (a property, a node, a wire). A change reaches the board only with the
+next deploy. A failed deploy leaves it enabled so you can fix the problem and retry.
 
 ### Libraries
 

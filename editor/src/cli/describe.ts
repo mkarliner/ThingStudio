@@ -7,8 +7,8 @@
 // `thingstudio-compile --describe` and to generate docs/user-guide/nodes-catalog.md (a test fails when that file is
 // out of date; regenerate it with the command in the test's message).
 //
-// Not here: allowed values and ranges. They live in each node's own validation, and the compile check reports them in
-// words on the first try (for example `journal node's rows "0" must be a whole number from 1 to 256`).
+// Not here: what a property means. That is the node's user-guide page (`nodePage()`), which each entry links to; the
+// catalog keeps only what the code owns (types, defaults, allowed options, config ids, and PROPERTY_NOTES).
 
 import type { PortDefinition } from "../compiler/node-definition.js";
 import { resolvePortType } from "../compiler/node-definition.js";
@@ -38,6 +38,8 @@ export interface NodeInfo {
   label: string;
   /** One line saying what the node does. Hand-written in NODE_PURPOSES. */
   purpose: string;
+  /** The node's user-guide page, relative to docs/user-guide/ (nodes/<kind>.md; every GUI node is nodes/gui.md). */
+  page: string;
   group: string;
   inputs: PortInfo[];
   outputs: PortInfo[];
@@ -74,30 +76,6 @@ function ports(list: PortDefinition[] | undefined, props: Record<string, unknown
 // One line for the properties whose name and default don't say enough (units, which of several values, what a number
 // counts). Hand-written, keyed "<kind>.<property>"; a test fails if a key names a property that no longer exists.
 export const PROPERTY_NOTES: Record<string, string> = {
-  "change.property": "the message property or flow variable to set or delete",
-  "change.value": "with value from `literal`, the value itself; otherwise the name of the message property or flow variable to copy",
-  "delay.delayMs": "milliseconds to hold each message; positive",
-  "filter.threshold": "for `deadband`: how far the payload must move from the last one passed; 0 passes any change",
-  "filter.intervalMs": "for `rate`: least milliseconds between messages passed",
-  "filter.ignoreFirst": "for `change` and `deadband`: the first message only sets the starting value, and is not passed",
-  "filter.perTopic": "filter each `msg.topic` on its own",
-  "inject.payloadValue": "the value to send, read as the chosen payload type",
-  "startup.payloadValue": "the value to send, read as the chosen payload type",
-  "http_in.port": "the TCP port to listen on, 1 to 65535; nodes can share a port",
-  "http_in.path": "the exact path to match, such as `/status`; no `:name` parameters",
-  "http_in.responseTimeoutMs": "milliseconds to wait for an `http response` node before the client gets a 500",
-  "http_request.url": "`http://host[:port]/path`; HTTPS is not supported",
-  "http_request.timeoutMs": "milliseconds to wait for the whole request and response",
-  "mqtt_publish.topic": "the topic to publish to",
-  "mqtt_publish.retain": "ask the broker to keep the message for later subscribers",
-  "mqtt_subscribe.topic": "the topic to subscribe to when the flow starts",
-  "ntp.server": "the NTP server to ask for the time",
-  "udp_receive.port": "the local UDP port to listen on, 1 to 65535",
-  "udp_receive.pollMs": "milliseconds between checks for a datagram; rarely needs changing",
-  "udp_send.host": "the destination hostname or IP address",
-  "udp_send.port": "the destination UDP port, 1 to 65535",
-  "udp_send.timeoutMs": "milliseconds to wait before the send fails",
-  "wifi_status.pollMs": "milliseconds between checks of the WiFi connection; a message goes out when it changes, and on the first check",
   "timer.intervalMs": "milliseconds between messages; the payload is a count that rises 1, 2, 3...",
   "function.code": "the body of a MicroPython function; `msg` in, return the message, None, or a list with one entry per output",
   "function.outputCount": "how many outputs, 1 to 10",
@@ -163,13 +141,13 @@ export const PROPERTY_NOTES: Record<string, string> = {
   "ble_scan.scanWindowMs": "how long each listen lasts, up to the interval; longer misses less and leaves WiFi less time",
   "ble_advertise.bleConfigId": "the flow's BLE config, whose name is advertised; name and payload share 31 bytes",
   "ble_characteristic_in.serviceUuid": "the service it belongs to: 16-bit (181a) or 128-bit; nodes for one service's characteristics share it",
-  "ble_characteristic_in.charUuid": "the characteristic a phone writes: 16-bit or 128-bit",
+  "ble_characteristic_in.charUuid": "the characteristic a connected device writes: 16-bit or 128-bit",
   "ble_characteristic_in.encoding": "how the written bytes become payload: bytes, text, int8/uint8/int16/uint16/int32/uint32 or float32 (little-endian); sets the output type",
   "ble_characteristic_out.serviceUuid": "the service it belongs to: 16-bit (181a) or 128-bit",
-  "ble_characteristic_out.charUuid": "the characteristic a phone reads: 16-bit or 128-bit; one out node per characteristic",
+  "ble_characteristic_out.charUuid": "the characteristic a connected device reads: 16-bit or 128-bit; one out node per characteristic",
   "ble_characteristic_out.encoding": "how payload becomes bytes: as for ble_characteristic_in; a value that doesn't fit is reported and dropped",
-  "ble_characteristic_out.notify": "also push each value to subscribed phones",
-  "ble_uart_in.lines": "one message per line the phone sends (\\n ends a line, \\r is dropped); off: one per write",
+  "ble_characteristic_out.notify": "also push each value to subscribed devices",
+  "ble_uart_in.lines": "one message per line the connected device sends (\\n ends a line, \\r is dropped); off: one per write",
   "ble_uart_out.newline": "add \\n after each payload",
   "ble_read.peerConfigId": "the ble peer config: the device to connect to, by address or name",
   "ble_read.serviceUuid": "the peer's service: 16-bit or 128-bit",
@@ -243,13 +221,13 @@ export const NODE_PURPOSES: Record<string, string> = {
   pwm_out: "Drives a PWM signal on a GPIO pin, for dimming or any variable duty cycle.",
   touch_i2c: "Raw touch input from an I2C touch panel: sends a message when a finger lands and when it lifts.",
   ble_advertise: "Advertises over Bluetooth LE: the board's name, and each message's payload as manufacturer or service data.",
-  ble_characteristic_in: "Sends a message each time a connected phone writes a Bluetooth LE characteristic.",
-  ble_characteristic_out: "Sets a Bluetooth LE characteristic to each message's payload for a phone to read, and notifies subscribed phones.",
+  ble_characteristic_in: "Sends a message each time a connected device writes a Bluetooth LE characteristic.",
+  ble_characteristic_out: "Sets a Bluetooth LE characteristic to each message's payload for a connected device to read, and notifies subscribed devices.",
   ble_notify: "Subscribes to a characteristic of another Bluetooth LE device and sends a message for each new value.",
   ble_read: "Reads a characteristic of another Bluetooth LE device for each message that arrives, and sends the value on.",
   ble_scan: "Listens for Bluetooth LE advertisements, such as beacons and BLE sensors, and sends one message per advertisement.",
-  ble_uart_in: "Receives text from a phone over Bluetooth LE, through the Nordic UART Service.",
-  ble_uart_out: "Sends text to the phones connected over Bluetooth LE, through the Nordic UART Service.",
+  ble_uart_in: "Receives text from a connected device over Bluetooth LE, through the Nordic UART Service.",
+  ble_uart_out: "Sends text to the devices connected over Bluetooth LE, through the Nordic UART Service.",
   ble_write: "Writes each message's payload to a characteristic of another Bluetooth LE device.",
   http_in: "Starts (or joins) an HTTP server on the board and sends a message for each matching request.",
   http_request: "Makes one HTTP request per incoming message and returns the response.",
@@ -262,6 +240,11 @@ export const NODE_PURPOSES: Record<string, string> = {
   wifi_gate: "Passes a message through unchanged while the board's WiFi is connected, and drops it while it isn't.",
   wifi_status: "Reports the board's WiFi connection state.",
 };
+
+/** The user-guide page that explains a node's properties, relative to docs/user-guide/. A test checks it exists. */
+export function nodePage(kind: string): string {
+  return kind.startsWith("gui_") ? "nodes/gui.md" : `nodes/${kind.replace(/_/g, "-")}.md`;
+}
 
 const typeOf = (v: unknown): string => (typeof v === "string" || typeof v === "number" || typeof v === "boolean" ? typeof v : "object");
 
@@ -290,7 +273,8 @@ export function buildCatalog(): Catalog {
         else if (CONFIG_BY_PROPERTY[name]) p.configType = CONFIG_BY_PROPERTY[name];
         if (field?.label) p.label = field.label;
         if (field?.options?.length) p.options = field.options.map((o) => String(o.value));
-        const note = PROPERTY_NOTES[`${kind}.${name}`] ?? field?.help;
+        // Only the hand-written notes: what a property means is the node page's job (one home for each fact).
+        const note = PROPERTY_NOTES[`${kind}.${name}`];
         if (note) p.note = note;
         return p;
       });
@@ -299,6 +283,7 @@ export function buildCatalog(): Catalog {
       kind: def?.kind ?? "?",
       label: style?.label ?? kind,
       purpose: NODE_PURPOSES[kind] ?? "",
+      page: nodePage(kind),
       group: style?.group ?? "",
       inputs: ports(def?.ports?.inputs, node.properties),
       outputs: ports(def?.ports?.outputs, node.properties),
@@ -333,7 +318,10 @@ export function findNode(catalog: Catalog, name: string): NodeInfo | undefined {
 }
 
 const lit = (v: unknown): string => (v === "" ? '`""`' : `\`${JSON.stringify(v)}\``);
-const portList = (p: PortInfo[]): string => (p.length ? p.map((x) => `${x.name} (${x.type})`).join(", ") : "none");
+// A port named `msg` carries a whole message, typed by its payload; any other port is named with its type.
+const portText = (x: PortInfo): string =>
+  x.name === "msg" ? (x.type === "any" ? "message, any payload" : `message, payload ${x.type}`) : `${x.name} (${x.type})`;
+const portList = (p: PortInfo[]): string => (p.length ? p.map(portText).join("; ") : "none");
 
 const shortType = (t: string): string => t.replace(/^thingstudio\//, "");
 const cell = (v: string): string => v.replace(/\|/g, "\\|").replace(/\s*\n\s*/g, " ");
@@ -342,17 +330,18 @@ export function renderNode(n: NodeInfo, heading = "###"): string {
   const lines = [`${heading} ${n.label}`, ""];
   if (n.purpose) lines.push(n.purpose, "");
   lines.push(`Type: \`${shortType(n.type)}\`. Kind: ${n.kind}.${n.group ? ` Palette group: ${n.group}.` : ""}`, "");
+  lines.push(`Properties explained: [${n.label}](${n.page})`, "");
   lines.push(`- Inputs: ${portList(n.inputs)}`);
   lines.push(`- Outputs: ${portList(n.outputs)}${n.variableOutputs ? " (the number of outputs is the node's `outputCount` property)" : ""}`);
   if (n.requires.length) lines.push(`- Needs hardware: ${n.requires.join(", ")} (checked against the board at compile time)`);
   if (n.properties.length === 0) {
     lines.push("- Properties: none");
   } else {
-    lines.push("", "| Property | Editor label | Type | Default | Meaning |", "| --- | --- | --- | --- | --- |");
+    lines.push("", "| Property | Editor label | Type | Default | Allowed values and notes |", "| --- | --- | --- | --- | --- |");
     for (const p of n.properties) {
       const meaning = [
-        (p.note ?? "").replace(/\.$/, ""),
         p.options ? `one of ${p.options.map((o) => `\`${o}\``).join(", ")}` : "",
+        (p.note ?? "").replace(/\.$/, ""),
         p.configType ? `the id of a \`${p.configType}\` config` : "",
       ].filter(Boolean).join("; ");
       const def = p.default === undefined ? "none" : lit(p.default);
@@ -368,12 +357,17 @@ export function renderMarkdown(c: Catalog): string {
     "",
     "<!-- Generated by `node dist-cli/thingstudio-compile.mjs --describe-all --markdown`. Do not edit by hand: a test fails when it is out of date. -->",
     "",
-    "Every node a flow file can use: what it does, its type, its ports with their payload types, and its properties with",
-    "the default the editor gives a new node. A property a flow file leaves out gets this default. Ranges are checked when",
-    "the flow is compiled, and the error says what is allowed. See [Check a flow without the editor](check-a-flow.md).",
+    "This is the flow-file reference. It lists every node a `.flow.json` can use, with the exact names a flow file needs:",
+    "the node's type, its ports, and its properties with their types, defaults and allowed values. The editor's code",
+    "generates it, so it matches what the compiler accepts.",
     "",
-    "A node's type in a flow file is `thingstudio/` followed by the type shown here: `wifi_status` is written",
-    "`thingstudio/wifi_status`. A property's editor label is the name the node's page in this guide uses for it.",
+    "It does not explain how to use a node. Each entry links to the node's page, which says what the node does and what",
+    "each property means. To build a flow in the editor, start from the [node reference](nodes/index.md). To write or check",
+    "a flow file without the editor, see [Check a flow without the editor](check-a-flow.md) and [AI authoring](ai-authoring.md).",
+    "",
+    "In a flow file a node's type is `thingstudio/` followed by the type shown here: `wifi_status` is written",
+    "`thingstudio/wifi_status`. A property's editor label is the name the node's page uses for it. A port described as",
+    "\"message, payload bool\" carries a message whose `payload` is a bool.",
     "",
     "Ports are numbered from 0 in a flow file's `edges`: `[fromNodeId, outputNumber, toNodeId, inputNumber]`, in the order listed here.",
     "",

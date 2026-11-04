@@ -1,6 +1,6 @@
 # ble uart out
 
-Sends text to the phones connected over Bluetooth LE, through the Nordic UART Service.
+Sends text to the devices connected over Bluetooth LE, through the Nordic UART Service.
 
 ## Properties
 
@@ -13,8 +13,8 @@ Sends text to the phones connected over Bluetooth LE, through the Nordic UART Se
 
 ## Behavior
 
-The text goes to every connected phone, split into pieces that fit each connection: 20 bytes until the phone agrees
-a larger MTU. With no phone connected, nothing is sent and nothing is kept.
+The text goes to every connected device, split into pieces that fit each connection: 20 bytes until the device
+agrees a larger MTU. With no device connected, nothing is sent and nothing is kept.
 
 ## Errors
 

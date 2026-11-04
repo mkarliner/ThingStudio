@@ -96,7 +96,7 @@ asyncio.run(main())
     expect(out).toContain("NODE_STATUS node=ci state=disconnected text=advertising, no one connected");
     expect(out).toContain("NODE_STATUS node=ci state=connected text=1 connected");
     expect(out).toMatch(/DEBUG node=d payload=-5\b/);
-    expect(out).toMatch(/a phone wrote 1 bytes, but int16 is 2/);
+    expect(out).toMatch(/a connected device wrote 1 bytes, but int16 is 2/);
     expect(out).toMatch(/DEBUG node=d payload=300\b/);
   });
 
@@ -175,7 +175,7 @@ asyncio.run(main())
     expect(out).toContain("SERVICES [('6e400001-b5a3-f393-e0a9-e50e24dcca9e', [('6e400002-b5a3-f393-e0a9-e50e24dcca9e', 12), ('6e400003-b5a3-f393-e0a9-e50e24dcca9e', 16)])]");
     expect(out).toContain("LINE 'hello' 1");
     expect(out).toContain("LINE 'world' 1");
-    expect(out).toMatch(/ble_uart_in: a phone sent 2 bytes that aren't UTF-8 text/);
+    expect(out).toMatch(/ble_uart_in: a connected device sent 2 bytes that aren't UTF-8 text/);
     expect(out).toContain("LINE 'ok' 1");
     expect(out).toContain("PIECES [20, 20, 6]");
     expect(out).toContain("AFTER MTU [46] b'\\n'");

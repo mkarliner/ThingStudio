@@ -212,6 +212,34 @@ unverifiable: `http in` queues same-route requests. Fixed: `mqtt subscribe`'s de
 isn't text; the code only decodes it, so the description now says UTF-8 text. A bytes fallback is a later change (runtime bump). The node catalog is now lean (type, ports, defaults, allowed values) and
 links to the node pages for meanings.
 
+Batch 3 started 2026-11-04 with `inject` and `timer`, for Mike's review before the other seven general pages.
+Checked against the descriptors, `compile.ts`'s source loops and `runtime.py`. Added from the code: how `inject` reads
+each value type (`bool` only `true` is true; a whole number is an `int`; empty is `0`); a bad number fails on the
+click, not at deploy; the not-connected console line; `timer` sends its first message at flow start and its interval
+starts after the chain finishes. New fact: a node error anywhere in a chain ends that chain's task (`_guarded` doesn't
+restart it), so the source stops until the next deploy. Mike's review added three style rules (one home for facts
+shared by many nodes, quote console messages exactly, defaults on node pages). Facts true of every node moved to their
+homes: the chain-stop to `debugging.md` (Reading a node error), "a change reaches the board only with the next
+deploy" to `flow-lifecycle.md` (Deploy). Every node page in later batches checks for such facts.
+
+Batch 3 done 2026-11-04: the other seven general pages, `function`, `change`, `delay`, `filter`, `journal`, `debug`,
+`startup`, checked against the descriptors, compile hooks and generated code (compile errors confirmed with the CLI).
+Defaults added throughout. Corrected: `filter` threshold 0 passes every number, not "any change"; `journal` reads text
+and bools as numbers, and `None` is a gap only with seconds per row 0; `timer`/`delay` minimum errors are the generic
+`property ... is below its minimum, 1`. Added: `change` names are one top-level key and a missing source copies
+`None`; `function` with one output passes a returned list on as the message; `debug` prints Python's repr and its
+console line locates the node. Moved to `flow-lifecycle.md` (Deploy): the board restarts its saved flow at boot, and
+every start begins nodes afresh except `settings`. Dropped as examples (Page types: examples go in tutorials): the
+`change` text flow, the `filter` temperature example, `journal`'s cascade (now a link to A sensor display, which
+has it) and its `test-flows/` path.
+
+Follow-ups the same day (Mike): a `timer` or custom-source `intervalMs` must be a whole number (`resolveIntervalMs`
+refuses a fraction, which compiled and then failed in `asyncio.sleep_ms()`); what a fork does to a message (first wire
+gets it, the others shallow copies) now lives in Editor in depth, Wiring; the BLE pages, descriptors, catalog notes
+and the two BLE error strings say "connected device" rather than "phone", since any central can connect. Repaired:
+`editor/src/cli/describe.ts` in `ceb25be1` was an earlier draft than the committed catalog and test (tsc failed, three
+catalog tests failed); rebuilt so it regenerates the committed catalog exactly.
+
 ### Phase 6 -- structure (review order item 6)
 
 Developer section in the nav (remark 4: check-a-flow, command-line's source-checkout half, From source,
