@@ -17,7 +17,7 @@ been deployed and run on that hardware. Pin details for boards and processors ar
 | CYD (ESP32-2432S028, ST7789) | ESP32 | Yes, display only. |
 | Freenove ESP32-S3 Display 4.0" (FNK0104S) | ESP32-S3 | Yes, with the display and touch |
 | Pyboard v1.0 | STM32F405 | Untested |
-| Seeed XIAO nRF52840 (Sense) | nRF52840 | Untested |
+| Seeed XIAO nRF52840 (Sense) | nRF52840 | Smoke tested, including the IMU |
 | Wemos D1 R32 | ESP32 | Yes, with an RM68090 parallel TFT shield (rewired, custom node) |
 
 MicroPython can be written onto any board in this list from the editor, with **Tools → Install firmware…**: a
@@ -40,6 +40,7 @@ Any board with one of these processors can be used by picking the processor from
 | ESP32-C5 | Yes, on the ESP32-C5-340X, over USB |
 | RP2040 | Yes, on the Pico and Pico W |
 | RP2350 | Yes, on the Pico 2 |
+| nRF52840 | Smoke tested on the Seeed XIAO nRF52840 (Sense) |
 
 ## Displays
 
