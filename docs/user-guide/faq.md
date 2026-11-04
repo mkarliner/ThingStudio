@@ -69,7 +69,8 @@ The console then shows megabytes free. Freenove's S3 display boards are an examp
 ## My ESP32-C5 prints "PSRAM chip is not connected" at boot. Is it broken?
 
 No. The generic ESP32-C5 build looks for PSRAM, and many C5 modules have none. It reports the failure, says
-"continuing without it", and starts MicroPython with the chip's own RAM.
+"continuing without it", and starts MicroPython with the chip's own RAM. The
+[Thingstudio C5 image](custom-firmware.md) doesn't look for PSRAM, so it doesn't print this.
 
 ## Which board should I use for a display and WiFi together?
 

@@ -488,7 +488,7 @@ describe("how a chip family is flashed (decisions/firmware-catalogue.md)", () =>
     expect(defs.boards.get("pico")!.variant).toBe("rpi-pico");
     expect(defs.boards.get("pyboard-v10")!.variant).toBeNull();
     // The CYD takes Thingstudio's own image: that is the board the image was built and tested for. The image it
-    // names is in firmware/classic-esp32/tested.json (firmware-assets.test.ts asserts that), and the next build
+    // names is in firmware/targets/classic-esp32/tested.json (firmware-assets.test.ts asserts that), and the next build
     // replaces the version, not the board file.
     expect(defs.boards.get("cyd")!.variant).toBe("thingstudio-classic-esp32");
   });

@@ -13,9 +13,9 @@ Thingstudio can install it for you, on the chips it can write.
 Thingstudio writes the firmware itself: over a serial port for the ESP32 family, and onto a mounted drive for
 RP2040, RP2350 and nRF52 boards.
 
-For a classic ESP32 with 4 MB of flash and no PSRAM, pick the [Thingstudio custom image](custom-firmware.md) as the
-**Firmware** rather than official MicroPython: the runtime and the flow libraries are frozen into flash, where they
-run without taking the RAM the display stack and the flow need. Its **Version** list holds the published releases.
+On a classic ESP32 with 4 MB of flash and no PSRAM, an ESP32-C3 or an ESP32-C5, pick the
+[Thingstudio custom image](custom-firmware.md) as the **Firmware** when the dialog lists one for the chip. The
+runtime and the flow libraries are frozen into flash, where they run without taking the RAM the flow needs. Its **Version** list holds the published releases.
 After flashing it, **Install runtime** writes only the boot script.
 
 1. Plug the board into USB. A Pico needs **BOOTSEL** held while you plug it in.

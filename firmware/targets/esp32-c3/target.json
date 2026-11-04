@@ -1,0 +1,11 @@
+{
+  "$comment": "Facts for this target; the shared scripts in firmware/ read them (tools/firmware_targets.py).",
+  "label": "ESP32-C3, 4 MB",
+  "family": "esp32-c3",
+  "chip": "esp32c3",
+  "idfTarget": "esp32c3",
+  "micropython": "v1.29.0",
+  "espIdf": "v5.5.2",
+  "address": 0,
+  "portSdkconfig": ["boards/sdkconfig.base", "boards/sdkconfig.riscv", "boards/sdkconfig.ble", "boards/sdkconfig.c3"]
+}

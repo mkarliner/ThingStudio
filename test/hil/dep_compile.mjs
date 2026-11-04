@@ -11,7 +11,7 @@
 // as /in.py; a native build compiling "font_body12.py" therefore produces different bytes, and its
 // hash can never match the one a board reports -- which is why a CLI deploy used to push every
 // library a flow imports, frozen image or not (2026-10-26). So this uses the same vendored WASM
-// mpy-cross as the editor and firmware/classic-esp32/gen_deps_index.mjs, with the same input name and
+// mpy-cross as the editor and firmware/gen_deps_index.mjs, with the same input name and
 // no -march, then hashes exactly as editor/src/compiler/flow-dependencies.ts does.
 //
 // Usage: node dep_compile.mjs <spec.json> <outdir>

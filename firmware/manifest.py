@@ -1,12 +1,12 @@
 # SPDX-License-Identifier: Apache-2.0
-# firmware/classic-esp32/manifest.py
+# firmware/manifest.py
 #
-# FROZEN_MANIFEST for the classic-ESP32 image: freeze the whole staged tree, which stage.py lays
+# FROZEN_MANIFEST for every target's image: freeze the whole staged tree, which stage.py lays
 # out from runtime_manifest.py -- the runtime core, the listener, every vendored library and font
 # set the editor can deploy, under their on-board module names.
 #
 # Freezing all of them (rather than a per-flow subset) is what makes one generic image work for
-# every flow on this chip: a flow that doesn't import a library never touches its flash.
+# every flow on a chip: a flow that doesn't import a library never touches its flash.
 #
 # The stage directory comes from the build script (build.sh sets THINGSTUDIO_FROZEN_STAGE); the
 # fallback keeps a hand-run `make` working from this directory.
@@ -25,7 +25,7 @@ if not _stage:
 
 if not os.path.isdir(_stage):
     raise Exception(
-        "frozen stage missing at %s -- run firmware/classic-esp32/build.sh (it stages from "
+        "frozen stage missing at %s -- run firmware/build.sh <target> (it stages from "
         "device-runtime/runtime_manifest.py), or set THINGSTUDIO_FROZEN_STAGE" % _stage
     )
 

@@ -199,9 +199,9 @@ Gaps:
   (`backend/pyproject.toml`, `aiohttp>=3.9,<4`). Hash pinning (`pip --require-hashes`) for the bundle is the next step.
 - **The docs workflow has `contents: write`** for `gh-deploy`; scope it to the Pages branch if possible.
 - **Release artifacts are not signed** beyond the checksums (macOS signing is conditional on CI secrets). The
-  custom classic-ESP32 firmware image (`firmware/classic-esp32/`) follows the same rule: SHA-256 plus a build
-  script, workflow and pinned MicroPython/ESP-IDF versions, so the image is rebuildable from a known commit -- a
-  checksum detects corruption, not tampering. Signing is deferred to the first OTA-capable firmware release
+  custom firmware images (`firmware/`, one per target chip) follow the same rule: SHA-256 plus a build script and
+  per-target pinned MicroPython/ESP-IDF tags that the build refuses to deviate from, so each image is rebuildable
+  from the commit in its name -- a checksum detects corruption, not tampering. Signing is deferred to the first OTA-capable firmware release
   (`docs/working-notes/decisions/classic-esp32-firmware.md`).
 
 ## 4. Secrets

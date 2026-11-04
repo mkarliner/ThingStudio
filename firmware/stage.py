@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: Apache-2.0
-# firmware/classic-esp32/stage.py
+# firmware/stage.py
 #
-# Lays out exactly the files a custom image freezes, in the same names the board would see them
+# Lays out exactly the files a custom image freezes (the same set for every target), in the same names the board would see them
 # under /lib and its root. One source of truth: device-runtime/runtime_manifest.py, the same list a
 # runtime install reads. Nothing here is a second copy of that list.
 #
@@ -17,7 +17,7 @@ import shutil
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-REPO = os.path.dirname(os.path.dirname(HERE))
+REPO = os.path.dirname(HERE)
 SRC = os.path.join(REPO, "device-runtime", "src")
 VENDOR = os.path.join(SRC, "vendor")
 

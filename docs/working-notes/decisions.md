@@ -287,9 +287,11 @@ refusing; the image stays **optional, not the recommended route** for the moment
 
 ## Custom firmware images (all targets)
 
-Scope is not shape: one image per target chip, each a folder, never a constant in the shared tooling (rule in
-`AGENTS.md`); every image is rebuilt, flashed and recorded at each runtime bump, enforced at release, not at merge
-(2026-11-04). `docs/working-notes/decisions/custom-firmware.md`.
+Scope is not shape: one image per target chip, each a folder under `firmware/targets/`, never a constant in the
+shared tooling (rule in `AGENTS.md`); every image is rebuilt, flashed and recorded at each runtime bump, enforced at
+release, not at merge; per-target MicroPython/ESP-IDF pins, all at v1.29.0/v5.5.2 to start; merged images at the
+target's address (C5 0x2000); the C5 image without PSRAM; `firmware.yml` removed (2026-11-04).
+`docs/working-notes/decisions/custom-firmware.md`.
 
 ## MCP server
 

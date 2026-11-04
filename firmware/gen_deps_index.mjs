@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // SPDX-License-Identifier: Apache-2.0
-// firmware/classic-esp32/gen_deps_index.mjs
+// firmware/gen_deps_index.mjs
 //
 // Writes /lib/_deps.json for a custom image: the library inventory the board reports in HELLO and
 // checks on DEPLOY. Without it, every Deploy would push copies of libraries the image already
@@ -27,7 +27,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const REPO = resolve(HERE, "..", "..");
+const REPO = resolve(HERE, "..");
 const MPY_CROSS = join(REPO, "editor", "public", "vendor", "mpy-cross");
 
 const [stageArg, outArg] = process.argv.slice(2);

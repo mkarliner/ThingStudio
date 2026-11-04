@@ -1,26 +1,27 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: Apache-2.0
-# firmware/classic-esp32/record-tested.sh
+# firmware/record-tested.sh
 #
 # Records that an image was flashed and run on a board, so publish.sh will attach it to a release.
 # The record is the only thing standing between "a file exists in out/" and "a release ships it", so
 # it asks for the one thing a script cannot know: what you actually did on the board.
 #
 # Usage:
-#   firmware/classic-esp32/record-tested.sh <image> "<board>" "<what you ran and saw>"
+#   firmware/record-tested.sh <image> "<board>" "<what you ran and saw>"
 #
 # Example:
-#   firmware/classic-esp32/record-tested.sh out/thingstudio-classic-esp32-12.1.0-8e2f87d.bin \
-#       "CYD (ESP32-2432S028)" "install clean, hero GUI flow deployed 3x over a running flow"
+#   firmware/record-tested.sh firmware/out/esp32-c5/thingstudio-esp32-c5-15.0.0-8e2f87d.bin \
+#       "ESP32-C5-340X" "install clean, BLE scan flow deployed twice over a running flow"
 #
-# Writes firmware/classic-esp32/tested.json (sorted by hash) and prints the git command to commit it.
+# The target comes from the image's name (thingstudio-<target>-<version>-<sha>.bin); a -dirty image is refused.
+# Writes firmware/targets/<target>/tested.json (sorted by hash) and prints the git command to commit it.
 # Publishing also needs the docs page's image name to be this file's name -- editor/test/
 # firmware-assets.test.ts checks that.
 
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-RECORD="$HERE/tested.json"
+REPO="$(cd "$HERE/.." && pwd)"
 
 die() { echo "record-tested: $*" >&2; exit 1; }
 
@@ -42,6 +43,21 @@ sha_cmd() {
 
 HASH="$(sha_cmd "$IMG" | cut -d' ' -f1)"
 NAME="$(basename "$IMG")"
+TARGET_ID="$(python3 - "$REPO/tools" "$NAME" <<'PY'
+import sys
+sys.path.insert(0, sys.argv[1])
+import firmware_targets as t
+parsed = t.parse_image_name(sys.argv[2])
+if parsed is None:
+    raise SystemExit("record-tested: %s is not thingstudio-<target>-<version>-<sha>.bin (a -dirty build cannot be "
+                     "recorded: commit, then rebuild)" % sys.argv[2])
+try:
+    print(t.target(parsed[0]).id)
+except t.TargetError as exc:
+    raise SystemExit("record-tested: %s" % exc)
+PY
+)" || exit 1
+RECORD="$HERE/targets/$TARGET_ID/tested.json"
 
 # A stale .sha256 beside the image is how a wrong hash gets published, so it has to agree.
 if [ -f "$IMG.sha256" ]; then
@@ -68,6 +84,6 @@ cat <<EOF
 
 Commit the record so the release can cite it:
 
-  git add firmware/classic-esp32/tested.json && \\
+  git add firmware/targets/$TARGET_ID/tested.json && \\
   git commit -m "firmware: record $NAME as tested on $BOARD"
 EOF

@@ -238,7 +238,7 @@ _PROBE_FROZEN = (
 
 def is_frozen_image(port: _SerialPort, timeouts: RawReplTimeouts = RawReplTimeouts()) -> bool:
     """True when this board runs a custom image, recognised by the frozen inventory module that only
-    such an image carries (`deps_frozen`, written by firmware/classic-esp32/build.sh).
+    such an image carries (`deps_frozen`, written by firmware/build.sh).
 
     Decides which half of an install is needed (2026-10-25): a custom image freezes the runtime into
     flash, so pushing the core files would shadow them with filesystem copies -- the memory saving the

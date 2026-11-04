@@ -1,0 +1,11 @@
+{
+  "$comment": "Facts for this target; the shared scripts in firmware/ read them (tools/firmware_targets.py).",
+  "label": "ESP32-C5, 4 MB, no PSRAM",
+  "family": "esp32-c5",
+  "chip": "esp32c5",
+  "idfTarget": "esp32c5",
+  "micropython": "v1.29.0",
+  "espIdf": "v5.5.2",
+  "address": 8192,
+  "portSdkconfig": ["boards/sdkconfig.base", "boards/sdkconfig.riscv", "boards/sdkconfig.ble", "boards/sdkconfig.240mhz", "boards/sdkconfig.flash_qio_80m"]
+}

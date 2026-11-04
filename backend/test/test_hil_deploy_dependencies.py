@@ -10,7 +10,7 @@
 #   2. a library is skipped only when the hashes agree, and everything is sent when the board reports nothing.
 #
 # The golden hash below is the value a 14.1.0 image reports in HELLO for font_body12; it comes from
-# firmware/classic-esp32/gen_deps_index.mjs, which the image's frozen inventory is built from.
+# firmware/gen_deps_index.mjs, which the image's frozen inventory is built from.
 
 import importlib.util
 import shutil

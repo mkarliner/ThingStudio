@@ -11,13 +11,14 @@
 # same file, and typing them is how they drift. This reads them off the image.
 #
 # Usage:
-#   python3 tools/firmware_catalogue.py --image firmware/classic-esp32/out/thingstudio-classic-esp32-14.1.0-ab12cd3.bin \
-#       --url https://github.com/mkarliner/ThingStudio/releases/download/v0.10.0/thingstudio-classic-esp32-14.1.0-ab12cd3.bin
+#   python3 tools/firmware_catalogue.py --image firmware/out/esp32-c5/thingstudio-esp32-c5-15.0.0-ab12cd3.bin \
+#       --url https://github.com/mkarliner/ThingStudio/releases/download/v0.11.0/thingstudio-esp32-c5-15.0.0-ab12cd3.bin
 #   python3 tools/firmware_catalogue.py --check
 #
-# The image must already be recorded in firmware/classic-esp32/tested.json (record-tested.sh), because a build we
-# ship under our own name is a build a board ran. That is the same rule editor/test/firmware-assets.test.ts
-# enforces, applied where the entry is written rather than after the fact.
+# The target comes from the image's name. The image must already be recorded in that target's
+# firmware/targets/<target>/tested.json (record-tested.sh), because a build we ship under our own name is a build a
+# board ran. That is the same rule editor/test/firmware-assets.test.ts enforces, applied where the entry is written
+# rather than after the fact. A target's first image creates its build entry from its target.json.
 #
 # Stdlib only, so CI can run it with any Python 3.10+.
 
@@ -32,10 +33,14 @@ from datetime import date
 from pathlib import Path
 from urllib.parse import urlparse
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import firmware_targets  # noqa: E402
+
 REPO = Path(__file__).resolve().parent.parent
 CATALOGUE = REPO / "firmware" / "builds.json"
-TESTED = REPO / "firmware" / "classic-esp32" / "tested.json"
-BUILD_ID = "thingstudio-classic-esp32"
+INFO_URL = "https://github.com/mkarliner/ThingStudio/blob/main/docs/user-guide/custom-firmware.md"
+NOTE = ("The runtime and every flow library are frozen into this image, so Install runtime only writes the boot "
+        "script and Deploy sends no libraries.")
 VERSION_RE = re.compile(r"^(\d+)\.(\d+)\.(\d+)$")
 
 
@@ -51,12 +56,6 @@ def sha256_of(path: Path) -> str:
     return digest.hexdigest()
 
 
-def version_from_name(name: str) -> str | None:
-    """thingstudio-classic-esp32-14.1.0-ab12cd3.bin -> 14.1.0."""
-    match = re.match(r"^thingstudio-classic-esp32-(\d+\.\d+\.\d+)-[0-9a-f]{7,}\.bin$", name)
-    return match.group(1) if match else None
-
-
 def load(path: Path) -> dict:
     try:
         return json.loads(path.read_text(encoding="utf-8"))
@@ -66,28 +65,44 @@ def load(path: Path) -> dict:
         raise CatalogueError(f"cannot read {path}: {exc}") from exc
 
 
-def thingstudio_build(catalogue: dict) -> dict:
+def thingstudio_build(catalogue: dict, target: firmware_targets.Target) -> dict:
+    """The target's build entry, created from its target.json the first time one of its images is published."""
     for build in catalogue.get("builds", []):
-        if build.get("id") == BUILD_ID:
+        if build.get("id") == target.build_id:
             return build
-    raise CatalogueError(f'firmware/builds.json has no build "{BUILD_ID}" -- is this a catalogue for the editor?')
+    build = {
+        "id": target.build_id,
+        "supplier": "thingstudio",
+        "family": target.family,
+        "label": target.label,
+        "infoUrl": INFO_URL,
+        "runtime": "install",
+        "note": NOTE,
+        "versions": [],
+        "address": target.address,
+    }
+    catalogue.setdefault("builds", []).append(build)
+    return build
 
 
 def add(image: Path, url: str, when: str | None) -> str:
     if not image.is_file():
         raise CatalogueError(f"no such image: {image}")
+    parsed = firmware_targets.parse_image_name(image.name)
+    if parsed is None:
+        raise CatalogueError(f"{image.name} is not thingstudio-<target>-<major>.<minor>.<patch>-<sha>.bin")
+    try:
+        target = firmware_targets.target(parsed[0])
+        tested = target.tested()
+    except firmware_targets.TargetError as exc:
+        raise CatalogueError(str(exc)) from exc
+    version = parsed[1]
     digest = sha256_of(image)
-    tested = load(TESTED)
     if digest not in tested:
         raise CatalogueError(
-            f"{image.name} hashes to {digest[:12]}..., which is not in firmware/classic-esp32/tested.json.\n"
+            f"{image.name} hashes to {digest[:12]}..., which is not in firmware/targets/{target.id}/tested.json.\n"
             f"Run it on a board and record it first:\n"
-            f'  firmware/classic-esp32/record-tested.sh {image} "<board>" "<what you ran and saw>"'
-        )
-    version = version_from_name(image.name)
-    if version is None or not VERSION_RE.match(version):
-        raise CatalogueError(
-            f"{image.name} does not carry its version: expected thingstudio-classic-esp32-<major>.<minor>.<patch>-<sha>.bin"
+            f'  firmware/record-tested.sh {image} "<board>" "<what you ran and saw>"'
         )
     parsed = urlparse(url)
     if parsed.scheme != "https":
@@ -96,12 +111,12 @@ def add(image: Path, url: str, when: str | None) -> str:
         raise CatalogueError(f"the URL's file name is {Path(parsed.path).name!r}, not {image.name!r}")
 
     catalogue = load(CATALOGUE)
-    build = thingstudio_build(catalogue)
+    build = thingstudio_build(catalogue, target)
     entry = {"version": version, "date": when or date.today().isoformat(), "url": url, "sha256": digest}
     versions = [v for v in build.get("versions", []) if v.get("version") != version and v.get("sha256") != digest]
     build["versions"] = [entry, *versions]
     CATALOGUE.write_text(json.dumps(catalogue, indent=2) + "\n", encoding="utf-8")
-    return f"catalogue: {BUILD_ID} {version} <- {image.name} ({digest[:12]}...), tested on {tested[digest]['board']}"
+    return f"catalogue: {target.build_id} {version} <- {image.name} ({digest[:12]}...), tested on {tested[digest]['board']}"
 
 
 def check() -> list[str]:
@@ -111,10 +126,8 @@ def check() -> list[str]:
         catalogue = load(CATALOGUE)
     except CatalogueError as exc:
         return [str(exc)]
-    try:
-        tested = load(TESTED)
-    except CatalogueError as exc:
-        return [str(exc)]
+    # Thingstudio's own builds: one per target folder, each version tested on a board (firmware_targets.check).
+    problems.extend(firmware_targets.check())
     seen: set[str] = set()
     for build in catalogue.get("builds", []):
         build_id = build.get("id", "?")
@@ -135,14 +148,12 @@ def check() -> list[str]:
             url = str(entry.get("url", ""))
             if urlparse(url).scheme != "https":
                 problems.append(f"{label}: url is not https")
-            if build.get("supplier") == "thingstudio" and digest not in tested:
-                problems.append(f"{label}: not in tested.json -- an untested image must not be offered")
     return problems
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Add a built Thingstudio image to the flash catalogue, or check it.")
-    parser.add_argument("--image", type=Path, help="the built image (firmware/classic-esp32/out/...)")
+    parser.add_argument("--image", type=Path, help="the built image (firmware/out/<target>/...)")
     parser.add_argument("--url", help="the release asset URL that serves that exact file")
     parser.add_argument("--date", help="the version's date (default: today)")
     parser.add_argument("--check", action="store_true", help="check the catalogue and exit")

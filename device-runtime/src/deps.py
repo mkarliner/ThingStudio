@@ -33,7 +33,7 @@ try:
 except ImportError:
     board_fs = None
 try:
-    # Generated into a custom image by its build (firmware/classic-esp32/build.sh): the libraries the
+    # Generated into a custom image by its build (firmware/build.sh): the libraries the
     # image froze, in the same shape as the index Deploy writes. Absent on a stock board.
     import deps_frozen
 except ImportError:
