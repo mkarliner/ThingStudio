@@ -55,17 +55,19 @@ chip. The classic-ESP32 image's own history (why freeze, chunked deploy, local b
   for PSRAM; the ESP32-C5-340X's C5-FH4 module has none, and the probe prints errors at every boot. Left out, as
   the classic image leaves PSRAM out. **A second one would need:** a C5-with-PSRAM board is its own target folder
   (`esp32-c5-spiram`), not a flag.
-- **2026-11-05 — The full loop — build, flash, test, record — runs in Mike's Linux session VM, not only on the
-  Mac (Mike).** The VM is a persistent build host: its repo is a native checkout (git writes are safe, no
-  shared-mount lock rules), its network reaches `micropython.org`, `dl.espressif.com` and `components.espressif.com`
-  directly, so no registry stand-ins and no `-dirty` from patched component sources — the images it builds are
-  recordable and publishable. ESP-IDF v5.5.2 (`~/esp/esp-idf-5.5.2/`) and MicroPython v1.29.0
-  (`~/micropython-1.29.0/`) install once and stay. Boards connect over USB passthrough; they must be unplugged from
-  Thingstudio before an install, as anywhere. A session therefore runs the whole "At every runtime bump" routine
-  itself: the bump commits, all three targets build, each flashes a board, runs and is recorded.
+- **2026-11-05 — The split: the session VM builds; the machine with the boards flashes, tests and records
+  (Mike).** The VM is a persistent build host: its repo is a native checkout (git writes are safe, no shared-mount
+  lock rules), its network reaches `micropython.org`, `dl.espressif.com` and `components.espressif.com` directly, so
+  no registry stand-ins and no `-dirty` from patched component sources — the images it builds are recordable and
+  publishable. ESP-IDF v5.5.2 (`~/esp/esp-idf-5.5.2/`) and MicroPython v1.29.0 (`~/micropython-1.29.0/`) install
+  once and stay. Boards never reach the VM (no USB through, Mike 2026-11-05), so the board half — install, connect,
+  deploy-test, record — runs wherever a board is plugged in, pointed at the images built here:
+  `install.sh <target> [image]` and `record-tested.sh <image> …` both take an explicit image, and `tested.json`
+  keys on the image's sha256 — only what the name says (target, version, clean commit) matters, not the host.
   **A second host would need:** a repo checkout plus the toolchain at the pinned tags and network to the registry
-  and MicroPython; nothing in the scripts names a host. On a network where the registry is blocked, fall back to the
-  stand-in recipe below — those builds are checks, never records.
+  and MicroPython for building; for flashing, just `esptool`+`mpremote` and the image with its `.sha256` and
+  `out/<target>/main.py`. On a network where the registry is blocked, fall back to the stand-in recipe below —
+  those builds are checks, never records.
 - **2026-11-05 — Commit first, then build (Mike).** A recordable image must be named from a commit the release tag
   contains, and `build.sh` names a tree with uncommitted changes under `device-runtime/` or `firmware/`
   `...-dirty.bin`, which nothing records or publishes. So on a bump or library change the sequence is: commit the

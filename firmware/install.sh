@@ -111,6 +111,6 @@ sleep 2
 
 echo "install: writing the boot script"
 wait_port || die "port $PORT did not come back after reset -- unplug and replug the board"
-mpremote connect "$PORT" fs cp "$HERE/out/main.py" :/main.py
+mpremote connect "$PORT" fs cp "$OUT/main.py" :/main.py
 
 echo "install: done -- reset the board if it is still sitting in the REPL; it boots into the listener"
