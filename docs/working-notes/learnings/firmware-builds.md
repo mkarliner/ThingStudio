@@ -2,6 +2,17 @@
 
 Status: detail file, started 2026-11-04. See `learnings.md` for the index.
 
+- **2026-11-05 — Mike's Linux session VM is a build host, unlike the cloud container:** `micropython.org`,
+  `dl.espressif.com`, `components.espressif.com` and GitHub are all reachable, the repo is a native checkout (git
+  writes are safe), and the toolchain persists (`~/esp/esp-idf-5.5.2/`, `~/micropython-1.29.0/`, 4 cores, ~26 GB).
+- **2026-11-05 — A Linux build host needs `cmake` and `ninja`, and `sudo` may not be available.** The brief's
+  `brew install cmake ninja dfu-util` is the Mac recipe; on the VM `cmake` was missing (`make submodules` failed
+  with "`cmake` must be available on the PATH to use idf.py") and `sudo` wanted a password. Both install as wheels
+  into the IDF Python env, which `export.sh` puts on the PATH, so nothing else is needed:
+  `~/.espressif/python_env/idf5.5_py3.13_env/bin/pip install cmake ninja`. Entry point: every new shell is
+  `. ~/esp/esp-idf-5.5.2/export.sh && cd ~/Src/ThingStudio`-shaped, with the VM's path here.
+  Builds here need no registry stand-ins — the `override_path` recipe below applies only on a blocked network — and
+  `build.sh` still refuses a checkout at any other tag. Decision: `decisions/custom-firmware.md` 2026-11-05.
 - **2026-11-04 — A cloud session can build every target's image**, despite the BLE briefing's "this cloud session
   can't install ESP-IDF". ESP-IDF v5.5.2 (`git clone --depth 1 --branch v5.5.2 --recursive --shallow-submodules`)
   and its toolchains come from GitHub; only two things are blocked: `dl.espressif.com` (the Python constraints file:

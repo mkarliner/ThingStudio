@@ -58,7 +58,8 @@ MICROPY_DIR=~/micropython firmware/build.sh esp32-c5
 
 Output in `out/<target>/`: the merged image `thingstudio-<target>-<version>-<sha>.bin`, its `.sha256`, and
 `main.py` (the boot script install writes to the board). Uncommitted changes under `device-runtime/` or `firmware/`
-name the image `...-dirty.bin`, which cannot be recorded or published.
+name the image `...-dirty.bin`, which cannot be recorded or published. So commit first, build second: the image
+records a commit, not a working tree.
 
 ## Install
 
@@ -74,7 +75,8 @@ credentials. Read the script first: it is short.
 ## At every runtime bump: rebuild every target
 
 An image freezes the runtime, so a runtime bump makes every published image one the editor refuses or runs stale.
-A bump is finished when each target has a tested image at the new version. For each target:
+A bump is finished when each target has a tested image at the new version. First commit the bump itself, then for
+each target:
 
 1. Build at the bump's commit (or later), flash it, run a flow on a board of that chip.
 2. Record it:

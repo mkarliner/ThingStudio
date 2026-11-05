@@ -55,6 +55,23 @@ chip. The classic-ESP32 image's own history (why freeze, chunked deploy, local b
   for PSRAM; the ESP32-C5-340X's C5-FH4 module has none, and the probe prints errors at every boot. Left out, as
   the classic image leaves PSRAM out. **A second one would need:** a C5-with-PSRAM board is its own target folder
   (`esp32-c5-spiram`), not a flag.
+- **2026-11-05 — The full loop — build, flash, test, record — runs in Mike's Linux session VM, not only on the
+  Mac (Mike).** The VM is a persistent build host: its repo is a native checkout (git writes are safe, no
+  shared-mount lock rules), its network reaches `micropython.org`, `dl.espressif.com` and `components.espressif.com`
+  directly, so no registry stand-ins and no `-dirty` from patched component sources — the images it builds are
+  recordable and publishable. ESP-IDF v5.5.2 (`~/esp/esp-idf-5.5.2/`) and MicroPython v1.29.0
+  (`~/micropython-1.29.0/`) install once and stay. Boards connect over USB passthrough; they must be unplugged from
+  Thingstudio before an install, as anywhere. A session therefore runs the whole "At every runtime bump" routine
+  itself: the bump commits, all three targets build, each flashes a board, runs and is recorded.
+  **A second host would need:** a repo checkout plus the toolchain at the pinned tags and network to the registry
+  and MicroPython; nothing in the scripts names a host. On a network where the registry is blocked, fall back to the
+  stand-in recipe below — those builds are checks, never records.
+- **2026-11-05 — Commit first, then build (Mike).** A recordable image must be named from a commit the release tag
+  contains, and `build.sh` names a tree with uncommitted changes under `device-runtime/` or `firmware/`
+  `...-dirty.bin`, which nothing records or publishes. So on a bump or library change the sequence is: commit the
+  change, then build. Never build first and commit around it, and never work around a `-dirty` name — commit or
+  hand-finished, no exceptions. The VM having git write access (above) is what makes commit-then-build one
+  unbroken step for a session.
 - **2026-11-04 — `.github/workflows/firmware.yml` removed.** It had never completed a build, was not the build
   path (2026-10-23), named the classic image throughout, and would have needed a matrix over targets to keep
   meaning anything. The trigger to build in CI stays as `classic-esp32-firmware.md` states it: when images need
