@@ -2,7 +2,8 @@
 
 Status: handoff, 2026-11-04. One cloud session with Mike. The single classic-ESP32 image's tooling became a family of
 targets, the C3 and C5 were added, and two rules came out of it. Branch `custom-firmware-family`, PR open against
-`main`. **Next: Mike builds, flashes and records the three images on the Mac** (section "Next").
+`main`. **Next: Mike builds, flashes and records the three images on the Mac** (section "Next"; the
+stand-alone task brief for that session is `firmware-images-build-and-record-briefing.md`).
 
 Read first: `decisions/custom-firmware.md` (every call, dated), `firmware/README.md` (how to build, record, publish
 and add a target). Previous thread: `ble-nodes-and-c5-bringup-briefing.md` (BLE PR #10 is still open; this work is
