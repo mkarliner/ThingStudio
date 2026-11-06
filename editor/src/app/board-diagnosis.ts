@@ -40,6 +40,28 @@ export const DOC_BOARD_WONT_CONNECT: DocLink = { label: "Board won't connect", p
 export const DOC_BOARD_STUCK: DocLink = { label: "Board stuck restarting", path: "debugging/#board-stuck-restarting" };
 export const DOC_COMMANDS: DocLink = { label: "Commands and the Python prompt", path: "debugging/#commands-and-the-python-prompt" };
 export const DOC_BOARD_FIRMWARE_MODULES: DocLink = { label: "Module missing on the board", path: "debugging/#module-missing-on-the-board" };
+export const DOC_MQTT_UNREACHABLE: DocLink = { label: "MQTT broker unreachable", path: "debugging/#mqtt-broker-unreachable" };
+export const DOC_WIFI_NOT_JOINED: DocLink = { label: "The board hasn't joined WiFi", path: "debugging/#the-board-hasnt-joined-wifi" };
+
+/** A plain next step for a node error the raw text doesn't explain, or null. So far: an MQTT connect that failed
+ * after its retries (ts_mqtt.py), read by the board's WiFi status at the time. Only the ESP32 statuses
+ * debugging.md documents are explained; any other status keeps the raw line alone. */
+export function explainNodeError(exceptionMessage: string): Advice | null {
+  const connect = /mqtt connect to (\S+) failed after/.exec(exceptionMessage);
+  if (!connect) return null;
+  const statuses = [...exceptionMessage.matchAll(/wifi status (-?\d+)/g)];
+  const status = statuses.length ? statuses[statuses.length - 1]![1] : null;
+  if (status === "1010") {
+    return { text: `Board is on WiFi but can't reach the broker ${connect[1]} from its network.`, doc: DOC_MQTT_UNREACHABLE };
+  }
+  if (status === "201") {
+    return { text: "Board never joined WiFi: network not found. Check the WiFi name in the flow.", doc: DOC_WIFI_NOT_JOINED };
+  }
+  if (status === "202") {
+    return { text: "Board never joined WiFi: wrong password? Check the flow's WiFi credential.", doc: DOC_WIFI_NOT_JOINED };
+  }
+  return null;
+}
 
 const INSTALL_FAILURE_ADVICE: Record<string, Advice> = {
   silent: {

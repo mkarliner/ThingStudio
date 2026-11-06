@@ -36,3 +36,8 @@ Status: detail file, started 2026-11-04. See `learnings.md` for the index.
   so `esptool run` cannot restart it and `install.sh`'s `mpremote` step failed with `could not enter raw repl`
   (Mike's first C5 install). The image was written; RESET by hand, then copying `main.py`, finished it.
   `install.sh` now stops there with those steps instead of a traceback.
+- **2026-11-06 — v0.12.0 shipped without its own images in the dialog.** The editor reads the `builds.json` it was
+  installed with, and the 15.0.0 entries were committed after the tag (`f3f957a`), so an installed 0.12.0 offered
+  only the classic 14.x images its runtime refuses. Release URLs are known before the release exists, so
+  `firmware/README.md` "Publishing" now runs `firmware_catalogue.py --image` before the tag; v0.12.1 carries the
+  entries.

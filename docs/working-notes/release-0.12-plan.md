@@ -1,6 +1,7 @@
 # Release plan: v0.12.0 and the next tester round
 
-Status: plan, 2026-11-06. Not yet agreed by Mike. It collects the work of 2026-10-24 to 2026-11-06 into one
+Status: plan, 2026-11-06. v0.12.0 released 2026-11-06 14:39; v0.12.1 next (see "After v0.12.0").
+It collects the work of 2026-10-24 to 2026-11-06 into one
 release, and gets that release ready for the next round of test announcements, where people from the target
 communities onboard themselves. The version number is a proposal: runtime 15.0.0 is a major runtime bump, so
 v0.12.0 rather than v0.11.3.
@@ -212,3 +213,17 @@ the reports get counted toward the marketing plan's "trying it" target.
 4. Which of step 4's fixes are gates for this round, and which can follow in v0.12.1?
 5. Board variants for the C3/C5 after publish; keep or drop the 14.x classic builds.
 6. Which communities this round, and whether the remote display spike runs alongside (it does not block).
+
+## After v0.12.0 (2026-11-06)
+
+v0.12.0 is out with all three 15.0.0 images attached. Its installed `builds.json` predates their catalogue entries
+(`learnings/firmware-builds.md`), so v0.12.1 is needed for the dialog to offer them. In v0.12.1:
+
+- PR #14 (merged): C3/C5 boards point at their Thingstudio images; 14.x classic builds dropped.
+- Branch `tester-fixes-0.12.1`: the `[wifi]` line says whether the board is on a network (discussion #5); an
+  `[mqtt]` line explains a failed broker connect from the WiFi status; `firmware/README.md` runs the catalogue step
+  before the tag.
+
+Still open: the C6/H2/P4 detection (needs Mike's call on the board-descriptor spec), the local classic-image
+address detection, stale draft releases (v0.11.2 x2, v0.10.1), the fresh-machine check on v0.12.1, a reply on
+discussion #5, the README AI declaration, then the announcements. The Onboarding Reports category exists.

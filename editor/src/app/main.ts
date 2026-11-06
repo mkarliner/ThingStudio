@@ -128,6 +128,7 @@ import {
   parsePortSelection,
   passwordProblem,
   wifiReadiness,
+  wifiReadyLine,
 } from "./network-choice.js";
 import { choosePort, isUsbPort } from "./port-choice.js";
 import {
@@ -136,6 +137,7 @@ import {
   classifyDebugLines,
   explainInstallFailure,
   explainNoHello,
+  explainNodeError,
   localDocUrl,
   type Advice,
   type DocLink,
@@ -1471,7 +1473,11 @@ const transportEvents: TransportEvents = {
     // narrows this safely per the real discriminated union either way.
     const nodeId = "nodeId" in message ? message.nodeId : undefined;
     logLine(`[${message.type}] ${JSON.stringify(message, (_k, v) => (v instanceof Uint8Array ? `<${v.length} bytes>` : v))}`, "ok", nodeId);
-    if (message.type === "NODE_ERROR") highlightNodeFromNodeError(message.nodeId);
+    if (message.type === "NODE_ERROR") {
+      highlightNodeFromNodeError(message.nodeId);
+      const advice = explainNodeError(message.exceptionMessage);
+      if (advice) logAdvice("[mqtt]", advice, "err");
+    }
     if (message.type === "NODE_STATUS") handleNodeStatus(message.nodeId, message.state, message.text);
     if (message.type === "HELLO") {
       if (message.safeMode) {
@@ -2269,12 +2275,7 @@ async function rememberBoardPassword(hostname: string, password: string): Promis
 function logWifiStatus(hello: HelloMessage): void {
   const readiness = wifiReadiness(hello, activeTarget.value?.board?.wifi ?? null);
   if (readiness === "ready") {
-    logLine(
-      hello.networkAddress
-        ? `[wifi] ${hello.hostname} reachable over WiFi at ${hello.networkAddress} (${hello.hostname}.local)`
-        : `[wifi] ${hello.hostname} reachable over WiFi while its flow is on a network`,
-      "",
-    );
+    logLine(wifiReadyLine(hello.hostname ?? "", hello.networkAddress), "");
   } else if (readiness === "no_password" && !backendTransportOrNull()?.connectedOverNetwork) {
     logLine(`[wifi] ${hello.hostname} only accepts USB until it has a password. Set one in "Tools → Board settings…".`, "");
   }

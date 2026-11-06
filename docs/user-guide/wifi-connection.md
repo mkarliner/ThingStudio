@@ -36,6 +36,13 @@ If this computer has no saved password for the board, the editor asks for it.
 
 A board with no password is listed as **no password set**. It won't accept a WiFi connection until you set one.
 
+Connected over USB, the console says whether the board can take a WiFi connection now:
+
+```text
+[wifi] kitchen is on a network at 192.168.1.42 (kitchen.local): you can connect over WiFi
+[wifi] kitchen is not on a network: WiFi connects need a running flow that joins one
+```
+
 ## Good to know
 
 - Only one editor can connect over WiFi at a time.

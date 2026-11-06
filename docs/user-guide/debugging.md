@@ -224,7 +224,10 @@ An `mqtt publish` or `mqtt subscribe` node shows a red dot, and the console says
 mqtt connect to HOST:1883 failed after 3 attempts (… 'Timeout on socket write' …, wifi status 1010)
 ```
 
-The line ends with the board's WiFi status. `wifi status 1010` means the board has joined WiFi and has an address
+The editor adds a line after it, read from the board's WiFi status, such as
+`[mqtt] Board is on WiFi but can't reach the broker HOST:1883 from its network.`
+
+The raw line ends with the board's WiFi status. `wifi status 1010` means the board has joined WiFi and has an address
 but can't reach the broker from its network: the cause is the network between the board and the broker, not the
 board's memory. `201` or `202` means the board never joined WiFi; see
 [The board hasn't joined WiFi](#the-board-hasnt-joined-wifi).
