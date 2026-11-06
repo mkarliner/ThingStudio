@@ -3690,6 +3690,9 @@ release significant memory for your flow.</p>
 <strong>Thingstudio custom image</strong> as the <strong>Firmware</strong> when the dialog lists one for the chip. Its <strong>Version</strong> list holds
 the published releases.
 After flashing it, <strong>Install runtime</strong> writes only the boot script.</p>
+<p>The list of builds comes from docs.thingstudio.net, so a new image appears without updating Thingstudio. Thingstudio
+uses that list only when it carries Thingstudio's signature; offline, it uses the last list it saved, or the one it
+was installed with. The line under <strong>Version</strong> says which.</p>
 <ol>
 <li>Plug the board into USB. A Pico needs <strong>BOOTSEL</strong> held while you plug it in.</li>
 <li>Choose <strong>Tools → Install firmware…</strong>.</li>
