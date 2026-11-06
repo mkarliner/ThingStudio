@@ -240,3 +240,15 @@ describe("the dialog's lines", () => {
     expect(doneLine(custom)).toMatch(/Connect, then/);
   });
 });
+
+describe("catalogueLine", () => {
+  it("names where the build list came from, and why the site's copy was not used", async () => {
+    const { catalogueLine } = await import("../src/app/firmware-dialog.js");
+    expect(catalogueLine({ source: "site", serial: 7, note: "" })).toBe("Builds from docs.thingstudio.net (catalog 7).");
+    expect(catalogueLine({ source: "bundled", serial: 0, note: "" })).toBe("Builds that came with this install.");
+    expect(catalogueLine({ source: "saved", serial: 6, note: "docs.thingstudio.net was not reachable." })).toBe(
+      "Builds saved from docs.thingstudio.net (catalog 6). docs.thingstudio.net was not reachable.",
+    );
+    expect(catalogueLine(undefined)).toBe("");
+  });
+});

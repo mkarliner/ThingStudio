@@ -1,5 +1,6 @@
 {
   "schema": 1,
+  "serial": 0,
   "builds": [
     {
       "id": "esp32-generic",

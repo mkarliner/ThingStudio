@@ -26,6 +26,10 @@ on:
       - "tools/mkdocs_llms_hook.py"
       # The editor stamps the release version from here into its toolbar, so a version bump changes the screenshots.
       - "backend/pyproject.toml"
+      # The signed firmware catalogue installs fetch (decisions/firmware-catalogue.md, 2026-11-06).
+      - "firmware/builds.json"
+      - "firmware/builds.json.sig"
+      - "firmware/catalogue-keys.json"
   workflow_dispatch: {}
 
 permissions:
@@ -62,4 +66,16 @@ jobs:
         run: |
           playwright install --with-deps chromium
           python tools/screenshots.py
+      # The firmware catalogue installs fetch from docs.thingstudio.net/catalogue/. Published only when its signature
+      # verifies: an unsigned or stale one would be refused by every install anyway, and leaving it out makes them
+      # fall back to their saved or bundled copy (backend catalogue_source.py). Signing happens on the maintainer's
+      # machine (tools/catalogue_sign.py sign); no key is in CI.
+      - name: Signed firmware catalogue
+        run: |
+          if python3 tools/catalogue_sign.py verify; then
+            mkdir -p docs/user-guide/catalogue
+            cp firmware/builds.json firmware/builds.json.sig docs/user-guide/catalogue/
+          else
+            echo "::warning::firmware catalogue not published: see the line above"
+          fi
       - run: mkdocs gh-deploy --force

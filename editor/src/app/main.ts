@@ -185,7 +185,7 @@ import {
   type CanvasNodeSnapshot,
 } from "../flow-file/flow-file.js";
 import { DEFAULT_BACKEND_WS_URL, backendHttpBaseUrl, initialBackendWsUrl, slugifyFlowName, getCredential, putCredential, listDefinitions, listCustomNodePackages, readCustomNode, type CredentialType, listFirmwareCatalogue, listFirmwareTargets, uploadFirmwareImage, startFirmwareFlash, getFirmwareJob, type FirmwareBuild, type FirmwareCatalogue, type FirmwareFamily, type FirmwareJobState, type FirmwareVersion } from "../flow-file/admin-api-client.js";
-import { choiceProblem, doneLine, flashBoard, jobLine, type FirmwareChoice, type FirmwareFile } from "./firmware-dialog.js";
+import { catalogueLine, choiceProblem, doneLine, flashBoard, jobLine, type FirmwareChoice, type FirmwareFile } from "./firmware-dialog.js";
 // slugifyFlowName is reused here purely for a nicer suggested filename in
 // the save dialog below -- its own header's reasoning for why a display
 // name isn't a valid storage key applies just as well to a suggested
@@ -2760,8 +2760,10 @@ el("btnInstallFirmware").addEventListener("click", () => {
   void (async () => {
     try {
       fwCatalogue = await listFirmwareCatalogue(currentBackendWsUrl());
+      el("fwCatalogueNote").textContent = catalogueLine(fwCatalogue.catalogue);
     } catch (err) {
       fwCatalogue = null;
+      el("fwCatalogueNote").textContent = "";
       el("fwError").textContent = err instanceof Error ? err.message : String(err);
     }
     renderFwFamilies();

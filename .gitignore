@@ -43,3 +43,6 @@ backend/build/
 # checksums). Images are GitHub release assets, never committed binaries
 # (docs/working-notes/decisions/classic-esp32-firmware.md).
 firmware/out/
+
+# Copied in by the Docs workflow when the catalogue's signature verifies; the source is firmware/builds.json.
+docs/user-guide/catalogue/

@@ -97,8 +97,11 @@ tag until every target has a tested image at the tag's runtime version, built fr
 
 ## Publishing
 
-The editor offers the images listed in the `builds.json` it was installed with, so the catalogue entries go into
-the commit the tag points at. An image's download URL is known before the release exists.
+The editor offers the images in the newest catalogue it trusts: the signed `builds.json` on the docs site
+(`docs.thingstudio.net/catalogue/`), the last one it saved from there, or the one it was installed with. So the
+catalogue entries go into the commit the tag points at (an install made from that release lists them even offline),
+and signing the catalogue publishes them to every install that can reach the site. An image's download URL is known
+before the release exists.
 
 1. Offer each image in the editor, with the URL it will have on the release:
 
@@ -108,8 +111,16 @@ the commit the tag points at. An image's download URL is known before the releas
    ```
 
    That adds the version to `builds.json`, creating the target's build entry from `target.json` the first time. It
-   refuses an image whose hash is not in that target's `tested.json`. Commit `builds.json` with the version bump;
-   `--check` (in CI) and the editor's tests hold the files together.
+   refuses an image whose hash is not in that target's `tested.json`. Then sign the catalogue (it raises its serial,
+   so installs that already saw an older one take this one):
+
+   ```sh
+   python3 tools/catalogue_sign.py sign        # asks for the key's passphrase
+   ```
+
+   Commit `builds.json` and `builds.json.sig` with the version bump; `--check` and `catalogue_sign.py verify` (both
+   in CI) and the editor's tests hold the files together. The Docs workflow publishes the catalogue only when its
+   signature verifies.
 2. Tag the release (after the records above are committed). The Release workflow makes a draft.
 3. Attach every target's image:
 
@@ -122,6 +133,22 @@ the commit the tag points at. An image's download URL is known before the releas
    runtime version, recorded as tested, built from a commit the tag contains and match their `.sha256`. Every
    upload is read back and compared. The release notes name each image, its hash and its tested board. Needs `gh`,
    logged in. Until it runs, the catalogue's new URLs answer 404, so publish the release promptly.
+
+## Signing keys (once)
+
+Installs trust the docs site's catalogue only when a key in `firmware/catalogue-keys.json` signed it
+(`decisions/firmware-catalogue.md`, 2026-11-06). Make two keys, on the machine that builds the images:
+
+```sh
+python3 tools/catalogue_sign.py keygen main    # the key you sign with
+python3 tools/catalogue_sign.py keygen spare   # kept offline, used only if main is lost or leaked
+```
+
+Each private key goes to `~/.thingstudio-signing/`, encrypted with the passphrase you give. Copy the spare's file
+and passphrase somewhere offline (a password manager), then delete it from the machine. Commit
+`catalogue-keys.json`: installs from the next release on carry both public keys. If `main` is lost or leaked, sign
+with `--key-id spare`, make a new spare, and ship it in the next release. The tool needs `cryptography`
+(`pip install cryptography`, or the backend's own environment).
 
 ## Adding a target
 

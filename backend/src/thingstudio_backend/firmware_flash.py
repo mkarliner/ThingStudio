@@ -37,7 +37,7 @@ from pathlib import Path
 
 from serial.tools import list_ports
 
-from . import assets
+from . import assets, catalogue_source
 from .persisted_store import PersistedStore
 
 logger = logging.getLogger(__name__)
@@ -243,8 +243,25 @@ def _builds_from(data: object, where: str) -> list[Build]:
 
 def catalogue_sources() -> list[Path]:
     """Where builds come from. One file today (`firmware/builds.json`, shipped with the install); a list because a
-    manufacturer-supplied repository is the intended extension (decisions/firmware-catalogue.md, 2026-10-25)."""
+    manufacturer-supplied repository is the intended extension (decisions/firmware-catalogue.md, 2026-10-25).
+    The first is the bundled copy that catalogue_source.choose() weighs against the signed site copy (2026-11-06)."""
     return [assets.asset_dirs().builds]
+
+
+def effective_catalogue(store: PersistedStore) -> tuple[list[Build], catalogue_source.Chosen]:
+    """The builds the dialog offers and a flash may use: the signed site copy, the saved one, or the bundled one,
+    whichever is newest and verifies (catalogue_source.py). The bundled copy is read the usual way, so a missing or
+    broken install catalogue is still reported as such."""
+    paths = catalogue_sources()
+    chosen = catalogue_source.current(store, paths[0], validate=lambda data, where: _builds_from(data, where))
+    if chosen.source == "bundled":
+        return load_catalogue(paths), chosen
+    found = {build.id: build for build in _builds_from(chosen.data, f"the {chosen.source} catalogue")}
+    for build in load_catalogue(paths[1:]) if len(paths) > 1 else []:
+        if build.id in found:
+            raise FirmwareError("catalogue", f"build {build.id!r} is listed twice")
+        found[build.id] = build
+    return list(found.values()), chosen
 
 
 def load_catalogue(paths: list[Path] | None = None) -> list[Build]:
@@ -270,7 +287,8 @@ def catalogue(store: PersistedStore) -> dict:
     already downloaded. Builds whose family has no `flash` block are left out -- they cannot be written yet."""
     known = families(store)
     builds = []
-    for build in load_catalogue():
+    found, chosen = effective_catalogue(store)
+    for build in found:
         family = known.get(build.family)
         if family is None:
             logger.info("catalogue build %s names family %r, which cannot be flashed; left out", build.id, build.family)
@@ -298,7 +316,7 @@ def catalogue(store: PersistedStore) -> dict:
                 ],
             }
         )
-    return {"families": [family.public() for family in known.values()], "builds": builds}
+    return {"families": [family.public() for family in known.values()], "builds": builds, "catalogue": chosen.public()}
 
 
 def build_version(builds: list[Build], build_id: str, version: str) -> tuple[Build, BuildVersion]:
@@ -675,7 +693,7 @@ class FirmwareJobs:
         build: Build | None = None
         entry: BuildVersion | None = None
         if build_id:
-            build, entry = build_version(load_catalogue(), str(build_id), str(version or ""))
+            build, entry = build_version(effective_catalogue(self._store)[0], str(build_id), str(version or ""))
 
         # An address the user typed wins, then the build's own (a merged image), then the family's.
         if address is None and build is not None:

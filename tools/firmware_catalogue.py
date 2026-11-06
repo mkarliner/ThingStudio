@@ -116,7 +116,8 @@ def add(image: Path, url: str, when: str | None) -> str:
     versions = [v for v in build.get("versions", []) if v.get("version") != version and v.get("sha256") != digest]
     build["versions"] = [entry, *versions]
     CATALOGUE.write_text(json.dumps(catalogue, indent=2) + "\n", encoding="utf-8")
-    return f"catalogue: {target.build_id} {version} <- {image.name} ({digest[:12]}...), tested on {tested[digest]['board']}"
+    return (f"catalogue: {target.build_id} {version} <- {image.name} ({digest[:12]}...), tested on "
+            f"{tested[digest]['board']}\nthen sign it: python3 tools/catalogue_sign.py sign")
 
 
 def check() -> list[str]:

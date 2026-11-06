@@ -381,9 +381,18 @@ export interface FirmwareBuild {
   versions: FirmwareVersion[];
 }
 
+/** Where the list of builds came from (backend catalogue_source.py): the signed copy on the docs site, the last
+ *  one saved from it, or the copy that shipped with this install; `note` says why the site's copy wasn't used. */
+export interface FirmwareCatalogueSource {
+  source: "site" | "saved" | "bundled";
+  serial: number;
+  note: string;
+}
+
 export interface FirmwareCatalogue {
   families: FirmwareFamily[];
   builds: FirmwareBuild[];
+  catalogue?: FirmwareCatalogueSource;
 }
 
 export interface FirmwareTarget {

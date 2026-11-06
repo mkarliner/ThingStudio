@@ -24,6 +24,10 @@ On a classic ESP32 with 4 MB of flash and no PSRAM, an ESP32-C3 or an ESP32-C5, 
 the published releases.
 After flashing it, **Install runtime** writes only the boot script.
 
+The list of builds comes from docs.thingstudio.net, so a new image appears without updating Thingstudio. Thingstudio
+uses that list only when it carries Thingstudio's signature; offline, it uses the last list it saved, or the one it
+was installed with. The line under **Version** says which.
+
 1. Plug the board into USB. A Pico needs **BOOTSEL** held while you plug it in.
 2. Choose **Tools → Install firmware…**.
 3. Pick **Serial port** or **Mounted drive**, then the port or drive from the list. USB ports come first, shown as

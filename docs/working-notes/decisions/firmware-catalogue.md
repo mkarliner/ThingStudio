@@ -1,6 +1,7 @@
 # Decisions — firmware catalogue (flashing from the editor)
 
-Status: decision, 2026-10-25. Supersedes the per-board `firmware` block in `editor-firmware-flashing-scoping.md`.
+Status: decision, 2026-10-25; catalogue location superseded 2026-11-06 (next section). Supersedes the per-board
+`firmware` block in `editor-firmware-flashing-scoping.md`.
 
 ## Target model: Thonny's shape, our trust rules
 
@@ -27,6 +28,53 @@ Mike: "Look at what Thonny does. I think that is our target in general." After r
   they are. This is what replaced the address dropdown the first cut invented.
 - **Not copied from Thonny:** fetching the catalogue from a remote server at flash time (unpinned download path);
   per-backend handler classes (our tool registry plus data is the package-extensible shape).
+
+## Superseded 2026-11-06: the catalogue is fetched, signed, from the docs site (Mike)
+
+v0.12.0 shipped a bundle whose `builds.json` predated its own images (`learnings/firmware-builds.md`): a catalogue
+inside the bundle can only offer what existed at the tag, so every image needs an app release to appear. Mike:
+"images would be downloaded from the thingstudio repo. A json catalogue (in pages) would list the available ones."
+So, superseding "the catalogue is data in the repo" and "not copied from Thonny: fetching the catalogue from a
+remote server":
+
+- **The editor fetches `builds.json` from the docs site** (GitHub Pages) when the Install firmware dialog opens.
+  The repo's `firmware/builds.json` stays the source; the Docs workflow publishes it. The bundled copy is the
+  fallback when offline or when the fetched one is refused, and the dialog says which it is showing.
+- **Signed, because the 2026-10-25 reason still holds.** A build is bytes onto the user's hardware, and the
+  per-version sha256 only pins what the catalogue says, so whoever can change the catalogue chooses the image.
+  The catalogue carries an Ed25519 signature made with a key Mike holds (on the Mac, beside the image builds,
+  never in CI); the editor ships the public key and refuses a catalogue that does not verify: one console line,
+  bundled copy used. Verification uses `cryptography`, already pinned for the backend: no new dependency.
+- **No rollback:** the catalogue carries a serial; the editor keeps the highest it has accepted and refuses an
+  older one, so an old signed catalogue listing a since-withdrawn image cannot be replayed.
+- **Signing is a publish step:** `firmware/publish.sh` (already Mac-side, after the images are tested) signs
+  `builds.json`; the signature is committed beside it and the Docs workflow deploys both.
+- **Order:** v0.12.1 ships first with the catalogue step moved before the tag (works today, no new machinery).
+  The fetched catalogue was built on 2026-11-06 and ships in the release after that; it is inert until Mike makes
+  the keys (with no keys shipped, the site is not asked).
+- **Fits the apt-style future** below: the built-in source becomes "the signed catalogue at the docs site", and a
+  manufacturer's source is the same shape with its own key and an explicit trust prompt.
+- **A second one would need:** another source is a URL plus a public key, which is the repositories item.
+
+**Board definitions are a separate source, not part of the build catalogue (Mike, 2026-11-06):** "board defs
+are separate, manufacturers may have a standard chip with custom peripherals." A manufacturer can publish boards
+(pins, peripherals) without builds, and a board names a build by id, possibly ours (`thingstudio-esp32-c5`).
+
+Confirmed by Mike ("go", 2026-11-06) and built the same day (`backend/.../catalogue_source.py`,
+`tools/catalogue_sign.py`, the Docs workflow's "Signed firmware catalogue" step):
+
+- **Board sources are signed by their own source and accepted once**, like build sources, though the stakes are
+  lower (reviewable data, not bytes onto flash). A board's `variant` may only name a build from a source the user
+  already trusts, so a board file cannot bring in an untrusted build.
+- **Two keys from the start.** The signing key on Mike's Mac, passphrase-encrypted; a spare generated at the
+  same time, kept offline (password manager or paper), never used. The editor ships both public keys. Loss or
+  compromise: sign with the spare, ship a new spare in the next release; no install is left unable to verify.
+- **Detached signature over the exact bytes:** `builds.json` (plus a `serial` field) and `builds.json.sig`
+  holding the key id and the Ed25519 signature of the file's bytes. No canonical-JSON step to get wrong; the key
+  id says which of the two keys to check.
+- **Withdrawing an image:** remove its version, raise the serial. Rollback protection keeps it gone.
+- **No expiry.** A stale but genuine catalogue offers fewer images, not wrong ones; an expiry date adds a way to
+  fail whose only benefit is noticing a site that stopped updating.
 
 ## Variants are builds, not boards
 
