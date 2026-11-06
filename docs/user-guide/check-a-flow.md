@@ -8,7 +8,7 @@ Use it in a script, in CI, or to let an AI assistant check a flow it has written
 From the `editor/` folder:
 
 ```text
-npm ci
+npm ci --ignore-scripts
 npm run build:cli
 ```
 

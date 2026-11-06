@@ -33,7 +33,8 @@ Some nodes take a value you type next to a type you pick: [inject](nodes/inject.
 **value / source property**). The value is read as that type:
 
 - `bool`: `true` is `True`. Anything else is `False`, including `True` and `1`.
-- `number`: a whole number becomes an `int`, any other number a `float`. An empty value is `0`.
+- `number`: a whole number becomes an `int`, any other number a `float`. An empty value is `0`. Write numbers in
+  decimal: `0x2000` is not a number.
 - `string`: sent as typed.
 
 With type `number`, a value that isn't a number stops the deploy for `change`. For `inject` and `startup` it fails on

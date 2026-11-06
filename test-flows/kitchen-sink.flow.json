@@ -31,20 +31,6 @@
       }
     },
     {
-      "id": "5d25acd911ff5c4a",
-      "type": "thingstudio/encoder",
-      "properties": {
-        "pinX": 10,
-        "pinY": 11,
-        "div": 1,
-        "value": 0,
-        "vmin": "",
-        "vmax": "",
-        "mod": "",
-        "delay": 100
-      }
-    },
-    {
       "id": "709611994fed3f7b",
       "type": "thingstudio/debug",
       "properties": {
@@ -106,7 +92,7 @@
       "id": "px-boot",
       "type": "thingstudio/ebutton",
       "properties": {
-        "pin": 3,
+        "pin": 9,
         "suppress": false,
         "senseMode": "auto",
         "debounceMs": 50,
@@ -235,16 +221,6 @@
       "pos": [
         98.81752760029391,
         516.014479045065
-      ],
-      "size": [
-        110,
-        34
-      ]
-    },
-    "5d25acd911ff5c4a": {
-      "pos": [
-        75.14139321222635,
-        940.3809569700766
       ],
       "size": [
         110,
@@ -383,7 +359,6 @@
     "0e6ccd894f09db92": "pane-1",
     "22cf106376b052c0": "pane-1",
     "278c9a42c50d7912": "pane-1",
-    "5d25acd911ff5c4a": "pane-1",
     "709611994fed3f7b": "pane-1",
     "737a425960268084": "pane-1",
     "b0cd2ece2ad3fc47": "pane-1",
@@ -397,5 +372,5 @@
     "px-show": "pane-1",
     "px-tick": "pane-1"
   },
-  "notes": "Kitchen sink for the LuatOS ESP32C3-CORE. Blink: timer -> LED D5 (GPIO 13). Button on GPIO 3 lights LED D4 (GPIO 12) while held. adc on GPIO 0 sends readings to debug. Single NeoPixel on GPIO 6 (header pin 22): colour cycle, breathe or police flash; press BOOT (GPIO 9) for the next effect."
+  "notes": "Kitchen sink for the board in the user guide's Kitchen-sink board page (LuatOS ESP32C3-CORE). Blink: timer -> LED D5 (GPIO 13). Button on GPIO 3 lights LED D4 (GPIO 12) while held. adc on GPIO 0 (potentiometer) sends readings to debug. Single NeoPixel on GPIO 6 (header pin 22): colour cycle, breathe or police flash; press BOOT (GPIO 9) for the next effect."
 }

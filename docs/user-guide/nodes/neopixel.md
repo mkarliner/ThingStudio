@@ -4,7 +4,8 @@ Lights a WS2812 (NeoPixel) strip: sets its pixels from each message, then writes
 
 ## Properties
 
-- **pin** — the strip's data pin. Default 13.
+- **pin** — the strip's data pin. Default 13. [Kitchen-sink board](../kitchen-sink-board.md) shows one LED wired to
+  one.
 - **count** — how many pixels the strip has. Default 8. Must be 1 or more.
 - **order** — the color order of your strip: `GRB`, `RGB`, `RGBW` or `GRBW`. Default `GRB`, which most WS2812
   strips use. The `W` orders are for strips with a white channel.
