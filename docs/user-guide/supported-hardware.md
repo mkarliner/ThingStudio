@@ -37,8 +37,8 @@ Any board with one of these processors can be used by picking the processor from
 | ESP32 | Yes, on the CYD |
 | ESP32-S2 | Yes, on the LOLIN S2 Mini |
 | ESP32-S3 | Yes, on the Freenove board |
-| ESP32-C3 | Yes, on a generic ESP32-C3 board, over USB and WiFi |
-| ESP32-C5 | Yes, on the ESP32-C5-340X, over USB |
+| ESP32-C3 | Yes, on a generic ESP32-C3 board, over USB and WiFi; also on the [custom image](custom-firmware.md) |
+| ESP32-C5 | Yes, on the ESP32-C5-340X, over USB; also on the [custom image](custom-firmware.md) |
 | RP2040 | Yes, on the Pico and Pico W |
 | RP2350 | Yes, on the Pico 2 |
 | nRF52840 | Smoke tested on the Seeed XIAO nRF52840 (Sense) |

@@ -53,6 +53,12 @@ A soft restart reuses the same heap; only a power cycle rebuilds it. See [Memory
 Possibly. If a deploy still fails after **Tools → Remove flow…** and a power cycle, the flow may be too big for the
 board. See [MemoryError or a library that won't load](debugging.md#memoryerror-or-a-library-that-wont-load) for what to do.
 
+## Redeploying a BLE flow on an ESP32-C5 fails with "MemoryError". Why?
+
+On stock MicroPython, the Bluetooth stack keeps its memory between flows, and the runtime, libraries and new flow
+have to fit in what is left. Install the [Thingstudio custom image](custom-firmware.md): it redeploys the same flow
+with room to spare. Or choose **Tools → Remove flow…**, power cycle the board, then deploy.
+
 ## Why does http request fail with "MemoryError" fetching a page?
 
 The node reads the whole response body into memory at once. A page larger than the largest free block fails, even

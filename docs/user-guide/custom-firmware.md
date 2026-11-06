@@ -32,8 +32,9 @@ Because the libraries are already there, Deploy does not send them. The console 
 
 Two things follow from that:
 
-- Deploying over a running flow is more likely to fit. On stock MicroPython, the runtime, the libraries and the
-  flow fight over the same memory.
+- Deploying over a running flow fits where stock MicroPython runs out. On stock MicroPython, the runtime, the
+  libraries and the flow fight over the same memory: an ESP32-C5 redeploying a BLE flow fails with `MemoryError`.
+  On the custom image, the same board redeploys it with 100 KB to spare.
 - The first deploy after flashing has more memory to work with than any later one. Judge a flow by a deploy over
   another flow, not by the first one.
 
@@ -135,12 +136,15 @@ Read the third row before leaning on deploys: each deploy over a running flow le
 the chip's own heap shrinks as MicroPython takes from it. WiFi and Bluetooth draw from that chip heap, and the
 console warns when it is low.
 
-The C3 and C5, measured with an MQTT flow running over WiFi, after deploying it over itself, in KB:
+The C3 and C5, measured with each flow running after deploying it over itself, in KB:
 
-| Board | MicroPython free | ESP-IDF free | ESP-IDF largest |
-|---|---|---|---|
-| ESP32-C3 module | 114 | 36 | 28 |
-| ESP32-C5-340X | 94 | 29 | 17 |
+| Board | Flow | MicroPython free | ESP-IDF free | ESP-IDF largest |
+|---|---|---|---|---|
+| ESP32-C3 module | MQTT over WiFi | 114 | 36 | 28 |
+| ESP32-C5-340X | MQTT over WiFi | 94 | 29 | 17 |
+| ESP32-C5-340X | BLE central | 113 | 108 | 88 |
+
+WiFi takes the most from the chip's heap.
 
 Keeping frames small and recovering from a `MemoryError` are covered in [Memory](debugging.md#memory) and
 [MemoryError or a library that won't load](debugging.md#memoryerror-or-a-library-that-wont-load).
