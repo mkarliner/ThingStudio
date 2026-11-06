@@ -205,6 +205,12 @@
       "note": "The runtime is frozen into this image, so Install runtime only writes the boot script. 14.1.0 and later also freeze the library list, so Deploy sends nothing; earlier versions still push every library a flow uses.",
       "versions": [
         {
+          "version": "15.0.0",
+          "date": "2026-11-06",
+          "url": "https://github.com/mkarliner/ThingStudio/releases/download/v0.12.0/thingstudio-classic-esp32-15.0.0-1dc99d7.bin",
+          "sha256": "ef8260bc1c8154c2457a545ad7c5b1870227791be543217d10668bccd83ba85f"
+        },
+        {
           "version": "14.1.0",
           "date": "2026-10-25",
           "url": "https://github.com/mkarliner/ThingStudio/releases/download/v0.10.0/thingstudio-classic-esp32-14.1.0-a236ba0.bin",
@@ -218,6 +224,42 @@
         }
       ],
       "address": 0
+    },
+    {
+      "id": "thingstudio-esp32-c3",
+      "supplier": "thingstudio",
+      "family": "esp32-c3",
+      "label": "ESP32-C3, 4 MB",
+      "infoUrl": "https://github.com/mkarliner/ThingStudio/blob/main/docs/user-guide/custom-firmware.md",
+      "runtime": "install",
+      "note": "The runtime and every flow library are frozen into this image, so Install runtime only writes the boot script and Deploy sends no libraries.",
+      "versions": [
+        {
+          "version": "15.0.0",
+          "date": "2026-11-06",
+          "url": "https://github.com/mkarliner/ThingStudio/releases/download/v0.12.0/thingstudio-esp32-c3-15.0.0-1dc99d7.bin",
+          "sha256": "9aeecd034dd1cc74cd7f4fba9ee4eda25d41f4c5e3b5714e9b1c22daa54e099d"
+        }
+      ],
+      "address": 0
+    },
+    {
+      "id": "thingstudio-esp32-c5",
+      "supplier": "thingstudio",
+      "family": "esp32-c5",
+      "label": "ESP32-C5, 4 MB, no PSRAM",
+      "infoUrl": "https://github.com/mkarliner/ThingStudio/blob/main/docs/user-guide/custom-firmware.md",
+      "runtime": "install",
+      "note": "The runtime and every flow library are frozen into this image, so Install runtime only writes the boot script and Deploy sends no libraries.",
+      "versions": [
+        {
+          "version": "15.0.0",
+          "date": "2026-11-06",
+          "url": "https://github.com/mkarliner/ThingStudio/releases/download/v0.12.0/thingstudio-esp32-c5-15.0.0-1dc99d7.bin",
+          "sha256": "fa1d3111e9877bac7ea27d9bd600a782e1c577f5b4ab904309344b75595c3f4b"
+        }
+      ],
+      "address": 8192
     }
   ]
 }
