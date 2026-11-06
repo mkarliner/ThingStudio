@@ -3751,7 +3751,9 @@ shasum<span class="w"> </span>-a<span class="w"> </span><span class="m">256</spa
 <p>For an ESP32-C5, <code>--chip esp32c5</code> and <code>0x2000</code>. Written at 0, a C5 does not boot. On macOS the port looks like
    <code>/dev/cu.usbserial-14420</code>. On Windows it is <code>COM3</code> or similar.</p>
 <ol>
-<li>Write the boot script, the one file that lives on the filesystem rather than in the image:</li>
+<li>If you held <strong>BOOT</strong> to get into download mode, press <strong>RESET</strong> now: without it the board stays in its
+   bootloader, and <code>mpremote</code> fails with <code>could not enter raw repl</code>. Then write the boot script, the one file that
+   lives on the filesystem rather than in the image:</li>
 </ol>
 <div class="highlight"><pre><span></span><code>mpremote<span class="w"> </span>connect<span class="w"> </span>/dev/ttyUSB0<span class="w"> </span>fs<span class="w"> </span>cp<span class="w"> </span>main.py<span class="w"> </span>:/main.py
 </code></pre></div>
@@ -3810,7 +3812,32 @@ and its port name comes from <code>PORT</code>.</p>
 </table>
 <p>Read the third row before leaning on deploys: each deploy over a running flow leaves the heaps more fragmented, and
 the chip's own heap shrinks as MicroPython takes from it. WiFi and Bluetooth draw from that chip heap, and the
-console warns when it is low. The C3 and C5 images are not measured yet.</p>
+console warns when it is low.</p>
+<p>The C3 and C5, measured with an MQTT flow running over WiFi, after deploying it over itself, in KB:</p>
+<table>
+<thead>
+<tr>
+<th>Board</th>
+<th>MicroPython free</th>
+<th>ESP-IDF free</th>
+<th>ESP-IDF largest</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ESP32-C3 module</td>
+<td>114</td>
+<td>36</td>
+<td>28</td>
+</tr>
+<tr>
+<td>ESP32-C5-340X</td>
+<td>94</td>
+<td>29</td>
+<td>17</td>
+</tr>
+</tbody>
+</table>
 <p>Keeping frames small and recovering from a <code>MemoryError</code> are covered in <a href="../debugging/#memory">Memory</a> and
 <a href="../debugging/#memoryerror-or-a-library-that-wont-load">MemoryError or a library that won't load</a>.</p>
 <h2 id="back-to-stock-micropython">Back to stock MicroPython</h2>
