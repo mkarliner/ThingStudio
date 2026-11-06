@@ -79,6 +79,15 @@ ThingStudioMarketing repo, not here.
 
 ## Boards / definitions
 
+- **[TR]** **[P2]** **A local Thingstudio classic-ESP32 image installs at the wrong address -- new item, 2026-11-06.**
+  **Or use your own image file** writes at the chip family's address (`0x1000` for ESP32) unless the user sets
+  **Address** under **Install options**; Thingstudio's classic image is merged and must go at `0x0`, so the board
+  doesn't boot. Catalogue installs are fine (the build entry carries `address`), and the C3/C5 images match their
+  family's address. Docs now say to set `0x0` (`installing-micropython.md`, `custom-firmware.md`, `debugging.md`).
+  Fix: `inspect_image` (`backend/.../firmware_flash.py`) also reports where a `.bin` starts, from where its
+  partition table sits in the file (flash `0x8000`: file offset `0x8000` for a file written at 0, `0x7000` for one
+  written at `0x1000`), and the dialog uses that address unless the user typed one. Found by Mike, 2026-11-06.
+
 - **[BACKLOG]** **Manufacturer-supplied catalogue repositories (apt-style) -- Mike's idea, 2026-10-25.** A
   URL that adds board definitions, builds and versions beside the built-in catalogue, so a vendor does not need a
   Thingstudio release. The loader already takes a list of sources. The design cost is trust: a source's builds are

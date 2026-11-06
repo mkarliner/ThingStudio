@@ -89,6 +89,10 @@ chip, its `.sha256` file and `main.py`.
    For an ESP32-C5, `--chip esp32c5` and `0x2000`. Written at 0, a C5 does not boot. On macOS the port looks like
    `/dev/cu.usbserial-14420`. On Windows it is `COM3` or similar.
 
+   To write the downloaded image from the editor instead, use **Or use your own image file** in **Tools → Install
+   firmware…** and set **Address**, under **Install options**, to the one in the table. Without it, a classic ESP32
+   image goes at the family's `0x1000` and the board does not boot.
+
 3. If you held **BOOT** to get into download mode, press **RESET** now: without it the board stays in its
    bootloader, and `mpremote` fails with `could not enter raw repl`. Then write the boot script, the one file that
    lives on the filesystem rather than in the image:

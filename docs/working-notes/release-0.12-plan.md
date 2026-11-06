@@ -122,11 +122,14 @@ Ranked by what a newcomer meets first. The [TR] items are tester-ready gates.
 2. **Plain console line for an unreachable MQTT broker** (same family; adventurers go to MQTT next).
 3. **[TR] [P2] ESP32-C6/H2/P4 resolve as a classic ESP32.** More likely to bite now that the C3 and C5 are
    promoted: someone will bring a C6. An unknown ESP32 variant should resolve to no processor.
-4. `examples/http-blink.flow.json` shipped with **full message** ticked, so the Web Blink tutorial can drop the
+4. **[TR] A local classic-ESP32 Thingstudio image installs at `0x1000`** through **Or use your own image file**
+   and doesn't boot. The docs now say to set **Address** `0x0`; the fix reads the start address out of the image
+   (`outstanding-items.md`, Boards / definitions). Matters once 15.0.0 images sit on the releases page.
+5. `examples/http-blink.flow.json` shipped with **full message** ticked, so the Web Blink tutorial can drop the
    instruction (optional).
 
 Anything here that touches the wire protocol or another interface spec follows `AGENTS.md` (read the spec, run
-its conformance test, Mike's permission to change it). None of the four should.
+its conformance test, Mike's permission to change it). None of the five should.
 
 ## 5. Bump and tag (Mike, 15 min)
 

@@ -37,7 +37,9 @@ tested.
 
 The list covers every build Thingstudio pins, so **Or use your own image file** is only for the rest: a build for a
 board Thingstudio doesn't list, a chip with no pinned build yet (the ESP32-C5), or an image you downloaded yourself. Pick the `.bin` or `.uf2`; the chip family you
-choose decides the address, and the file's own header usually decides the family.
+choose decides the address, and the file's own header usually decides the family. **Address**, under **Install
+options**, overrides the family's address. A Thingstudio custom image for a classic ESP32 needs `0x0` there: see
+[Custom firmware](custom-firmware.md#install-by-hand).
 
 Flashing erases the flow and all settings on the board. Afterwards, [connect](connecting.md) it
 and [install the runtime](installing-runtime.md).
