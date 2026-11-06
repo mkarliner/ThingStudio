@@ -21,6 +21,9 @@ notifications for the ble notify nodes. The nodes' status follows each step: **f
 **discovering**, **connected**. If a step fails or the link drops, the status says why, and the board starts again
 from finding after 10 seconds. It never connects to a different device instead.
 
+An ESP32 holds at most 4 Bluetooth connections at once, counting its peers and the devices connected to the board.
+A peer over that limit reports a failure at connecting.
+
 ## Errors
 
 A peer with neither an address nor a name, a malformed address, or a timeout outside 1000 to 60000 ms stops the
