@@ -53,7 +53,7 @@ the above.
 | Outside services | MQTT brokers, HTTP endpoints, NTP servers a flow uses |
 | Code sources | custom-node packages, shared flow files, bundled examples, AI agents using the CLI and skills |
 | Supply chain | npm and PyPI dependencies, GitHub Actions, vendored binaries, CI, releases, installers, the MicroPython firmware users flash |
-| Not yet built | a backend on another machine (§5), node registries/marketplace, a team or fleet server |
+| Not yet built | a backend on another machine (§5), node registries/marketplace, a team or fleet server, remote displays (board-served page and package widget faces on the phone; `working-notes/remote-display-scoping.md` P1) |
 
 ## 2. Threat tiers
 

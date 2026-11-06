@@ -1,6 +1,7 @@
 # Remote displays — scoping (provisional)
 
-**Status: provisional.** Written 2026-11-05 from a brainstorm with Mike. Nothing here is decided: the positions
+**Status: provisional.** Written 2026-11-05 from a brainstorm with Mike; design principles and lineage added
+2026-11-06. The two design principles are decided (`decisions/remote-display.md`); nothing else is: the positions
 below are where the brainstorm ended, and Mike makes the final decisions in a separate session. Until then, nothing
 in this note supersedes `gui-layout-widget-system-scoping.md` ("Remote views (2026-10-08)", which leaned
 MQTT-first, multi-viewer and read-only to begin with). Nothing is built beyond the hooks listed under "What exists".
@@ -14,6 +15,12 @@ MQTT-first, multi-viewer and read-only to begin with). Nothing is built beyond t
 - **Nearly everyone carries a phone.** It's a display, a keyboard and precise touch that the user already owns. No
   display hardware to buy, wire or choose a driver for.
 - **Boards with no input at all can be configured**: no buttons, no keyboard, no display.
+- **A UI format that an AI writes and a person audits.** A remote display is an entry in the `screens` tree,
+  checked by the same compiler as the flow, so the checks between the UI and the flow are free (a widget bound
+  to a value nothing produces, a type mismatch, a widget unsuited to the display). This is the "common ground"
+  argument of Mike's post *Making Common Ground for Humans and LLM's*
+  (https://blog.karliner.net/posts/thingstudio-common-ground/) applied to UIs, and it is what the 2015 ThingStudio
+  was missing: a small vocabulary of parts, but no checker (see "Lineage", below).
 
 ## Provisional positions (Mike, 2026-11-05)
 
@@ -32,6 +39,47 @@ MQTT-first, multi-viewer and read-only to begin with). Nothing is built beyond t
 7. **Alerts are out of scope**: a notification node (e.g. Pushover) handles them.
 8. **Possibly an MVP item**, expected to be modest in size, but behind the current focus (tester readiness,
    onboarding, outreach).
+
+## Design principles (Mike, 2026-11-06)
+
+These sit above the provisional positions: a position that conflicts with one of them changes, not the principle.
+
+### P1. Everything is a plugin, and contributing must not open a supply-chain hole
+
+The project-wide rule (`builtins-as-packages-scoping.md`: extend without changing the core; `docs/security-policy.md`
+§2, supply chain is **Defend**) applies here unchanged. Mike wants a community that finds contributing easy, in this
+project and in its 2015 predecessor's spirit, without making each contribution a way in. For remote displays:
+
+- **A remote widget's face is a new place package code runs**: on the user's phone, inside a page that holds an
+  authenticated session able to drive hardware. That is a new zone and code source in the security policy (§1, §3.4),
+  added in the same change that builds it.
+- **Prefer data to code.** Most widget faces should be declarative (a descriptor composing core-rendered
+  primitives: text, SVG shapes, bindings to the widget's values and events), so the common case ships no JS at all
+  and is reviewable at a glance, by a human or an AI. A JS face is the exception and is marked as such.
+- **A JS face gets the narrowest interface the core can give it**: it receives its own widget's values and may emit
+  its own widget's declared events, nothing else. No access to the socket, the session key, other widgets or the
+  network (e.g. a sandboxed iframe or worker with a message-only API, and a CSP on the page). A malicious face can
+  then at worst misdraw itself or send events the flow already accepts from that widget.
+- **Unknown or refused widgets degrade**, as already planned: a labelled placeholder with the raw value.
+- Package distribution, signing and any registry stay under the existing deferred marketplace decision; nothing here
+  pre-empts it.
+
+### P2. The hosted page is the first client, not the only one
+
+v1 is the board-served web page over WebSocket. Nothing in the design may assume it is the only client, so that a
+native app (Capacitor or otherwise), a **Bluetooth LE** transport, or a later many-viewer renderer can be added
+without redesign. Concretely:
+
+- **The interface spec is transport-neutral.** Messages, login (`TSAUTH1`), version negotiation and link-status
+  semantics are defined independently of HTTP/WebSocket; the WebSocket binding is one section, BLE another later.
+  No reliance on browser origin, cookies or URL paths for meaning.
+- **Messages stay small and chunkable**: BLE MTUs are tens to a few hundred bytes. Values deltas are already small;
+  the screen definition and assets must be fetchable in pieces.
+- **Assets are versioned and content-addressed** (hash per renderer and widget face), so a native app can bundle the
+  core renderer and fetch or cache only what a flow adds, over whatever transport it has.
+- **Renderer in shared TS**, the same code in the board-served page and a native wrapper.
+- **Capabilities a browser lacks** (DNS-SD discovery, BLE on iOS, phone sensors as flow inputs) are features of a
+  client, advertised in version negotiation, never assumed by the board.
 
 ## Use cases, and what each tests
 
@@ -142,9 +190,10 @@ The interface spec (`interfaces/remote-display/`, name TBD) covers: the screen d
 page messages (`screen`, `values`, take-over, link status); page → board messages (login, events, navigator
 commands); version negotiation. Conformance vectors, as for the wire protocol.
 
-Custom widgets (post-MVP, high priority: `.widget.json` + `.widget.py`) gain a third file, a small JS module for the
-remote face, so a developer can add a remote widget without touching the core. Unknown widget kinds render as a
-labelled placeholder showing the raw value, never a blank.
+Custom widgets (post-MVP, high priority: `.widget.json` + `.widget.py`) gain a remote face, so a developer can add
+a remote widget without touching the core. Per P1 the face is **declarative data by default** (composed from
+core-rendered primitives); a JS module is the marked exception and runs confined to its own widget's values and
+events. Unknown or refused widget kinds render as a labelled placeholder showing the raw value, never a blank.
 
 ## Later, not v1
 
@@ -169,6 +218,20 @@ Confirm or change each provisional position above, then settle:
    (like a touch panel config)?
 9. MVP or post-MVP.
 
+Raised in the 2026-11-06 review session (Claude, with Mike), not yet agreed:
+
+10. **Integrity on page→board input frames in v1** (HMAC with a counter, keyed from the `TSAUTH1` session), since
+    input drives hardware. Board→page frames can stay as the editor session is.
+11. **Link loss by heartbeat, not socket close.** The board declares the link lost after N missed pings; a phone
+    leaving WiFi is often never seen as a close. For continuous input, a separate deadman timeout: no fresh
+    input within X ms means safe, even with the link up.
+12. **Serve page assets gzipped as-is** (`Content-Encoding: gzip`): no decompression on the board.
+13. **Captive-portal DNS on the AP route**: answering every name with the board's address makes most phones open
+    the page on joining, and reduces the fall-back-to-mobile-data problem.
+14. **Nominal sizes:** portrait and landscape (remote control is mostly landscape), not one size.
+15. **Keep the screen definition transport-neutral** (P2), so a later many-viewer renderer over MQTT could reuse
+    it: the 2015 ThingStudio's multi-viewer strength, without making it v1.
+
 ## Corrections from the brainstorm
 
 - "Nobody has TLS on a home Mosquitto" was wrong: Home Assistant's Mosquitto add-on supports TLS, with Let's Encrypt
@@ -176,9 +239,24 @@ Confirm or change each provisional position above, then settle:
 - Chrome (142+, WebSockets from 147) lets an https page reach LAN devices after a Local Network Access prompt,
   exempt from mixed-content blocking. Safari and Firefox not checked. Moot while the board serves its own page.
 
-## History
+## Lineage: the 2015 ThingStudio
 
-2015-2019 ThingStudio (thingstud.io; archive in `~/Src/ThingStudioArchive/2019/ThingStudio/private/docs`): a
-cloud-hosted Meteor viewer, MQTT over WebSockets to the user's own broker, HTML/handlebars templates, any number of
-viewers. A new user's first step was "run an MQTT broker". This design reverses all three: no broker, no cloud,
-one viewer.
+Remote displays are the second time Mike has built "a UI for a device". The first, also called ThingStudio, ran
+2015-2019 (thingstud.io; Mike Karliner and Paul Grieselhuber):
+
+- **Material.** `~/Src/ThingStudio2015` holds the 2015-2016 documents: `WhitePaper1.doc` (privacy vs security,
+  the "remote control problem"), `Thingstudio Presentations/` (`MeteorJune.pdf`, `TS-0.2.0.pdf`,
+  `March2016IntroKey.pdf`), screencasts and MongoDB backups. The later code and docs are archived in
+  `~/Src/ThingStudioArchive/2019/ThingStudio/private/docs`.
+- **What it was.** A cloud-hosted Meteor IDE and viewer; MQTT over WebSockets from the browser to the user's own
+  broker, so no device data passed through ThingStudio's servers; screens written as HTML/handlebars templates
+  with a few helpers (`{{message "DesktopTemp"}}`, `data-feed="Doorbell"`) and SVG widgets as custom elements;
+  apps were database queries over stored templates; any number of viewers.
+- **What carries forward.** Privacy by architecture (data never leaves the user's own network); a small
+  vocabulary of parts that does a lot; widgets anyone can add; the phone as an input sensor (its
+  `DeviceOrientation` widget, "Later, not v1").
+- **What this design reverses.** A new user's first step was "run an MQTT broker". Remote displays need no
+  broker, no cloud, one viewer. Templates and helpers were free-form and unchecked, and lived in a hosted database;
+  here screens are files in the flow, checked by the compiler.
+- **Why it matters now.** Reviewing the 2015 material on 2026-11-06, Mike agreed that its idea is more relevant
+  today as a format AIs write and humans can audit than as a hand-coding IDE (`decisions/remote-display.md`).

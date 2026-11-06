@@ -347,3 +347,11 @@ runtime change touches `ts_wifi` anyway (Mike, 2026-11-01, having hit the idle-b
 BLE flow nodes ship in phases: broadcast first (scan, advertise), then the board as a GATT peripheral (unpaired,
 with a documented warning), then central. ESP32 family (C5 included) only for now; Pico W later. Own `ts_ble` on
 the raw `bluetooth` module, not `aioble` (2026-11-03). 1 entry: `docs/working-notes/decisions/ble-nodes.md`.
+
+## Remote displays
+
+A remote display (phone/browser as a board's display) follows two principles: everything is a plugin without
+opening a supply-chain hole (widget faces are data by default, confined JS the exception), and the board-served
+page is the first client, not the only one (transport-neutral spec; BLE and native app stay possible). Remote UIs
+are a format AIs write and humans audit, the lesson taken from the 2015 ThingStudio (2026-11-06). 3 entries:
+`docs/working-notes/decisions/remote-display.md`.

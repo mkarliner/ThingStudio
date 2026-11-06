@@ -6,6 +6,8 @@ files to re-enter current work. The per-session handoff rules that produce these
 
 ## Live — active handoffs and open threads
 
+- `remote-display-principles-briefing.md` — 2026-11-06 — 2015 ThingStudio reviewed; remote-display design
+  principles P1/P2 decided, lineage recorded; next: the remote-display decision session.
 - `ble-nodes-and-c5-bringup-briefing.md` — 2026-11-04 — BLE nodes in three phases (scan/advertise, GATT server +
   UART, central) on `ts_ble`, the ESP32-C5 brought up, package libraries (runtime 15.0.0); phase 3 is PR #10;
   next: custom firmware images for the ESP32-C5 and C3.
