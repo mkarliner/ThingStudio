@@ -103,6 +103,12 @@ jobs:
         run: python3 tools/firmware_catalogue.py --check
       - name: every target has a tested image at the runtime version (warning)
         run: python3 tools/firmware_targets.py current --warn
+      # The Docs workflow publishes the catalogue only when this passes; signing is a maintainer step after a
+      # catalogue change (tools/catalogue_sign.py sign), so a pending signature is a warning here.
+      - name: the firmware catalogue is signed (warning)
+        run: |
+          pip install --require-hashes --no-deps -r backend/requirements.txt >/dev/null
+          python3 tools/catalogue_sign.py verify --warn
 
   # The user guide's checkable style rules (tools/docs_lint.py) against docs/style-lint-baseline.json, a list
   # of today's violations that only shrinks: a new violation fails, and so does a baseline entry whose

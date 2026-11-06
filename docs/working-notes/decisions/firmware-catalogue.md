@@ -50,7 +50,8 @@ remote server":
 - **Signing is a publish step:** `firmware/publish.sh` (already Mac-side, after the images are tested) signs
   `builds.json`; the signature is committed beside it and the Docs workflow deploys both.
 - **Order:** v0.12.1 ships first with the catalogue step moved before the tag (works today, no new machinery).
-  The fetched catalogue is v0.13 work.
+  The fetched catalogue was built on 2026-11-06 and ships in the release after that; it is inert until Mike makes
+  the keys (with no keys shipped, the site is not asked).
 - **Fits the apt-style future** below: the built-in source becomes "the signed catalogue at the docs site", and a
   manufacturer's source is the same shape with its own key and an explicit trust prompt.
 - **A second one would need:** another source is a URL plus a public key, which is the repositories item.
@@ -59,7 +60,8 @@ remote server":
 are separate, manufacturers may have a standard chip with custom peripherals." A manufacturer can publish boards
 (pins, peripherals) without builds, and a board names a build by id, possibly ours (`thingstudio-esp32-c5`).
 
-Proposed, for Mike to confirm before v0.13 is built:
+Confirmed by Mike ("go", 2026-11-06) and built the same day (`backend/.../catalogue_source.py`,
+`tools/catalogue_sign.py`, the Docs workflow's "Signed firmware catalogue" step):
 
 - **Board sources are signed by their own source and accepted once**, like build sources, though the stakes are
   lower (reviewable data, not bytes onto flash). A board's `variant` may only name a build from a source the user

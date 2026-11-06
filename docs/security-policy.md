@@ -198,6 +198,14 @@ Gaps:
 - **Python dependencies are version-pinned, not hash-pinned** (`constraints.txt`); development installs use ranges
   (`backend/pyproject.toml`, `aiohttp>=3.9,<4`). Hash pinning (`pip --require-hashes`) for the bundle is the next step.
 - **The docs workflow has `contents: write`** for `gh-deploy`; scope it to the Pages branch if possible.
+- **The firmware catalogue is fetched from the docs site, signed** (`decisions/firmware-catalogue.md`,
+  2026-11-06). A build is bytes onto the user's board and its sha256 pins only what the catalogue says, so the
+  catalogue picks the image. Installs use the site's `builds.json` only when its detached Ed25519 signature
+  (`builds.json.sig`, over the exact bytes) verifies against a key shipped with the install
+  (`firmware/catalogue-keys.json`), and only if its serial is not older than one already accepted (no rollback).
+  Otherwise the saved or bundled copy is used and the dialog says why (`catalogue_source.py`). The private keys
+  stay on the maintainer's machine, passphrase-encrypted, with a spare kept offline; nothing in CI can sign, so a
+  compromised workflow or Pages branch can withhold the catalogue but not change it.
 - **Release artifacts are not signed** beyond the checksums (macOS signing is conditional on CI secrets). The
   custom firmware images (`firmware/`, one per target chip) follow the same rule: SHA-256 plus a build script and
   per-target pinned MicroPython/ESP-IDF tags that the build refuses to deviate from, so each image is rebuildable

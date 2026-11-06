@@ -102,6 +102,7 @@ def _fake_repo(root: Path) -> Path:
         write("editor/src/definitions/boards/pico.json", "{}"),
         write("editor/src/definitions/processors/rp2040.json", "{}"),
         write("firmware/builds.json", '{"schema": 1, "builds": []}'),
+        write("firmware/catalogue-keys.json", '{"keys": {}}'),
         write(
             "device-runtime/runtime_manifest.py",
             'CORE_FILES = ["runtime.py"]\nLISTENER_FILE = "listener.py"\nMAIN_FILE = "main.py"\nBOOT_SCRIPT = b"import listener\\nlistener.main()\\n"\nDEPENDENCIES = [{"name": "thing", "files": [("lib/thing.py", "thing.py")], "requires": []}]\n',

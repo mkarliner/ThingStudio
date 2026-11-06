@@ -12,6 +12,7 @@
 #   _assets/device-runtime/runtime_build_sha.txt   git SHA of the last commit touching device-runtime/src
 #   _assets/definitions/{boards,processors}/*.json <- editor/src/definitions
 #   _assets/firmware/builds.json         <- firmware/builds.json (the flash catalogue)
+#   _assets/firmware/catalogue-keys.json <- firmware/catalogue-keys.json (keys that sign the site's catalogue)
 #
 # tutorials/ is not copied here: tools/make_bundle.py puts it at the bundle root, beside the launcher,
 # where a user can see it in the installed folder.
@@ -152,6 +153,12 @@ def build(repo: Path, out: Path, allow_stale: bool = False, allow_no_sha: bool =
         raise BuildError(f"no firmware catalogue at {builds}")
     (tmp / "firmware").mkdir(parents=True)
     shutil.copy2(builds, tmp / "firmware" / "builds.json")
+    # The public keys that sign the docs site's catalogue (backend catalogue_source.py): without them an install
+    # never uses the site's copy, so a missing file is a build error, not a silent downgrade.
+    keys = repo / "firmware" / "catalogue-keys.json"
+    if not keys.is_file():
+        raise BuildError(f"no catalogue keys at {keys}")
+    shutil.copy2(keys, tmp / "firmware" / "catalogue-keys.json")
     if out.exists():
         shutil.rmtree(out)
     tmp.rename(out)

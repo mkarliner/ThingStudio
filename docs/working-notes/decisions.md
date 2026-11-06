@@ -311,7 +311,7 @@ the CYD and Freenove S3. 1 entry: `docs/working-notes/decisions/editor-firmware-
 Flashing follows Thonny's shape: the chip family owns the knowledge (tool, esptool chip, start address — in the
 processor descriptor), a build is a variant inside a family with versions, a board only points at one
 (`variant`), and the catalogue is a hash-pinned file in the repo rather than a server fetch (superseded
-2026-11-06: fetched from the docs site, Ed25519-signed by Mike's key, no rollback, bundled copy as fallback; v0.13); erase-all by default,
+2026-11-06: fetched from the docs site, Ed25519-signed by Mike's key, no rollback, bundled copy as fallback; built 2026-11-06); erase-all by default,
 and a local file's family read from the image with `esptool image_info` rather than asked. Kept open for a future
 manufacturer-supplied repository (apt-style), which is why the loader takes a list of sources (2026-10-25).
 1 entry: `docs/working-notes/decisions/firmware-catalogue.md`.

@@ -10,7 +10,7 @@
 // does not match it is refused before anything runs. A build with no board involved is a complete choice; a
 // local file is too, once its family is known.
 
-import type { FirmwareFamily, FirmwareBuild, FirmwareFlashRequest, FirmwareJobState } from "../flow-file/admin-api-client.js";
+import type { FirmwareFamily, FirmwareBuild, FirmwareCatalogueSource, FirmwareFlashRequest, FirmwareJobState } from "../flow-file/admin-api-client.js";
 
 export interface FirmwareFile {
   readonly name: string;
@@ -148,4 +148,18 @@ export function doneLine(build: FirmwareBuild | undefined): string {
     return "Flashed. The image has no Thingstudio runtime: Connect, then Tools → Install runtime….";
   }
   return "Flashed. Click Connect to start using the board.";
+}
+
+/** One line under the build lists: where they came from, and why the docs site's copy wasn't used if it wasn't
+ *  (backend catalogue_source.py; decisions/firmware-catalogue.md, 2026-11-06). A refused catalogue is a fact the
+ *  user should see, not a log entry: it means the site served something this install would not trust. */
+export function catalogueLine(source: FirmwareCatalogueSource | undefined): string {
+  if (source === undefined) return "";
+  const where = {
+    site: "Builds from docs.thingstudio.net",
+    saved: "Builds saved from docs.thingstudio.net",
+    bundled: "Builds that came with this install",
+  }[source.source];
+  const serial = source.serial > 0 ? ` (catalog ${source.serial})` : "";
+  return `${where}${serial}.${source.note ? ` ${source.note}` : ""}`;
 }
