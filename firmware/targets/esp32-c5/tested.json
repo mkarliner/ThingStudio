@@ -3,6 +3,6 @@
     "image": "thingstudio-esp32-c5-15.0.0-1dc99d7.bin",
     "board": "ESP32-C5-340X",
     "date": "2026-11-06",
-    "tested": "HELLO 15.0.0, all libraries frozen; blink deployed 3x over a running flow: MicroPython 153 KB free, ESP-IDF 137 KB (116 largest); earlier build of the same code: MQTT 3x over a running flow, MicroPython 94 KB, ESP-IDF 29 KB (17 largest). Stays in bootloader after flashing: RESET by hand"
+    "tested": "HELLO 15.0.0, all libraries frozen; blink deployed 3x over a running flow: MicroPython 153 KB free, ESP-IDF 137 KB (116 largest); BLE central flow (ble-central-c5) deployed several times over itself: MicroPython 113 KB, ESP-IDF 108 KB (88 largest) -- stock MicroPython failed this redeploy with MemoryError; earlier build of the same code: MQTT 3x over a running flow, MicroPython 94 KB, ESP-IDF 29 KB (17 largest). Stays in bootloader after flashing: RESET by hand"
   }
 }
