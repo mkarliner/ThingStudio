@@ -1,1 +1,8 @@
-{}
+{
+  "fa1d3111e9877bac7ea27d9bd600a782e1c577f5b4ab904309344b75595c3f4b": {
+    "image": "thingstudio-esp32-c5-15.0.0-1dc99d7.bin",
+    "board": "ESP32-C5-340X",
+    "date": "2026-11-06",
+    "tested": "HELLO 15.0.0, all libraries frozen; blink deployed 3x over a running flow: MicroPython 153 KB free, ESP-IDF 137 KB (116 largest); earlier build of the same code: MQTT 3x over a running flow, MicroPython 94 KB, ESP-IDF 29 KB (17 largest). Stays in bootloader after flashing: RESET by hand"
+  }
+}

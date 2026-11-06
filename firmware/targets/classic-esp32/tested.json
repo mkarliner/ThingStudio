@@ -35,6 +35,12 @@
     "date": "2026-10-24",
     "tested": "install clean, booted 13.1.0 with all 34 libraries frozen (147 KB free); dummy GUI flow deployed twice in one session over the running flow; a FLOW_PUT piece resent and a DEP_PUT piece resent were both ACKed, and DEP_COMMIT installed the library (DEP_OK) -- the resend cases that used to end in BadPiece"
   },
+  "ef8260bc1c8154c2457a545ad7c5b1870227791be543217d10668bccd83ba85f": {
+    "image": "thingstudio-classic-esp32-15.0.0-1dc99d7.bin",
+    "board": "CYD (ESP32-2432S028)",
+    "date": "2026-11-06",
+    "tested": "HELLO 15.0.0, all libraries frozen; deployed and running: MicroPython 137 KB free, ESP-IDF 128 KB (108 largest); earlier build of the same code: gui-hero-cyd-theme deployed 3x over a running flow, MicroPython 93 KB, ESP-IDF 17 KB (14 largest)"
+  },
   "f931ca3f4c3da426f3398440526dbf4e643b2d6c5f72aa8440ed31e7151cead0": {
     "image": "thingstudio-classic-esp32-12.1.0-8e2f87d.bin",
     "board": "CYD (ESP32-2432S028)",

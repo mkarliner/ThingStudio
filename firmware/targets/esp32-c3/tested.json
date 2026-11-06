@@ -1,1 +1,8 @@
-{}
+{
+  "9aeecd034dd1cc74cd7f4fba9ee4eda25d41f4c5e3b5714e9b1c22daa54e099d": {
+    "image": "thingstudio-esp32-c3-15.0.0-1dc99d7.bin",
+    "board": "ESP32C3 module",
+    "date": "2026-11-06",
+    "tested": "HELLO 15.0.0, all libraries frozen; blink deployed over a running flow: MicroPython 150 KB free, ESP-IDF 148 KB (112 largest); earlier build of the same code: MQTT over a running flow, MicroPython 114 KB, ESP-IDF 36 KB (28 largest)"
+  }
+}
