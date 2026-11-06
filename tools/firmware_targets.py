@@ -261,6 +261,12 @@ def check() -> list[str]:
                 problems.append(f"{t.build_id} {version.get('version')}: URL names {name!r}")
     for orphan in sorted(ours):
         problems.append(f"firmware/builds.json: Thingstudio build {orphan!r} has no firmware/targets/ folder")
+    # Images are release assets, never committed: one committed by mistake (2026-11-06, a `git add -A` after the
+    # .gitignore pattern moved) made every later build's tree dirty once it was deleted.
+    listed = subprocess.run(["git", "-C", str(REPO), "ls-files", "--", "firmware/*.bin", "firmware/**/*.bin"],
+                            capture_output=True, text=True, check=False)
+    for path in listed.stdout.split():
+        problems.append(f"{path}: a firmware image is committed -- images are release assets (git rm it)")
     return problems
 
 
