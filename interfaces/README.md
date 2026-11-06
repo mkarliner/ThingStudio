@@ -16,6 +16,7 @@ with permission."**
 | Node descriptor (built-in + custom node format) | shipped, known divergence | [`node-descriptor/SPEC.md`](node-descriptor/SPEC.md) |
 | Node compile context (package compile-time hook) | **draft, pending review** | [`node-compile-context/SPEC.md`](node-compile-context/SPEC.md) |
 | Board / processor descriptor (`~/.thingstudio/{boards,processors}/*.json`) | shipped | [`board-descriptor/SPEC.md`](board-descriptor/SPEC.md) |
+| Remote display (the board-served phone page ↔ board) | **draft, spike** (`working-notes/remote-display-spike-briefing.md`) | [`remote-display/SPEC.md`](remote-display/SPEC.md) |
 
 ## How to work with one
 

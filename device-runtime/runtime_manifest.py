@@ -91,6 +91,12 @@ DEPENDENCIES: list[dict] = [
     {"name": "tsgui_led", "files": [("thingstudio_gui/led.py", "tsgui_led.py")], "requires": []},
     {"name": "tsgui_button", "files": [("thingstudio_gui/button.py", "tsgui_button.py")], "requires": []},
     {"name": "tsgui_pagedots", "files": [("thingstudio_gui/pagedots.py", "tsgui_pagedots.py")], "requires": []},
+    # The remote display (2026-11-06, remote-display spike): the board side that mounts its routes on the
+    # shared ts_http_server, serves the pre-gzipped page (ts_remote/page_data.py) and shuttles a
+    # RemoteSurface to a phone. Only flows that build a remote display import it.
+    {"name": "ts_remote", "files": [("thingstudio_remote/ts_remote/__init__.py", "ts_remote/__init__.py"),
+                                    ("thingstudio_remote/ts_remote/page_data.py", "ts_remote/page_data.py")],
+     "requires": ["ts_http_server", "thingstudio_gui"]},
 ]
 
 # GUI fonts (2026-10-07, docs/working-notes/gui-font-pipeline-scoping.md): a prebuilt set, one library per

@@ -163,3 +163,11 @@ edit didn't land"; cache-bust with a query parameter (`https://…?fresh=2`). 1 
 Building the images in a cloud session (ESP-IDF from GitHub, registry components overridden), image sizes per
 target at runtime 15.0.0, NimBLE's 4-connection limit, esptool 3.x lacking the C5 (2026-11-04).
 `docs/working-notes/learnings/firmware-builds.md`.
+
+## Remote display spike MicroPython gotchas (2026-11-06)
+
+`b2a_base64` returns bytes (a lost string concat inside the server's broad `except` looks like a caller timeout); `bytes.split` needs a bytes
+needle; MicroPython floats have no `is_integer()`; the socket query string arrives with or without the leading `?`; piped micro-python output
+buffers to process end, so a test that "hangs" is an illusion; the pymock fixture is a byte-identical copy of the vendored library (edit both
+in one change); route timeouts are seconds and may be fractional, so never `int()` them; `dep_compile.mjs` needed a recursive `mkdir` for
+nested package board files. 8 entries: `docs/working-notes/learnings/remote-display-spike.md`.

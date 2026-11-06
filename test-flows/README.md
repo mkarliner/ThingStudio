@@ -863,3 +863,33 @@ delete, `keys()`, unencodable-value `NODE_ERROR`, survival across a same-name re
 across a soft reboot, per-flow isolation in both directions, `clear()`/`clear_all()`/`prune()`,
 corrupt-file move-aside (including a corrupt file present at boot), and a simulated write failure
 attributing `SettingsError` to the key. A real full-flash write failure was not induced.
+
+## `remote-display-spike.py`
+
+The remote display spike's hand-written flow (2026-11-06,
+[briefing](../docs/working-notes/remote-display-spike-briefing.md)). Codegen and the editor config node
+are out of the spike's scope, so this is a Python flow file, not a `.flow.json`: it goes to the board
+through `deploy_flow.py` directly.
+
+Prerequisites, in order:
+
+1. **A board password** (the editor's board settings action over USB) -- the remote display's login
+   fails closed (`503` on the page) without one.
+2. **The board's WiFi** -- edit `SSID`/`PASSWORD` at the top of the file (and `LED_PIN` for your board).
+3. A native mpy-cross build (`device-runtime/test/README.md`).
+
+```sh
+python3 test-flows/deploy_flow.py --dut-port /dev/ttyUSB0 --mpy-cross /path/to/mpy-cross \
+  --flow-name remote-spike test-flows/remote-display-spike.py
+```
+
+The command installs the flow's libraries (`ts_wifi`, `ts_http_server`, `thingstudio_gui`,
+`ts_remote`) from the board's inventory. Watch for `REMOTE_DISPLAY http://<ip>/ts/remote/` on the
+console, then open it on a phone and log in with the board password. What the flow exercises: live
+values (2 s readouts + a bar), a momentary button, a **controlled** toggle (`unknown -> pending ->
+confirmed`), board-owned navigation and a modal, number/text fields whose settings form writes
+`runtime.settings` (a threshold survives a reboot), a `ctl` slider driving the LED's PWM -- with the
+link policy `safe` and a 400 ms deadman, so a lost link or a stopped drag turns the LED off
+(`REMOTE_LINK down` / `REMOTE_SAFE` on the console) -- and, on the same server, a static
+`GET /ts/spike-info` route beside the display. Latency numbers the checkpoints need print on the
+page's own console (`[rd]`, chrome://inspect or Safari > Develop).

@@ -257,6 +257,26 @@ legacy unicast answers): QR stays primary, the spike tests MicroPython's respond
 Not explicitly decided; the spike adopts them as working assumptions and reports on each: positions 1-8 above,
 and items **10, 11, 12, 13, 15** (14 fell with 7).
 
+## Where the spike stands in code (2026-11-06, branch `remote-display-spike`)
+
+The spike's code side is built and off-device tested; the hardware session fills
+`remote-display-spike-results.md`. Concrete state:
+
+- `ts_http_server` is the general facility (answers question 5 and the server part of 8): `mount()` for
+  queued, static and WebSocket routes; the upgrade handshake/framing lives there; per-frame intake cap
+  2048 bytes; fragmentation refused cleanly.
+- The board side is the flow dependency `ts_remote` (`thingstudio_remote/ts_remote/`): login =
+  `TSAUTH1` re-used over plain HTTP (question 3's example answer below), HMAC+counter signing of every
+  page→board frame (**10 done**), heartbeat with the miss window + stale/safe policy and a deadman on
+  continuous input (**11 done**), definition served in ~240-byte pieces (P2), one viewer with take-over
+  (close code 4000).
+- Page: `page/remote.html`, gzipped as generated data (`ts_remote/page_data.py`, 9.7 KB; **12 done**),
+  hand-written SHA-256/HMAC (`crypto.subtle` absent on plain http) tested against RFC 4231 via
+  `editor/test/remote-page-crypto.test.ts`.
+- `interfaces/remote-display/SPEC.md` written from what was proven (**6 partially survives**: name settled;
+  the draft defers only what hardware has to teach; positions 4 and 14: nothing shipped is screen-size
+  specific). **13** (captive DNS) stands — not implemented.
+
 ## Corrections from the brainstorm
 
 - "Nobody has TLS on a home Mosquitto" was wrong: Home Assistant's Mosquitto add-on supports TLS, with Let's Encrypt

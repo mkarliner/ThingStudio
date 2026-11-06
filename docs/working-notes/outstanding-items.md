@@ -79,6 +79,12 @@ ThingStudioMarketing repo, not here.
 
 ## Boards / definitions
 
+- **[P3]** **Remote display spike follow-ups (2026-11-06).** The viewer token in the WebSocket URL
+  (`?t=...`) needs a production decision (header or per-session nonce, security-policy §3.8); captive DNS on
+  the AP route (scoping item 13) lacks its UDP responder; two owners of one shared port need the production
+  `web_server` config node. Spec draft: `interfaces/remote-display/SPEC.md`.
+  ([detail](outstanding-items/remote-display-spike-followups.md))
+
 - **[TR]** **[P2]** **A local Thingstudio classic-ESP32 image installs at the wrong address -- new item, 2026-11-06.**
   **Or use your own image file** writes at the chip family's address (`0x1000` for ESP32) unless the user sets
   **Address** under **Install options**; Thingstudio's classic image is merged and must go at `0x0`, so the board

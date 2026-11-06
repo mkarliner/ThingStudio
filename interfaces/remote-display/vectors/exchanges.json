@@ -1,0 +1,119 @@
+{
+  "comment": "Remote display page<->board exchanges (interfaces/remote-display/SPEC.md, draft). Each vector is one exchange the unix-port suite replays: device-runtime/test/test_remote_display.py (the message layer, sockets stubbed) and test_ts_http_ws.py (the binding, real TCP). Shape mirrors interfaces/protocol/vectors: a name, the steps in order, and the expected outcome.",
+  "protocol_version": 1,
+  "exchanges": [
+    {
+      "name": "login challenge then correct answer",
+      "given": "board password set (salt ita per test); page knows the password",
+      "steps": [
+        {"from": "page", "http": "GET /ts/remote/login", "expect": {"status": 200, "line_starts": "TSAUTH1 "}},
+        {"from": "page", "http": "POST /ts/remote/login", "body": "TSAUTH1 <hex HMAC-SHA256(sha256^iters(salt+password), nonce)>", "expect": {"status": 200, "json": {"v": 1, "display": "phone", "token": "<hex>"}}}
+      ]
+    },
+    {
+      "name": "login with a wrong password",
+      "steps": [
+        {"from": "page", "http": "GET /ts/remote/login", "expect": {"status": 200}},
+        {"from": "page", "http": "POST /ts/remote/login", "body": "TSAUTH1 <hex of HMAC over the same key but wrong message or key>", "expect": {"status": 401, "body": "refused"}}
+      ]
+    },
+    {
+      "name": "login with no board password (fail closed)",
+      "given": "no password stored",
+      "steps": [
+        {"from": "page", "http": "GET /ts/remote/login", "expect": {"status": 503}}
+      ]
+    },
+    {
+      "name": "session start: definition pieces then screen",
+      "given": "token from a successful login",
+      "steps": [
+        {"from": "page", "ws": "GET /ts/remote/ws?t=<token>", "expect": {"status": 101}},
+        {"from": "page", "frame": "hi", "m": {"type": "hi", "v": 1}, "c": 1, "expect": {}},
+        {"from": "board", "n_frames": "<n>", "each": {"type": "screen_def", "i": "<0..n-1>", "n": "<n>", "part": "<str slice>", "display": "phone"}},
+        {"from": "board", "any_order_after_last_piece": true, "one_of": ["screen", "values"]}
+      ]
+    },
+    {
+      "name": "tap on a momentary button",
+      "given": "live session; 'boop' is a momentary button",
+      "steps": [
+        {"from": "page", "frame": {"c": 2, "m": {"type": "tap", "wid": "boop", "phase": "down"}}},
+        {"from": "page", "frame": {"c": 3, "m": {"type": "tap", "wid": "boop", "phase": "up"}}, "expect": {"gui": "event queue for 'boop' has one payload; pressed look both ways"}}
+      ]
+    },
+    {
+      "name": "controlled toggle unknown -> pending -> confirmed, over the link",
+      "steps": [
+        {"from": "page", "frame": {"m": {"type": "tap", "wid": "pump", "phase": "down"}}},
+        {"from": "page", "frame": {"m": {"type": "tap", "wid": "pump", "phase": "up"}}, "expect": {"board": "state pending; emit on_val"}},
+        {"from": "flow", "call": "set_value('pump', on_val)", "expect": {"board": "confirmed; page gets values with pump state known"}}
+      ]
+    },
+    {
+      "name": "settings form submits as one message and survives properties",
+      "given": "form cfg with number field key threshold",
+      "steps": [
+        {"from": "page", "frame": {"m": {"type": "form", "form": "cfg", "values": {"threshold": "31.5"}}}, "expect": {"reply": {"type": "form_ok", "form": "cfg"}, "settings": {"threshold": 31.5}}},
+        {"from": "page", "frame": {"m": {"type": "form", "form": "cfg", "values": {"threshold": "zap"}}}, "expect": {"err": true, "settings_unchanged": true}}
+      ]
+    },
+    {
+      "name": "replayed input frame is refused",
+      "steps": [
+        {"from": "page", "frame": {"c": 7, "m": {"type": "ping", "at": 1}}, "expect": {"reply": {"type": "pong", "echo": 1}}},
+        {"from": "page", "frame_same_bytes_again": true, "expect": {"close": 1008}}
+      ]
+    },
+    {
+      "name": "altered input frame is refused",
+      "steps": [
+        {"from": "attacker", "frame": "<valid json body, changed one byte, original hmac>", "expect": {"close": 1008}}
+      ]
+    },
+    {
+      "name": "deadman: continuous input stops, output goes safe",
+      "given": "link policy safe, deadman_ms 150, session armed by a prior ctl",
+      "steps": [
+        {"from": "page", "frame": {"m": {"type": "ctl", "wid": "level", "value": 42}}, "expect": {"controls": {"payload": 42}}},
+        {"from": "clock", "after_ms": 400, "expect": {"link_event": "down", "console": "REMOTE_LINK down (no input for 400 ms)"}},
+        {"from": "page", "frame": {"m": {"type": "ctl", "wid": "level", "value": 10}}, "expect": {"link_event": "up"}}
+      ]
+    },
+    {
+      "name": "link lost by heartbeat, revived by input",
+      "steps": [
+        {"from": "clock", "after_ms_silence": 3200, "expect": {"link_event": "down"}},
+        {"from": "page", "frame": {"m": {"type": "ping", "at": 9}}, "expect": {"link_event": "up", "reply": {"type": "pong", "echo": 9}}}
+      ]
+    },
+    {
+      "name": "take-over: the second viewer wins, the first is told why",
+      "given": "session 1 live over its own socket",
+      "steps": [
+        {"from": "page2", "login": true, "then": "ws connect"},
+        {"from": "board->page1", "one_of": [{"type": "takeover", "reason": "another viewer has logged in"}, {"ws_close_code": 4000}]},
+        {"from": "expect", "note": "close code 4000 on the old socket"}
+      ]
+    },
+    {
+      "name": "fragmentation is refused cleanly (transport)",
+      "steps": [
+        {"from": "client", "frame": "text with FIN=0", "then": "continuation frame", "expect": {"close": 1003}}
+      ]
+    },
+    {
+      "name": "oversized client frame is refused (transport)",
+      "steps": [
+        {"from": "client", "frame": "text, 3000 bytes", "expect": {"close": 1009}}
+      ]
+    },
+    {
+      "name": "the other route on the same server still serves (transport)",
+      "steps": [
+        {"from": "client", "http": "GET /static/ping", "expect": {"status": 200, "body": "pong!"}},
+        {"from": "client", "http": "GET /nothing", "expect": {"status": 404}}
+      ]
+    }
+  ]
+}

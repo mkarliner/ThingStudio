@@ -662,6 +662,39 @@ class GUI:
         self._release(s, _ticks_ms() if now is None else now)
         return True
 
+    def button_press(self, surface_name, wid, kind, now=None):
+        """A remote viewer's down/up on a touchable widget, by id -- tap() for a viewer that knows which widget it
+        touched instead of coordinates (a remote view lays itself out to its own screen, so the board's rects mean
+        nothing to it; the same event as a touch is still what it sends, `remote-display` scoping P2). Same rules
+        otherwise: down presses and holds, the release fires a non-on_press button, on_press fires on the down,
+        a release only ever completes the down of the same widget, and the pressed look/wait limits are the ones
+        tap() runs. Returns (wid, "down"/"up") like tap(), or None."""
+        s = self._surface(surface_name)
+        w = self.widgets.get(wid)
+        if w is None or not w.touchable:
+            raise ValueError("%r isn't a button" % (wid,))
+        now = _ticks_ms() if now is None else now
+        if kind == "down":
+            if s.held is not None and s.held != wid:
+                self._release(s, now)
+            s.held = wid
+            w.pressed = True
+            w.down_at = now
+            w.release_at = None
+            self._mark(w)
+            s.last_push = None  # a press is drawn at once, like tap()'s
+            if w.mode is not None and w.on_press:
+                self._activate(w, s, now)
+            return (wid, "down")
+        if kind == "up":
+            if s.held != wid:
+                return None  # lifted somewhere else (or before any down): this release fires nothing
+            self._release(s, now)
+            if w.mode is not None and not w.on_press:
+                self._activate(w, s, now)  # the release of its own down is always "inside"
+            return (wid, "up")
+        raise ValueError("button_press kind must be down or up, not %r" % (kind,))
+
     def _activate(self, w, s, now):
         if w.mode == "navigate":
             self.navigate(s.name, w.target)

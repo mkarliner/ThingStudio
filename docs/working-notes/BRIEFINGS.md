@@ -6,6 +6,9 @@ files to re-enter current work. The per-session handoff rules that produce these
 
 ## Live — active handoffs and open threads
 
+- `remote-display-spike-code-side-briefing.md` — 2026-11-06 — the spike's code half is written and green off-device on branch
+  `remote-display-spike` (WebSocket server capability, `ts_remote` board side, the page, its SPEC draft, runtime 15.1.0, security §3.8); the
+  hardware half starts from `remote-display-spike-results.md`.
 - `remote-display-spike-briefing.md` — 2026-11-06 — spike to prove remote displays (WebSocket, live page,
   login, input, failsafe, routes, budget) on Pico W / C3 / ESP32 with real phones; results decide MVP or not.
 - `remote-display-principles-briefing.md` — 2026-11-06 — 2015 ThingStudio reviewed; remote-display design

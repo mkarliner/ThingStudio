@@ -1,0 +1,537 @@
+<!doctype html>
+<!--
+  SPDX-License-Identifier: Apache-2.0
+  device-runtime/src/vendor/thingstudio_remote/page/remote.html
+  The remote display's phone page (remote-display spike, 2026-11-06). Served gzipped, as-is, by the board
+  (Content-Encoding: gzip; nothing decompresses on the board). Single file, no dependencies, plain ES2019.
+
+  Widget faces are data (P1): the renderers below are core, one per built-in widget kind, and an unknown kind
+  degrades to a labelled placeholder carrying the raw value -- never a blank. Layout is CSS flexbox mirroring
+  editor/src/gui/layout.ts's vocabulary (row/column, gap, padding, grow, align/alignSelf, justify); the page
+  lays out on the real viewport and scrolls when taller -- screen-size agnostic, no nominal size.
+
+  Auth is TSAUTH1 over plain HTTP (no crypto.subtle in an insecure context): SHA-256 and HMAC-SHA256 are
+  hand-written below and validated against RFC 4231's NIST vectors (device test test_page_crypto). Input
+  frames are "<json>\n<hexhmac(session_key, json)>" with a strictly increasing counter. The session key,
+  HMAC(key, nonce + " remote display input v1"), is derived on both sides from the password-derived TSAUTH1
+  key and the challenge nonce; neither the password nor that key ever crosses the wire.
+
+  Latency measurements the spike asks for print to the console prefixed "[rd]" (open through the browser's own
+  remote debugger -- chrome://inspect, Safari > Develop > <phone>); nothing depends on them.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Thingstudio</title>
+<style>
+:root{
+  --fg:#e8e4d8; --muted:#8a8878; --bg:#14161a; --card:#1e222a; --accent:#4da3ff;
+  --track:#2a2f38; --bad:#d05050; --good:#3fa66a;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+html,body{margin:0;min-height:100%;background:var(--bg);color:var(--fg);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
+body{display:flex;flex-direction:column;}
+/* ---- layout vocabulary: the flexbox subset layout.ts computes for physical screens ----------------- */
+.r,.c{display:flex;min-width:0;}
+.r{flex-direction:row;width:100%;}
+.c{flex-direction:column;}
+.cardy{background:var(--card);border-radius:10px;}
+/* ---- core widget renderers, one per kind ------------------------------------------------------------ */
+#view{flex:1;overflow-y:auto;padding:8px 8px 24px;display:flex;flex-direction:column;gap:8px;}
+.label{font-size:15px;color:var(--fg);white-space:pre-wrap;min-height:18px;}
+.readout .cap{font-size:12px;color:var(--muted);}
+.readout .val{font-size:34px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.1;}
+.readout .units{font-size:14px;color:var(--muted);font-weight:400;margin-left:3px;}
+.bar{position:relative;align-self:stretch;height:16px;background:var(--track);border-radius:8px;overflow:hidden;min-width:40px;}
+.bar .fill{position:absolute;top:0;bottom:0;left:0;width:0%;background:var(--accent);transition:width .12s linear;}
+.bar.segs{display:flex;gap:2px;background:transparent;overflow:visible;}
+.bar.segs i{flex:1;background:var(--track);border-radius:3px;}
+.bar.segs i.on{background:var(--accent);}
+.led{width:18px;height:18px;border-radius:50%;background:var(--track);border:2px solid var(--muted);}
+.led.on{background:var(--accent);border-color:var(--accent);}
+.led.chip{border-radius:99px;width:auto;height:24px;min-width:56px;padding:0 10px;font-size:12px;
+  display:flex;align-items:center;justify-content:center;}
+.btn{border:2px solid var(--muted);border-radius:10px;background:var(--card);color:var(--fg);font-size:16px;
+  min-height:44px;min-width:72px;padding:8px 16px;user-select:none;cursor:default;}
+.btn .t{white-space:pre-wrap;}
+.btn.pressed{background:var(--accent);color:var(--bg);border-color:var(--accent);}
+.btn.pressed .t{color:var(--bg);}
+.submit{border:2px solid var(--good);border-radius:10px;background:var(--card);color:var(--good);font-size:16px;
+  min-height:44px;padding:8px 16px;user-select:none;cursor:default;}
+.field{display:flex;flex-direction:column;gap:4px;min-width:0;}
+.field .cap{font-size:12px;color:var(--muted);}
+.field input{background:var(--track);border:1px solid var(--muted);border-radius:8px;color:var(--fg);
+  font-size:18px;padding:10px;min-height:44px;width:100%;}
+.field input:focus{border-color:var(--accent);outline:none;}
+.slider{width:100%;height:44px;}
+.dots{display:flex;gap:10px;justify-content:center;align-items:center;padding:6px;}
+.dots i{width:9px;height:9px;border-radius:50%;background:var(--track);}
+.dots i.cur{background:var(--fg);}
+.trend{display:flex;align-items:flex-end;gap:1px;height:60px;align-self:stretch;background:var(--track);
+  border-radius:4px;padding:2px;}
+.trend i{flex:1;background:var(--accent);border-radius:1px;}
+.mono{font-variant-numeric:tabular-nums;}
+.ph{border:2px dashed var(--muted);border-radius:8px;padding:6px 10px;color:var(--muted);font-size:13px;
+  min-width:0;overflow:hidden;white-space:pre-wrap;}
+/* ---- value states: shape and pattern, not colour alone ----------------------------------------------- */
+.st-unknown{opacity:.45;}
+.st-stale{opacity:.75;position:relative;}
+.st-stale::after{content:"";position:absolute;left:0;bottom:-3px;width:34px;border-top:2px dotted var(--muted);}
+.st-pending{outline:2px dashed var(--accent);outline-offset:2px;}
+/* ---- chrome: banner, modal overlay, login ------------------------------------------------------------ */
+#banner{display:none;position:sticky;top:0;z-index:5;background:var(--bad);color:#fff;text-align:center;
+  font-size:14px;padding:8px 10px;}
+#modal{position:absolute;inset:0;background:#000000b8;z-index:8;padding:12px;display:none;}
+#modal .box{background:var(--bg);border:2px solid var(--fg);border-radius:12px;padding:10px;
+  display:flex;flex-direction:column;gap:8px;max-width:420px;margin:14vh auto 0;}
+#queued{font-size:12px;color:var(--muted);text-align:center;padding:4px 0;}
+#login{margin:auto;max-width:360px;width:100%;padding:16px;display:flex;flex-direction:column;gap:10px;}
+#login h1{font-size:22px;margin:4px 0;}
+#login .host{color:var(--muted);font-size:13px;}
+#login input{background:var(--track);border:1px solid var(--muted);border-radius:8px;color:var(--fg);font-size:18px;padding:12px;}
+#login button{background:var(--accent);border:0;color:var(--bg);border-radius:10px;font-size:16px;padding:12px;}
+#login .err{color:var(--bad);font-size:14px;min-height:18px;}
+#toast{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);background:var(--card);color:var(--fg);
+  border:1px solid var(--muted);border-radius:8px;padding:8px 14px;font-size:13px;display:none;z-index:9;}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div id="banner"></div>
+<div id="login">
+  <h1>Thingstudio</h1>
+  <div class="host" id="lhost"></div>
+  <div>The board's password:</div>
+  <input type="password" id="pw" autocomplete="off">
+  <button id="go">Connect</button>
+  <div class="err" id="lerr"></div>
+</div>
+<div id="main" hidden>
+  <div id="view"></div>
+  <div id="queued"></div>
+</div>
+<div id="modal"><div class="box" id="modalbox"></div></div>
+<div id="toast"></div>
+<script id="crypto">
+"use strict";
+/* SHA-256 and HMAC-SHA256, in the open, auditable and tested against NIST's RFC 4231 vectors.
+   Hand-written because crypto.subtle exists only in secure contexts and this page is served over plain
+   http from a board on the LAN. No DOM in this block: the tests run it standalone in Node. */
+var SHA = (function () {
+  var K = [
+    0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,
+    0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,
+    0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,
+    0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,
+    0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,
+    0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,
+    0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,
+    0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2
+  ];
+  function toBytes(str) {
+    var out = [], i, c;
+    for (i = 0; i < str.length; i++) {
+      c = str.codePointAt(i);
+      if (c < 0x80) out.push(c);
+      else if (c < 0x800) out.push(0xc0 | c >> 6, 0x80 | (c & 63));
+      else if (c < 0x10000) out.push(0xe0 | c >> 12, 0x80 | ((c >> 6) & 63), 0x80 | (c & 63));
+      else out.push(0xf0 | c >> 18, 0x80 | ((c >> 12) & 63), 0x80 | ((c >> 6) & 63), 0x80 | (c & 63));
+    }
+    return out;
+  }
+  function digest(bytes) {
+    bytes = Array.prototype.slice.call(bytes); /* accept Buffer/Uint8Array inputs too */
+    var len = bytes.length;
+    var bitLo = (len * 8) % 4294967296;
+    var bitHi = Math.floor((len * 8) / 4294967296);
+    var msg = bytes.concat([0x80]);
+    while (msg.length % 64 !== 56) msg.push(0);
+    msg.push((bitHi >>> 24) & 255, (bitHi >>> 16) & 255, (bitHi >>> 8) & 255, bitHi & 255,
+             (bitLo >>> 24) & 255, (bitLo >>> 16) & 255, (bitLo >>> 8) & 255, bitLo & 255);
+    var h0 = 0x6a09e667, h1 = 0xbb67ae85, h2 = 0x3c6ef372, h3 = 0xa54ff53a,
+        h4 = 0x510e527f, h5 = 0x9b05688c, h6 = 0x1f83d9ab, h7 = 0x5be0cd19;
+    var w = new Uint32Array(64), i, j;
+    for (i = 0; i < msg.length; i += 64) {
+      for (j = 0; j < 16; j++) w[j] = msg[i + 4*j] << 24 | msg[i + 4*j + 1] << 16 | msg[i + 4*j + 2] << 8 | msg[i + 4*j + 3];
+      for (j = 16; j < 64; j++) {
+        var x = w[j - 15], y = w[j - 2];
+        var s0 = ((x >>> 7 | x << 25) ^ (x >>> 18 | x << 14) ^ (x >>> 3)) >>> 0;
+        var s1 = ((y >>> 17 | y << 15) ^ (y >>> 19 | y << 13) ^ (y >>> 10)) >>> 0;
+        w[j] = (w[j - 16] + s0 + w[j - 7] + s1) >>> 0;
+      }
+      var a = h0, b = h1, c = h2, d = h3, e = h4, f = h5, g = h6, h = h7;
+      for (j = 0; j < 64; j++) {
+        var S1 = ((e >>> 6 | e << 26) ^ (e >>> 11 | e << 21) ^ (e >>> 25 | e << 7)) >>> 0;
+        var ch = ((e & f) ^ (~e & g)) >>> 0;
+        var t1 = (h + S1 + ch + K[j] + w[j]) >>> 0;
+        var S0 = ((a >>> 2 | a << 30) ^ (a >>> 13 | a << 19) ^ (a >>> 22 | a << 10)) >>> 0;
+        var maj = ((a & b) ^ (a & c) ^ (b & c)) >>> 0;
+        var t2 = (S0 + maj) >>> 0;
+        h = g; g = f; f = e; e = (d + t1) >>> 0; d = c; c = b; b = a; a = (t1 + t2) >>> 0;
+      }
+      h0 = (h0 + a) >>> 0; h1 = (h1 + b) >>> 0; h2 = (h2 + c) >>> 0; h3 = (h3 + d) >>> 0;
+      h4 = (h4 + e) >>> 0; h5 = (h5 + f) >>> 0; h6 = (h6 + g) >>> 0; h7 = (h7 + h) >>> 0;
+    }
+    var out = new Uint8Array(32), hs = [h0, h1, h2, h3, h4, h5, h6, h7], jj;
+    for (jj = 0; jj < 8; jj++) {
+      out[jj*4]     = (hs[jj] >>> 24) & 255;
+      out[jj*4 + 1] = (hs[jj] >>> 16) & 255;
+      out[jj*4 + 2] = (hs[jj] >>> 8)  & 255;
+      out[jj*4 + 3] = hs[jj] & 255;
+    }
+    return out;
+  }
+  return { toBytes: toBytes, digest: digest };
+})();
+function utf8(s) { return SHA.toBytes(s); }
+function sha(b) { return SHA.digest(b); }
+function hmac(key, msg) {
+  var k = key; if (k.length > 64) k = sha(k);
+  var first = [], second = [], i;
+  for (i = 0; i < 64; i++) { first[i] = 0x36; second[i] = 0x5c; }
+  for (i = 0; i < k.length; i++) { first[i] ^= k[i]; second[i] ^= k[i]; }
+  var inner = sha(first.concat(Array.prototype.slice.call(msg)));
+  return sha(second.concat(Array.prototype.slice.call(inner)));
+}
+function hexs(b) { var out = "", i; for (i = 0; i < b.length; i++) out += (b[i] < 16 ? "0" : "") + b[i].toString(16); return out; }
+function unhex(s) { var b = [], i; for (i = 0; i < s.length; i += 2) b.push(parseInt(s.substr(i, 2), 16)); return b; }
+function catOne() { var out = [], i, j; for (i = 0; i < arguments.length; i++) { var a = arguments[i];
+  for (j = 0; j < a.length; j++) out.push(a[j]); } return out; }
+</script>
+<script id="app">
+"use strict";
+/* ============ state ============ */
+var $ = function (id) { return document.getElementById(id); };
+var SESSION_KEY_TAIL = " remote display input v1";
+var TOKEN_MSG = "open session v1";
+var def = null, defAcc = "", defN = 0, screenPend = null, valuesPend = [];
+var vals = {};            /* wid -> [value, stateName] */
+var token = null, sessionKey = null, counter = 0, socket = null, pollen = null, reconnect = null;
+var pageRecs = {};        /* wid -> rec {node, config, set(v,state), input?, el} */
+var modalRecs = {};
+var curPage = null, curModal = null, dragVal = null, lastFrame = 0;
+
+/* ---- toast / banner ---- */
+var toastTimer = null;
+function toast(t) { var e = $("toast"); e.textContent = t; e.style.display = "block";
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(function () { e.style.display = "none"; }, 2500); }
+function banner(text) { var e = $("banner");
+  if (!text) { e.style.display = "none"; return; }
+  e.textContent = text; e.style.display = "block"; }
+
+/* ---- login: challenge, 2000-iteration key, answer; the same key derives the session key ---------- */
+function login(pw) {
+  return fetch("login").then(function (r) {
+    if (!r.ok) throw new Error(r.status === 503 ? "set a board password in the editor first" : ("login unavailable (" + r.status + ")"));
+    return r.text();
+  }).then(function (line) {
+    var parts = line.trim().split(" ");
+    if (parts[0] !== "TSAUTH1" || parts.length !== 5) throw new Error("unrecognised challenge");
+    $("lhost").textContent = "board " + parts[1];
+    var nonce = unhex(parts[2]), salt = parts[3], iters = parseInt(parts[4], 10);
+    if (!(iters >= 1 && iters <= 1000000)) throw new Error("bad iteration count");
+    var k = utf8(salt + pw), i;
+    for (i = 0; i < iters; i++) k = sha(k);
+    var K = k; /* 32 bytes: the same key board_settings stores */
+    var answer = "TSAUTH1 " + hexs(hmac(K, nonce)).toUpperCase();
+    return fetch("login", { method: "POST", body: answer }).then(function (r2) {
+      if (!r2.ok) return r2.text().then(function (t) { throw new Error(t || ("refused (" + r2.status + ")")); });
+      return r2.json();
+    }).then(function (j) {
+      sessionKey = hmac(K, catOne(nonce, utf8(SESSION_KEY_TAIL)));
+      token = j.token; counter = 0;
+      return j;
+    });
+  });
+}
+
+/* ---- outgoing frames: "<json>\n<hexhmac(session_key, json)>", counter strictly increasing --------- */
+function send(obj) {
+  if (!socket || socket.readyState !== 1) return;
+  counter += 1;
+  var body = JSON.stringify(Object.assign({ c: counter }, obj));
+  var line = body + "\n" + hexs(hmac(sessionKey, utf8(body)));
+  socket.send(line);
+}
+
+/* ---- the socket --------------------------------------------------------------------------------- */
+function connect() {
+  if (reconnect) { clearTimeout(reconnect); reconnect = null; }
+  var proto = location.protocol === "https:" ? "wss:" : "ws:";
+  try { socket = new WebSocket(proto + "//" + location.host + "/ts/remote/ws?t=" + encodeURIComponent(token)); }
+  catch (e) { showLogin("cannot open a socket here"); return; }
+  socket.onopen = function () {
+    counter = 0; def = null; defAcc = ""; defN = 0; screenPend = null; valuesPend = [];
+    send({ type: "hi", v: 1 });
+    banner(null);
+    if (pollen) clearInterval(pollen);
+    pollen = setInterval(function () { send({ type: "ping", at: Math.round(performance.now()) }); }, 1000);
+  };
+  socket.onmessage = function (e) { frame(e.data); };
+  socket.onclose = function (e) {
+    clearInterval(pollen); pollen = null;
+    if (e.code === 4000) { token = null; showLogin("another viewer logged in on the board - connect again"); return; }
+    if (e.code === 1008) { token = null; showLogin("the board wants a fresh login"); return; }
+    banner("link lost - reconnecting");
+    reconnect = setTimeout(function () { if (token) connect(); else showLogin("re connect"); }, 3000);
+  };
+  socket.onerror = function () {};
+}
+function frame(text) {
+  lastFrame = Date.now();
+  var m; try { m = JSON.parse(text); } catch (_e) { console.warn("[rd] undecodable frame"); return; }
+  var kind = m.type;
+  if (kind === "screen_def") {
+    if (m.i === 0) { defAcc = ""; defN = m.n; }
+    defAcc += m.part;
+    if (m.i + 1 === m.n) {
+      try { finishDefs(JSON.parse(defAcc)); }
+      catch (err) { console.error("[rd] definition did not parse:", err); toast("bad definition from the board"); }
+    }
+  }
+  else if (kind === "screen") { if (def === null) screenPend = m; else { applyScreen(m); banner(null); } }
+  else if (kind === "values") {
+    if (def === null) valuesPend.push(m);
+    else { mergeValues(m.values || {}); refresh(); }
+  }
+  else if (kind === "pong") {
+    var ms = Math.round(performance.now()) - (m.echo | 0);
+    console.info("[rd] ping round-trip %dms", ms);
+  }
+  else if (kind === "takeover") { banner(m.reason || "another viewer has logged in"); }
+  else if (kind === "form_ok") { toast("saved: " + (m.keys || []).join(", ")); }
+  else if (kind === "form_err") { console.warn("[rd] form failed", m.failed);
+    toast("save failed: " + Object.keys(m.failed || {}).join(", ")); }
+  else if (kind === "err") { console.warn("[rd] board:", m.what); }
+  else { console.info("[rd]", m); }
+}
+/* the page says "link lost" when nothing at all arrives for 4 s (the board says nothing across a dead link) */
+setInterval(function () {
+  if (socket && socket.readyState === 1 && lastFrame && Date.now() - lastFrame > 4000) banner("link lost");
+}, 1500);
+
+/* ---- definitions, screens and values --------------------------------------------------------------- */
+function finishDefs(d) {
+  if (!d || d.v !== 1) { console.error("[rd] unsupported board definition version", d && d.v);
+    toast("this page speaks v1; the board speaks something else"); return; }
+  def = d;
+  buildPage(curPagePending || firstPageName());
+  curPagePending = null;
+  var pends = valuesPend; valuesPend = [];
+  for (var i = 0; i < pends.length; i++) mergeValues(pends[i].values || {});
+  if (screenPend) { var s = screenPend; screenPend = null; applyScreen(s); }
+  else refresh();
+}
+var curPagePending = null;
+function firstPageName() { return (def.carousel && def.carousel[0]) || (def.pages && def.pages.length && def.pages[0].name); }
+function mergeValues(values) { for (var k in values) vals[k] = values[k]; }
+function refresh() { applyAll(pageRecs); if (curModal) applyAll(modalRecs); }
+function applyAll(recs) {
+  for (var wid in recs) {
+    var rec = recs[wid], v = vals[wid] || [null, "unknown"];
+    if (rec.el) stateClass(rec.el, v[1]);
+    try { rec.set(v[0], v[1]); } catch (e) { console.warn("[rd]", wid, e); }
+  }
+}
+function stateClass(el, state) {
+  for (var name in { unknown: 1, stale: 1, pending: 1 }) el.classList.toggle("st-" + name, state === name);
+}
+function applyScreen(m) {
+  mergeValues(m.values || {});
+  curModal = m.modal;
+  $("queued").textContent = (m.modal && m.queued) ? ("+" + m.queued + " queued") : "";
+  if (m.modal) {
+    $("modalbox").innerHTML = ""; modalRecs = {};
+    mountTree(modalTreeOf(m.modal), $("modalbox"));
+    $("modal").style.display = "block";
+  } else { $("modal").style.display = "none"; modalRecs = {}; }
+  if (m.page !== curPage) buildPage(m.page); else refresh();
+}
+function modalTreeOf(name) {
+  var i, ms = def.modals || [];
+  for (i = 0; i < ms.length; i++) if (ms[i].name === name) return ms[i].tree;
+  return { kind: "column", children: [] };
+}
+
+/* ---- rendering: one builder per kind; each leaf registers a rec for later updates -----  */
+function buildPage(name) {
+  curPage = name; pageRecs = {};
+  var v = $("view"); v.innerHTML = "";
+  var pages = def.pages || [], spec = null, i;
+  for (i = 0; i < pages.length; i++) if (pages[i].name === name) { spec = pages[i]; break; }
+  if (!spec) { toast("the board named a page this page has never had: " + name); return; }
+  mountTree(spec.tree, v);
+  var carousel = def.carousel || [], j;
+  if (carousel.length > 1) {
+    var dots = document.createElement("div"); dots.className = "dots";
+    for (j = 0; j < carousel.length; j++) {
+      (function (idx) {
+        var dot = document.createElement("i");
+        if (carousel[idx] === name) dot.className = "cur";
+        dot.addEventListener("click", function () { send({ type: "page", n: idx }); });
+        dots.appendChild(dot);
+      })(j);
+    }
+    v.appendChild(dots);
+  }
+  refresh();
+}
+function mountTree(node, parent, reg) {
+  reg = reg || pageRecs;
+  if (node && node.wid) { var l = leaf(node, reg); parent.appendChild(l.box); return; }
+  if (!node) return;
+  var el = document.createElement("div");
+  el.className = (node.kind === "row" ? "r" : "c") + (node.card ? " cardy" : "");
+  el.style.gap = (node.gap || 0) + "px";
+  if (node.padding != null) el.style.padding = node.padding + "px";
+  if (node.align) el.style.alignItems = flexVal(node.align);
+  if (node.justify) el.style.justifyContent = flexVal(node.justify);
+  if (node.grow) el.style.flex = String(node.grow);
+  var kids = node.children || [], i;
+  for (i = 0; i < kids.length; i++) mountTree(kids[i], el, reg);
+  parent.appendChild(el);
+}
+function flexVal(v) { return v === "start" ? "flex-start" : v === "end" ? "flex-end" : v; }
+function leaf(node) {
+  var kind = node.kind, cfg = node.config || {}, wid = node.wid;
+  var box = null, setf = function () {}, rec = { node: node, kind: kind, config: cfg, el: null, set: setf };
+  if (kind === "label") {
+    box = document.createElement("div"); box.className = "label";
+    setf = function (v) { box.textContent = cfg.text != null ? cfg.text : (v == null ? "--" : String(v)); };
+  }
+  else if (kind === "readout") {
+    box = document.createElement("div"); box.className = "readout";
+    var cap = document.createElement("div"); cap.className = "cap"; cap.textContent = cfg.caption || "";
+    var val = document.createElement("div"); val.className = "val";
+    val.appendChild(document.createTextNode("\u00a0"));
+    if (cfg.units) { var u = document.createElement("span"); u.className = "units"; u.textContent = cfg.units; val.appendChild(u); }
+    box.appendChild(cap); box.appendChild(val);
+    setf = function (v, state) {
+      var s = (state === "unknown" || v === null || v === undefined) ? "--"
+        : (cfg.decimals != null && typeof v === "number") ? v.toFixed(cfg.decimals) : String(v);
+      val.firstChild.nodeValue = s;
+    };
+  }
+  else if (kind === "bar") {
+    var segs = cfg.segments || 12;
+    box = document.createElement("div"); box.className = "bar" + (cfg.style === "segments" ? " segs" : "");
+    if (cfg.style === "segments") { for (var is = 0; is < segs; is++) box.appendChild(document.createElement("i")); }
+    else { box.appendChild(document.createElement("div")).className = "fill"; }
+    var lo = cfg.lo != null ? cfg.lo : 0, hi = cfg.hi != null ? cfg.hi : 100;
+    setf = function (v) {
+      var p = typeof v === "number" ? Math.min(1, Math.max(0, (v - lo) / ((hi - lo) || 1))) : 0;
+      if (cfg.style === "segments") { var ks = box.children, x;
+        for (x = 0; x < ks.length; x++) ks[x].className = (x / ks.length) <= p ? "on" : ""; }
+      else box.firstChild.style.width = (p * 100).toFixed(1) + "%";
+    };
+  }
+  else if (kind === "led") {
+    box = document.createElement("div");
+    var chip = cfg.style === "chip";
+    if (chip) { var slot = document.createElement("span"); slot.textContent = cfg.text || ""; box.appendChild(slot); }
+    setf = function (v) { var on = v === true || v === "true" || v === 1;
+      box.className = "led" + (chip ? " chip" : "") + (on ? " on" : ""); };
+  }
+  else if (kind === "button") {
+    box = document.createElement("div"); box.className = "btn";
+    var t = document.createElement("span"); t.className = "t"; box.appendChild(t);
+    box.addEventListener("pointerdown", function (e) { e.preventDefault(); e.stopPropagation();
+      send({ type: "tap", wid: wid, phase: "down" }); });
+    var up = function () { send({ type: "tap", wid: wid, phase: "up" }); };
+    box.addEventListener("pointerup", up);
+    box.addEventListener("pointercancel", up);
+    setf = function (v, state) {
+      var text;
+      if (cfg.text != null) text = cfg.text;
+      else if (cfg.mode === "toggle") text = v === true ? (cfg.onText || "ON") : v === false ? (cfg.offText || "OFF") : "--";
+      else text = (v === null || v === undefined) ? "--" : String(v);
+      t.textContent = text;
+      box.classList.toggle("pressed", state === "pressed");
+    };
+  }
+  else if (kind === "submit") {
+    box = document.createElement("div"); box.className = "submit";
+    box.textContent = cfg.label || "Save";
+    box.addEventListener("pointerdown", function (e) { e.preventDefault(); e.stopPropagation(); submitForm(cfg.form); });
+    setf = function () {};
+  }
+  else if (kind === "number" || kind === "text") {
+    box = document.createElement("div"); box.className = "field";
+    var ccap = document.createElement("div"); ccap.className = "cap"; ccap.textContent = cfg.label || "";
+    var input = document.createElement("input"); input.type = kind === "number" ? "number" : "text";
+    input.inputMode = kind === "number" ? "decimal" : "text";
+    if (cfg.default != null) input.value = String(cfg.default);
+    box.appendChild(ccap); box.appendChild(input); rec.input = input;
+    setf = function (v) { if (input === document.activeElement) return;
+      input.value = (v === null || v === undefined) ? (cfg.default != null ? String(cfg.default) : "")
+        : String(v); };
+    rec.collect = function () { return input.value; };
+  }
+  else if (kind === "ctl") {
+    box = document.createElement("div");
+    var slider = document.createElement("input"); slider.type = "range"; slider.className = "slider";
+    var lo = cfg.lo != null ? cfg.lo : 0, hi = cfg.hi != null ? cfg.hi : 1;
+    slider.min = lo; slider.max = hi; slider.step = cfg.step != null ? cfg.step : (hi - lo) / 50;
+    box.appendChild(slider);
+    slider.addEventListener("input", function () { dragVal = { wid: wid, value: parseFloat(slider.value) }; });
+    setf = function () {};
+  }
+  else if (kind === "pagedots") {
+    box = document.createElement("div"); box.className = "dots";
+    var carousel = (def && def.carousel) || [], ip;
+    for (ip = 0; ip < carousel.length; ip++) {
+      (function (idx) { var dot = document.createElement("i"); if (carousel[idx] === curPage) dot.className = "cur";
+        dot.addEventListener("click", function () { send({ type: "page", n: idx }); });
+        box.appendChild(dot); })(ip);
+    }
+    setf = function () {};
+  }
+  else if (kind === "trend") {
+    box = document.createElement("div"); box.className = "trend";
+    setf = function (v) { box.innerHTML = "";
+      if (Array.isArray(v)) for (var i = 0; i < v.length; i++) {
+        var h = typeof v[i] === "number" ? Math.min(100, Math.max(0, v[i])) : 0;
+        var bar = document.createElement("i"); bar.style.height = h + "%"; box.appendChild(bar); } };
+  }
+  else { /* unknown kind degrades to a labelled placeholder with the raw value -- never blank */
+    box = document.createElement("div"); box.className = "ph";
+    setf = function (v) { box.textContent = (cfg.text || kind) + ": " + (v == null ? "--" : JSON.stringify(v)); };
+  }
+  if (node.grow) box.style.flex = String(node.grow);
+  if (node.alignSelf) box.style.alignSelf = flexVal(node.alignSelf);
+  rec.el = box; rec.set = setf;
+  (node.inModal ? modalRecs : pageRecs)[wid] = rec;
+  return { box: box, rec: rec };
+}
+function submitForm(form) {
+  if (!form) { toast("that button submits no form"); return; }
+  var values = {};
+  var grab = function (recs) { for (var wid in recs) { var rec = recs[wid];
+    if (rec.config && rec.config.form === form && rec.collect)
+      values[rec.config.key || wid] = rec.collect(); } };
+  grab(pageRecs); grab(modalRecs);
+  send({ type: "form", form: form, values: values });
+}
+/* continuous input: at ~20 Hz, the latest value out -- the page's own rate limit (SPEC transport) */
+setInterval(function () { if (dragVal) { send({ type: "ctl", wid: dragVal.wid, value: dragVal.value }); } }, 50);
+
+/* ---- chrome wiring ---- */
+function showMain() { $("login").hidden = true; $("main").hidden = false; }
+function showLogin(msg) {
+  $("main").hidden = true; $("modal").style.display = "none"; $("login").hidden = false;
+  token = null;
+  if (pollen) { clearInterval(pollen); pollen = null; }
+  $("lerr").textContent = msg || "";
+}
+$("go").addEventListener("click", function () {
+  $("lerr").textContent = "";
+  login($("pw").value).then(function () { $("pw").value = ""; showMain(); connect(); })
+    .catch(function (e) { $("lerr").textContent = String(e.message || e); });
+});
+$("pw").addEventListener("keydown", function (e) { if (e.key === "Enter") $("go").click(); });
+</script>
+</body>
+</html>

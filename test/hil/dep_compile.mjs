@@ -77,6 +77,7 @@ for (const dep of spec) {
   for (const f of dep.files) {
     const mpy = compileToMpy(readFileSync(f.source, "utf8"));
     const path = join(dir, f.board);
+    mkdirSync(dirname(path), { recursive: true }); // board files may sit in a package folder (ts_ble/core.py)
     writeFileSync(path, mpy);
     files[f.board] = mpy;
     written.push({ board: f.board, path, bytes: mpy.length });
