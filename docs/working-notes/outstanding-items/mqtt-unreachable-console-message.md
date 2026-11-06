@@ -1,6 +1,6 @@
 # A plain console line when the MQTT broker can't be reached
 
-Status: open, 2026-11-01. Mike's call in the user guide review (`reviews/2026-11-01-user-guide.md`, remark 2: "docs
+Status: resolved, 2026-11-06 (`resolved.md`, Editor and backend). Opened 2026-11-01. Mike's call in the user guide review (`reviews/2026-11-01-user-guide.md`, remark 2: "docs
 plus a plainer console line"). The docs half is that review's Gaps, item 1.
 
 When the board is on WiFi but can't reach the broker, the console shows only the raw error, for example:

@@ -5,9 +5,12 @@
 import { describe, expect, it } from "vitest";
 import {
   DOC_INSTALL_MICROPYTHON,
+  DOC_MQTT_UNREACHABLE,
+  DOC_WIFI_NOT_JOINED,
   classifyDebugLines,
   explainInstallFailure,
   explainNoHello,
+  explainNodeError,
   localDocUrl,
 } from "../src/app/board-diagnosis.js";
 
@@ -92,5 +95,33 @@ describe("localDocUrl", () => {
       expect(explainNoHello(r).text).toContain("Disconnect");
     }
     expect(explainNoHello("micropython").text).not.toContain("Disconnect");
+  });
+});
+
+describe("explainNodeError", () => {
+  const raw = (status: string) =>
+    `mqtt connect to 192.168.1.5:1883 failed after 3 attempts (1: OSError('Timeout on socket write'), wifi status ${status}; ` +
+    `2: OSError('Timeout on socket write'), wifi status ${status}; 3: OSError('Timeout on socket write'), wifi status ${status})`;
+
+  it("says the board is on WiFi but can't reach the broker for status 1010", () => {
+    const advice = explainNodeError(raw("1010"));
+    expect(advice?.text).toBe("Board is on WiFi but can't reach the broker 192.168.1.5:1883 from its network.");
+    expect(advice?.doc).toBe(DOC_MQTT_UNREACHABLE);
+  });
+
+  it("says the board never joined WiFi for 201 and 202", () => {
+    expect(explainNodeError(raw("201"))?.text).toContain("network not found");
+    expect(explainNodeError(raw("202"))?.text).toContain("wrong password");
+    expect(explainNodeError(raw("202"))?.doc).toBe(DOC_WIFI_NOT_JOINED);
+  });
+
+  it("reads the last attempt's status", () => {
+    const mixed = raw("201").replace(/wifi status 201\)$/, "wifi status 1010)");
+    expect(explainNodeError(mixed)?.doc).toBe(DOC_MQTT_UNREACHABLE);
+  });
+
+  it("adds nothing for an undocumented status or another error", () => {
+    expect(explainNodeError(raw("3"))).toBeNull();
+    expect(explainNodeError("i2c device: no device at 0x76")).toBeNull();
   });
 });

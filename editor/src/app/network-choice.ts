@@ -85,6 +85,15 @@ export function wifiReadiness(
   return hello.authRequired ? "ready" : "no_password";
 }
 
+/** The console line for a board that takes WiFi connections. `networkAddress` is set only while the board's WiFi
+ * transport is up, so without it the board is on no network now (discussion #5: the old "reachable over WiFi" read
+ * as "connected"). */
+export function wifiReadyLine(hostname: string, networkAddress: string | null): string {
+  return networkAddress
+    ? `[wifi] ${hostname} is on a network at ${networkAddress} (${hostname}.local): you can connect over WiFi`
+    : `[wifi] ${hostname} is not on a network: WiFi connects need a running flow that joins one`;
+}
+
 /** Checks a new board password before it's sent: board_settings.py's rule (8-64 characters). */
 export function passwordProblem(password: string, confirm: string): string | null {
   if (password.length < 8 || password.length > 64) return "The password must be 8 to 64 characters.";

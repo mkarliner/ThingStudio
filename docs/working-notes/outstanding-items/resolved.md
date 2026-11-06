@@ -194,6 +194,12 @@ closed; the index bullets were removed the same day. Each carries its evidence l
 
 ## Editor and backend
 
+- **Plain console lines for WiFi and an unreachable MQTT broker** -- done 2026-11-06 (branch `tester-fixes-0.12.1`,
+  for v0.12.1). The `[wifi]` line says whether the board is on a network now (`wifiReadyLine`, `network-choice.ts`),
+  not "reachable over WiFi" (discussion #5). An `mqtt connect … failed after` node error gets an `[mqtt]` line read
+  from the WiFi status: 1010 "can't reach the broker", 201/202 "never joined WiFi", each linking its debugging
+  section (`explainNodeError`, `board-diagnosis.ts`). Details: `outstanding-items/wifi-reachable-console-message.md`,
+  `outstanding-items/mqtt-unreachable-console-message.md`.
 - **Seeded copies of built-in definitions no longer hide later updates** -- settled 2026-10-25 by revoking the rule
   rather than refining it: the built-ins are rewritten on every backend start, and a user's own definition is a
   file under another name (`decisions/chip-board-definitions.md`, 2026-10-25). The 2026-10-12 hash record and the

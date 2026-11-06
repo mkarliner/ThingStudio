@@ -9,6 +9,7 @@ import {
   parsePortSelection,
   passwordProblem,
   wifiReadiness,
+  wifiReadyLine,
 } from "../src/app/network-choice.js";
 
 const board = { hostname: "kitchen", address: "192.168.1.42", port: 7462, chip: "ESP32", flow: null, wifiTransport: true, busy: false };
@@ -72,5 +73,19 @@ describe("board settings checks", () => {
   it("matches board_settings.py's hostname rule", () => {
     for (const good of ["kitchen", "ts-a1b2c3", "a", "x".repeat(32)]) expect(hostnameProblem(good), good).toBeNull();
     for (const bad of ["", "Kitchen", "-a", "a-", "a.b", "x".repeat(33)]) expect(hostnameProblem(bad), bad).not.toBeNull();
+  });
+});
+
+describe("wifiReadyLine", () => {
+  it("says where the board is when its WiFi transport is up", () => {
+    expect(wifiReadyLine("ts-le0810", "192.168.1.20")).toBe(
+      "[wifi] ts-le0810 is on a network at 192.168.1.20 (ts-le0810.local): you can connect over WiFi",
+    );
+  });
+
+  it("says plainly that the board is on no network without an address", () => {
+    const line = wifiReadyLine("ts-le0810", null);
+    expect(line).toBe("[wifi] ts-le0810 is not on a network: WiFi connects need a running flow that joins one");
+    expect(line).not.toContain("reachable");
   });
 });

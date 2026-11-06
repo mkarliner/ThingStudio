@@ -1,6 +1,6 @@
 # The `[wifi] ... reachable over WiFi` console line misleads
 
-Status: open, 2026-11-01. From discussion #5 (clharting, CYD on Ubuntu). Same family as
+Status: resolved, 2026-11-06 (`resolved.md`, Editor and backend). Opened 2026-11-01. From discussion #5 (clharting, CYD on Ubuntu). Same family as
 `mqtt-unreachable-console-message.md`: a console line a user reads as meaning something it doesn't.
 
 While debugging a broken first MQTT flow, his console repeatedly showed:

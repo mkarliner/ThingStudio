@@ -97,8 +97,21 @@ tag until every target has a tested image at the tag's runtime version, built fr
 
 ## Publishing
 
-1. Tag the release (after the records above are committed). The Release workflow makes a draft.
-2. Attach every target's image:
+The editor offers the images listed in the `builds.json` it was installed with, so the catalogue entries go into
+the commit the tag points at. An image's download URL is known before the release exists.
+
+1. Offer each image in the editor, with the URL it will have on the release:
+
+   ```sh
+   python3 tools/firmware_catalogue.py --image firmware/out/<target>/<image> \
+       --url https://github.com/mkarliner/ThingStudio/releases/download/v<version>/<image>
+   ```
+
+   That adds the version to `builds.json`, creating the target's build entry from `target.json` the first time. It
+   refuses an image whose hash is not in that target's `tested.json`. Commit `builds.json` with the version bump;
+   `--check` (in CI) and the editor's tests hold the files together.
+2. Tag the release (after the records above are committed). The Release workflow makes a draft.
+3. Attach every target's image:
 
    ```sh
    firmware/publish.sh v<version>            # attach and verify, leaves the draft
@@ -108,17 +121,7 @@ tag until every target has a tested image at the tag's runtime version, built fr
    It takes the newest image in each `out/<target>/` and uploads nothing unless all of them are at the tag's
    runtime version, recorded as tested, built from a commit the tag contains and match their `.sha256`. Every
    upload is read back and compared. The release notes name each image, its hash and its tested board. Needs `gh`,
-   logged in.
-3. Offer each image in the editor:
-
-   ```sh
-   python3 tools/firmware_catalogue.py --image firmware/out/<target>/<image> \
-       --url https://github.com/mkarliner/ThingStudio/releases/download/v<version>/<image>
-   ```
-
-   That adds the version to `builds.json`, creating the target's build entry from `target.json` the first time. It
-   refuses an image whose hash is not in that target's `tested.json`. Commit `builds.json`; `--check` (in CI) and
-   the editor's tests hold the files together.
+   logged in. Until it runs, the catalogue's new URLs answer 404, so publish the release promptly.
 
 ## Adding a target
 
