@@ -87,7 +87,8 @@ nav:
   - Boards and networks:
       - Supported hardware: supported-hardware.md
       - Boards and processors: boards.md
-      - Custom firmware for classic ESP32: custom-firmware.md
+      - Kitchen-sink board: kitchen-sink-board.md
+      - Custom firmware: custom-firmware.md
       - Connecting over WiFi: wifi-connection.md
       - WiFi provisioning: wifi-provisioning.md
   - Node reference:

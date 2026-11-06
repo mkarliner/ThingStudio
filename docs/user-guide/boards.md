@@ -68,6 +68,7 @@ In the properties panel, a pin field shows the board's name for that pin, such a
 | Raspberry Pi Pico 2 | RP2350 | GPIO 0–29. LED on GPIO 25. |
 | LOLIN S2 Mini | ESP32-S2 | LED on GPIO 15, button on GPIO 0 |
 | LuatOS ESP32C3-CORE | ESP32-C3 | Pick by hand. LEDs on GPIO 12 and 13, button on GPIO 9. |
+| Kitchen sink (LuatOS ESP32C3-CORE) | ESP32-C3 | Pick by hand. The LuatOS board with a potentiometer (`POT`, GPIO 0), a button (`BUTTON`, GPIO 3) and a NeoPixel (`PIXEL`, GPIO 6) wired on. See [Kitchen-sink board](kitchen-sink-board.md). |
 | ESP32-C5-340X (ESP32-C5-KITC-A) | ESP32-C5 | Pick by hand. RGB LED (WS2812) on GPIO 27, button on GPIO 28. Left USB-C is a CH340E on GPIO 11/12, right is native USB on 13/14. If flashing doesn't start: hold BOOT, press RESET, release BOOT. |
 | CYD (ESP32-2432S028, ST7789) | ESP32 | Pick by hand. Display, touch, SD, RGB LED and speaker pins are labelled. |
 | Freenove ESP32-S3 Display 4.0" (FNK0104S, ST7796) | ESP32-S3 | Pick by hand. Display and touch pins are labelled. 320x480, SPI bus 1. Rotation 1 is portrait. For landscape, set the display's `orientation` to 90 (or 270 for the other way up) and keep the screen and display at 320x480. Display and touch (FT6336U) work. |
@@ -112,6 +113,10 @@ Thingstudio reads these files when the editor starts, when you connect, and when
 
 Save a JSON file in `~/.thingstudio/boards/`. The file name, without `.json`, is the board's id. Use lowercase letters, digits, `-` and `_`.
 
+A board file can't build on another one. To describe a built-in board with parts you have wired to it, copy the
+built-in's file, give it a new file name and `name`, and add a name in `pins` for each part, such as `"POT": 0`.
+[Kitchen-sink board](kitchen-sink-board.md) is a built-in made this way.
+
 ```json
 {
   "name": "My weather station",
@@ -137,6 +142,7 @@ The fields are:
 | `avoid` | Pins that give a warning, each with a reason. |
 | `free` | Pins the processor reserves or warns about that are fine on this board. For example `["12-13"]` on an ESP32-C3 board whose flash doesn't use them. |
 | `notes` | Anything else worth knowing. |
+| `variant` | The MicroPython build that **Tools → Install firmware…** picks for this board, such as `esp32-c3-generic`. Copy it from a built-in board with the same chip, or leave it out. |
 | `wifi` | `false` if the board has no WiFi. Hides [connecting over WiFi](wifi-connection.md) for it. Leave it out if unsure. |
 | `headerOrder` | `"down"` if the right-hand row is numbered top to bottom, like the left. Leave it out for a header numbered down the left and back up the right, like the Pico's. |
 | `usb` | Where the USB connector is, with pin 1 at the top left: `"top"` or `"bottom"`. Shown on the **Pins…** page. Needs `header`. |

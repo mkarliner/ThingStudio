@@ -291,7 +291,7 @@ def test_ensure_on_path_once():
 
 def test_index_entry_with_no_files_reads_as_installed():
     """A custom firmware image freezes libraries into flash and ships an index entry for each with no
-    files (2026-10-22, firmware/classic-esp32/gen_deps_index.mjs): the bytes are frozen code, not
+    files (2026-10-22, firmware/gen_deps_index.mjs): the bytes are frozen code, not
     files on the filesystem. That must read as installed -- a Deploy that looks for the files and
     calls the install incomplete would refuse every flow on such an image."""
     _fresh()

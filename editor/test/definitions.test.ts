@@ -63,7 +63,7 @@ describe("built-in definitions", () => {
   it("all load with no problems", () => {
     expect(defs.problems).toEqual([]);
     expect([...defs.processors.keys()].sort()).toEqual(["esp32", "esp32-c3", "esp32-c5", "esp32-s2", "esp32-s3", "nrf52840", "rp2040", "rp2350", "stm32f405"]);
-    expect([...defs.boards.keys()].sort()).toEqual(["cyd", "esp32-c5-340x", "freenove-s3-4in", "lolin-s2-mini", "luatos-esp32c3-core", "pico", "pico-2", "pico-w", "pyboard-v10", "wemos-d1-r32", "xiao-nrf52840"]);
+    expect([...defs.boards.keys()].sort()).toEqual(["cyd", "esp32-c5-340x", "freenove-s3-4in", "kitchen-sink-c3", "lolin-s2-mini", "luatos-esp32c3-core", "pico", "pico-2", "pico-w", "pyboard-v10", "wemos-d1-r32", "xiao-nrf52840"]);
   });
 
   it("FALLBACK_MAX_PIN is the widest range any built-in processor has", () => {
@@ -488,7 +488,7 @@ describe("how a chip family is flashed (decisions/firmware-catalogue.md)", () =>
     expect(defs.boards.get("pico")!.variant).toBe("rpi-pico");
     expect(defs.boards.get("pyboard-v10")!.variant).toBeNull();
     // The CYD takes Thingstudio's own image: that is the board the image was built and tested for. The image it
-    // names is in firmware/classic-esp32/tested.json (firmware-assets.test.ts asserts that), and the next build
+    // names is in firmware/targets/classic-esp32/tested.json (firmware-assets.test.ts asserts that), and the next build
     // replaces the version, not the board file.
     expect(defs.boards.get("cyd")!.variant).toBe("thingstudio-classic-esp32");
   });

@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: Apache-2.0
-# firmware/classic-esp32/install.sh
+# firmware/install.sh
+#
+# Usage: PORT=/dev/ttyUSB0 firmware/install.sh <target> [image]
 #
 # Flashes a built image and writes the one file that lives on the filesystem rather than in the
 # image: /main.py (the boot script, which imports the frozen listener). The library inventory is
@@ -23,26 +25,37 @@
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO="$(cd "$HERE/.." && pwd)"
 PORT="${PORT:-}"
-IMG="${1:-}"
+TARGET="${1:-}"
+IMG="${2:-}"
 TRIES="${TRIES:-20}"
 
 die() { echo "install: $*" >&2; exit 1; }
 
-[ -n "$PORT" ] || die "set PORT, e.g. PORT=/dev/ttyUSB0 $0 [image]"
+[ -n "$TARGET" ] || die "usage: PORT=/dev/ttyUSB0 $0 <target> [image]  (targets: $(python3 "$REPO/tools/firmware_targets.py" list | tr '\n' ' '))"
+[ -n "$PORT" ] || die "set PORT, e.g. PORT=/dev/ttyUSB0 $0 $TARGET [image]"
+ENV="$(python3 "$REPO/tools/firmware_targets.py" env "$TARGET")" || exit 1
+eval "$ENV"
+OUT="$HERE/out/$TARGET_ID"
 
 if [ -z "$IMG" ]; then
-    IMG="$(ls -t "$HERE"/out/thingstudio-classic-esp32-*.bin 2>/dev/null | head -1 || true)"
-    [ -n "$IMG" ] || die "no image given and none in $HERE/out -- run build.sh first"
+    IMG="$(ls -t "$OUT/$TARGET_BUILD_ID"-*.bin 2>/dev/null | head -1 || true)"
+    [ -n "$IMG" ] || die "no image given and none in $OUT -- run build.sh $TARGET_ID first"
 fi
 [ -f "$IMG" ] || die "no such image: $IMG"
-[ -f "$HERE/out/main.py" ] || die "missing $HERE/out/main.py -- build.sh writes it next to the image"
+case "$(basename "$IMG")" in "$TARGET_BUILD_ID"-*) ;; *) die "$(basename "$IMG") is not a $TARGET_ID image ($TARGET_BUILD_ID-*.bin)" ;; esac
+[ -f "$OUT/main.py" ] || die "missing $OUT/main.py -- build.sh writes it next to the image"
 # `esptool.py` is the name pip gives the 3.x/4.x console script, and what macOS and most
 # developer machines have; esptool 5 installs `esptool` instead with no `esptool.py` alias. Use
 # whichever exists rather than making the user care which version they installed.
 ESPTOOL="$(command -v esptool.py || command -v esptool || true)"
 [ -n "$ESPTOOL" ] || die "esptool not found on PATH (pip install esptool)"
 command -v mpremote >/dev/null || die "mpremote not found on PATH (pip install mpremote)"
+# An older esptool does not know the newer chips (macOS's default esptool.py 3.x has no esp32c5); asking for the
+# version with --chip fails at argument parsing for an unknown chip, before touching the port.
+"$ESPTOOL" --chip "$TARGET_CHIP" version >/dev/null 2>&1 \
+    || die "$ESPTOOL does not know chip $TARGET_CHIP -- pip install -U esptool (5.x knows every target here)"
 
 if [ -f "$IMG.sha256" ]; then
     # macOS ships `shasum`, not `sha256sum` (the build's file format works with both).
@@ -78,21 +91,18 @@ except OSError as e:
 # system python3 (macOS: pipx installs a tool's dependencies into its own venv, so `import serial`
 # there fails even when mpremote works; both esptool and mpremote are already required).
 reset_board() {
-    "$ESPTOOL" --chip esp32 --port "$PORT" run >/dev/null 2>&1
+    "$ESPTOOL" --chip "$TARGET_CHIP" --port "$PORT" run >/dev/null 2>&1
 }
 
-echo "install: flashing $IMG to $PORT (this erases the board's flows and settings)"
+echo "install: flashing $IMG to $PORT at $TARGET_ADDRESS (this erases the board's flows and settings)"
 wait_port || die "port $PORT never opened -- unplug and replug the board, then run this again"
 
-# Erase the filesystem partition before writing. The image's app sits at 0x10000..0x310000, so a
-# plain write_flash leaves whatever filesystem the old firmware had at 0x310000 untouched -- in a
-# different format, or with a boot sector that isn't blank. MicroPython then treats it as corrupt,
-# loops printing "The filesystem appears to be corrupted", and `os.mkdir('/lib')` answers ENODEV.
-# The size must match board/partitions.csv's vfs entry.
-FS_OFFSET=0x310000
-FS_SIZE=0xF0000
-"$ESPTOOL" --chip esp32 --port "$PORT" --after no_reset erase_region "$FS_OFFSET" "$FS_SIZE"
-"$ESPTOOL" --chip esp32 --port "$PORT" --after no_reset write_flash 0x0 "$IMG"
+# Erase the filesystem partition before writing. The merged image ends at the app partition, so a plain
+# write_flash leaves whatever filesystem the old firmware had untouched -- in a different format, or with a boot
+# sector that isn't blank. MicroPython then treats it as corrupt, loops printing "The filesystem appears to be
+# corrupted", and `os.mkdir('/lib')` answers ENODEV. Offset and size come from the target's partitions.csv.
+"$ESPTOOL" --chip "$TARGET_CHIP" --port "$PORT" --after no_reset erase_region "$TARGET_FS_OFFSET" "$TARGET_FS_SIZE"
+"$ESPTOOL" --chip "$TARGET_CHIP" --port "$PORT" --after no_reset write_flash "$TARGET_ADDRESS" "$IMG"
 
 echo "install: waiting for the board to restart and settle"
 wait_port || die "port $PORT did not come back after flashing -- unplug and replug the board"
@@ -101,6 +111,6 @@ sleep 2
 
 echo "install: writing the boot script"
 wait_port || die "port $PORT did not come back after reset -- unplug and replug the board"
-mpremote connect "$PORT" fs cp "$HERE/out/main.py" :/main.py
+mpremote connect "$PORT" fs cp "$OUT/main.py" :/main.py
 
 echo "install: done -- reset the board if it is still sitting in the REPL; it boots into the listener"

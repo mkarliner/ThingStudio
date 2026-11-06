@@ -63,13 +63,15 @@ jobs:
       - run: pytest -q
         working-directory: backend
 
-  # The frozen set for the custom classic-ESP32 image is derived from runtime_manifest.py, so it cannot
-  # drift -- but staging it still has to succeed, and every library the editor can deploy has to keep
-  # compiling with the editor's own mpy-cross (the image's /lib/_deps.json hashes must match what the
-  # editor computes, or Deploy pushes copies over the frozen ones). Minutes without a firmware toolchain;
-  # the image build itself is firmware.yml, on demand.
+  # Custom firmware images, one per firmware/targets/ folder. The frozen set is derived from runtime_manifest.py and
+  # is the same for every target, so it cannot drift -- but staging it still has to succeed, and every library the
+  # editor can deploy has to keep compiling with the editor's own mpy-cross (the image's frozen inventory hashes
+  # must match what the editor computes, or Deploy pushes copies over the frozen ones). Then every target has to be
+  # complete and agree with firmware/builds.json, and a target with no tested image at the current runtime version
+  # is a warning here (the release workflow refuses the tag for it: decisions/custom-firmware.md, 2026-11-04).
+  # Minutes, no firmware toolchain: images are built on a developer machine (firmware/README.md).
   firmware-manifest:
-    name: firmware frozen set (stage + _deps.json)
+    name: firmware targets (frozen set, catalogue, runtime version)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -80,13 +82,12 @@ jobs:
         with:
           node-version: 22
       - run: |
-          python3 firmware/classic-esp32/stage.py firmware/classic-esp32/out/stage
-          node firmware/classic-esp32/gen_deps_index.mjs \
-            firmware/classic-esp32/out/stage firmware/classic-esp32/out/_deps.json
+          python3 firmware/stage.py firmware/out/ci/stage
+          node firmware/gen_deps_index.mjs firmware/out/ci/stage firmware/out/ci/_deps.json
           python3 - <<'PY'
           import json, os
-          idx = json.load(open("firmware/classic-esp32/out/_deps.json"))
-          stage = "firmware/classic-esp32/out/stage"
+          idx = json.load(open("firmware/out/ci/_deps.json"))
+          stage = "firmware/out/ci/stage"
           # A module (name.py) or, from runtime 15.0.0, a package (name/__init__.py).
           staged = {n[:-3] for n in os.listdir(stage) if n.endswith(".py")}
           staged |= {n for n in os.listdir(stage) if os.path.isfile(os.path.join(stage, n, "__init__.py"))}
@@ -98,6 +99,10 @@ jobs:
                   raise SystemExit("%s: frozen entries must list no files" % name)
           print("%d libraries staged and indexed" % len(idx))
           PY
+      - name: every target complete and in step with the catalogue
+        run: python3 tools/firmware_catalogue.py --check
+      - name: every target has a tested image at the runtime version (warning)
+        run: python3 tools/firmware_targets.py current --warn
 
   # The user guide's checkable style rules (tools/docs_lint.py) against docs/style-lint-baseline.json, a list
   # of today's violations that only shrinks: a new violation fails, and so does a baseline entry whose

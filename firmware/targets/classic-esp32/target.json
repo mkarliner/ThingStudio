@@ -1,0 +1,11 @@
+{
+  "$comment": "Facts for this target; the shared scripts in firmware/ read them (tools/firmware_targets.py).",
+  "label": "classic ESP32, 4 MB, no PSRAM",
+  "family": "esp32",
+  "chip": "esp32",
+  "idfTarget": "esp32",
+  "micropython": "v1.29.0",
+  "espIdf": "v5.5.2",
+  "address": 0,
+  "portSdkconfig": ["boards/sdkconfig.base", "boards/sdkconfig.ble"]
+}

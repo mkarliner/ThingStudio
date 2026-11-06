@@ -157,3 +157,9 @@ A bounded, drop-oldest ring buffer for queued outbound messages — `mqtt_as`'s 
 Checking a public page's edits by fetching it plain returns a stale cached copy that looks exactly like "the
 edit didn't land"; cache-bust with a query parameter (`https://…?fresh=2`). 1 entry:
 `docs/working-notes/learnings/public-page-fetch-caching.md`.
+
+## Custom firmware builds
+
+Building the images in a cloud session (ESP-IDF from GitHub, registry components overridden), image sizes per
+target at runtime 15.0.0, NimBLE's 4-connection limit, esptool 3.x lacking the C5 (2026-11-04).
+`docs/working-notes/learnings/firmware-builds.md`.

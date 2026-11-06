@@ -202,9 +202,9 @@ If it still fails after the power cycle, the flow may be too big for this board.
   sends a frame in strips for this reason; a `function` node that builds a whole frame at once still needs one big
   block.
 - **Use a board with more memory.** A board with PSRAM can start flows that a board without it cannot.
-- **Run a firmware image with the libraries built in.** On a classic ESP32 there is a ready-made one:
-  [Custom firmware for classic ESP32](custom-firmware.md). On other boards, build your own by freezing the runtime
-  and the flow libraries into MicroPython.
+- **Run a firmware image with the libraries built in.** The classic ESP32, ESP32-C3 and ESP32-C5 have ready-made
+  ones: [Custom firmware](custom-firmware.md). On other boards, build your own by freezing the runtime and the flow
+  libraries into MicroPython.
 
 Deploy stops here on purpose; freeing or restarting is yours to invoke. When the board looks short of memory before
 a deploy starts, the console says so in one line (`only 19 KB free on the board, this flow is 10 KB -- it may not

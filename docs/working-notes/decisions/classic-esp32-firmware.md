@@ -21,6 +21,11 @@ case for recommending it — made on evidence, not on the gate.
 S2/S3/C3 are out: different silicon or partitions, and the S3's PSRAM removes the need. RP2040/RP2350
 are out for now; the same technique applies when a board needs it.
 
+**Superseded in shape, 2026-11-04:** the tooling was then built for this one image only, which the next chip
+exposed. The image is now the `classic-esp32` target of a family (`firmware/targets/`), built from MicroPython
+v1.29.0 and ESP-IDF v5.5.2, next to `esp32-c3` and `esp32-c5`; see `custom-firmware.md`. The reasoning below
+still holds for every target; paths in it name the old `firmware/classic-esp32/` layout.
+
 ## What makes it work
 
 - **Freeze everything `runtime_manifest.py` lists**, derived from that file (`firmware/classic-esp32/

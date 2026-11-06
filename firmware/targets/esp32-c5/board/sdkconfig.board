@@ -1,0 +1,18 @@
+# SPDX-License-Identifier: Apache-2.0
+# firmware/targets/esp32-c5/board/sdkconfig.board -- applied after the port's fragments (target.json), so these win.
+
+# 4 MB: the ESP32-C5-340X's C5-FH4 module. Flash mode and speed come from the port's sdkconfig.flash_qio_80m, as
+# in the stock generic-C5 build that runs on that board.
+CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y
+CONFIG_ESPTOOLPY_FLASHSIZE="4MB"
+
+# No PSRAM: the stock build's sdkconfig.spiram_quad is left out of target.json, because the C5-FH4 module has
+# none and the stock image prints PSRAM errors at every boot. A C5 board with PSRAM is a second target
+# (firmware/README.md, "Adding a target"), not a flag here.
+
+# The partition table is board/partitions.csv; build.sh writes the sdkconfig lines that point at it.
+
+# Frozen bytecode makes the app bigger than a stock build; optimise for size (sdkconfig.riscv already does).
+CONFIG_COMPILER_OPTIMIZATION_SIZE=y
+CONFIG_COMPILER_OPTIMIZATION_PERF=n
+CONFIG_COMPILER_OPTIMIZATION_CHECKS_SILENT=y

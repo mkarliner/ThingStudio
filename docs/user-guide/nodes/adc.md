@@ -4,7 +4,7 @@ Reads an analog pin, and sends the reading when it moves past the set bounds, an
 
 ## Properties
 
-- **pin** — the ADC pin. Default 34.
+- **pin** — the ADC pin. Default 34. [Kitchen-sink board](../kitchen-sink-board.md) shows a potentiometer wired to one.
 - **mode** — what counts as a change. Default `relative`.
     - `relative` — the reading has moved more than **delta** from the last one sent.
     - `absolute` — the reading crosses **lower** or **upper**: out of the range, or back into it (see **sense**).

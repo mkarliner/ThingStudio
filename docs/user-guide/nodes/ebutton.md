@@ -4,7 +4,7 @@ Reports presses, releases, long presses and double clicks from one button, ignor
 
 ## Properties
 
-- **pin** — the GPIO pin. Default 5.
+- **pin** — the GPIO pin. Default 5. [Kitchen-sink board](../kitchen-sink-board.md) shows a button wired to one.
 - **pull** — the pin's own pull resistor: `none`, `up` or `down`. Default `none`, for a button with an external
   pull resistor or a module that has one.
 - **sense** — the pin level when the button is not pressed: `auto`, `0` or `1`. Default `auto`, which takes the

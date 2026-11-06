@@ -23,7 +23,7 @@ that doesn't need to sit in every agent's context.
 | npm (`editor/`) | `package-lock.json` integrity hashes; `npm ci --ignore-scripts` | CI audit gate, `.github/dependabot.yml` |
 | Python (`backend/`) | `backend/requirements.txt`, hash-pinned; installed `--require-hashes` | CI, docs and release workflows, `make` |
 | GitHub Actions | 40-char commit SHA with a `# v7` comment, never a tag | every workflow |
-| Firmware toolchain | MicroPython/ESP-IDF tag + a build verified on the board | `firmware/classic-esp32/build.sh`, `tested.json` |
+| Firmware toolchain | MicroPython/ESP-IDF tag per target + a build verified on the board | `firmware/targets/<target>/target.json` (build.sh refuses another tag), `tested.json` |
 | Vendored libraries | the reviewed copy in `device-runtime/src/vendor/` | no update path by design |
 
 ## Open questions, rules and process

@@ -285,6 +285,14 @@ refusing; the image stays **optional, not the recommended route** for the moment
 (2026-10-22, second and third passes). 1 entry:
 `docs/working-notes/decisions/classic-esp32-firmware.md`.
 
+## Custom firmware images (all targets)
+
+Scope is not shape: one image per target chip, each a folder under `firmware/targets/`, never a constant in the
+shared tooling (rule in `AGENTS.md`); every image is rebuilt, flashed and recorded at each runtime bump, enforced at
+release, not at merge; per-target MicroPython/ESP-IDF pins, all at v1.29.0/v5.5.2 to start; merged images at the
+target's address (C5 0x2000); the C5 image without PSRAM; `firmware.yml` removed (2026-11-04).
+`docs/working-notes/decisions/custom-firmware.md`.
+
 ## MCP server
 
 Build an MCP server that talks to the running backend (check, describe, board info, console, node status, and
@@ -339,3 +347,12 @@ runtime change touches `ts_wifi` anyway (Mike, 2026-11-01, having hit the idle-b
 BLE flow nodes ship in phases: broadcast first (scan, advertise), then the board as a GATT peripheral (unpaired,
 with a documented warning), then central. ESP32 family (C5 included) only for now; Pico W later. Own `ts_ble` on
 the raw `bluetooth` module, not `aioble` (2026-11-03). 1 entry: `docs/working-notes/decisions/ble-nodes.md`.
+
+## Remote displays
+
+A remote display (phone/browser as a board's display) follows two principles: everything is a plugin without
+opening a supply-chain hole (widget faces are data by default, confined JS the exception), and the board-served
+page is the first client, not the only one (transport-neutral spec; BLE and native app stay possible). Remote UIs
+are a format AIs write and humans audit, the lesson taken from the 2015 ThingStudio. Screen-size agnostic; editor
+QR discovery; own WebSocket code; explicit web-server config node; spike before the MVP call (2026-11-06). 5 entries:
+`docs/working-notes/decisions/remote-display.md`.
