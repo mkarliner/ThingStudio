@@ -491,6 +491,11 @@ describe("how a chip family is flashed (decisions/firmware-catalogue.md)", () =>
     // names is in firmware/targets/classic-esp32/tested.json (firmware-assets.test.ts asserts that), and the next build
     // replaces the version, not the board file.
     expect(defs.boards.get("cyd")!.variant).toBe("thingstudio-classic-esp32");
+    // The C5 and C3 boards take their chips' Thingstudio images from v0.12.0 (Mike, 2026-11-06): on stock, the C5
+    // could not redeploy a BLE flow; on its image it redeploys with 100 KB to spare.
+    expect(defs.boards.get("esp32-c5-340x")!.variant).toBe("thingstudio-esp32-c5");
+    expect(defs.boards.get("luatos-esp32c3-core")!.variant).toBe("thingstudio-esp32-c3");
+    expect(defs.boards.get("kitchen-sink-c3")!.variant).toBe("thingstudio-esp32-c3");
   });
 
   it("every board's variant names a build the catalogue has, of that board's family", async () => {
