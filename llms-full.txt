@@ -146,6 +146,12 @@ Thingstudio tries not to reinvent the wheel.
   [`micropython-lib`](https://github.com/micropython/micropython-lib).
 - What comes out is plain MicroPython. You can read it in the editor's **Compiled source** panel.
 
+## Built with AI
+
+Thingstudio is written with heavy use of AI coding tools. Every change is reviewed by a person, and the boards and
+nodes marked tested in [Supported hardware](supported-hardware.md) have run on real hardware. If that rules it out
+for you, fair enough.
+
 ## What you need
 
 - A board with an ESP32 or RP2040/RP2350 processor. [Supported hardware](supported-hardware.md) lists what's been
