@@ -89,7 +89,9 @@ chip, its `.sha256` file and `main.py`.
    For an ESP32-C5, `--chip esp32c5` and `0x2000`. Written at 0, a C5 does not boot. On macOS the port looks like
    `/dev/cu.usbserial-14420`. On Windows it is `COM3` or similar.
 
-3. Write the boot script, the one file that lives on the filesystem rather than in the image:
+3. If you held **BOOT** to get into download mode, press **RESET** now: without it the board stays in its
+   bootloader, and `mpremote` fails with `could not enter raw repl`. Then write the boot script, the one file that
+   lives on the filesystem rather than in the image:
 
    ```sh
    mpremote connect /dev/ttyUSB0 fs cp main.py :/main.py
