@@ -4236,7 +4236,9 @@ retry up to three times. If it still fails, deploy again.</p>
 <p>An <code>mqtt publish</code> or <code>mqtt subscribe</code> node shows a red dot, and the console says:</p>
 <div class="highlight"><pre><span></span><code>mqtt connect to HOST:1883 failed after 3 attempts (… 'Timeout on socket write' …, wifi status 1010)
 </code></pre></div>
-<p>The line ends with the board's WiFi status. <code>wifi status 1010</code> means the board has joined WiFi and has an address
+<p>The editor adds a line after it, read from the board's WiFi status, such as
+<code>[mqtt] Board is on WiFi but can't reach the broker HOST:1883 from its network.</code></p>
+<p>The raw line ends with the board's WiFi status. <code>wifi status 1010</code> means the board has joined WiFi and has an address
 but can't reach the broker from its network: the cause is the network between the board and the broker, not the
 board's memory. <code>201</code> or <code>202</code> means the board never joined WiFi; see
 <a href="#the-board-hasnt-joined-wifi">The board hasn't joined WiFi</a>.</p>

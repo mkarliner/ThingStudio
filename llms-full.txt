@@ -2559,6 +2559,13 @@ If this computer has no saved password for the board, the editor asks for it.
 
 A board with no password is listed as **no password set**. It won't accept a WiFi connection until you set one.
 
+Connected over USB, the console says whether the board can take a WiFi connection now:
+
+```text
+[wifi] kitchen is on a network at 192.168.1.42 (kitchen.local): you can connect over WiFi
+[wifi] kitchen is not on a network: WiFi connects need a running flow that joins one
+```
+
 ## Good to know
 
 - Only one editor can connect over WiFi at a time.
@@ -7430,7 +7437,10 @@ An `mqtt publish` or `mqtt subscribe` node shows a red dot, and the console says
 mqtt connect to HOST:1883 failed after 3 attempts (… 'Timeout on socket write' …, wifi status 1010)
 ```
 
-The line ends with the board's WiFi status. `wifi status 1010` means the board has joined WiFi and has an address
+The editor adds a line after it, read from the board's WiFi status, such as
+`[mqtt] Board is on WiFi but can't reach the broker HOST:1883 from its network.`
+
+The raw line ends with the board's WiFi status. `wifi status 1010` means the board has joined WiFi and has an address
 but can't reach the broker from its network: the cause is the network between the board and the broker, not the
 board's memory. `201` or `202` means the board never joined WiFi; see
 [The board hasn't joined WiFi](#the-board-hasnt-joined-wifi).
