@@ -3568,6 +3568,8 @@ device. Nodes that name the same peer share one connection.</p>
 notifications for the ble notify nodes. The nodes' status follows each step: <strong>finding</strong>, <strong>connecting</strong>,
 <strong>discovering</strong>, <strong>connected</strong>. If a step fails or the link drops, the status says why, and the board starts again
 from finding after 10 seconds. It never connects to a different device instead.</p>
+<p>An ESP32 holds at most 4 Bluetooth connections at once, counting its peers and the devices connected to the board.
+A peer over that limit reports a failure at connecting.</p>
 <h2 id="errors">Errors</h2>
 <p>A peer with neither an address nor a name, a malformed address, or a timeout outside 1000 to 60000 ms stops the
 deploy. A step that fails on the board, such as the device not being found or a service it doesn't have, is

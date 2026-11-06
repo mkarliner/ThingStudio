@@ -4153,7 +4153,7 @@ what the board sent instead, and what to do:</p>
 </tr>
 <tr>
 <td>The board doesn't start after flashing, or its serial output repeats <code>invalid header</code></td>
-<td>The address or the family was wrong: <code>0x1000</code> for an ESP32 or ESP32-S2, <code>0x2000</code> for an ESP32-C5, <code>0</code> for an ESP32-S3, C3, C6 or ESP8266. A board maker's manual may give another address for its own demo images; for MicroPython, use these. Thonny can't write a C5 at <code>0x2000</code> (<a href="../installing-micropython/#without-a-terminal-thonny">Install MicroPython</a>). Flash again with the right family; the board is recoverable.</td>
+<td>The address or the family was wrong: <code>0x1000</code> for an ESP32 or ESP32-S2, <code>0x2000</code> for an ESP32-C5, <code>0</code> for an ESP32-S3, C3, C6 or ESP8266, and <code>0</code> for a <a href="../custom-firmware/">Thingstudio custom image</a> on a classic ESP32. A board maker's manual may give another address for its own demo images; for MicroPython, use these. Thonny can't write a C5 at <code>0x2000</code> (<a href="../installing-micropython/#without-a-terminal-thonny">Install MicroPython</a>). Flash again with the right family; the board is recoverable.</td>
 </tr>
 <tr>
 <td>esptool is not installed on this machine</td>

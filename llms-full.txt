@@ -750,9 +750,15 @@ Thingstudio can install it for you, on the chips it can write.
 Thingstudio writes the firmware itself: over a serial port for the ESP32 family, and onto a mounted drive for
 RP2040, RP2350 and nRF52 boards.
 
-On a classic ESP32 with 4 MB of flash and no PSRAM, an ESP32-C3 or an ESP32-C5, pick the
-[Thingstudio custom image](custom-firmware.md) as the **Firmware** when the dialog lists one for the chip. The
-runtime and the flow libraries are frozen into flash, where they run without taking the RAM the flow needs. Its **Version** list holds the published releases.
+!!! tip "ESP32 without PSRAM? Use a custom image"
+    ESP32 boards without PSRAM can be very tight on memory, as the ESP32's WiFi stack and FreeRTOS take quite a
+    bit of RAM. We strongly suggest that you flash these boards with one of our
+    [custom MicroPython images](custom-firmware.md). They include the runtime and the common libraries, and so
+    release significant memory for your flow.
+
+On a classic ESP32 with 4 MB of flash and no PSRAM, an ESP32-C3 or an ESP32-C5, pick
+**Thingstudio custom image** as the **Firmware** when the dialog lists one for the chip. Its **Version** list holds
+the published releases.
 After flashing it, **Install runtime** writes only the boot script.
 
 1. Plug the board into USB. A Pico needs **BOOTSEL** held while you plug it in.
@@ -774,7 +780,9 @@ tested.
 
 The list covers every build Thingstudio pins, so **Or use your own image file** is only for the rest: a build for a
 board Thingstudio doesn't list, a chip with no pinned build yet (the ESP32-C5), or an image you downloaded yourself. Pick the `.bin` or `.uf2`; the chip family you
-choose decides the address, and the file's own header usually decides the family.
+choose decides the address, and the file's own header usually decides the family. **Address**, under **Install
+options**, overrides the family's address. A Thingstudio custom image for a classic ESP32 needs `0x0` there: see
+[Custom firmware](custom-firmware.md#install-by-hand).
 
 Flashing erases the flow and all settings on the board. Afterwards, [connect](connecting.md) it
 and [install the runtime](installing-runtime.md).
@@ -2017,8 +2025,8 @@ Any board with one of these processors can be used by picking the processor from
 | ESP32 | Yes, on the CYD |
 | ESP32-S2 | Yes, on the LOLIN S2 Mini |
 | ESP32-S3 | Yes, on the Freenove board |
-| ESP32-C3 | Yes, on a generic ESP32-C3 board, over USB and WiFi |
-| ESP32-C5 | Yes, on the ESP32-C5-340X, over USB |
+| ESP32-C3 | Yes, on a generic ESP32-C3 board, over USB and WiFi; also on the [custom image](custom-firmware.md) |
+| ESP32-C5 | Yes, on the ESP32-C5-340X, over USB; also on the [custom image](custom-firmware.md) |
 | RP2040 | Yes, on the Pico and Pico W |
 | RP2350 | Yes, on the Pico 2 |
 | nRF52840 | Smoke tested on the Seeed XIAO nRF52840 (Sense) |
@@ -2381,8 +2389,9 @@ Because the libraries are already there, Deploy does not send them. The console 
 
 Two things follow from that:
 
-- Deploying over a running flow is more likely to fit. On stock MicroPython, the runtime, the libraries and the
-  flow fight over the same memory.
+- Deploying over a running flow fits where stock MicroPython runs out. On stock MicroPython, the runtime, the
+  libraries and the flow fight over the same memory: an ESP32-C5 redeploying a BLE flow fails with `MemoryError`.
+  On the custom image, the same board redeploys it with 100 KB to spare.
 - The first deploy after flashing has more memory to work with than any later one. Judge a flow by a deploy over
   another flow, not by the first one.
 
@@ -2438,6 +2447,10 @@ chip, its `.sha256` file and `main.py`.
    For an ESP32-C5, `--chip esp32c5` and `0x2000`. Written at 0, a C5 does not boot. On macOS the port looks like
    `/dev/cu.usbserial-14420`. On Windows it is `COM3` or similar.
 
+   To write the downloaded image from the editor instead, use **Or use your own image file** in **Tools → Install
+   firmware…** and set **Address**, under **Install options**, to the one in the table. Without it, a classic ESP32
+   image goes at the family's `0x1000` and the board does not boot.
+
 3. If you held **BOOT** to get into download mode, press **RESET** now: without it the board stays in its
    bootloader, and `mpremote` fails with `could not enter raw repl`. Then write the boot script, the one file that
    lives on the filesystem rather than in the image:
@@ -2480,12 +2493,15 @@ Read the third row before leaning on deploys: each deploy over a running flow le
 the chip's own heap shrinks as MicroPython takes from it. WiFi and Bluetooth draw from that chip heap, and the
 console warns when it is low.
 
-The C3 and C5, measured with an MQTT flow running over WiFi, after deploying it over itself, in KB:
+The C3 and C5, measured with each flow running after deploying it over itself, in KB:
 
-| Board | MicroPython free | ESP-IDF free | ESP-IDF largest |
-|---|---|---|---|
-| ESP32-C3 module | 114 | 36 | 28 |
-| ESP32-C5-340X | 94 | 29 | 17 |
+| Board | Flow | MicroPython free | ESP-IDF free | ESP-IDF largest |
+|---|---|---|---|---|
+| ESP32-C3 module | MQTT over WiFi | 114 | 36 | 28 |
+| ESP32-C5-340X | MQTT over WiFi | 94 | 29 | 17 |
+| ESP32-C5-340X | BLE central | 113 | 108 | 88 |
+
+WiFi takes the most from the chip's heap.
 
 Keeping frames small and recovering from a `MemoryError` are covered in [Memory](debugging.md#memory) and
 [MemoryError or a library that won't load](debugging.md#memoryerror-or-a-library-that-wont-load).
@@ -4086,6 +4102,9 @@ The board finds the device, connects, finds the services and characteristics the
 notifications for the ble notify nodes. The nodes' status follows each step: **finding**, **connecting**,
 **discovering**, **connected**. If a step fails or the link drops, the status says why, and the board starts again
 from finding after 10 seconds. It never connects to a different device instead.
+
+An ESP32 holds at most 4 Bluetooth connections at once, counting its peers and the devices connected to the board.
+A peer over that limit reports a failure at connecting.
 
 ## Errors
 
@@ -7315,7 +7334,7 @@ The raw error stays in the message, in brackets. Include it if you report a prob
 | The chip family list is empty, or the catalog can't be read | This install's `firmware/builds.json` is missing or malformed; the dialog says which line. A reinstall replaces it. |
 | … is not a .uf2, or is a .uf2 sent to a serial port | A mounted drive takes the `.uf2` build, a serial port the `.bin`. Pick the matching file. |
 | choose the chip family, so esptool knows which chip and address to use | A file on its own doesn't say which chip it is for. Pick the family; if the image is the reason, the editor reads it out of the file. |
-| The board doesn't start after flashing, or its serial output repeats `invalid header` | The address or the family was wrong: `0x1000` for an ESP32 or ESP32-S2, `0x2000` for an ESP32-C5, `0` for an ESP32-S3, C3, C6 or ESP8266. A board maker's manual may give another address for its own demo images; for MicroPython, use these. Thonny can't write a C5 at `0x2000` ([Install MicroPython](installing-micropython.md#without-a-terminal-thonny)). Flash again with the right family; the board is recoverable. |
+| The board doesn't start after flashing, or its serial output repeats `invalid header` | The address or the family was wrong: `0x1000` for an ESP32 or ESP32-S2, `0x2000` for an ESP32-C5, `0` for an ESP32-S3, C3, C6 or ESP8266, and `0` for a [Thingstudio custom image](custom-firmware.md) on a classic ESP32. A board maker's manual may give another address for its own demo images; for MicroPython, use these. Thonny can't write a C5 at `0x2000` ([Install MicroPython](installing-micropython.md#without-a-terminal-thonny)). Flash again with the right family; the board is recoverable. |
 | esptool is not installed on this machine | The backend's Python has no `esptool`: `pip install esptool`, then restart Thingstudio. |
 | esptool exited N at … on PORT | The write stopped; the dialog's log has the tool's own lines. Check the cable and the bootloader mode, and retry. In **Install options**, try a slower speed, or tick **Disable the stub loader**. |
 | the flash did not finish within … | The tool stopped answering. Unplug and replug the board, then flash again. |
@@ -7612,6 +7631,12 @@ A soft restart reuses the same heap; only a power cycle rebuilds it. See [Memory
 
 Possibly. If a deploy still fails after **Tools → Remove flow…** and a power cycle, the flow may be too big for the
 board. See [MemoryError or a library that won't load](debugging.md#memoryerror-or-a-library-that-wont-load) for what to do.
+
+## Redeploying a BLE flow on an ESP32-C5 fails with "MemoryError". Why?
+
+On stock MicroPython, the Bluetooth stack keeps its memory between flows, and the runtime, libraries and new flow
+have to fit in what is left. Install the [Thingstudio custom image](custom-firmware.md): it redeploys the same flow
+with room to spare. Or choose **Tools → Remove flow…**, power cycle the board, then deploy.
 
 ## Why does http request fail with "MemoryError" fetching a page?
 

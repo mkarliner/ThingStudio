@@ -3679,9 +3679,16 @@ per board.</p>
 <h2 id="install-from-thingstudio">Install from Thingstudio</h2>
 <p>Thingstudio writes the firmware itself: over a serial port for the ESP32 family, and onto a mounted drive for
 RP2040, RP2350 and nRF52 boards.</p>
-<p>On a classic ESP32 with 4 MB of flash and no PSRAM, an ESP32-C3 or an ESP32-C5, pick the
-<a href="../custom-firmware/">Thingstudio custom image</a> as the <strong>Firmware</strong> when the dialog lists one for the chip. The
-runtime and the flow libraries are frozen into flash, where they run without taking the RAM the flow needs. Its <strong>Version</strong> list holds the published releases.
+<div class="admonition tip">
+<p class="admonition-title">ESP32 without PSRAM? Use a custom image</p>
+<p>ESP32 boards without PSRAM can be very tight on memory, as the ESP32's WiFi stack and FreeRTOS take quite a
+bit of RAM. We strongly suggest that you flash these boards with one of our
+<a href="../custom-firmware/">custom MicroPython images</a>. They include the runtime and the common libraries, and so
+release significant memory for your flow.</p>
+</div>
+<p>On a classic ESP32 with 4 MB of flash and no PSRAM, an ESP32-C3 or an ESP32-C5, pick
+<strong>Thingstudio custom image</strong> as the <strong>Firmware</strong> when the dialog lists one for the chip. Its <strong>Version</strong> list holds
+the published releases.
 After flashing it, <strong>Install runtime</strong> writes only the boot script.</p>
 <ol>
 <li>Plug the board into USB. A Pico needs <strong>BOOTSEL</strong> held while you plug it in.</li>
@@ -3702,7 +3709,9 @@ chip families the editor can write are listed, and only builds whose hash is pin
 tested.</p>
 <p>The list covers every build Thingstudio pins, so <strong>Or use your own image file</strong> is only for the rest: a build for a
 board Thingstudio doesn't list, a chip with no pinned build yet (the ESP32-C5), or an image you downloaded yourself. Pick the <code>.bin</code> or <code>.uf2</code>; the chip family you
-choose decides the address, and the file's own header usually decides the family.</p>
+choose decides the address, and the file's own header usually decides the family. <strong>Address</strong>, under <strong>Install
+options</strong>, overrides the family's address. A Thingstudio custom image for a classic ESP32 needs <code>0x0</code> there: see
+<a href="../custom-firmware/#install-by-hand">Custom firmware</a>.</p>
 <p>Flashing erases the flow and all settings on the board. Afterwards, <a href="../connecting/">connect</a> it
 and <a href="../installing-runtime/">install the runtime</a>.</p>
 <h2 id="doing-it-yourself">Doing it yourself</h2>

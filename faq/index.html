@@ -3496,6 +3496,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#redeploying-a-ble-flow-on-an-esp32-c5-fails-with-memoryerror-why" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Redeploying a BLE flow on an ESP32-C5 fails with "MemoryError". Why?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#why-does-http-request-fail-with-memoryerror-fetching-a-page" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3923,6 +3934,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#redeploying-a-ble-flow-on-an-esp32-c5-fails-with-memoryerror-why" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Redeploying a BLE flow on an ESP32-C5 fails with "MemoryError". Why?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#why-does-http-request-fail-with-memoryerror-fetching-a-page" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4307,6 +4329,10 @@ See <a href="../debugging/#memoryerror-or-a-library-that-wont-load">MemoryError 
 <h2 id="deploy-failed-a-second-time-is-the-flow-too-big-for-my-board">Deploy failed a second time. Is the flow too big for my board?</h2>
 <p>Possibly. If a deploy still fails after <strong>Tools → Remove flow…</strong> and a power cycle, the flow may be too big for the
 board. See <a href="../debugging/#memoryerror-or-a-library-that-wont-load">MemoryError or a library that won't load</a> for what to do.</p>
+<h2 id="redeploying-a-ble-flow-on-an-esp32-c5-fails-with-memoryerror-why">Redeploying a BLE flow on an ESP32-C5 fails with "MemoryError". Why?</h2>
+<p>On stock MicroPython, the Bluetooth stack keeps its memory between flows, and the runtime, libraries and new flow
+have to fit in what is left. Install the <a href="../custom-firmware/">Thingstudio custom image</a>: it redeploys the same flow
+with room to spare. Or choose <strong>Tools → Remove flow…</strong>, power cycle the board, then deploy.</p>
 <h2 id="why-does-http-request-fail-with-memoryerror-fetching-a-page">Why does http request fail with "MemoryError" fetching a page?</h2>
 <p>The node reads the whole response body into memory at once. A page larger than the largest free block fails, even
 when the console shows more free memory than the page size. A 56 KB page on an ESP32-C3 failed with
