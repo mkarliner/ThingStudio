@@ -78,3 +78,9 @@ chip. The classic-ESP32 image's own history (why freeze, chunked deploy, local b
   path (2026-10-23), named the classic image throughout, and would have needed a matrix over targets to keep
   meaning anything. The trigger to build in CI stays as `classic-esp32-firmware.md` states it: when images need
   rebuilding without the maintainer's machine, design CI as the release path, per target, from scratch.
+- **2026-11-06 — v0.12.0 offers all three images; the C3 and C5 boards point at theirs; 14.x is dropped (Mike).**
+  The first images built and recorded under the family rule (all at 1dc99d7) shipped with v0.12.0 and are in
+  `builds.json`. `esp32-c5-340x`, `luatos-esp32c3-core` and `kitchen-sink-c3` now name `thingstudio-esp32-c5` /
+  `thingstudio-esp32-c3` as their `variant`, as the CYD and D1 R32 name the classic image: the C5's stock build
+  could not redeploy a BLE flow, its image redeploys with 100 KB to spare. The classic build's 14.1.0 and 14.0.1
+  versions leave `builds.json` (an editor on runtime 15 refuses them); their `tested.json` entries stay as history.

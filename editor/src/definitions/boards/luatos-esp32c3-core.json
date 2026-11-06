@@ -1,7 +1,7 @@
 {
   "name": "LuatOS ESP32C3-CORE",
   "processor": "esp32-c3",
-  "variant": "esp32-c3-generic",
+  "variant": "thingstudio-esp32-c3",
   "wifi": true,
   "match": [],
   "pins": { "LED_D4": 12, "LED_D5": 13, "BOOT": 9 },
