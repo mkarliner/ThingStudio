@@ -1328,6 +1328,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../kitchen-sink-board/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Kitchen-sink board
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../custom-firmware/" class="md-nav__link">
         
   
@@ -1335,7 +1363,7 @@
   <span class="md-ellipsis">
     
   
-    Custom firmware for classic ESP32
+    Custom firmware
   
 
     
@@ -4290,7 +4318,8 @@ octal PSRAM (the <code>SPIRAM_OCT</code> variant) from <a href="https://micropyt
 The console then shows megabytes free. Freenove's S3 display boards are an example: 121 KB before, 7.8 MB after.</p>
 <h2 id="my-esp32-c5-prints-psram-chip-is-not-connected-at-boot-is-it-broken">My ESP32-C5 prints "PSRAM chip is not connected" at boot. Is it broken?</h2>
 <p>No. The generic ESP32-C5 build looks for PSRAM, and many C5 modules have none. It reports the failure, says
-"continuing without it", and starts MicroPython with the chip's own RAM.</p>
+"continuing without it", and starts MicroPython with the chip's own RAM. The
+<a href="../custom-firmware/">Thingstudio C5 image</a> doesn't look for PSRAM, so it doesn't print this.</p>
 <h2 id="which-board-should-i-use-for-a-display-and-wifi-together">Which board should I use for a display and WiFi together?</h2>
 <p>An ESP32 with external RAM (PSRAM), such as many ESP32-S3 boards. MicroPython puts its heap in the external RAM,
 leaving the chip's own RAM for WiFi. A classic ESP32 or ESP32-C3 without PSRAM can run a display and WiFi, but

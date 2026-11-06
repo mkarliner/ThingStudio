@@ -16,7 +16,7 @@
         <link rel="prev" href="../supported-hardware/">
       
       
-        <link rel="next" href="../custom-firmware/">
+        <link rel="next" href="../kitchen-sink-board/">
       
       
         
@@ -1478,6 +1478,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../kitchen-sink-board/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Kitchen-sink board
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../custom-firmware/" class="md-nav__link">
         
   
@@ -1485,7 +1513,7 @@
   <span class="md-ellipsis">
     
   
-    Custom firmware for classic ESP32
+    Custom firmware
   
 
     
@@ -3732,6 +3760,11 @@ see <a href="#adding-a-processor">Adding a processor</a>.</p>
 <td>Pick by hand. LEDs on GPIO 12 and 13, button on GPIO 9.</td>
 </tr>
 <tr>
+<td>Kitchen sink (LuatOS ESP32C3-CORE)</td>
+<td>ESP32-C3</td>
+<td>Pick by hand. The LuatOS board with a potentiometer (<code>POT</code>, GPIO 0), a button (<code>BUTTON</code>, GPIO 3) and a NeoPixel (<code>PIXEL</code>, GPIO 6) wired on. See <a href="../kitchen-sink-board/">Kitchen-sink board</a>.</td>
+</tr>
+<tr>
 <td>ESP32-C5-340X (ESP32-C5-KITC-A)</td>
 <td>ESP32-C5</td>
 <td>Pick by hand. RGB LED (WS2812) on GPIO 27, button on GPIO 28. Left USB-C is a CH340E on GPIO 11/12, right is native USB on 13/14. If flashing doesn't start: hold BOOT, press RESET, release BOOT.</td>
@@ -3833,6 +3866,9 @@ file in place lasts until the next start.</p>
 <p>Thingstudio reads these files when the editor starts, when you connect, and when you deploy. If a file has a mistake, it isn't loaded and the built-in is used instead. The console says what's wrong, and the Board menu lists the file under <strong>Invalid files</strong>.</p>
 <h2 id="adding-a-board">Adding a board</h2>
 <p>Save a JSON file in <code>~/.thingstudio/boards/</code>. The file name, without <code>.json</code>, is the board's id. Use lowercase letters, digits, <code>-</code> and <code>_</code>.</p>
+<p>A board file can't build on another one. To describe a built-in board with parts you have wired to it, copy the
+built-in's file, give it a new file name and <code>name</code>, and add a name in <code>pins</code> for each part, such as <code>"POT": 0</code>.
+<a href="../kitchen-sink-board/">Kitchen-sink board</a> is a built-in made this way.</p>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
 <span class="w">  </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"My weather station"</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">"processor"</span><span class="p">:</span><span class="w"> </span><span class="s2">"esp32-c3"</span><span class="p">,</span>
@@ -3890,6 +3926,10 @@ file in place lasts until the next start.</p>
 <tr>
 <td><code>notes</code></td>
 <td>Anything else worth knowing.</td>
+</tr>
+<tr>
+<td><code>variant</code></td>
+<td>The MicroPython build that <strong>Tools → Install firmware…</strong> picks for this board, such as <code>esp32-c3-generic</code>. Copy it from a built-in board with the same chip, or leave it out.</td>
 </tr>
 <tr>
 <td><code>wifi</code></td>

@@ -1330,6 +1330,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../kitchen-sink-board/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Kitchen-sink board
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../custom-firmware/" class="md-nav__link">
         
   
@@ -1337,7 +1365,7 @@
   <span class="md-ellipsis">
     
   
-    Custom firmware for classic ESP32
+    Custom firmware
   
 
     
@@ -4193,9 +4221,9 @@ cycle gives the board a clean heap.</p>
   sends a frame in strips for this reason; a <code>function</code> node that builds a whole frame at once still needs one big
   block.</li>
 <li><strong>Use a board with more memory.</strong> A board with PSRAM can start flows that a board without it cannot.</li>
-<li><strong>Run a firmware image with the libraries built in.</strong> On a classic ESP32 there is a ready-made one:
-  <a href="../custom-firmware/">Custom firmware for classic ESP32</a>. On other boards, build your own by freezing the runtime
-  and the flow libraries into MicroPython.</li>
+<li><strong>Run a firmware image with the libraries built in.</strong> The classic ESP32, ESP32-C3 and ESP32-C5 have ready-made
+  ones: <a href="../custom-firmware/">Custom firmware</a>. On other boards, build your own by freezing the runtime and the flow
+  libraries into MicroPython.</li>
 </ul>
 <p>Deploy stops here on purpose; freeing or restarting is yours to invoke. When the board looks short of memory before
 a deploy starts, the console says so in one line (<code>only 19 KB free on the board, this flow is 10 KB -- it may not

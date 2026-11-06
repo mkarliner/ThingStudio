@@ -1473,6 +1473,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../kitchen-sink-board/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Kitchen-sink board
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../custom-firmware/" class="md-nav__link">
         
   
@@ -1480,7 +1508,7 @@
   <span class="md-ellipsis">
     
   
-    Custom firmware for classic ESP32
+    Custom firmware
   
 
     
@@ -3651,9 +3679,9 @@ per board.</p>
 <h2 id="install-from-thingstudio">Install from Thingstudio</h2>
 <p>Thingstudio writes the firmware itself: over a serial port for the ESP32 family, and onto a mounted drive for
 RP2040, RP2350 and nRF52 boards.</p>
-<p>For a classic ESP32 with 4 MB of flash and no PSRAM, pick the <a href="../custom-firmware/">Thingstudio custom image</a> as the
-<strong>Firmware</strong> rather than official MicroPython: the runtime and the flow libraries are frozen into flash, where they
-run without taking the RAM the display stack and the flow need. Its <strong>Version</strong> list holds the published releases.
+<p>On a classic ESP32 with 4 MB of flash and no PSRAM, an ESP32-C3 or an ESP32-C5, pick the
+<a href="../custom-firmware/">Thingstudio custom image</a> as the <strong>Firmware</strong> when the dialog lists one for the chip. The
+runtime and the flow libraries are frozen into flash, where they run without taking the RAM the flow needs. Its <strong>Version</strong> list holds the published releases.
 After flashing it, <strong>Install runtime</strong> writes only the boot script.</p>
 <ol>
 <li>Plug the board into USB. A Pico needs <strong>BOOTSEL</strong> held while you plug it in.</li>

@@ -1456,6 +1456,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../kitchen-sink-board/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Kitchen-sink board
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../custom-firmware/" class="md-nav__link">
         
   
@@ -1463,7 +1491,7 @@
   <span class="md-ellipsis">
     
   
-    Custom firmware for classic ESP32
+    Custom firmware
   
 
     
@@ -3661,7 +3689,8 @@ replacing it, changes it for the other wires too.</p>
 <strong>value / source property</strong>). The value is read as that type:</p>
 <ul>
 <li><code>bool</code>: <code>true</code> is <code>True</code>. Anything else is <code>False</code>, including <code>True</code> and <code>1</code>.</li>
-<li><code>number</code>: a whole number becomes an <code>int</code>, any other number a <code>float</code>. An empty value is <code>0</code>.</li>
+<li><code>number</code>: a whole number becomes an <code>int</code>, any other number a <code>float</code>. An empty value is <code>0</code>. Write numbers in
+  decimal: <code>0x2000</code> is not a number.</li>
 <li><code>string</code>: sent as typed.</li>
 </ul>
 <p>With type <code>number</code>, a value that isn't a number stops the deploy for <code>change</code>. For <code>inject</code> and <code>startup</code> it fails on

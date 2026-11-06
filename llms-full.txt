@@ -750,9 +750,9 @@ Thingstudio can install it for you, on the chips it can write.
 Thingstudio writes the firmware itself: over a serial port for the ESP32 family, and onto a mounted drive for
 RP2040, RP2350 and nRF52 boards.
 
-For a classic ESP32 with 4 MB of flash and no PSRAM, pick the [Thingstudio custom image](custom-firmware.md) as the
-**Firmware** rather than official MicroPython: the runtime and the flow libraries are frozen into flash, where they
-run without taking the RAM the display stack and the flow need. Its **Version** list holds the published releases.
+On a classic ESP32 with 4 MB of flash and no PSRAM, an ESP32-C3 or an ESP32-C5, pick the
+[Thingstudio custom image](custom-firmware.md) as the **Firmware** when the dialog lists one for the chip. The
+runtime and the flow libraries are frozen into flash, where they run without taking the RAM the flow needs. Its **Version** list holds the published releases.
 After flashing it, **Install runtime** writes only the boot script.
 
 1. Plug the board into USB. A Pico needs **BOOTSEL** held while you plug it in.
@@ -1749,7 +1749,8 @@ Some nodes take a value you type next to a type you pick: [inject](nodes/inject.
 **value / source property**). The value is read as that type:
 
 - `bool`: `true` is `True`. Anything else is `False`, including `True` and `1`.
-- `number`: a whole number becomes an `int`, any other number a `float`. An empty value is `0`.
+- `number`: a whole number becomes an `int`, any other number a `float`. An empty value is `0`. Write numbers in
+  decimal: `0x2000` is not a number.
 - `string`: sent as typed.
 
 With type `number`, a value that isn't a number stops the deploy for `change`. For `inject` and `startup` it fails on
@@ -1992,6 +1993,7 @@ been deployed and run on that hardware. Pin details for boards and processors ar
 | Raspberry Pi Pico 2 | RP2350 | Yes |
 | LOLIN S2 Mini | ESP32-S2 | Yes |
 | LuatOS ESP32C3-CORE | ESP32-C3 | Yes, with the adc and neopixel nodes |
+| [Kitchen sink](kitchen-sink-board.md) (LuatOS ESP32C3-CORE) | ESP32-C3 | Yes, with the adc, ebutton and neopixel nodes |
 | ESP32-C5-340X (ESP32-C5-KITC-A) | ESP32-C5 | Yes, with the ble nodes (scan, advertise, characteristics, UART) |
 | CYD (ESP32-2432S028, ST7789) | ESP32 | Yes, display only. |
 | Freenove ESP32-S3 Display 4.0" (FNK0104S) | ESP32-S3 | Yes, with the display and touch |
@@ -2154,6 +2156,7 @@ In the properties panel, a pin field shows the board's name for that pin, such a
 | Raspberry Pi Pico 2 | RP2350 | GPIO 0–29. LED on GPIO 25. |
 | LOLIN S2 Mini | ESP32-S2 | LED on GPIO 15, button on GPIO 0 |
 | LuatOS ESP32C3-CORE | ESP32-C3 | Pick by hand. LEDs on GPIO 12 and 13, button on GPIO 9. |
+| Kitchen sink (LuatOS ESP32C3-CORE) | ESP32-C3 | Pick by hand. The LuatOS board with a potentiometer (`POT`, GPIO 0), a button (`BUTTON`, GPIO 3) and a NeoPixel (`PIXEL`, GPIO 6) wired on. See [Kitchen-sink board](kitchen-sink-board.md). |
 | ESP32-C5-340X (ESP32-C5-KITC-A) | ESP32-C5 | Pick by hand. RGB LED (WS2812) on GPIO 27, button on GPIO 28. Left USB-C is a CH340E on GPIO 11/12, right is native USB on 13/14. If flashing doesn't start: hold BOOT, press RESET, release BOOT. |
 | CYD (ESP32-2432S028, ST7789) | ESP32 | Pick by hand. Display, touch, SD, RGB LED and speaker pins are labelled. |
 | Freenove ESP32-S3 Display 4.0" (FNK0104S, ST7796) | ESP32-S3 | Pick by hand. Display and touch pins are labelled. 320x480, SPI bus 1. Rotation 1 is portrait. For landscape, set the display's `orientation` to 90 (or 270 for the other way up) and keep the screen and display at 320x480. Display and touch (FT6336U) work. |
@@ -2198,6 +2201,10 @@ Thingstudio reads these files when the editor starts, when you connect, and when
 
 Save a JSON file in `~/.thingstudio/boards/`. The file name, without `.json`, is the board's id. Use lowercase letters, digits, `-` and `_`.
 
+A board file can't build on another one. To describe a built-in board with parts you have wired to it, copy the
+built-in's file, give it a new file name and `name`, and add a name in `pins` for each part, such as `"POT": 0`.
+[Kitchen-sink board](kitchen-sink-board.md) is a built-in made this way.
+
 ```json
 {
   "name": "My weather station",
@@ -2223,6 +2230,7 @@ The fields are:
 | `avoid` | Pins that give a warning, each with a reason. |
 | `free` | Pins the processor reserves or warns about that are fine on this board. For example `["12-13"]` on an ESP32-C3 board whose flash doesn't use them. |
 | `notes` | Anything else worth knowing. |
+| `variant` | The MicroPython build that **Tools → Install firmware…** picks for this board, such as `esp32-c3-generic`. Copy it from a built-in board with the same chip, or leave it out. |
 | `wifi` | `false` if the board has no WiFi. Hides [connecting over WiFi](wifi-connection.md) for it. Leave it out if unsure. |
 | `headerOrder` | `"down"` if the right-hand row is numbered top to bottom, like the left. Leave it out for a header numbered down the left and back up the right, like the Pico's. |
 | `usb` | Where the USB connector is, with pin 1 at the top left: `"top"` or `"bottom"`. Shown on the **Pins…** page. Needs `header`. |
@@ -2274,23 +2282,91 @@ In the editor, a pin field on a named-pin board is a dropdown of the board's pin
 
 ---
 
+Source: https://docs.thingstudio.net/kitchen-sink-board/
+
+# Kitchen-sink board
+
+How to wire a test board for the input and output nodes: a potentiometer, a push button and a NeoPixel on a LuatOS
+ESP32C3-CORE. Tutorials that need hardware beyond an LED use these parts on these pins, so a flow from one tutorial
+runs on a board wired for another. Wire all of it, or only the parts a tutorial needs.
+
+## What you need
+
+- A LuatOS ESP32C3-CORE, the version with a USB-serial chip (CH343). The version with native USB works too, but
+  needs GPIO 18 and 19 left free.
+- A 10 kΩ potentiometer. Any value from 1 kΩ to 100 kΩ works.
+- A push button.
+- One WS2812 (NeoPixel) LED, on a breakout or as part of a strip.
+- Hookup wire, and a breadboard or stripboard.
+
+## Wiring
+
+The parts connect to these pins. The header pin is the number on the board's pin list; **Pins…** in the editor
+shows where each one is.
+
+| Part | Connection | GPIO | Header pin | Name in the editor |
+| --- | --- | --- | --- | --- |
+| Potentiometer | one end | — | 13 (3V3) | |
+| | wiper (middle) | 0 | 2 | `POT` |
+| | other end | — | 1 (GND) | |
+| Push button | one side | 3 | 20 | `BUTTON` |
+| | other side | — | 17 (GND) | |
+| WS2812 | DIN | 6 | 22 | `PIXEL` |
+| | 5V | — | 16 or 31 (5V) | |
+| | GND | — | 14 or 32 (GND) | |
+
+The button needs no resistor: set the `ebutton` node's **pull** to `up`. The board also has two LEDs of its own,
+`LED_D4` (GPIO 12) and `LED_D5` (GPIO 13), and the `BOOT` button (GPIO 9), so a flow can use those with nothing
+wired.
+
+## Pick the board
+
+Choose **Kitchen sink (LuatOS ESP32C3-CORE)** from the **Board** menu. The board reports itself as a generic ESP32-C3,
+so Auto can't find it. Pin fields then show `POT`, `BUTTON` and `PIXEL` next to their numbers.
+
+## Check each part
+
+Wire one node to a `debug` node, or to a `neopixel` node, and deploy:
+
+- **Potentiometer**: an `adc` node on pin 0. Turning the knob sends readings to the console.
+- **Button**: an `ebutton` node on pin 3, **pull** `up`. Pressing it sends `press` and `release`.
+- **NeoPixel**: a `startup` node with **payload type** `number` and **value** `8192` (`0x002000`), into a
+  `neopixel` node on pin 6 with **count** 1. The LED lights dim green.
+
+## Other pins
+
+To put the parts on other pins, keep these points in mind:
+
+- **Potentiometer**: GPIO 0–4 can read a voltage. GPIO 5 can too, but not while WiFi is on.
+- **Avoid** GPIO 2, 8 and 9: they decide how the board starts. GPIO 11 powers the flash chip.
+- **Rename pins** by saving a copy of the board's file under a new name: see
+  [Adding a board](boards.md#adding-a-board).
+
+
+---
+
 Source: https://docs.thingstudio.net/custom-firmware/
 
-# Custom firmware for classic ESP32
+# Custom firmware
 
-A MicroPython image with Thingstudio's runtime and every flow library built in, for classic ESP32 boards with 4 MB
-of flash and no PSRAM (ESP32-D0WD and similar). This is the image to flash on those boards: stock MicroPython
-loads the runtime and the flow into RAM, and the display stack pushes it over — with this image they run from
-flash instead, which is the difference between a GUI flow starting and failing with
-`MemoryError allocating 13317 bytes`.
+A Thingstudio custom image is MicroPython with Thingstudio's runtime and every flow library built in. Stock
+MicroPython loads the runtime, the libraries and the flow into RAM. With a custom image, the runtime and libraries
+run from flash instead, which leaves the RAM for the flow. On a small board, that is the difference between a flow
+starting and failing with `MemoryError`.
 
-On stock MicroPython, flows without a GUI run as usual. [Back to stock MicroPython](#back-to-stock-micropython) says
-how to return to it.
+There is one image per chip:
 
-The technique is not specific to this image or to this chip: freezing the runtime and the flow libraries into
-MicroPython works on any board. This image exists because a classic ESP32 is the board where it changes the most,
-and because building one needs an ESP-IDF toolchain. `firmware/classic-esp32/` in the repository is a working
-example to copy for another board.
+| Chip | Image | Written at |
+|---|---|---|
+| classic ESP32, 4 MB, no PSRAM | `thingstudio-classic-esp32-…bin` | 0x0 |
+| ESP32-C3, 4 MB | `thingstudio-esp32-c3-…bin` | 0x0 |
+| ESP32-C5, 4 MB, no PSRAM | `thingstudio-esp32-c5-…bin` | 0x2000 |
+
+On stock MicroPython, flows that fit in memory run as usual. [Back to stock MicroPython](#back-to-stock-micropython)
+says how to return to it.
+
+The technique works on any board that runs MicroPython: freeze the runtime and the flow libraries into the
+firmware. `firmware/` in the repository builds these images, and its README says how to add a chip.
 
 ## What it changes
 
@@ -2303,20 +2379,23 @@ Because the libraries are already there, Deploy does not send them. The console 
 [libraries] this flow uses font_body12, … st7796py -- already on the board: font_body12, … st7796py
 ```
 
-Two things follow from that, and both matter on a board with this little RAM:
+Two things follow from that:
 
-- Deploying over a running GUI flow works. On stock MicroPython it fails: the runtime and the flow fight over the
-  same memory.
-- The first deploy after flashing has more memory to work with than any later one, because the board is not drawing
-  yet. Judge a flow by a deploy over another flow, not by the first one.
+- Deploying over a running flow is more likely to fit. On stock MicroPython, the runtime, the libraries and the
+  flow fight over the same memory.
+- The first deploy after flashing has more memory to work with than any later one. Judge a flow by a deploy over
+  another flow, not by the first one.
 
-The image carries no board-specific settings. Pins and the display come from the [board definition](boards.md), so
-one image serves any classic ESP32 board. It is tested on the CYD and, with a plain GPIO flow, on the Wemos D1 R32.
+The image carries no board-specific settings. Pins and displays come from the [board definition](boards.md), so
+one image serves any board with that chip.
+
+Each image is rebuilt and tested on a board at every runtime version. The runtime version an image carries is its
+**Version** in the Install firmware dialog.
 
 ## What you need
 
-- A classic ESP32 board with 4 MB of flash and no PSRAM (ESP32-D0WD and similar). This image is not for the S2, S3,
-  C3 or C6, and not for RP2040 or RP2350 boards.
+- A board with one of the chips in the table above. The S2, S3 and C6 have no custom image, and neither do RP2040
+  or RP2350 boards.
 - A USB cable that carries data.
 
 ## Install from the editor
@@ -2325,10 +2404,11 @@ Flashing erases the board: its saved flow and all settings are gone afterwards.
 
 1. Put the board in download mode if it needs it: hold **BOOT** and tap **RESET**.
 2. Choose **Tools → Install firmware…**, pick **Serial port**, then the board's port.
-3. Set **Chip family** to **ESP32** and **Firmware** to **Thingstudio custom image**.
+3. Set **Chip family** to the board's chip and **Firmware** to **Thingstudio custom image**. If there is no
+   **Thingstudio custom image** for the chip, no image for it has been published yet: use official MicroPython.
 4. Pick a **Version**. Each version listed ran on a board before it was published, and the editor checks the
    download against its recorded SHA-256 before writing it.
-5. Click **Flash**.
+5. Click **Flash**. The editor writes the image at the address in the table above.
 6. [Connect](connecting.md), then choose **Tools → Install runtime…**. It writes only the boot script, `main.py`:
    the runtime is already in the image.
 
@@ -2336,25 +2416,27 @@ Flashing erases the board: its saved flow and all settings are gone afterwards.
 
 You need `esptool` and `mpremote` on the computer: `pip install esptool mpremote`.
 
-Each image is attached to the Thingstudio release it was published with, which is often not the latest release.
-On the [releases page](https://github.com/mkarliner/ThingStudio/releases), open the release whose assets include the
-image version you want (the versions are the ones the editor lists), and download three files from it: the image,
-its `.sha256` file and `main.py`.
+Each image is attached to the Thingstudio release it was published with. On the
+[releases page](https://github.com/mkarliner/ThingStudio/releases), open the release whose assets include the image
+version you want (the versions are the ones the editor lists), and download three files from it: the image for your
+chip, its `.sha256` file and `main.py`.
 
 1. Put the three files in one folder and go there. Check the image against its checksum:
 
    ```sh
-   IMAGE=$(ls thingstudio-classic-esp32-*.bin)   # the image you downloaded
+   IMAGE=$(ls thingstudio-*.bin)   # the image you downloaded
    shasum -a 256 -c "$IMAGE.sha256"      # sha256sum -c on Linux
    ```
 
-2. Put the board in download mode if your board needs it, then write the image at address 0:
+2. Put the board in download mode if your board needs it, then write the image. Use the chip and address from the
+   table above. For a classic ESP32:
 
    ```sh
    esptool.py --chip esp32 --port /dev/ttyUSB0 write_flash 0x0 "$IMAGE"
    ```
 
-   On macOS the port looks like `/dev/cu.usbserial-14420`. On Windows it is `COM3` or similar.
+   For an ESP32-C5, `--chip esp32c5` and `0x2000`. Written at 0, a C5 does not boot. On macOS the port looks like
+   `/dev/cu.usbserial-14420`. On Windows it is `COM3` or similar.
 
 3. Write the boot script, the one file that lives on the filesystem rather than in the image:
 
@@ -2368,8 +2450,9 @@ its `.sha256` file and `main.py`.
 
 4. Reset the board. It starts the listener and prints `LISTENER_READY`.
 
-The repository also has `firmware/classic-esp32/install.sh`, which runs these steps in one command. Read it before
-running it: it erases the filesystem partition, and its port name comes from `PORT`.
+The repository also has `firmware/install.sh`, which runs these steps in one command
+(`PORT=/dev/ttyUSB0 firmware/install.sh esp32-c5`). Read it before running it: it erases the filesystem partition,
+and its port name comes from `PORT`.
 
 ## Connect and deploy
 
@@ -2379,12 +2462,11 @@ Connect in the editor as usual. Two things confirm the image is running:
   firmware dialog
 - `[libraries] … already on the board: …` names every library the flow imports
 
-Then deploy the flow. A GUI flow that failed with `MemoryError` on stock MicroPython should run.
+Then deploy the flow.
 
 ## Memory and the board
 
-The image does not add RAM. A classic ESP32 has about 140 KB free for flows with this image and nothing running, and
-a GUI flow takes most of what it has. Measured on the CYD (ESP32-D0WD, 4 MB, no PSRAM), in KB:
+The image does not add RAM. Measured on the CYD (classic ESP32-D0WD, 4 MB, no PSRAM) with a GUI flow, in KB:
 
 | Board state | MicroPython free | Largest block | ESP-IDF free | ESP-IDF largest |
 |---|---|---|---|---|
@@ -2393,8 +2475,8 @@ a GUI flow takes most of what it has. Measured on the CYD (ESP32-D0WD, 4 MB, no 
 | GUI flow running, after two more deploys | 120 | 27 | 18 | 14 |
 
 Read the third row before leaning on deploys: each deploy over a running flow leaves the heaps more fragmented, and
-the chip's own heap shrinks as MicroPython takes from it. A GUI flow still starts (a 9.5 KB flow needs far less than
-the 27 KB block), but WiFi draws from that shrinking chip heap, and the console warns when it is low.
+the chip's own heap shrinks as MicroPython takes from it. WiFi and Bluetooth draw from that chip heap, and the
+console warns when it is low. The C3 and C5 images are not measured yet.
 
 Keeping frames small and recovering from a `MemoryError` are covered in [Memory](debugging.md#memory) and
 [MemoryError or a library that won't load](debugging.md#memoryerror-or-a-library-that-wont-load).
@@ -2406,8 +2488,8 @@ Keeping frames small and recovering from a `MemoryError` are covered in [Memory]
 
 ## Reporting a problem
 
-Reports on any classic ESP32 board are welcome, listed or not. Include the board's name and the console's version and
-`[memory]` lines from a fresh boot.
+Reports on any board with these chips are welcome, listed or not. Include the board's name and the console's
+version and `[memory]` lines from a fresh boot.
 
 
 ---
@@ -4082,7 +4164,7 @@ Reports presses, releases, long presses and double clicks from one button, ignor
 
 ## Properties
 
-- **pin** — the GPIO pin. Default 5.
+- **pin** — the GPIO pin. Default 5. [Kitchen-sink board](../kitchen-sink-board.md) shows a button wired to one.
 - **pull** — the pin's own pull resistor: `none`, `up` or `down`. Default `none`, for a button with an external
   pull resistor or a module that has one.
 - **sense** — the pin level when the button is not pressed: `auto`, `0` or `1`. Default `auto`, which takes the
@@ -4133,7 +4215,7 @@ Reads an analog pin, and sends the reading when it moves past the set bounds, an
 
 ## Properties
 
-- **pin** — the ADC pin. Default 34.
+- **pin** — the ADC pin. Default 34. [Kitchen-sink board](../kitchen-sink-board.md) shows a potentiometer wired to one.
 - **mode** — what counts as a change. Default `relative`.
     - `relative` — the reading has moved more than **delta** from the last one sent.
     - `absolute` — the reading crosses **lower** or **upper**: out of the range, or back into it (see **sense**).
@@ -4233,7 +4315,8 @@ Lights a WS2812 (NeoPixel) strip: sets its pixels from each message, then writes
 
 ## Properties
 
-- **pin** — the strip's data pin. Default 13.
+- **pin** — the strip's data pin. Default 13. [Kitchen-sink board](../kitchen-sink-board.md) shows one LED wired to
+  one.
 - **count** — how many pixels the strip has. Default 8. Must be 1 or more.
 - **order** — the color order of your strip: `GRB`, `RGB`, `RGBW` or `GRBW`. Default `GRB`, which most WS2812
   strips use. The `W` orders are for strips with a white channel.
@@ -5894,7 +5977,7 @@ Use it in a script, in CI, or to let an AI assistant check a flow it has written
 From the `editor/` folder:
 
 ```text
-npm ci
+npm ci --ignore-scripts
 npm run build:cli
 ```
 
@@ -7297,9 +7380,9 @@ If it still fails after the power cycle, the flow may be too big for this board.
   sends a frame in strips for this reason; a `function` node that builds a whole frame at once still needs one big
   block.
 - **Use a board with more memory.** A board with PSRAM can start flows that a board without it cannot.
-- **Run a firmware image with the libraries built in.** On a classic ESP32 there is a ready-made one:
-  [Custom firmware for classic ESP32](custom-firmware.md). On other boards, build your own by freezing the runtime
-  and the flow libraries into MicroPython.
+- **Run a firmware image with the libraries built in.** The classic ESP32, ESP32-C3 and ESP32-C5 have ready-made
+  ones: [Custom firmware](custom-firmware.md). On other boards, build your own by freezing the runtime and the flow
+  libraries into MicroPython.
 
 Deploy stops here on purpose; freeing or restarting is yours to invoke. When the board looks short of memory before
 a deploy starts, the console says so in one line (`only 19 KB free on the board, this flow is 10 KB -- it may not
@@ -7537,7 +7620,8 @@ The console then shows megabytes free. Freenove's S3 display boards are an examp
 ## My ESP32-C5 prints "PSRAM chip is not connected" at boot. Is it broken?
 
 No. The generic ESP32-C5 build looks for PSRAM, and many C5 modules have none. It reports the failure, says
-"continuing without it", and starts MicroPython with the chip's own RAM.
+"continuing without it", and starts MicroPython with the chip's own RAM. The
+[Thingstudio C5 image](custom-firmware.md) doesn't look for PSRAM, so it doesn't print this.
 
 ## Which board should I use for a display and WiFi together?
 

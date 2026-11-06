@@ -13,7 +13,7 @@
         <link rel="canonical" href="https://docs.thingstudio.net/custom-firmware/">
       
       
-        <link rel="prev" href="../boards/">
+        <link rel="prev" href="../kitchen-sink-board/">
       
       
         <link rel="next" href="../wifi-connection/">
@@ -27,7 +27,7 @@
     
     
       
-        <title>Custom firmware for classic ESP32 - Thingstudio</title>
+        <title>Custom firmware - Thingstudio</title>
       
     
     
@@ -72,7 +72,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#custom-firmware-for-classic-esp32" class="md-skip">
+        <a href="#custom-firmware" class="md-skip">
           Skip to content
         </a>
       
@@ -108,7 +108,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Custom firmware for classic ESP32
+              Custom firmware
             
           </span>
         </div>
@@ -1329,6 +1329,34 @@
                 
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="../kitchen-sink-board/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Kitchen-sink board
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
     
   
   
@@ -1348,7 +1376,7 @@
   <span class="md-ellipsis">
     
   
-    Custom firmware for classic ESP32
+    Custom firmware
   
 
     
@@ -1366,7 +1394,7 @@
   <span class="md-ellipsis">
     
   
-    Custom firmware for classic ESP32
+    Custom firmware
   
 
     
@@ -3630,37 +3658,63 @@
   
 
 
-<h1 id="custom-firmware-for-classic-esp32">Custom firmware for classic ESP32</h1>
-<p>A MicroPython image with Thingstudio's runtime and every flow library built in, for classic ESP32 boards with 4 MB
-of flash and no PSRAM (ESP32-D0WD and similar). This is the image to flash on those boards: stock MicroPython
-loads the runtime and the flow into RAM, and the display stack pushes it over — with this image they run from
-flash instead, which is the difference between a GUI flow starting and failing with
-<code>MemoryError allocating 13317 bytes</code>.</p>
-<p>On stock MicroPython, flows without a GUI run as usual. <a href="#back-to-stock-micropython">Back to stock MicroPython</a> says
-how to return to it.</p>
-<p>The technique is not specific to this image or to this chip: freezing the runtime and the flow libraries into
-MicroPython works on any board. This image exists because a classic ESP32 is the board where it changes the most,
-and because building one needs an ESP-IDF toolchain. <code>firmware/classic-esp32/</code> in the repository is a working
-example to copy for another board.</p>
+<h1 id="custom-firmware">Custom firmware</h1>
+<p>A Thingstudio custom image is MicroPython with Thingstudio's runtime and every flow library built in. Stock
+MicroPython loads the runtime, the libraries and the flow into RAM. With a custom image, the runtime and libraries
+run from flash instead, which leaves the RAM for the flow. On a small board, that is the difference between a flow
+starting and failing with <code>MemoryError</code>.</p>
+<p>There is one image per chip:</p>
+<table>
+<thead>
+<tr>
+<th>Chip</th>
+<th>Image</th>
+<th>Written at</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>classic ESP32, 4 MB, no PSRAM</td>
+<td><code>thingstudio-classic-esp32-…bin</code></td>
+<td>0x0</td>
+</tr>
+<tr>
+<td>ESP32-C3, 4 MB</td>
+<td><code>thingstudio-esp32-c3-…bin</code></td>
+<td>0x0</td>
+</tr>
+<tr>
+<td>ESP32-C5, 4 MB, no PSRAM</td>
+<td><code>thingstudio-esp32-c5-…bin</code></td>
+<td>0x2000</td>
+</tr>
+</tbody>
+</table>
+<p>On stock MicroPython, flows that fit in memory run as usual. <a href="#back-to-stock-micropython">Back to stock MicroPython</a>
+says how to return to it.</p>
+<p>The technique works on any board that runs MicroPython: freeze the runtime and the flow libraries into the
+firmware. <code>firmware/</code> in the repository builds these images, and its README says how to add a chip.</p>
 <h2 id="what-it-changes">What it changes</h2>
 <p>The runtime and the flow libraries are frozen into the firmware, so MicroPython runs them from flash instead of
 copying them into RAM.</p>
 <p>Because the libraries are already there, Deploy does not send them. The console says so after connecting:</p>
 <div class="highlight"><pre><span></span><code>[libraries] this flow uses font_body12, … st7796py -- already on the board: font_body12, … st7796py
 </code></pre></div>
-<p>Two things follow from that, and both matter on a board with this little RAM:</p>
+<p>Two things follow from that:</p>
 <ul>
-<li>Deploying over a running GUI flow works. On stock MicroPython it fails: the runtime and the flow fight over the
-  same memory.</li>
-<li>The first deploy after flashing has more memory to work with than any later one, because the board is not drawing
-  yet. Judge a flow by a deploy over another flow, not by the first one.</li>
+<li>Deploying over a running flow is more likely to fit. On stock MicroPython, the runtime, the libraries and the
+  flow fight over the same memory.</li>
+<li>The first deploy after flashing has more memory to work with than any later one. Judge a flow by a deploy over
+  another flow, not by the first one.</li>
 </ul>
-<p>The image carries no board-specific settings. Pins and the display come from the <a href="../boards/">board definition</a>, so
-one image serves any classic ESP32 board. It is tested on the CYD and, with a plain GPIO flow, on the Wemos D1 R32.</p>
+<p>The image carries no board-specific settings. Pins and displays come from the <a href="../boards/">board definition</a>, so
+one image serves any board with that chip.</p>
+<p>Each image is rebuilt and tested on a board at every runtime version. The runtime version an image carries is its
+<strong>Version</strong> in the Install firmware dialog.</p>
 <h2 id="what-you-need">What you need</h2>
 <ul>
-<li>A classic ESP32 board with 4 MB of flash and no PSRAM (ESP32-D0WD and similar). This image is not for the S2, S3,
-  C3 or C6, and not for RP2040 or RP2350 boards.</li>
+<li>A board with one of the chips in the table above. The S2, S3 and C6 have no custom image, and neither do RP2040
+  or RP2350 boards.</li>
 <li>A USB cable that carries data.</li>
 </ul>
 <h2 id="install-from-the-editor">Install from the editor</h2>
@@ -3668,31 +3722,34 @@ one image serves any classic ESP32 board. It is tested on the CYD and, with a pl
 <ol>
 <li>Put the board in download mode if it needs it: hold <strong>BOOT</strong> and tap <strong>RESET</strong>.</li>
 <li>Choose <strong>Tools → Install firmware…</strong>, pick <strong>Serial port</strong>, then the board's port.</li>
-<li>Set <strong>Chip family</strong> to <strong>ESP32</strong> and <strong>Firmware</strong> to <strong>Thingstudio custom image</strong>.</li>
+<li>Set <strong>Chip family</strong> to the board's chip and <strong>Firmware</strong> to <strong>Thingstudio custom image</strong>. If there is no
+   <strong>Thingstudio custom image</strong> for the chip, no image for it has been published yet: use official MicroPython.</li>
 <li>Pick a <strong>Version</strong>. Each version listed ran on a board before it was published, and the editor checks the
    download against its recorded SHA-256 before writing it.</li>
-<li>Click <strong>Flash</strong>.</li>
+<li>Click <strong>Flash</strong>. The editor writes the image at the address in the table above.</li>
 <li><a href="../connecting/">Connect</a>, then choose <strong>Tools → Install runtime…</strong>. It writes only the boot script, <code>main.py</code>:
    the runtime is already in the image.</li>
 </ol>
 <h2 id="install-by-hand">Install by hand</h2>
 <p>You need <code>esptool</code> and <code>mpremote</code> on the computer: <code>pip install esptool mpremote</code>.</p>
-<p>Each image is attached to the Thingstudio release it was published with, which is often not the latest release.
-On the <a href="https://github.com/mkarliner/ThingStudio/releases">releases page</a>, open the release whose assets include the
-image version you want (the versions are the ones the editor lists), and download three files from it: the image,
-its <code>.sha256</code> file and <code>main.py</code>.</p>
+<p>Each image is attached to the Thingstudio release it was published with. On the
+<a href="https://github.com/mkarliner/ThingStudio/releases">releases page</a>, open the release whose assets include the image
+version you want (the versions are the ones the editor lists), and download three files from it: the image for your
+chip, its <code>.sha256</code> file and <code>main.py</code>.</p>
 <ol>
 <li>Put the three files in one folder and go there. Check the image against its checksum:</li>
 </ol>
-<div class="highlight"><pre><span></span><code><span class="nv">IMAGE</span><span class="o">=</span><span class="k">$(</span>ls<span class="w"> </span>thingstudio-classic-esp32-*.bin<span class="k">)</span><span class="w">   </span><span class="c1"># the image you downloaded</span>
+<div class="highlight"><pre><span></span><code><span class="nv">IMAGE</span><span class="o">=</span><span class="k">$(</span>ls<span class="w"> </span>thingstudio-*.bin<span class="k">)</span><span class="w">   </span><span class="c1"># the image you downloaded</span>
 shasum<span class="w"> </span>-a<span class="w"> </span><span class="m">256</span><span class="w"> </span>-c<span class="w"> </span><span class="s2">"</span><span class="nv">$IMAGE</span><span class="s2">.sha256"</span><span class="w">      </span><span class="c1"># sha256sum -c on Linux</span>
 </code></pre></div>
 <ol>
-<li>Put the board in download mode if your board needs it, then write the image at address 0:</li>
+<li>Put the board in download mode if your board needs it, then write the image. Use the chip and address from the
+   table above. For a classic ESP32:</li>
 </ol>
 <div class="highlight"><pre><span></span><code>esptool.py<span class="w"> </span>--chip<span class="w"> </span>esp32<span class="w"> </span>--port<span class="w"> </span>/dev/ttyUSB0<span class="w"> </span>write_flash<span class="w"> </span>0x0<span class="w"> </span><span class="s2">"</span><span class="nv">$IMAGE</span><span class="s2">"</span>
 </code></pre></div>
-<p>On macOS the port looks like <code>/dev/cu.usbserial-14420</code>. On Windows it is <code>COM3</code> or similar.</p>
+<p>For an ESP32-C5, <code>--chip esp32c5</code> and <code>0x2000</code>. Written at 0, a C5 does not boot. On macOS the port looks like
+   <code>/dev/cu.usbserial-14420</code>. On Windows it is <code>COM3</code> or similar.</p>
 <ol>
 <li>Write the boot script, the one file that lives on the filesystem rather than in the image:</li>
 </ol>
@@ -3704,8 +3761,9 @@ shasum<span class="w"> </span>-a<span class="w"> </span><span class="m">256</spa
 <ol>
 <li>Reset the board. It starts the listener and prints <code>LISTENER_READY</code>.</li>
 </ol>
-<p>The repository also has <code>firmware/classic-esp32/install.sh</code>, which runs these steps in one command. Read it before
-running it: it erases the filesystem partition, and its port name comes from <code>PORT</code>.</p>
+<p>The repository also has <code>firmware/install.sh</code>, which runs these steps in one command
+(<code>PORT=/dev/ttyUSB0 firmware/install.sh esp32-c5</code>). Read it before running it: it erases the filesystem partition,
+and its port name comes from <code>PORT</code>.</p>
 <h2 id="connect-and-deploy">Connect and deploy</h2>
 <p>Connect in the editor as usual. Two things confirm the image is running:</p>
 <ul>
@@ -3713,10 +3771,9 @@ running it: it erases the filesystem partition, and its port name comes from <co
   firmware dialog</li>
 <li><code>[libraries] … already on the board: …</code> names every library the flow imports</li>
 </ul>
-<p>Then deploy the flow. A GUI flow that failed with <code>MemoryError</code> on stock MicroPython should run.</p>
+<p>Then deploy the flow.</p>
 <h2 id="memory-and-the-board">Memory and the board</h2>
-<p>The image does not add RAM. A classic ESP32 has about 140 KB free for flows with this image and nothing running, and
-a GUI flow takes most of what it has. Measured on the CYD (ESP32-D0WD, 4 MB, no PSRAM), in KB:</p>
+<p>The image does not add RAM. Measured on the CYD (classic ESP32-D0WD, 4 MB, no PSRAM) with a GUI flow, in KB:</p>
 <table>
 <thead>
 <tr>
@@ -3752,16 +3809,16 @@ a GUI flow takes most of what it has. Measured on the CYD (ESP32-D0WD, 4 MB, no 
 </tbody>
 </table>
 <p>Read the third row before leaning on deploys: each deploy over a running flow leaves the heaps more fragmented, and
-the chip's own heap shrinks as MicroPython takes from it. A GUI flow still starts (a 9.5 KB flow needs far less than
-the 27 KB block), but WiFi draws from that shrinking chip heap, and the console warns when it is low.</p>
+the chip's own heap shrinks as MicroPython takes from it. WiFi and Bluetooth draw from that chip heap, and the
+console warns when it is low. The C3 and C5 images are not measured yet.</p>
 <p>Keeping frames small and recovering from a <code>MemoryError</code> are covered in <a href="../debugging/#memory">Memory</a> and
 <a href="../debugging/#memoryerror-or-a-library-that-wont-load">MemoryError or a library that won't load</a>.</p>
 <h2 id="back-to-stock-micropython">Back to stock MicroPython</h2>
 <p><a href="../installing-micropython/">Install MicroPython</a> with a standard build for the board, then
 <a href="../installing-runtime/">install the runtime</a> again. Flashing erases the board's flows and settings, as above.</p>
 <h2 id="reporting-a-problem">Reporting a problem</h2>
-<p>Reports on any classic ESP32 board are welcome, listed or not. Include the board's name and the console's version and
-<code>[memory]</code> lines from a fresh boot.</p>
+<p>Reports on any board with these chips are welcome, listed or not. Include the board's name and the console's
+version and <code>[memory]</code> lines from a fresh boot.</p>
 
 
 
