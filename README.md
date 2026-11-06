@@ -1,6 +1,3 @@
-Please note: This project contains AI generated code. 
-
-
 # Thingstudio
 
 Thingstudio is a visual, low-code way to program microcontrollers. You build a flow of nodes and wires in a
@@ -9,6 +6,11 @@ to [MicroPython](https://micropython.org/) and sends it to your board, where it 
 cloud, and no editor connected.
 
 **User guide:** https://docs.thingstudio.net/
+
+**Built with AI:** Thingstudio is written with heavy use of AI coding tools. Every change is reviewed by a person,
+and the boards and nodes marked tested in
+[Supported hardware](https://docs.thingstudio.net/supported-hardware/) have run on real hardware. If that rules it
+out for you, fair enough.
 
 ## Install
 
