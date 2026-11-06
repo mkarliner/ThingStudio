@@ -89,7 +89,9 @@ chip, its `.sha256` file and `main.py`.
    For an ESP32-C5, `--chip esp32c5` and `0x2000`. Written at 0, a C5 does not boot. On macOS the port looks like
    `/dev/cu.usbserial-14420`. On Windows it is `COM3` or similar.
 
-3. Write the boot script, the one file that lives on the filesystem rather than in the image:
+3. If you held **BOOT** to get into download mode, press **RESET** now: without it the board stays in its
+   bootloader, and `mpremote` fails with `could not enter raw repl`. Then write the boot script, the one file that
+   lives on the filesystem rather than in the image:
 
    ```sh
    mpremote connect /dev/ttyUSB0 fs cp main.py :/main.py
@@ -127,7 +129,14 @@ The image does not add RAM. Measured on the CYD (classic ESP32-D0WD, 4 MB, no PS
 
 Read the third row before leaning on deploys: each deploy over a running flow leaves the heaps more fragmented, and
 the chip's own heap shrinks as MicroPython takes from it. WiFi and Bluetooth draw from that chip heap, and the
-console warns when it is low. The C3 and C5 images are not measured yet.
+console warns when it is low.
+
+The C3 and C5, measured with an MQTT flow running over WiFi, after deploying it over itself, in KB:
+
+| Board | MicroPython free | ESP-IDF free | ESP-IDF largest |
+|---|---|---|---|
+| ESP32-C3 module | 114 | 36 | 28 |
+| ESP32-C5-340X | 94 | 29 | 17 |
 
 Keeping frames small and recovering from a `MemoryError` are covered in [Memory](debugging.md#memory) and
 [MemoryError or a library that won't load](debugging.md#memoryerror-or-a-library-that-wont-load).

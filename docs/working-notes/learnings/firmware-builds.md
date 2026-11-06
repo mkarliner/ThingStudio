@@ -32,3 +32,7 @@ Status: detail file, started 2026-11-04. See `learnings.md` for the index.
 - **2026-11-04 — macOS's default `esptool.py` (3.x) has no `esp32c5`.** `install.sh` now checks the chip with
   `esptool --chip <chip> version` before touching the port; esptool 5.x (what the backend bundles) knows every
   target.
+- **2026-11-06 — The ESP32-C5-340X stays in the bootloader after flashing.** Its CH340E has no auto-reset wiring,
+  so `esptool run` cannot restart it and `install.sh`'s `mpremote` step failed with `could not enter raw repl`
+  (Mike's first C5 install). The image was written; RESET by hand, then copying `main.py`, finished it.
+  `install.sh` now stops there with those steps instead of a traceback.

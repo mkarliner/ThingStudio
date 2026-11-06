@@ -72,6 +72,10 @@ Needs `esptool` and `mpremote` (`pip install esptool mpremote`). It erases the f
 image at the target's address, and copies `main.py` to the board. Flashing erases flows, settings and WiFi
 credentials. Read the script first: it is short.
 
+A board without auto-reset wiring (the ESP32-C5-340X) needs BOOT held while you tap RESET before flashing, and
+stays in the bootloader afterwards: `install.sh` then stops after writing the image and prints the two manual
+steps (press RESET, copy `main.py` with `mpremote`, press RESET).
+
 ## At every runtime bump: rebuild every target
 
 An image freezes the runtime, so a runtime bump makes every published image one the editor refuses or runs stale.
