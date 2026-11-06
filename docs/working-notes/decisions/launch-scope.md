@@ -50,3 +50,7 @@ separate ThingStudioMarketing repo — not logged here.
   designed round learner profiles (path-follower, adventurer, reader, sample-scavenger, goal-driven arriver),
   every tutorial page serving all modes; onboarding reports gain "what did you try next, and what
   happened?". Written up in `docs/tester-ready.md` TBD section, same date.
+- **2026-11-06 -- tester announcements go out one community at a time (Mike).** First post: MicroPython GitHub
+  Discussions, after v0.12.1. Each community brings one or two testers, and each one teaches a lot, so a slow
+  trickle beats a batch: fix what a tester finds before the next post. The launch itself (Show HN, Hackaday) stays
+  as `marketing-plan.md` §9 has it.

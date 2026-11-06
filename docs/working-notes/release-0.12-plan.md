@@ -169,7 +169,9 @@ Also confirm the **Onboarding reports** Discussions category exists (the form in
 
 ## 8. The test announcements (Mike's words)
 
-This is a tester round, not the launch: Show HN and the Hackaday tip stay unused, since each lands once
+Posted one community at a time (Mike, 2026-11-06, `decisions/launch-scope.md`): MicroPython GitHub Discussions
+first, on 2026-11-06, then the next only after the last one's testers have been heard. This is a tester round, not
+the launch: Show HN and the Hackaday tip stay unused, since each lands once
 (marketing plan §9). Communities that suit a "come and try it, tell us where it breaks" post, from the plan's
 launch-week list:
 
@@ -225,5 +227,5 @@ v0.12.0 is out with all three 15.0.0 images attached. Its installed `builds.json
   before the tag.
 
 Still open: the C6/H2/P4 detection (needs Mike's call on the board-descriptor spec), the local classic-image
-address detection, stale draft releases (v0.11.2 x2, v0.10.1), the fresh-machine check on v0.12.1, a reply on
+address detection, stale draft releases (v0.11.2 x2, v0.10.1; Mike, in the web UI), the fresh-machine check on v0.12.1, a reply on
 discussion #5, the README AI declaration, then the announcements. The Onboarding Reports category exists.

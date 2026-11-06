@@ -57,6 +57,8 @@ Flagged so far, each with neutral text in place until Mike writes his own:
   titles of Web Blink and Blink from anywhere. They set the mood for each project.
 - 2026-11-02 `background/` and `coming-from/`: the opening of each page. It explains why the project exists and
   speaks to newcomers from other tools.
+- 2026-11-06 `index.md` "Built with AI", and the same paragraph in `README.md`: the AI declaration (marketing plan
+  §4). A statement of how the project is made, in the maker's own words; threads link to it.
 
 Written by Mike, so settled text:
 
