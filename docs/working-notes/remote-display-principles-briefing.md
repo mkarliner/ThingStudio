@@ -28,7 +28,8 @@ nothing committed.
 
 ## Next
 
-- The decision session the scoping note asks for: confirm/change the provisional positions, settle items 1-15.
+- Done later the same session: open questions settled (scoping note, "Where the questions stand"); next is
+  the spike, `remote-display-spike-briefing.md`.
 - When building: add the phone page as a zone and code source in `security-policy.md` (§1, §3.4) in the same
   change; draft the transport-neutral interface spec under `interfaces/` before the WebSocket code.
 - Possible follow-up offered to Mike: compare the 2015 widget set (incl. `DeviceOrientation`) with the current GUI

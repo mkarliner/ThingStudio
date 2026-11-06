@@ -158,8 +158,9 @@ this; they browse mDNS for `_wled._tcp`. Options for v1, cheapest first:
   board's web server rather than a display node.
 - The page receives the screen definition (page tree, widget kinds, placement properties) and builds the DOM: Row
   and Column become flex containers with the same gap/padding/grow/align/justify.
-- Overflow is checked at compile time against a **nominal** phone size (e.g. 360x640 CSS px, portrait); CSS handles
-  the real size at runtime. Not exact, by design.
+- **Screen-size agnostic** (Mike, 2026-11-06): the layout is constraints, not pixels, so the page lays out on the
+  real viewport and scrolls vertically when content is taller. No compile-time nominal-size check (an earlier
+  draft had one); at most, later, a lint warning for a row whose minimum widths cannot fit a narrow phone.
 - Unknown/stale/pending/error keep their visual language (shape and pattern, not colour alone).
 - Navigation and modals stay board-owned (`RemoteSurface`), so the page shows whatever page the board says. Page
   dots and back/next are taps sent as navigator commands.
@@ -231,6 +232,30 @@ Raised in the 2026-11-06 review session (Claude, with Mike), not yet agreed:
 14. **Nominal sizes:** portrait and landscape (remote control is mostly landscape), not one size.
 15. **Keep the screen definition transport-neutral** (P2), so a later many-viewer renderer over MQTT could reuse
     it: the 2015 ThingStudio's multi-viewer strength, without making it v1.
+
+### Where the questions stand (2026-11-06 session)
+
+Decided by Mike: **1** the editor shows the URL and a QR code after deploy, `<hostname>.local` where it resolves,
+a fixed address on the AP route (at least for the spike); **5** our own WebSocket code in `ts_http_server` (microdot
+read as a reference only, not vendored); **6** `interfaces/remote-display/`; **7** dropped: screen-size agnostic
+(see "Rendering"); **8** the web server is an explicit config node that remote displays (and `http_in`) reference, and a
+general facility, not the remote display's: it may also serve a user's or developer's own web front end (Mike,
+2026-11-06). So the remote display mounts under its own path prefix and leaves `/` to the flow; WebSocket upgrade is
+a server capability any route can use (a future `ws` node, a dev's own page), not remote-display code; auth is per
+route (the remote display requires `TSAUTH1`, other routes choose); take-over applies only to the remote display's
+socket; connection limits and memory are shared and budgeted across all users of the server;
+**9** spike first, MVP or post-MVP decided on its results (`remote-display-spike-briefing.md`).
+
+Answered by research: **2** `runtime.settings` (`device-runtime/src/device_settings.py`, runtime 11.0.0),
+per-flow, persistent, fail-safe; the remote display reads and writes it like any value. **3** Pico W STA+AP at once
+is used in the field, but MicroPython rp2 has open issues in exactly this area (the AP's DNS server is overwritten
+when the STA connects, breaking captive-portal DNS; the AP's DHCP stays on 192.168.4.x whatever `ifconfig` says):
+the spike verifies. Flash for a gzipped page (tens of KB) looks comfortable; the spike measures. **4** Android's
+resolver has handled `.local` since 2021, but browsers still fail against some responders (they need RFC 6762
+legacy unicast answers): QR stays primary, the spike tests MicroPython's responder on current Android and iOS.
+
+Not explicitly decided; the spike adopts them as working assumptions and reports on each: positions 1-8 above,
+and items **10, 11, 12, 13, 15** (14 fell with 7).
 
 ## Corrections from the brainstorm
 
