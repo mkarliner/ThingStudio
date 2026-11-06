@@ -55,9 +55,24 @@ remote server":
   manufacturer's source is the same shape with its own key and an explicit trust prompt.
 - **A second one would need:** another source is a URL plus a public key, which is the repositories item.
 
-Not decided yet (scoping, before building): key storage and rotation (a second key held offline as a
-replacement), the exact signed format (detached `builds.json.sig` vs. an envelope), and whether board/processor
-definitions ride along in the same signed file.
+**Board definitions are a separate source, not part of the build catalogue (Mike, 2026-11-06):** "board defs
+are separate, manufacturers may have a standard chip with custom peripherals." A manufacturer can publish boards
+(pins, peripherals) without builds, and a board names a build by id, possibly ours (`thingstudio-esp32-c5`).
+
+Proposed, for Mike to confirm before v0.13 is built:
+
+- **Board sources are signed by their own source and accepted once**, like build sources, though the stakes are
+  lower (reviewable data, not bytes onto flash). A board's `variant` may only name a build from a source the user
+  already trusts, so a board file cannot bring in an untrusted build.
+- **Two keys from the start.** The signing key on Mike's Mac, passphrase-encrypted; a spare generated at the
+  same time, kept offline (password manager or paper), never used. The editor ships both public keys. Loss or
+  compromise: sign with the spare, ship a new spare in the next release; no install is left unable to verify.
+- **Detached signature over the exact bytes:** `builds.json` (plus a `serial` field) and `builds.json.sig`
+  holding the key id and the Ed25519 signature of the file's bytes. No canonical-JSON step to get wrong; the key
+  id says which of the two keys to check.
+- **Withdrawing an image:** remove its version, raise the serial. Rollback protection keeps it gone.
+- **No expiry.** A stale but genuine catalogue offers fewer images, not wrong ones; an expiry date adds a way to
+  fail whose only benefit is noticing a site that stopped updating.
 
 ## Variants are builds, not boards
 
