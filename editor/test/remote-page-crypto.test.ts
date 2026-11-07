@@ -72,10 +72,14 @@ describe("the remote page's hand-written SHA-256/HMAC (no crypto.subtle over pla
     // TSAUTH1: key = sha256^N(salt + password); 2000 iterations is board_settings._ITERATIONS
     const salt = "a1b2c3d4e5f60718293a4b5c6d7e8f90";
     const password = "sample-phone-password";
-    let k: number[] = mod.utf8(salt + password);
+    // the salt is hex on the wire and BYTES in the key derivation (board_settings.derive_key), so the page
+    // has to unhex it first -- hashing the hex text derives a different key and every login answers 401
+    const saltBytes = (mod as unknown as { unhex: (s: string) => number[] }).unhex(salt);
+    let k: number[] = saltBytes.concat(mod.utf8(password));
     for (let i = 0; i < 2000; i++) k = Array.from(mod.sha(k));
-    let rk: Buffer = Buffer.from(salt + password);
+    let rk: Buffer = Buffer.concat([Buffer.from(salt, "hex"), Buffer.from(password)]);
     for (let i = 0; i < 2000; i++) rk = createHash("sha256").update(rk).digest();
+    eq("salt is hashed as bytes, not as its hex text", k, rk);
     eq("2000-iteration key chain", k, rk);
     // session_key = HMAC(key, nonce + " remote display input v1"); token = HMAC(session_key, "open session v1")
     const nonce = Buffer.from([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);
@@ -84,6 +88,37 @@ describe("the remote page's hand-written SHA-256/HMAC (no crypto.subtle over pla
         .update(" remote display input v1").digest());
     const token = Buffer.from(mod.hmac(sk, Buffer.from("open session v1")));
     eq("token", token, createHmac("sha256", sk).update("open session v1").digest());
+  });
+
+  it("encodes the input envelope the board decodes: {\"c\":n,\"m\":{...}}", () => {
+    // ts_remote._check() takes the counter from "c" and hands data["m"] to _dispatch. The page used to send the
+    // fields flat ({"c":n,"type":"tap"}), which decoded as None -- every tap/nav/ctl answered "message is not an
+    // object" and was dropped, on a board that otherwise looked healthy (phone against the S3, 2026-11-07).
+    const src = readFileSync(PAGE, "utf8");
+    const app = /<script id="app">([\s\S]*?)<\/script>/.exec(src)?.[1];
+    if (app === undefined) throw new Error("the app block is missing from the page");
+    const sendSrc = /function send\(obj\)[\s\S]*?\n\}/.exec(app)?.[0];
+    if (sendSrc === undefined) throw new Error("send() is missing from the page");
+
+    const crypto = pageCrypto();
+    const sessionKey = createHmac("sha256", "k").update("m").digest();
+    const sent: string[] = [];
+    const socket = { readyState: 1, send: (line: string) => sent.push(line) };
+    const make = new Function("socket", "sessionKey", "hexs", "hmac", "utf8", "counter", `${sendSrc}; return send;`);
+    const send = make(socket, sessionKey, (crypto as never as { hexs: (b: number[]) => string }).hexs,
+                      crypto.hmac, crypto.utf8, 0) as (o: unknown) => void;
+
+    send({ type: "tap", wid: "boop", phase: "down" });
+    expect(sent).toHaveLength(1);
+    const line = sent[0] ?? "";
+    const cut = line.indexOf("\n");
+    expect(cut).toBeGreaterThan(0);
+    const body = line.slice(0, cut);
+    const sig = line.slice(cut + 1);
+    const parsed = JSON.parse(body);
+    expect(parsed.c).toBe(1);
+    expect(parsed.m).toEqual({ type: "tap", wid: "boop", phase: "down" });
+    expect(sig).toBe(createHmac("sha256", sessionKey).update(body).digest("hex"));
   });
 
   it("is what the board serves: page_data.py holds this page's current gzip", () => {

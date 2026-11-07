@@ -259,11 +259,14 @@ function login(pw) {
   });
 }
 
-/* ---- outgoing frames: "<json>\n<hexhmac(session_key, json)>", counter strictly increasing --------- */
+/* ---- outgoing frames: {"c":<n>,"m":{...}}\n<hexhmac(session_key, json)>, counter strictly increasing -------
+   The message rides under "m": the board's _check() reads the counter from "c" and returns data["m"], so a
+   flat {"c":1,"type":"tap"} arrives as None and is answered "message is not an object" -- every tap, nav and
+   ctl silently dropped (found on a phone against the S3, 2026-11-07). */
 function send(obj) {
   if (!socket || socket.readyState !== 1) return;
   counter += 1;
-  var body = JSON.stringify(Object.assign({ c: counter }, obj));
+  var body = JSON.stringify({ c: counter, m: obj });
   var line = body + "\n" + hexs(hmac(sessionKey, utf8(body)));
   socket.send(line);
 }
@@ -343,7 +346,12 @@ function refresh() { applyAll(pageRecs); if (curModal) applyAll(modalRecs); }
 function applyAll(recs) {
   for (var wid in recs) {
     var rec = recs[wid], v = vals[wid] || [null, "unknown"];
-    if (rec.el) stateClass(rec.el, v[1]);
+    /* a button with static text (BOOP, a nav, Save) has no value to be "unknown" about: dimming it made a
+       working control look disabled (reported from a phone, 2026-11-07). A controlled toggle keeps the state
+       class, because "we don't know its state yet" is exactly what it means there. */
+    var noValueYet = v[0] === null && rec.node && rec.node.kind === "button" &&
+                     !(rec.node.config && rec.node.config.controlled);
+    if (rec.el) stateClass(rec.el, noValueYet ? "" : v[1]);
     try { rec.set(v[0], v[1]); } catch (e) { console.warn("[rd]", wid, e); }
   }
 }
