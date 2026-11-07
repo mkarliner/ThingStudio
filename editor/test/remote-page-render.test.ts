@@ -83,8 +83,11 @@ function renderScreen(screen: unknown): Record<string, StubEl> {
   // (the declaration would shadow the parameter and it would read back as null)
   const run = new Function("document", "location", "WebSocket", "fetch", "__def", "__screen",
     `${crypto}\n${app}\nfinishDefs(__def);\napplyScreen(__screen);\nreturn {pageRecs, modalRecs};`);
-  run(doc, { protocol: "http:", host: "192.168.10.110" }, function () { this.readyState = 0; this.send = () => {}; },
-      () => new Promise(() => {}), def, screen);
+  const WebSocketStub = function (this: { readyState: number; send: () => void }) {
+    this.readyState = 0;
+    this.send = () => {};
+  };
+  run(doc, { protocol: "http:", host: "192.168.10.110" }, WebSocketStub, () => new Promise(() => {}), def, screen);
   return els;
 }
 
