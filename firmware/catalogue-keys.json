@@ -1,0 +1,7 @@
+{
+  "$comment": "Public keys that sign firmware/builds.json (tools/catalogue_sign.py). Installs ship this file and use the docs site's catalogue only when one of these keys signed it.",
+  "keys": {
+    "main": "zeEZR8vsLepnSskwGMZUbHK+7kgomMNsAz5BTj+m1G8=",
+    "spare": "zBsPD70FViCUEYxvce0VhUpcMzKgeZwOQ9AS4ziBfGA="
+  }
+}

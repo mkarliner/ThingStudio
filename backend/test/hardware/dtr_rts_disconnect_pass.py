@@ -22,12 +22,10 @@
 # real production code path, not a reimplementation -- so a pass here says
 # something real about the shipped module rather than a fresh guess at it.
 #
-# Run against the backend's own real venv, in a real Terminal (not the agent
-# sandbox):
+# Run in a real Terminal (not the agent sandbox), from the repo root, against
+# the repo-root .venv that `make` builds (there is no backend/.venv):
 #
-#     cd backend
-#     source .venv/bin/activate
-#     python3 test/hardware/dtr_rts_disconnect_pass.py
+#     .venv/bin/python backend/test/hardware/dtr_rts_disconnect_pass.py
 #
 # Follow the prompts: pick the port, watch the board during the DTR/RTS
 # sweep, then physically unplug it when asked for the disconnect-timing
