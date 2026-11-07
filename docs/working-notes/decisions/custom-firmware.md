@@ -95,6 +95,9 @@ chip. The classic-ESP32 image's own history (why freeze, chunked deploy, local b
   would change it is the same one it rides on). Board-facing behaviour stays stock: a board on this chip with an
   external USB-UART chip keeps its UART0 REPL, and the installs problem the spike recorded -- runtime installs on
   a native-USB S3 whose REPL the listener left on UART0 need a UART connection (the brief's step 1) -- is not
-  decided here; the console shape is measured on the board before the image deviates. **A third one would
-  need:** another folder plus its facts; `check` and the editor's asset tests iterate `firmware/targets/`, which
-  is what keeps a target a folder.
+  decided here; the console shape is measured on the board before the image deviates. Status: the folder landed
+  ahead of need — one clean image built for the spike's proving work, never recorded — then parked by Mike's
+  spike-scope call (`decisions/remote-display.md`, 2026-11-07: custom builds are for the full
+  implementation); no image is recorded into the catalogue or offered in `builds.json` until that starts.
+  **A third one would need:** another folder plus its facts; `check` and the editor's asset tests iterate
+  `firmware/targets/`, which is what keeps a target a folder.

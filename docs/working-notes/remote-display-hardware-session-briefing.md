@@ -62,13 +62,12 @@ out of scope (`decisions/remote-display.md`, 2026-11-07). Pico W is explicitly n
 2. **Checkpoints 4, 5, 7, 8, 9** on the S3, phone in hand: settings form + threshold across a reboot, deadman
    timing (`REMOTE_SAFE led off`, measured), asset/peak-RAM figures, mDNS/QR (QR needs Mike's decision), and the
    SPEC read-through against hardware.
-3. **Pico W** — the decision leaves it open because RP2040 avoids the ESP32 memory tax. One deploy plus the
-   memory figures would settle whether the "custom builds only" rule needs a second entry.
-4. **Custom S3 image** — runtime 15.1.0 plus the spike's libraries frozen, in `firmware/targets/`. This is what
-   makes the decision real, and the next natural build.
-5. **`device_cli` over the WiFi transport.** The session hand-rolled it twice; it belongs in the tool, both for
+3. **Deferred to the full implementation** (Mike, 2026-11-07: "custom builds are for a full implementation"):
+   the **Pico W** probe and the **custom S3 image** (folder landed as `esp32-s3` in 74c8cd4; no image recorded
+   or offered yet). The spike is proven by the S3 with PSRAM running as-is.
+4. **`device_cli` over the WiFi transport.** The session hand-rolled it twice; it belongs in the tool, both for
    boards like this one and because deploys over TCP do not disturb USB.
-6. Known gaps unchanged: `?t=` token in the page URL (security-policy §3.8), captive-portal DNS unimplemented
+5. Known gaps unchanged: `?t=` token in the page URL (security-policy §3.8), captive-portal DNS unimplemented
    (results item 13), AP route untested, second-viewer take-over verified board-side only.
 
 ## Where the reasoning is

@@ -44,3 +44,12 @@ board's display). The design itself is still provisional: `docs/working-notes/re
   **A second one would need:** a target folder + image for that board family, its frozen inventory including the
   spike's libraries, and a row in `remote-display-spike-results.md` measured with `freeIdfHeapBytes` /
   `largestIdfHeapBlockBytes` (never `gc.mem_free()` alone, which looked healthy throughout the C3's failure).
+- **2026-11-07 — Spike scope: the concept call, not the deliverable (Mike).** "This is a spike. The goal is to
+  evaluate the concept of the remote display, not to implement everything. Working on a board with PSRAM proves
+  it; custom builds are for a full implementation." So the custom-builds-only decision above is the delivery
+  plan for when the feature is implemented, not spike-phase work: the S3's measured headroom (8 MB gc / 8.07 MB
+  IDF, below) is the evidence the concept fits hardware that can carry it, and that is what proves the spike.
+  The landed `esp32-s3` target folder (74c8cd4) stands as registry work; no image is recorded or offered until
+  the implementation starts. Pico W waits with it — it was a question about whether "custom builds only" needs a
+  second entry, not about the concept. Spike work remains: install the rebind fix on the S3 (needs a UART
+  connection), phone checkpoints 4/5/7/8/9, and the SPEC read-through against hardware.
