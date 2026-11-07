@@ -163,3 +163,46 @@ of running it proves the logic, not the integration.
 Also cosmetic but user-visible: `applyAll()` applied `st-unknown` (opacity .45) to any widget with no value,
 so a momentary button with static text looked disabled. Anything with fixed text skips that state; a controlled
 toggle keeps it, because "state unknown" is meaningful there.
+
+## A widget must paint when it is mounted; a modal's records must not live in `pageRecs`
+
+The alarm modal reached a phone as an empty box that could not be dismissed. `applyScreen()` mounted the modal's
+widgets into `pageRecs`, then — when the same screen message named a page the page had not built yet — `buildPage()`
+ran and reset `pageRecs`, so the modal's records were dropped and the `set()` that writes a label's text never
+ran. The Ack button was built the same way, so nothing was there to tap.
+
+Two rules came out of it, both now enforced by `editor/test/remote-page-render.test.ts` (which runs the page's own
+renderer under a DOM stub):
+
+- a widget paints itself at mount (`leaf()` calls `setf` with the current value), so nothing depends on a later
+  `refresh()` that may never come;
+- modal widgets register in `modalRecs`, which `buildPage()` does not touch and `refresh()` applies when
+  `curModal` is set.
+
+Reproduced off-device by rendering the definition the board actually sends: the pre-fix page gives
+`label text = ""` for a screen message whose page has not been built yet; the fixed one gives `"Timer fired"`.
+
+## `__await__` does not exist on a MicroPython coroutine — use `send`
+
+Cleaning up a listening socket needs `await wait_closed()`, so `runtime.cancel_running()` was changed to await a
+cleanup that returns a coroutine. The first version tested `hasattr(pending, "__await__")` — the CPython shape —
+and MicroPython coroutines are plain generators with **no `__await__`**, so every async cleanup was silently
+dropped and port 80 stayed bound (`EADDRINUSE` for the next flow, web server never started). The new unix-port
+test failed on exactly that, one run after the fix "looked right". On MicroPython a coroutine is
+`type == 'generator'` with `send`, and `asyncio.wait_for(coro, n)` accepts it.
+
+Same family of trap as `print(..., flush=True)` and `bytes.split("str")`: write the check against what
+MicroPython actually exposes, not the CPython spelling.
+
+## On this S3 image the REPL is on UART0 — stopping the listener strands the board
+
+`STOP_TO_PROMPT` (USB only, `overUsb` guard) worked over the CDC: `LISTENER_STOPPED … >>>` printed. But nothing
+answers after that — no echo to a newline, no Ctrl-C, and `mpremote` cannot enter the raw REPL — because the
+REPL is on UART0 and the CDC is only a `dupterm` mirror the listener keeps alive. The board is then inert until a
+power cycle; nothing over the WiFi transport can bring it back, and `DTR`/`RTS` are not wired to EN on this board
+so a reset pulse does nothing.
+
+Consequence for this hardware: **runtime installs need a UART connection or an image built with the REPL on USB.**
+Also, opening the serial port resets this board, so a `STOP_TO_PROMPT` sent immediately after opening lands during
+`LISTENER_BOOTING` (`LISTENER_IGNORED 'LISTENER_BOOTINGF64:AAINoA=='`) — wait for the listener to be up (its WiFi
+transport answering is a good proof) before sending anything.
