@@ -266,11 +266,13 @@ class Remote:
                            static=(200, "text/html", page_data.PAGE_GZ, headers))
         self._server.mount({"id": "remote_ws", "method": "GET", "path": PREFIX + "ws"},
                            ws=self._session, pre=self._token_ok)
-        self._server.mount({"id": "remote_login_get", "method": "GET", "path": PREFIX + "login"},
-                           queue=self._login_q, timeoutS=_LOGIN_TIMEOUT_S)
-        self._server.mount({"id": "remote_login_post", "method": "POST", "path": PREFIX + "login"},
-                           queue=self._login_q, timeoutS=_LOGIN_TIMEOUT_S,
-                           body_limit=_LOGIN_BODY_MAX)
+        # timeoutS/body_limit ride in the route dict, not as mount() keywords: mount's whole signature is
+        # (route, queue=, static=, ws=, pre=), the same keys a construction-time route carries (Server.mount).
+        self._server.mount({"id": "remote_login_get", "method": "GET", "path": PREFIX + "login",
+                            "timeoutS": _LOGIN_TIMEOUT_S}, queue=self._login_q)
+        self._server.mount({"id": "remote_login_post", "method": "POST", "path": PREFIX + "login",
+                            "timeoutS": _LOGIN_TIMEOUT_S, "body_limit": _LOGIN_BODY_MAX},
+                           queue=self._login_q)
         await self._server.ensure()
         runtime.spawn(self._login_loop(), "remote_display")
         self._print_url()

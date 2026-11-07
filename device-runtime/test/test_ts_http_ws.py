@@ -162,7 +162,7 @@ def test_handshake_accept_and_echo():
         fired_done = fired == ["handler:"]
         assert fired_done, fired  # the handler saw the empty query (no ?t given)
         writer.close()
-        srv._stop()
+        await srv.stop()
     asyncio.run(main())
 
 
@@ -180,7 +180,7 @@ def test_fragmentation_refused_cleanly():
         assert opcode == 8, opcode
         assert payload[:2] == b"\x03\xeb", payload  # 1003 in two bytes
         writer.close()
-        srv._stop()
+        await srv.stop()
     asyncio.run(main())
 
 
@@ -196,7 +196,7 @@ def test_frame_cap_closes_with_1009():
         assert opcode == 8 and payload[:2] == b"\x03\xf1", (opcode, payload)  # 1009
         assert payload[:2] == b"\x03\xf1"  # 1009 = 0x03F1
         writer.close()
-        srv._stop()
+        await srv.stop()
     asyncio.run(main())
 
 
@@ -209,7 +209,7 @@ def test_pre_check_gates_upgrade_with_401():
         reader, writer, status, _h = await _ws_connect(srv.port, "/ws/gate")
         assert status == "HTTP/1.1 401 Unauthorized", status
         writer.close()
-        srv._stop()
+        await srv.stop()
     asyncio.run(main())
 
 
@@ -221,7 +221,7 @@ def test_non_upgrade_request_fails():
         reader, writer, status, _h = await _ws_connect(srv.port, "/ws/only", upgrade=False)
         assert status == "HTTP/1.1 401 Unauthorized", status
         writer.close()
-        srv._stop()
+        await srv.stop()
     asyncio.run(main())
 
 
@@ -236,7 +236,7 @@ def test_queue_and_static_routes_alongside():
         await srv.ensure()
         consumer = asyncio.create_task(_consume(q))
         reader, writer = await asyncio.open_connection("127.0.0.1", srv.port)
-        writer.write(b"POST /flow/echo HTTP/1.1\r\nHost: h\r\nContent-Length: 5\r\n\r\nstraight")
+        writer.write(b"POST /flow/echo HTTP/1.1\r\nHost: h\r\nContent-Length: 8\r\n\r\nstraight")
         await writer.drain()
         resp = await asyncio.wait_for(_read_all(reader), 5)
         assert resp.startswith(b"HTTP/1.1 200 OK"), resp
@@ -251,7 +251,7 @@ def test_queue_and_static_routes_alongside():
         await w3.drain()
         resp3 = await asyncio.wait_for(_read_all(r3), 5)
         assert resp3.startswith(b"HTTP/1.1 404"), resp3
-        srv._stop()
+        await srv.stop()
     asyncio.run(main())
 
 
@@ -261,6 +261,32 @@ async def _consume(q):
     body = item["req"].get("body", b"")
     conn["status"], conn["body"] = 200, body.decode() + "-banana"
     conn["done"].set()
+
+
+def test_connection_is_closed_after_the_answer():
+    """The server must release the socket, not just send `Connection: close`. On MicroPython asyncio
+    `writer.close()` leaves it open until `wait_closed()`, and with ESP32's cap of 10 sockets that becomes
+    "the board answers ten requests and then resets everything" (found on a C3, 2026-11-07). CPython closes on
+    close(), so a test that only reads the body never notices."""
+    async def main():
+        srv = _make_server()
+        srv.mount({"id": "s", "method": "GET", "path": "/static/bye"},
+                  static=(200, "text/plain", b"bye", []))
+        await srv.ensure()
+        for i in range(30):
+            reader, writer = await asyncio.open_connection("127.0.0.1", srv.port)
+            writer.write(b"GET /static/bye HTTP/1.1\r\nHost: h\r\n\r\n")
+            await writer.drain()
+            got = b""
+            while b"bye" not in got:
+                chunk = await asyncio.wait_for(reader.read(256), 5)
+                assert chunk, "answer %d ended before the body" % (i + 1,)
+                got += chunk
+            eof = await asyncio.wait_for(reader.read(1), 5)  # b"" = closed; a timeout means it was leaked
+            assert eof == b"", "connection %d left open after its answer" % (i + 1,)
+            writer.close()
+        await srv.stop()
+    asyncio.run(main())
 
 
 async def _read_all(reader):
@@ -286,11 +312,12 @@ def test_exact_one_owner_mount_is_refused():
                 raise AssertionError("mount accepted a broken owner set: %r" % (bad,))
             except ValueError:
                 pass
-        srv._stop()
+        await srv.stop()
     asyncio.run(main())
 
 
 minitest.run([test_handshake_accept_and_echo, test_fragmentation_refused_cleanly,
               test_frame_cap_closes_with_1009, test_pre_check_gates_upgrade_with_401,
               test_non_upgrade_request_fails, test_queue_and_static_routes_alongside,
+              test_connection_is_closed_after_the_answer,
               test_exact_one_owner_mount_is_refused])

@@ -38,8 +38,9 @@ not started. Nothing has been merged; the branch carries all of it.
 - Editor: `remote-page-crypto.test.ts` 4/4; backend dependency validation passes with the new entry
   (`backend/test/test_dependencies.py` 16/16); `dep_compile.mjs` compiles all three new/changed libraries
   to real .mpy (ts_remote 10.8 KB, page_data 9.8 KB, ts_http_server 5.0 KB).
-- Editor-wide `npm test`/`tsc --noEmit` NOT run this session — run before merging (one new test file +
-  main.ts version const are the only editor changes).
+- Editor-wide `npm test` / `tsc --noEmit` green on 2026-11-06 (the pre-merge gate this note asked for):
+  `.bin/tsc --noEmit` clean, `npm test` 120/120 files, 1375 passed / 2 skipped. No stray compiled `.js` left
+  in `editor/src`/`editor/test`.
 
 ## Known gaps / open threads for the hardware session
 

@@ -170,4 +170,4 @@ target at runtime 15.0.0, NimBLE's 4-connection limit, esptool 3.x lacking the C
 needle; MicroPython floats have no `is_integer()`; the socket query string arrives with or without the leading `?`; piped micro-python output
 buffers to process end, so a test that "hangs" is an illusion; the pymock fixture is a byte-identical copy of the vendored library (edit both
 in one change); route timeouts are seconds and may be fractional, so never `int()` them; `dep_compile.mjs` needed a recursive `mkdir` for
-nested package board files. 8 entries: `docs/working-notes/learnings/remote-display-spike.md`.
+nested package board files; MicroPython's `writer.close()` does not release a socket until `wait_closed()` (10-socket cliff on ESP32); the TSAUTH1 salt is hashed as bytes, not hex text; `mount()`'s timeoutS/body_limit ride in the route dict; a native-USB S3 drops large console writes so use the WiFi transport; `gc.mem_free()` hides IDF-heap starvation. 13 entries: `docs/working-notes/learnings/remote-display-spike.md`.

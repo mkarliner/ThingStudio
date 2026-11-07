@@ -43,7 +43,9 @@ SSID = "YOUR_WIFI_SSID"
 PASSWORD = "YOUR_WIFI_PASSWORD"
 LED_PIN = 2        # the onboard LED on the classic ESP32 dev boards; change for yours
 
-ts_wifi.ensure_station(SSID, PASSWORD, "unmanaged", False)
+# "password" (or "open") is what makes ts_wifi call .connect(); "unmanaged" only activates the radio and
+# is the flow author's opt-out for a link something else owns, which would leave this flow with no IP.
+ts_wifi.ensure_station(SSID, PASSWORD, "password", False)
 
 # ---- screens: the phone's page tree (SPEC form; see interfaces/remote-display/SPEC.md) ----------------
 DEF = {
@@ -104,7 +106,8 @@ _remote.set_link_policy("safe", 400)
 # The other route on the same server the spike brief asks for: mount() with a static body, the
 # server as a general facility and the display as one mount among several.
 _server.mount({"id": "spike_info", "method": "GET", "path": "/ts/spike-info"},
-              static=(200, "text/plain", b"remote display spike is running; the display lives at /ts/remote/"))
+              static=(200, "text/plain",
+                      b"remote display spike is running; the display lives at /ts/remote/", []))
 
 # A board actuator, touched the keyed-singleton way even here: the LED, later the PWM on the same pin.
 # (The editor-side claimResource() pass cannot run for a hand-written flow -- noted in the spike results.)

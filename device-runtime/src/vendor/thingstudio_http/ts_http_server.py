@@ -35,6 +35,22 @@ import runtime
 _HANDSHAKE_GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 
 
+async def _close_writer(writer):
+    """Releases the connection *and* its socket. On MicroPython asyncio `writer.close()` alone only marks the
+    stream for closing -- the socket is not released until `wait_closed()` returns, so a server that skips it
+    leaks one socket per request until the port stops accepting (10 of them on an ESP32, CONFIG_LWIP_MAX_SOCKETS;
+    found on a C3, 2026-11-07). CPython closes it on close(), which is why the unix-port tests never showed this
+    before the close was asserted rather than assumed."""
+    try:
+        writer.close()
+        wait_closed = getattr(writer, "wait_closed", None)
+        if wait_closed is not None:
+            await asyncio.wait_for(wait_closed(), 2)
+    except Exception:
+        pass  # already gone, or the peer vanished first: nothing left to release
+
+
+
 class Queue:
     def __init__(self):
         self._items = []
@@ -168,10 +184,7 @@ class WebSocket:
 
     async def close(self, code=1000):
         await self.send_close(code)
-        try:
-            self.writer.close()
-        except Exception:
-            pass
+        await _close_writer(self.writer)
 
 
 def _ws_accept(key):
@@ -240,11 +253,32 @@ class Server:
         self._server = await asyncio.start_server(self._handle, '0.0.0.0', self.port)
         runtime.register_cleanup('http-server-%s' % self.port, self._stop)
 
-    def _stop(self):
-        if self._server is not None:
-            self._server.close()
-            self._server = None
+    async def stop(self):
+        """Releases the listening socket for real: on MicroPython asyncio `close()` alone leaves the port bound,
+        so a redeploy that rebinds the same port fails with EADDRINUSE (see _close_writer for the same trap on
+        connections)."""
+        srv, self._server = self._server, None
         self.started = False
+        if srv is None:
+            return
+        try:
+            srv.close()
+            wait_closed = getattr(srv, "wait_closed", None)
+            if wait_closed is not None:
+                await asyncio.wait_for(wait_closed(), 2)
+        except Exception:
+            pass
+
+    def _stop(self):
+        """runtime.register_cleanup's hook: sync by contract, so hand the await to the loop that is tearing the
+        flow down."""
+        if self._server is None:
+            return
+        try:
+            asyncio.create_task(self.stop())
+        except Exception:
+            self._server = None
+            self.started = False
 
     async def _handle(self, reader, writer):
         try:
@@ -334,7 +368,7 @@ class Server:
         except Exception:
             pass
         finally:
-            writer.close()
+            await _close_writer(writer)
 
     async def _plain(self, writer, status, body):
         writer.write(('HTTP/1.1 %d %s\r\nContent-Length: %d\r\nConnection: close\r\n\r\n' % (

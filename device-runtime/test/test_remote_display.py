@@ -179,6 +179,28 @@ def test_token_gate():
     asyncio.run(main())
 
 
+def test_start_mounts_every_route_on_the_real_server():
+    """start() is what a deployed flow calls; the rest of this file drives Remote's parts directly, so a
+    mount() call start() got wrong (timeoutS/body_limit as keywords, not route keys -- found on a C3,
+    2026-11-06) passed every test here and only failed on hardware."""
+    async def main():
+        remote, g, srv, des = _setup()
+        await remote.start()
+        table = srv.table
+        page = table[("GET", ts_remote.PREFIX)]
+        assert page[0] is None and page[2] is not None and page[2][0] == 200, page  # static (status, type, body, headers)
+        ws = table[("GET", ts_remote.PREFIX + "ws")]
+        assert ws[2] is not None and ws[3] is not None, ws  # ws handler + the pre= token gate
+        get = table[("GET", ts_remote.PREFIX + "login")]
+        assert get[0] is not None and get[1] == ts_remote._LOGIN_TIMEOUT_S, get
+        post = table[("POST", ts_remote.PREFIX + "login")]
+        assert post[0] is not None and post[1] == ts_remote._LOGIN_TIMEOUT_S, post
+        assert post[4] == ts_remote._LOGIN_BODY_MAX, post
+        await srv.stop()
+    import asyncio
+    asyncio.run(main())
+
+
 def test_definition_problems_are_named():
     def build(des):
         remote = ts_remote.Remote(gui.GUI(), ts_http_server.Server(18402, [], {}), des)
@@ -423,6 +445,7 @@ def test_session_sends_definition_and_takes_over():
 
 
 minitest.run([test_login_requires_password_and_right_answer, test_token_gate,
+              test_start_mounts_every_route_on_the_real_server,
               test_definition_problems_are_named, test_definition_builds_surface_and_fields,
               test_input_frames_signed_and_replayed_are_refused, test_dispatch_tap_nav_and_page,
               test_screen_message_through_the_surface, test_form_submit_writes_settings,

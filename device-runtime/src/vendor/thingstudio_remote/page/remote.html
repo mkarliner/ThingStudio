@@ -223,21 +223,32 @@ function banner(text) { var e = $("banner");
   e.textContent = text; e.style.display = "block"; }
 
 /* ---- login: challenge, 2000-iteration key, answer; the same key derives the session key ---------- */
+/* A dead link must say so: fetch has no timeout of its own, so without this the button looks inert for as long
+   as the OS keeps the request open (a WiFi association that has stopped carrying traffic, 2026-11-06). */
+function withTimeout(p, ms, what) {
+  return new Promise(function (resolve, reject) {
+    var t = setTimeout(function () { reject(new Error(what + " did not answer in " + Math.round(ms / 1000) + " s")); }, ms);
+    p.then(function (v) { clearTimeout(t); resolve(v); },
+           function (e) { clearTimeout(t); reject(e); });
+  });
+}
 function login(pw) {
-  return fetch("login").then(function (r) {
+  return withTimeout(fetch("login"), 8000, "the board").then(function (r) {
     if (!r.ok) throw new Error(r.status === 503 ? "set a board password in the editor first" : ("login unavailable (" + r.status + ")"));
     return r.text();
   }).then(function (line) {
     var parts = line.trim().split(" ");
     if (parts[0] !== "TSAUTH1" || parts.length !== 5) throw new Error("unrecognised challenge");
     $("lhost").textContent = "board " + parts[1];
-    var nonce = unhex(parts[2]), salt = parts[3], iters = parseInt(parts[4], 10);
+    /* the salt arrives as hex and is hashed as BYTES (board_settings.apply derives key over the raw salt), so it
+       has to be decoded here -- hashing the hex text derives a different key and every login answers 401 */
+    var nonce = unhex(parts[2]), salt = unhex(parts[3]), iters = parseInt(parts[4], 10);
     if (!(iters >= 1 && iters <= 1000000)) throw new Error("bad iteration count");
-    var k = utf8(salt + pw), i;
+    var k = catOne(salt, utf8(pw)), i;
     for (i = 0; i < iters; i++) k = sha(k);
     var K = k; /* 32 bytes: the same key board_settings stores */
     var answer = "TSAUTH1 " + hexs(hmac(K, nonce)).toUpperCase();
-    return fetch("login", { method: "POST", body: answer }).then(function (r2) {
+    return withTimeout(fetch("login", { method: "POST", body: answer }), 8000, "the board").then(function (r2) {
       if (!r2.ok) return r2.text().then(function (t) { throw new Error(t || ("refused (" + r2.status + ")")); });
       return r2.json();
     }).then(function (j) {
