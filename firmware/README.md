@@ -32,6 +32,7 @@ firmware/
 | `classic-esp32` | ESP32, 4 MB, no PSRAM | v1.29.0 | v5.5.2 | 0x0 |
 | `esp32-c3` | ESP32-C3, 4 MB | v1.29.0 | v5.5.2 | 0x0 |
 | `esp32-c5` | ESP32-C5, 4 MB, no PSRAM | v1.29.0 | v5.5.2 | 0x2000 |
+| `esp32-s3` | ESP32-S3, 16 MB, Octal-SPIRAM | v1.29.0 | v5.5.2 | 0x0 |
 
 Each target pins its own versions in `target.json`. They start equal; a target moves on its own when it has to.
 

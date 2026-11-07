@@ -84,3 +84,17 @@ chip. The classic-ESP32 image's own history (why freeze, chunked deploy, local b
   `thingstudio-esp32-c3` as their `variant`, as the CYD and D1 R32 name the classic image: the C5's stock build
   could not redeploy a BLE flow, its image redeploys with 100 KB to spare. The classic build's 14.1.0 and 14.0.1
   versions leave `builds.json` (an editor on runtime 15 refuses them); their `tested.json` entries stay as history.
+- **2026-11-07 — `esp32-s3` target, for the remote display (Mike's custom-builds-only decision).** The
+  Freenove ESP32-S3-WROOM N16R8 board (16 MB flash, 8 MB Octal-SPIRAM, native USB only) ran the remote display
+  spike with 8 MB of heap to spare where an ESP32-C3 does not fit (`decisions/remote-display.md`, 2026-11-07); this
+  target freezes the runtime 15.1.0 set -- the remote display libraries included, per stage.py's same-set rule.
+  Facts read off the board with esptool over its native USB, not from a vendor page: flash 16 MB, flash lines
+  quad, PSRAM octal. Fragments named after the stock generic-S3 module (base, ble, flash_qio_80m, csi), with
+  `sdkconfig.spiram_oct` in place of the chip common's `sdkconfig.spiram_quad`. Single app slot like every
+  4 MB target; 16 MB today makes the dual-OTA table a possible later shape, not a current one (the install that
+  would change it is the same one it rides on). Board-facing behaviour stays stock: a board on this chip with an
+  external USB-UART chip keeps its UART0 REPL, and the installs problem the spike recorded -- runtime installs on
+  a native-USB S3 whose REPL the listener left on UART0 need a UART connection (the brief's step 1) -- is not
+  decided here; the console shape is measured on the board before the image deviates. **A third one would
+  need:** another folder plus its facts; `check` and the editor's asset tests iterate `firmware/targets/`, which
+  is what keeps a target a folder.

@@ -12,6 +12,7 @@ There is one image per chip:
 | classic ESP32, 4 MB, no PSRAM | `thingstudio-classic-esp32-…bin` | 0x0 |
 | ESP32-C3, 4 MB | `thingstudio-esp32-c3-…bin` | 0x0 |
 | ESP32-C5, 4 MB, no PSRAM | `thingstudio-esp32-c5-…bin` | 0x2000 |
+| ESP32-S3, 16 MB, Octal-SPIRAM | `thingstudio-esp32-s3-…bin` | 0x0 |
 
 On stock MicroPython, flows that fit in memory run as usual. [Back to stock MicroPython](#back-to-stock-micropython)
 says how to return to it.

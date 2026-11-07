@@ -1,0 +1,14 @@
+# Partition table for the Thingstudio esp32-s3 image (16 MB flash, single app slot).
+#
+# Single app slot like the 4 MB targets, not dual-OTA: the OTA feature is not built yet, and the install that
+# creates the partitions (one USB reflash) is the same install that would change them, so nothing is stranded
+# today. If OTA lands, this table re-partitions then -- that is the moment it needs a decision, not now.
+# install.sh reads the vfs row (tools/firmware_targets.py), so its offset and size are only written here.
+#
+# The 4 MB app slot leaves 12 MB for the filesystem (flows, board settings, /lib). The offset of the partition
+# table itself is fixed by ESP-IDF (0x8000).
+# Name,   Type, SubType, Offset,   Size,     Flags
+nvs,      data, nvs,     0x9000,   0x6000,
+phy_init, data, phy,     0xf000,   0x1000,
+factory,  app,  factory, 0x10000,  0x400000,
+vfs,      data, fat,     0x410000, 0xbf0000,

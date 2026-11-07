@@ -1,0 +1,11 @@
+{
+  "$comment": "Facts for this target; the shared scripts in firmware/ read them (tools/firmware_targets.py).",
+  "label": "ESP32-S3, 16 MB, Octal-SPIRAM",
+  "family": "esp32-s3",
+  "chip": "esp32s3",
+  "idfTarget": "esp32s3",
+  "micropython": "v1.29.0",
+  "espIdf": "v5.5.2",
+  "address": 0,
+  "portSdkconfig": ["boards/sdkconfig.base", "boards/sdkconfig.ble", "boards/sdkconfig.flash_qio_80m", "boards/sdkconfig.csi", "boards/sdkconfig.spiram_oct"]
+}

@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: Apache-2.0
+# firmware/targets/esp32-s3/board/sdkconfig.board -- applied after the port's fragments (target.json), so these win.
+
+# 16 MB: the Freenove ESP32-S3-WROOM (N16R8, 16 MB flash and 8 MB Octal-PSRAM). Flash mode and speed come from
+# the port's sdkconfig.flash_qio_80m, as in the stock generic-S3 build.
+CONFIG_ESPTOOLPY_FLASHSIZE_16MB=y
+CONFIG_ESPTOOLPY_FLASHSIZE="16MB"
+
+# Octal-SPIRAM: the port's sdkconfig.spiram_oct is in target.json where the chip common's sdkconfig.spiram_quad
+# was, because this module's PSRAM is octal (the stock build's quad setting would fail the probe at every boot
+# -- same shape as the C5's no-PSRAM exclusion, firmware/targets/esp32-c5/board/sdkconfig.board).
+
+# The partition table is board/partitions.csv; build.sh writes the sdkconfig lines that point at it.
