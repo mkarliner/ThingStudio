@@ -363,8 +363,11 @@ function applyScreen(m) {
   curModal = m.modal;
   $("queued").textContent = (m.modal && m.queued) ? ("+" + m.queued + " queued") : "";
   if (m.modal) {
+    /* the modal's widgets register into modalRecs, not pageRecs: buildPage() below resets pageRecs, so a modal
+       mounted there lost its records and rendered as an empty box -- its label's text is only written by the
+       set() that refresh() calls (reported from a phone, 2026-11-07). */
     $("modalbox").innerHTML = ""; modalRecs = {};
-    mountTree(modalTreeOf(m.modal), $("modalbox"));
+    mountTree(modalTreeOf(m.modal), $("modalbox"), modalRecs);
     $("modal").style.display = "block";
   } else { $("modal").style.display = "none"; modalRecs = {}; }
   if (m.page !== curPage) buildPage(m.page); else refresh();
@@ -414,7 +417,7 @@ function mountTree(node, parent, reg) {
   parent.appendChild(el);
 }
 function flexVal(v) { return v === "start" ? "flex-start" : v === "end" ? "flex-end" : v; }
-function leaf(node) {
+function leaf(node, reg) {
   var kind = node.kind, cfg = node.config || {}, wid = node.wid;
   var box = null, setf = function () {}, rec = { node: node, kind: kind, config: cfg, el: null, set: setf };
   if (kind === "label") {
@@ -522,7 +525,10 @@ function leaf(node) {
   if (node.grow) box.style.flex = String(node.grow);
   if (node.alignSelf) box.style.alignSelf = flexVal(node.alignSelf);
   rec.el = box; rec.set = setf;
-  (node.inModal ? modalRecs : pageRecs)[wid] = rec;
+  /* Paint on mount, not only on the next refresh(): a label's text lives in its config and a modal is mounted
+     and then possibly left alone, so waiting for a refresh that may not come left it blank (phone, 2026-11-07). */
+  try { var cur = vals[wid]; setf(cur ? cur[0] : null, cur ? cur[1] : "unknown"); } catch (e) { console.warn("[rd]", wid, e); }
+  (reg || pageRecs)[wid] = rec;
   return { box: box, rec: rec };
 }
 function submitForm(form) {
