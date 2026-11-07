@@ -145,3 +145,21 @@ I could not reproduce the collapse from ordinary load (42 requests, parallel fet
 a stalled reader, 200 refused WebSocket retries all left ~29 KB), so the trigger stays unidentified — record
 `freeIdfHeapBytes` and `largestIdfHeapBlockBytes` from `HELLO` as the memory checkpoint, never `gc.mem_free()`
 alone, and restart the board when the largest block is in the hundreds of bytes.
+
+## The page's frame envelope is `{"c":n,"m":{...}}` — flat messages decode as `None`
+
+The first working phone session (Freenove S3, 2026-11-07) had a page that rendered and ticked but whose
+buttons did nothing. `send()` built `{"c":n,"type":"tap",...}`; `ts_remote._check()` takes the counter from
+`"c"` and returns `data.get("m")`, so dispatch received `None` and answered `{"type":"err","what":"message is
+not an object"}` — silently, because the page has no handler for `err` frames. The board-side tests signed the
+wrapped form (they call `_check` themselves), and the page had never been exercised against it, so both halves
+were "tested" and the contract between them was not.
+
+The editor test now runs the page's own `send()` under Node and asserts the envelope and signature the board
+expects; replaying "the page's exact bytes" from a separate script is what found it (`{"c":2,"m":{...}}` →
+`BOOP None` on the console). Same shape as the `mount()` gap: a test that rebuilds the client's logic instead
+of running it proves the logic, not the integration.
+
+Also cosmetic but user-visible: `applyAll()` applied `st-unknown` (opacity .45) to any widget with no value,
+so a momentary button with static text looked disabled. Anything with fixed text skips that state; a controlled
+toggle keeps it, because "state unknown" is meaningful there.
