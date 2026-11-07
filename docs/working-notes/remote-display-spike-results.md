@@ -41,14 +41,14 @@ a row says so.
 
 | # | Checkpoint | classic ESP32 | Pico W | ESP32-C3 | Freenove S3 | Pass? |
 |---|---|---|---|---|---|---|
-| 1 | WS echo + burst survives; free heap before/after w/ flow running | | | survives, but the **system** heap collapses (see Measurements) | 8 MB gc heap; runtime too old to run the flow | no on C3 |
-| 1 | `hashlib.sha1` present on build | | | yes (`sha1("abc")` = `a9993e36…`) | not reached (runtime 14.0.1) | yes on C3 |
+| 1 | WS echo + burst survives; free heap before/after w/ flow running | | | survives, but the **system** heap collapses (see Measurements) | GC heap 8.07 MB free with the flow running (measured 2026-11-07); the burst itself still needs the page's WS half (see Measurements) | no on C3 |
+| 1 | `hashlib.sha1` present on build | | | yes (`sha1("abc")` = `a9993e36…`) | yes: `sha1("abc")` = `a9993e36…` rechecked in the running 15.1.0 image | yes on C3 |
 | 2 | Screen renders from definition; values live; nav + modal; latency board→page on LAN | | | definition streams in 9 `screen_def` chunks; page served 200 in 0.21-0.33 s | **phone: readouts tick, buttons and modal fixed and verified on the board side** (`tap boop` → `BOOP None` on the console); the modal renders once its widgets paint at mount | partial |
 | 3 | `TSAUTH1` login wrong-password refused; works on Android Chrome / iOS Safari | | | wrong → 401, right → 200 + token; WS gate 401 without a token | phone logged in over iOS Safari and rendered the screen | yes |
 | 4 | Input events incl. number/text + settings form; threshold survives a reboot | | | not reached | — | no |
 | 5 | Link-lost → `REMOTE_LINK down` and failsafe | | | not reached | — | no |
 | 6 | Routes: LAN and board's own AP; captive-portal behaviour | | | LAN only; AP route unimplemented (item 13) | LAN reachable (`192.168.10.110`) | LAN yes |
-| 7 | Asset budget: raw/gz, flash used, peak RAM first load | | | page 29,518 raw / **10,059 gz**; 30 sequential fetches cost ~0.5 KB IDF heap | — | yes (figures) |
+| 7 | Asset budget: raw/gz, flash used, peak RAM first load | | | page 29,518 raw / **10,059 gz**; 30 sequential fetches cost ~0.5 KB IDF heap | S3: page_data.py 31,135 raw, served **10,661 gz** (0.09-0.26 s first byte), `page_data.mpy` on flash 10,736 B; peak RAM first load still needs a live browser | yes (figures) |
 | 8 | Console URL; `<hostname>.local`; QR | | | URL printed **before** the station gets its IP (`192.168.4.1`, the AP default) then correct after a restart | prints `ts-b162c0` | partial |
 | 9 | SPEC read against hardware findings, line by line | | | not done | not done | no |
 
@@ -67,10 +67,15 @@ Measurements go in one row per figure, board named (a separate table below, not 
 | ESP32-C3 | failed DEPLOY | `DEPLOY_ERR MemoryError('allocating 232 bytes', before_ram=48400)` | `deploy_flow.py` output |
 | Freenove S3 | MicroPython heap free / total | 8,019,232 / 8,251,392 B | `EXEC` |
 | Freenove S3 | IDF heap free / largest block (HELLO) | 8,067,879 / 7,733,248 B | `HELLO` over the WiFi transport |
+| Freenove S3 | GC heap free with the spike running (device_cli, 2026-11-07) | 8,069,616 B free, 181,776 allocated | `device_cli.py exec "import gc; …"` |
+| Freenove S3 | IDF heap regions, spike running (device_cli, 2026-11-07) | HELLO aggregates: 8,335,751 free, largest block 7,995,392; raw `idf_heap_info(1)`: (8096/7716), (22308/4), (249784/141780) as (free/largest) per region | `device_cli.py exec` + `HELLO` after `NET_SESSION_OPEN` |
 | Freenove S3 | USB console, large write | 1.3 KB HELLO → 448-byte fragment, no `F64:` prefix; 1,500-char print → nothing | repeated `hello` + `EXEC` prints |
 | Freenove S3 | WiFi transport | `HELLO` complete on every attempt; `TSAUTH1` handshake on 7462; the whole deploy (`DEP_PUT` x3 + `DEPLOY`) goes through it | `net_dut.py` |
 | Freenove S3 | page + input, LIVE | page 200, 10,661 B gzip; tap on `boop` → `BOOP None` on the console | phone + `tap_check.py` |
 | Freenove S3 | deploy onto a running flow | port 80 stays bound, the new flow's web server never starts, one `RESTART` fixes it | deploy twice in a row; fixed in `runtime.cancel_running` afterwards (not yet installed on this board: it needs UART) |
+| Freenove S3 | page fetch, gzip as served (device_cli, 2026-11-07) | 10,661 B gz, first byte 0.09-0.26 s, total 0.11-0.38 s (warmed); server answers `Content-Encoding: gzip` whatever the client asks (SPEC item 12) | `curl -w` on the LAN, 4 fetches |
+| Freenove S3 | page asset on flash (device_cli, 2026-11-07) | `/lib/ts_remote/page_data.mpy` = 10,736 B (source in repo 31,135 B) | `device_cli.py exec "os.stat(...)"` |
+| Freenove S3 | runtime is 15.1.0, build dc511ad, `remote-spike` running (device_cli, 2026-11-07) | supersedes the "runtime too old" note the first S3 session recorded | `device_cli.py hello --host` |
 
 ## Kill-or-rethink signals (from the briefing)
 
