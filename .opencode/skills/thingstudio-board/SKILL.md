@@ -1,12 +1,12 @@
 ---
 name: Thingstudio board
-description: Use when a Thingstudio board is attached over USB serial and you need to check, deploy, trigger, or inspect a flow on it — list ports, verify/install the runtime, deploy a .flow.json, fire inject nodes, run console commands, and watch output.
+description: Use when a Thingstudio board is reachable on USB serial or on the network (WiFi transport) and you need to check, deploy, trigger, or inspect a flow on it — find it, verify/install the runtime (USB), deploy a .flow.json, fire inject nodes, run console commands, and watch output.
 ---
 
 # Thingstudio board
 
-A board is on USB serial. Use the repo's headless CLI for everything; do not drive the wire
-protocol by hand or assume the port path.
+A board is on USB serial, or on the network over the WiFi transport. Use the repo's headless CLI
+for everything; do not drive the wire protocol by hand or assume the port path.
 
 ```sh
 python3 test-flows/device_cli.py <command> [options]
@@ -32,8 +32,27 @@ Run it before anything else; it tells you whether the board is answering at all.
   `python3 test-flows/device_cli.py runtime install` (see below).
 - `ERR: cannot open ... port is held`: the editor/backend, `mpremote` or Thonny has the port.
   Disconnect in the editor first.
+- No serial port at all: the board may be reachable on the network instead — see §1.5.
 
-## 2. Install or update the runtime
+## 2. A board on the network (WiFi transport)
+
+`hello`, `flow deploy`, `trigger`, `exec`, `watch` and `restart` reach a board over the network
+without any serial port:
+
+```sh
+python3 test-flows/device_cli.py hello --host 192.168.1.42 --password "$PW"
+python3 test-flows/device_cli.py flow deploy flow.flow.json --host kitchen.local --password "$PW"
+```
+
+- `--host` and `--port` are exclusive: one connection, USB or network.
+- The password is the board's WiFi-transport password (Board settings, set over USB); without it
+  the board never opens the port. `--password` or `THINGSTUDIO_BOARD_PASSWORD`.
+- Plain output is the same console/message stream as over USB; `--json` parses the same.
+- `stop` and `runtime install` are USB-only and refused over `--host`: a listener stopped from the
+  network has nothing left to fall back to.
+- `list` stays serial-only; there is no port argument to guess.
+
+## 3. Install or update the runtime
 
 Only when the version is wrong or the board has no runtime. This takes about a minute, stops the
 running flow, and resets the board. It needs `mpremote`.
@@ -45,7 +64,7 @@ python3 test-flows/device_cli.py runtime install --no-reset   # native-USB board
 
 `--wipe` erases the board's filesystem. Do not use it unless the user asked.
 
-## 3. Deploy a flow
+## 4. Deploy a flow
 
 ```sh
 python3 test-flows/device_cli.py flow deploy path/to/flow.flow.json \
@@ -68,7 +87,7 @@ compiler, so a compile error is reported before anything reaches the board.
 
 A DEPLOY replaces the board's saved flow. Only one flow runs at a time.
 
-## 4. Drive and inspect a running flow
+## 5. Drive and inspect a running flow
 
 ```sh
 python3 test-flows/device_cli.py trigger setread00001
@@ -85,7 +104,7 @@ console text, not a protocol message; the CLI waits `--timeout` (2s default) for
 Supported consoles are the same `EXEC` channel the editor's command box uses — bounded, quick
 commands only, not long loops.
 
-## 5. Testing discipline
+## 6. Testing discipline
 
 - Capture what the flow is expected to print before triggering it; one trigger per inject, and wait
   for the debug line rather than firing everything at once.

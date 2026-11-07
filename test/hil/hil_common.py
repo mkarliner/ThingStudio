@@ -32,6 +32,7 @@ SRC_DIR = os.path.join(THIS_DIR, "..", "..", "device-runtime", "src")
 sys.path.insert(0, SRC_DIR)
 
 import protocol  # noqa: E402
+import wifi_link  # noqa: E402
 
 F64_PREFIX = "F64:"
 BAUD_RATE = 115200
@@ -68,23 +69,15 @@ class DutLink:
         return raw.decode("utf-8", "replace").rstrip("\r\n")
 
     def wait_for_message(self, predicate, timeout_s, description):
-        deadline = time.time() + timeout_s
-        debug_lines = []
-        while time.time() < deadline:
-            line = self.read_line()
-            if line is None:
-                continue
-            if not line.startswith(F64_PREFIX):
-                debug_lines.append(line)
-                continue
-            try:
-                frame = base64.b64decode(line[len(F64_PREFIX) :])
-            except Exception:
-                continue
-            for result in self.decoder.push(frame):
-                if "message" in result and predicate(result["message"]):
-                    return result["message"]
-        raise TimeoutError("timed out waiting for %s; debug output seen:\n%s" % (description, "\n".join(debug_lines)))
+        return wifi_link.wait_for_message(self, predicate, timeout_s, description)
+
+    def set_read_timeout(self, seconds):
+        """Overriding DutLink's open-time timeout (see device_cli.open_link)."""
+        self.ser.timeout = seconds
+
+    def clear_input(self):
+        """Drops buffered lines -- device_cli's hello() starts from silence."""
+        self.ser.reset_input_buffer()
 
     def close(self):
         self.ser.close()

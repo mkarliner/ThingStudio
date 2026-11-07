@@ -151,7 +151,7 @@ unlink:
 
 # --- tests --------------------------------------------------------------------
 
-test: typecheck test-editor test-backend check-protocol
+test: typecheck test-editor test-backend test-host-tools check-protocol
 
 typecheck: editor/node_modules/.package-lock.json | check-node
 	@find editor/src editor/test -name '*.js' -type f -print -delete | sed 's/^/deleted stray /'
@@ -163,6 +163,12 @@ test-editor: editor/node_modules/.package-lock.json | check-node
 
 test-backend: $(VENV)/.installed
 	cd backend && ../$(VPY) -m pytest -q
+
+# The host-side board tools' off-device tests (device_cli's WiFi-transport link and its CLI glue,
+# against an in-process fake board -- test/hil/README.md). The hil scripts that need the physical
+# rig stay a manual gate. Same venv as the backend tests has: pyserial and pytest are pinned there.
+test-host-tools: $(VENV)/.installed
+	$(VPY) -m pytest -q test/hil/test_wifi_link.py
 
 # Wire protocol: states.json is consistent and what is generated from it (STATES.md, the board's and the editor's
 # machine tables) is current; COVERAGE.md is current, and every message is specified, has vectors, is sent and

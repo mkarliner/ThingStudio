@@ -2,15 +2,15 @@
 # SPDX-License-Identifier: Apache-2.0
 # test-flows/device_cli.py
 #
-# A headless command line for a Thingstudio board over USB serial: list ports, ask for HELLO,
-# install the runtime, deploy a .flow.json (compile + deploy), fire an inject node, run console
+# A headless command line for a Thingstudio board over USB serial or the WiFi
+# transport: find the board, ask for HELLO, install the runtime (USB), deploy a .flow.json (compile + deploy), fire an inject node, run console
 # commands, restart or stop the listener, and watch the console. Built for scripting and for
 # agents (the thingstudio-board skill wraps it); the editor remains the normal path.
 #
 # It deliberately reuses test/hil/hil_common.py's DutLink/compile_flow/deploy_message rather than
 # growing a second implementation of §13 framing, the dependency install, or the DEPLOY shape --
-# the same reason test-flows/deploy_flow.py already does. If a third consumer needs those
-# primitives, promote them out of test/hil into a shared host module then, not preemptively.
+# the same reason test-flows/deploy_flow.py already does. The WiFi transport's link is
+# test/hil/wifi_link.py (DutLink's twin over TCP + TSAUTH1), called with --host.
 #
 # Flow files are compiled by the editor's own headless compiler (editor/dist-cli/
 # thingstudio-compile.mjs, `npm run build:cli`), so the CLI and the editor cannot disagree about
@@ -19,13 +19,21 @@
 # Examples:
 #   python3 test-flows/device_cli.py list
 #   python3 test-flows/device_cli.py hello --port /dev/ttyACM0
+#   python3 test-flows/device_cli.py hello --host 192.168.1.42 --password ...
 #   python3 test-flows/device_cli.py runtime install --port /dev/ttyACM0
 #   python3 test-flows/device_cli.py flow deploy my.flow.json --port /dev/ttyACM0 \
 #       --mpy-cross ~/mpy-src/mpy-cross/build/mpy-cross --trigger inject0001
+#   python3 test-flows/device_cli.py flow deploy my.flow.json --host kitchen.local --password ...
 #   python3 test-flows/device_cli.py exec --port /dev/ttyACM0 "settings.namespaces()"
 #
 # Needs pyserial and, for flow deploy, a native mpy-cross (device-runtime/test/README.md).
 # `runtime install` shells out to deploy_runtime.py and needs mpremote.
+#
+# Boards with the WiFi transport answer over the network instead of USB:
+# `--host <ip or name.local>` with the board's password (Board settings, set over
+# USB), or THINGSTUDIO_HOST / THINGSTUDIO_BOARD_PASSWORD in the environment.
+# hello, watch, exec, trigger, restart and flow deploy work either way; stop and
+# runtime install stay USB-only (WiFi only link: test/hil/wifi_link.py).
 
 import argparse
 import base64
@@ -47,9 +55,11 @@ MPY_BUILD_DOC = "device-runtime/test/README.md"
 EXAMPLES = """examples:
   device_cli.py list
   device_cli.py hello --port /dev/ttyACM0
+  device_cli.py hello --host 192.168.1.42 --password ...
   device_cli.py runtime install --port /dev/ttyACM0
   device_cli.py flow deploy my.flow.json --port /dev/ttyACM0 \\
       --mpy-cross ~/mpy-src/mpy-cross/build/mpy-cross --trigger inject0001
+  device_cli.py flow deploy my.flow.json --host kitchen.local --password ...
   device_cli.py exec --port /dev/ttyACM0 "settings.namespaces()"
   device_cli.py watch --port /dev/ttyACM0
 """
@@ -59,6 +69,7 @@ try:
     import serial
     from serial.tools import list_ports
     from hil_common import DutLink, compile_flow, deploy_message
+    from hil_common import wifi_link
 except ImportError as e:  # pragma: no cover - environment problem, not a code path
     print("ERR: %s -- pyserial is needed (see test/hil/README.md)." % e, file=sys.stderr)
     sys.exit(2)
@@ -66,6 +77,9 @@ except ImportError as e:  # pragma: no cover - environment problem, not a code p
 
 class CliError(Exception):
     pass
+
+
+USB_PASSWORD_ENV = "THINGSTUDIO_BOARD_PASSWORD"
 
 
 # --- output ---------------------------------------------------------------------------------
@@ -125,7 +139,45 @@ def resolve_port(args):
     )
 
 
-def open_link(port):
+def resolve_host(args):
+    """The WiFi transport takes --host (or THINGSTUDIO_HOST); --port and --host
+    are exclusive, and the board's password must be available: TSAUTH1 refuses
+    a client without one (a board without a password set never opens the port)."""
+    host = getattr(args, "host", None) or os.environ.get("THINGSTUDIO_HOST")
+    if not host:
+        return None
+    if getattr(args, "port", None):
+        die("--port and --host are exclusive: reach the board over USB or over the network, not both.")
+    password = getattr(args, "password", None) or os.environ.get(USB_PASSWORD_ENV)
+    if not password:
+        die(
+            "the WiFi transport needs the board's password: pass --password or set %s "
+            "(the Board settings WiFi password, set over USB)." % USB_PASSWORD_ENV
+        )
+    return host, password
+
+
+def target_label(args):
+    """What the status line names the board: host:port or the serial path."""
+    target = resolve_host(args)
+    if target is None:
+        return resolve_port(args)
+    return "%s:%s" % (target[0], getattr(args, "tcp_port", wifi_link.DEFAULT_PORT))
+
+
+def open_link(args, timeout_s=0.25):
+    """Either transport, adjusted for the CLI's responsive loops."""
+    target = resolve_host(args)
+    if target is not None:
+        host, password = target
+        try:
+            link = wifi_link.WifiLink(
+                host, password, tcp_port=getattr(args, "tcp_port", wifi_link.DEFAULT_PORT))
+        except wifi_link.HandshakeError as e:
+            die("%s: %s" % (e.code, e))
+        link.set_read_timeout(timeout_s)
+        return link
+    port = resolve_port(args)
     try:
         dut = DutLink(port, exclusive=True)
     except serial.SerialException as e:
@@ -141,7 +193,7 @@ def open_link(port):
                 "(or close mpremote/Thonny) and try again." % port
             )
         die("cannot open %s: %s" % (port, text))
-    dut.ser.timeout = 0.25  # responsive loops; DutLink's own 8s is for boot-time HELLO only
+    dut.set_read_timeout(timeout_s)  # responsive loops; DutLink's own 8s is for boot-time HELLO only
     return dut
 
 
@@ -195,7 +247,7 @@ def wait_for(dut, predicate, timeout_s, description, on_console=None):
 
 
 def hello(dut, timeout_s=8):
-    dut.ser.reset_input_buffer()
+    dut.clear_input()
     dut.send_message({"type": "HELLO_REQUEST"})
     return wait_for(dut, lambda m: m["type"] == "HELLO", timeout_s, "HELLO")
 
@@ -234,8 +286,7 @@ def cmd_list(args):
 
 
 def cmd_hello(args):
-    port = resolve_port(args)
-    dut = open_link(port)
+    dut = open_link(args)
     try:
         message = hello(dut, args.timeout)
     except CliError as e:
@@ -249,7 +300,7 @@ def cmd_hello(args):
         print(json.dumps(message, sort_keys=True))
     else:
         version = message.get("runtimeVersion") or {}
-        emit("status", False, text="board %s" % port)
+        emit("status", False, text="board %s" % target_label(args))
         emit("status", False, text="  runtime  %s.%s.%s  build %s" % (
             version.get("major"), version.get("minor"), version.get("patch"), message.get("runtimeBuild")))
         emit("status", False, text="  chip     %s" % message.get("chipType"))
@@ -263,10 +314,9 @@ def cmd_hello(args):
 
 
 def cmd_watch(args):
-    port = resolve_port(args)
-    dut = open_link(port)
+    dut = open_link(args)
     try:
-        emit("status", args.json, text="watching %s (Ctrl-C to stop)" % port)
+        emit("status", args.json, text="watching %s (Ctrl-C to stop)" % target_label(args))
         if args.timeout:
             drain(dut, args.timeout, args.json)
         else:
@@ -282,8 +332,7 @@ def cmd_watch(args):
 
 
 def cmd_exec(args):
-    port = resolve_port(args)
-    dut = open_link(port)
+    dut = open_link(args)
     try:
         dut.send_message({"type": "EXEC", "code": args.code})
         drain(dut, args.timeout, args.json)
@@ -293,8 +342,7 @@ def cmd_exec(args):
 
 
 def cmd_trigger(args):
-    port = resolve_port(args)
-    dut = open_link(port)
+    dut = open_link(args)
     try:
         dut.send_message({"type": "TRIGGER", "nodeId": args.node_id})
         drain(dut, args.timeout, args.json)
@@ -304,8 +352,7 @@ def cmd_trigger(args):
 
 
 def cmd_restart(args):
-    port = resolve_port(args)
-    dut = open_link(port)
+    dut = open_link(args)
     try:
         dut.send_message({"type": "RESTART", "hard": args.hard})
         end = time.time() + args.timeout
@@ -334,8 +381,10 @@ def cmd_restart(args):
 
 
 def cmd_stop(args):
-    port = resolve_port(args)
-    dut = open_link(port)
+    if resolve_host(args) is not None:
+        die("stop is a USB command: STOP_TO_PROMPT leaves the REPL on a port the link "
+            "cannot reach, so refuse it over the network rather than strand the board.")
+    dut = open_link(args)
     try:
         dut.send_message({"type": "STOP_TO_PROMPT"})
         drain(dut, args.timeout, args.json)
@@ -345,6 +394,9 @@ def cmd_stop(args):
 
 
 def cmd_runtime_install(args):
+    if resolve_host(args) is not None:
+        die("runtime install is a USB command (mpremote, deploy_runtime.py --port); "
+            "pass --port a serial path, or use the editor's Install.")
     port = resolve_port(args)
     if not os.path.exists(DEPLOY_RUNTIME):
         die("%s is missing" % DEPLOY_RUNTIME)
@@ -352,7 +404,7 @@ def cmd_runtime_install(args):
     # The listener turns Ctrl-C off, so mpremote cannot enter the raw REPL while it is running.
     # Ask a live board to stop at the prompt first (the editor's Install does the same); a board
     # already at the prompt just ignores the line.
-    dut = open_link(port)
+    dut = open_link(args)
     try:
         dut.send_message({"type": "STOP_TO_PROMPT"})
         drain(dut, 2.0, args.json)
@@ -441,8 +493,7 @@ def cmd_flow_deploy(args):
         )
 
     mpy_cross = find_mpy_cross(args)
-    port = resolve_port(args)
-    dut = open_link(port)
+    dut = open_link(args)
     try:
         # Ask the board what it is, both to report it and to pick mpy-cross -march for viper code. Its
         # HELLO also carries the library inventory, which is what lets the deploy below skip what the
@@ -530,6 +581,10 @@ def cmd_flow_deploy(args):
 
 def common(sub, timeout_default):
     sub.add_argument("--port", help="serial port (default: the one port found, or THINGSTUDIO_PORT)")
+    sub.add_argument("--host", help="the board's IP or name.local for the WiFi transport (or THINGSTUDIO_HOST)")
+    sub.add_argument("--password", help="the board's WiFi-transport password (or THINGSTUDIO_BOARD_PASSWORD)")
+    sub.add_argument("--tcp-port", type=int, default=wifi_link.DEFAULT_PORT, metavar="N",
+                     help="the WiFi transport's TCP port (default %d)" % wifi_link.DEFAULT_PORT)
     sub.add_argument("--json", action="store_true", help="one JSON object per line instead of text")
     sub.add_argument("--timeout", type=float, default=timeout_default,
                      help="seconds to collect output after the command (default %ss)" % timeout_default)
@@ -538,7 +593,7 @@ def common(sub, timeout_default):
 def main(argv=None):
     parser = argparse.ArgumentParser(
         prog="device_cli.py",
-        description="Headless Thingstudio board control over USB serial.",
+        description="Headless Thingstudio board control over USB serial or the WiFi transport.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=EXAMPLES,
     )
@@ -606,6 +661,9 @@ def main(argv=None):
         return 1
     except serial.SerialException as e:
         print("ERR: serial connection lost: %s" % e, file=sys.stderr)
+        return 1
+    except wifi_link.LinkGone as e:
+        print("ERR: network session lost: %s" % e, file=sys.stderr)
         return 1
     except KeyboardInterrupt:
         return 0

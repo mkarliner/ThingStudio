@@ -32,12 +32,14 @@ python3 test-flows/deploy_runtime.py --port PORT
 
 ## Deploy and run a flow without the editor
 
-`device_cli.py` is a small command line for a board on USB serial. It does what the editor does, without a browser:
-find the board, check the runtime, deploy a flow, fire inject nodes, run console commands and watch the output.
+`device_cli.py` is a small command line for a board over USB serial or the network. It does what the editor does,
+without a browser: find the board, check the runtime, deploy a flow, fire inject nodes, run console commands and
+watch the output.
 
 ```sh
 python3 test-flows/device_cli.py list          # USB serial ports
 python3 test-flows/device_cli.py hello         # runtime version, chip, running flow
+python3 test-flows/device_cli.py hello --host 192.168.1.42 --password "boardpw"
 python3 test-flows/device_cli.py flow deploy my-flow.flow.json \
     --mpy-cross ~/mpy-src/mpy-cross/build/mpy-cross
 python3 test-flows/device_cli.py trigger inject0001
@@ -56,3 +58,20 @@ python3 test-flows/device_cli.py watch
 
 `python3 test-flows/device_cli.py <command> --help` lists every option. `test-flows/README.md` has ready-made test
 flows and their expected output.
+
+### Over the network (WiFi transport)
+
+A board running the runtime's WiFi transport answers on the network, no serial port needed:
+
+```sh
+python3 test-flows/device_cli.py hello --host kitchen.local --password "boardpw"
+python3 test-flows/device_cli.py flow deploy my-flow.flow.json --host 192.168.1.42 --password "boardpw"
+```
+
+- `--host` takes an IP address or `name.local`. `--port` and `--host` are exclusive.
+- The password is the board's WiFi-transport password from **Board settings** (set it over USB). Without one the
+  board never opens the port; the CLI saves nothing, so pass `--password` or `THINGSTUDIO_BOARD_PASSWORD` each time.
+- All commands except `stop` and `runtime install` work over `--host`. Those two stay USB-only — stopping the
+  listener from the network leaves the board with no way back, and the runtime install tool is serial-only.
+- The board drops a network session that sends nothing for 90 s, so the CLI sends keepalives while it watches:
+  `watch --timeout 300` holds a session for five minutes.
