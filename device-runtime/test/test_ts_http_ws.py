@@ -302,6 +302,26 @@ async def _read_all(reader):
     return out
 
 
+def test_the_next_flow_can_bind_the_port_the_cleanup_released():
+    """A redeploy tears the old flow down through runtime.cancel_running(), which runs the cleanups registered
+    with runtime.register_cleanup(). On MicroPython a socket is only released by wait_closed(), so the server's
+    cleanup is a coroutine that cancel_running awaits -- scheduling it as a task instead lost the race and left
+    port 80 bound, so the redeployed flow's web server never started (Freenove S3, 2026-11-07)."""
+    async def main():
+        import runtime
+        # its own port: register_cleanup keys on the port and keeps the first registration, and the other tests
+        # here use _base_port() too, so a shared number would leave this server's cleanup unregistered
+        srv = ts_http_server.Server(_base_port() + 500, [], {})
+        srv.mount({"id": "s", "method": "GET", "path": "/x"}, static=(200, "text/plain", b"ok", []))
+        await srv.ensure()
+        await runtime.cancel_running()          # exactly what a redeploy does
+        again = ts_http_server.Server(srv.port, [], {})
+        again.mount({"id": "s2", "method": "GET", "path": "/x"}, static=(200, "text/plain", b"ok", []))
+        await again.ensure()                    # EADDRINUSE until the cleanup was awaited
+        await again.stop()
+    asyncio.run(main())
+
+
 def test_exact_one_owner_mount_is_refused():
     async def main():
         srv = _make_server()
@@ -320,4 +340,5 @@ minitest.run([test_handshake_accept_and_echo, test_fragmentation_refused_cleanly
               test_frame_cap_closes_with_1009, test_pre_check_gates_upgrade_with_401,
               test_non_upgrade_request_fails, test_queue_and_static_routes_alongside,
               test_connection_is_closed_after_the_answer,
+              test_the_next_flow_can_bind_the_port_the_cleanup_released,
               test_exact_one_owner_mount_is_refused])

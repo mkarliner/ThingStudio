@@ -322,9 +322,17 @@ async def cancel_running():
     # running or crash the redeploy itself -- same "never let one failure
     # kill the whole path" convention _report_error/_send_message_safe
     # already follow in listener.py.
+    # A cleanup may hand back a coroutine: on MicroPython a socket is not released by close() alone, it needs
+    # wait_closed(), so ts_http_server's server cleanup is async. Awaiting it here is what lets the next flow
+    # rebind the same port -- calling it and moving on left port 80 bound and the redeployed flow's web server
+    # never started (Freenove S3, 2026-11-07). Bounded, and still one failure per cleanup.
     for key, fn in _cleanups.items():
         try:
-            fn()
+            pending = fn()
+            # MicroPython coroutines are plain generators: they have send() but no __await__, so testing for
+            # __await__ (the CPython shape) silently dropped every async cleanup instead of awaiting it.
+            if pending is not None and hasattr(pending, "send"):
+                await asyncio.wait_for(pending, 3)
         except Exception as e:  # noqa: BLE001 -- one resource's cleanup failing must never block the others or the redeploy itself
             print("CLEANUP_ERR key=%s %r" % (key, e))
     _cleanups.clear()

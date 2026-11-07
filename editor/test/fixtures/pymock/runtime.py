@@ -93,11 +93,9 @@ if not hasattr(asyncio, "ThreadSafeFlag"):
 # detection-briefing.md, Problem 1): udp-send.ts/udp-receive.ts's
 # generated setup statements now self-register a socket-close cleanup via
 # `runtime.register_cleanup(key, fn)` right where they create the socket.
-# This fixture doesn't need to ever actually invoke a registered cleanup
-# (no test here calls a redeploy-equivalent path) -- it just needs to
-# exist so running that generated setup code through this mock doesn't
-# raise AttributeError, mirroring the real runtime.py's dedup-by-key
-# contract closely enough to be a faithful stand-in either way.
+# node-http-in's redeploy test does drive the redeploy-equivalent path (cancel_running), so this mock runs
+# cleanups the way the real runtime.py does: call each one, and await it when it hands back a coroutine. The
+# real thing keeps the first registration per key; so does this.
 _cleanups = {}
 
 # start_reason, added to the mock 2026-10-14 so it matches the documented runtime-API surface
@@ -110,6 +108,19 @@ start_reason = "unknown"
 def register_cleanup(key, fn):
     if key not in _cleanups:
         _cleanups[key] = fn
+
+
+async def cancel_running():
+    """The teardown a redeploy runs (the real runtime.py also cancels tasks and clears singletons). Cleanups
+    may be coroutines -- releasing a listening socket needs wait_closed() -- so they are awaited here."""
+    for key, fn in _cleanups.items():
+        try:
+            pending = fn()
+            if pending is not None and hasattr(pending, "send"):
+                await pending
+        except Exception as e:  # noqa: BLE001 -- one cleanup failing must not block the others
+            print("CLEANUP_ERR key=%s %r" % (key, e))
+    _cleanups.clear()
 
 
 class NodeError(Exception):

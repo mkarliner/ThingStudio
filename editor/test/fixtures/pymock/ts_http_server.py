@@ -269,16 +269,11 @@ class Server:
         except Exception:
             pass
 
-    def _stop(self):
-        """runtime.register_cleanup's hook: sync by contract, so hand the await to the loop that is tearing the
-        flow down."""
-        if self._server is None:
-            return
-        try:
-            asyncio.create_task(self.stop())
-        except Exception:
-            self._server = None
-            self.started = False
+    async def _stop(self):
+        """runtime.register_cleanup's hook. Async on purpose: releasing the listening socket needs
+        `wait_closed()`, and `runtime.cancel_running()` awaits a cleanup that returns a coroutine, so the next
+        flow on the same port can bind. Scheduling it as a task instead lost the race and left port 80 held."""
+        await self.stop()
 
     async def _handle(self, reader, writer):
         try:
