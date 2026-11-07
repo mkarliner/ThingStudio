@@ -30,3 +30,17 @@ board's display). The design itself is still provisional: `docs/working-notes/re
   developer's own web front end: the remote display mounts under its own path prefix, WebSocket upgrade is a server
   capability any route can use, auth is per route. Sequencing: a spike first
   (`remote-display-spike-briefing.md`); MVP or post-MVP decided on its results.
+- **2026-11-07 — Deliver it as a custom firmware build; stock installs on small ESP32 boards are out of scope
+  (Mike).** The spike's hardware session measured the floor. On an ESP32-C3 (66 KB MicroPython heap free) the
+  *IDF* heap — what the WiFi stack and lwIP draw from — fell from 30,200 B at boot to **1,312 B with a 448 B
+  largest block**; the board stayed associated at RSSI -52 and could not move a packet, and the page received
+  `400 Bad Request` because the server's header read timed out. That is not a leak to tune away: it is the
+  feature exceeding what a stock install on a no-PSRAM ESP32 leaves spare. So a remote display ships as a custom
+  image (`firmware/targets/`) with the runtime and the spike's libraries frozen, and the heap headroom known at
+  build time. Mike: "then this feature will [be] for custom builds only ... memory constrained devices".
+  **Deliberately not a PSRAM rule:** the RP2040 boards (Pico W) may well carry it, because they do not pay the
+  ESP32 memory tax (WiFi stack and lwIP sharing the one heap). The rule is measured headroom on the target, not
+  a chip list — which is why the results sheet keeps a column per board rather than a verdict per family.
+  **A second one would need:** a target folder + image for that board family, its frozen inventory including the
+  spike's libraries, and a row in `remote-display-spike-results.md` measured with `freeIdfHeapBytes` /
+  `largestIdfHeapBlockBytes` (never `gc.mem_free()` alone, which looked healthy throughout the C3's failure).

@@ -354,5 +354,7 @@ A remote display (phone/browser as a board's display) follows two principles: ev
 opening a supply-chain hole (widget faces are data by default, confined JS the exception), and the board-served
 page is the first client, not the only one (transport-neutral spec; BLE and native app stay possible). Remote UIs
 are a format AIs write and humans audit, the lesson taken from the 2015 ThingStudio. Screen-size agnostic; editor
-QR discovery; own WebSocket code; explicit web-server config node; spike before the MVP call (2026-11-06). 5 entries:
+QR discovery; own WebSocket code; explicit web-server config node; spike before the MVP call (2026-11-06);
+ships as a custom firmware build, stock installs on small ESP32 boards out of scope, judged on measured heap
+headroom rather than PSRAM (Pico W may still fit) (2026-11-07). 6 entries:
 `docs/working-notes/decisions/remote-display.md`.
