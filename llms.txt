@@ -21,7 +21,7 @@
 
 ## Getting started
 
-- [1. Install Thingstudio](https://docs.thingstudio.net/getting-started/): From a new board to a blinking LED, in six steps:
+- [1. Install Thingstudio](https://docs.thingstudio.net/getting-started/): Want a look first?
 - [2. Tour the editor](https://docs.thingstudio.net/editor-tour/): Start Thingstudio if it isn't running: see step 1.
 - [3. Install MicroPython](https://docs.thingstudio.net/installing-micropython/): Thingstudio runs on top of MicroPython, so the board needs it first.
 - [4. Connect your board](https://docs.thingstudio.net/connecting/): Connect the board over USB so the editor can talk to it.

@@ -528,6 +528,9 @@ Source: https://docs.thingstudio.net/getting-started/
 
 # Getting started
 
+Want a look first? [Try the editor in your browser](https://demo.thingstudio.net/) before you install anything.
+The demo doesn't connect to a board, but you can build a flow and read the MicroPython it makes.
+
 From a new board to a blinking LED, in six steps:
 
 1. **[Install Thingstudio](#step-1-install-thingstudio)** on your computer.
@@ -718,7 +721,8 @@ The right-hand side holds the selected node's settings and what the board sends 
 
 - **Selected node's settings:** the properties panel.
 - **Notes on this flow:** the **Notes** panel, free text saved with the flow.
-- **Generated MicroPython:** the **Compiled source** panel. Click it to open it.
+- **Generated MicroPython:** the **Compiled source** panel. Click it to open it. **Download .py** saves it as a
+  file. Like the panel, the file holds your WiFi password and broker login.
 - **Messages from the board:** the **Device console**, with messages from Thingstudio and the board, including your
   flow's output. Its **Show** menu sets how much it shows: **Normal** for your flow's output, results and errors,
   **Info** to add routine reports such as memory, **Debug** for everything.
@@ -7237,7 +7241,8 @@ Its **Show** menu sets how much it shows:
 
 Hidden lines are kept, so choosing Info or Debug later shows what was already logged.
 
-The **Compiled source** panel shows the MicroPython your flow compiles to.
+The **Compiled source** panel shows the MicroPython your flow compiles to. **Download .py** saves it as a file, named
+after the flow.
 
 The editor's version is next to its name in the toolbar, and in **Help → About Thingstudio**. A `+` after it means
 you built it from uncommitted changes. Include the versions when you report a problem.
@@ -7611,8 +7616,8 @@ lines around the problem. Share the flow file, not compiled output; see the next
 
 Share the flow file: **File → Save**, then attach or paste the `.flow.json`. It holds the nodes and wiring and no
 passwords: the WiFi and broker logins stay on your computer
-([The Thingstudio folder](thingstudio-folder.md#credentials)). Don't paste the **Compiled source** panel or the
-console's compiled output: it contains the resolved WiFi password and broker login. If you pasted it somewhere
+([The Thingstudio folder](thingstudio-folder.md#credentials)). Don't paste the **Compiled source** panel, a downloaded
+`.py` or the console's compiled output: they contain the resolved WiFi password and broker login. If you pasted it somewhere
 public, change the password.
 
 ## Why does my ESP32 have so little free memory?
