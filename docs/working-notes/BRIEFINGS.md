@@ -6,6 +6,9 @@ files to re-enter current work. The per-session handoff rules that produce these
 
 ## Live — active handoffs and open threads
 
+- `online-editor-demo-build-briefing.md` — 2026-11-08 — build the code-only editor demo for demo.thingstudio.net
+  (demo build mode, examples, compile and Python preview, file open/save, request check, release zip, home-lab
+  deploy script and server config); plan in `online-editor-demo-scoping.md`.
 - `remote-display-spike-briefing.md` — 2026-11-06 — spike to prove remote displays (WebSocket, live page,
   login, input, failsafe, routes, budget) on Pico W / C3 / ESP32 with real phones; results decide MVP or not.
 - `remote-display-principles-briefing.md` — 2026-11-06 — 2015 ThingStudio reviewed; remote-display design
