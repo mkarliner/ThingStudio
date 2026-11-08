@@ -285,3 +285,8 @@ closed; the index bullets were removed the same day. Each carries its evidence l
 - **Documentation** -- scoping, tech selection, design and content-writing done 2026-09-07; a real mkdocs
   build confirmed 2026-09-08. ([detail](outstanding-items/docs-nothing-written.md))
 
+## Added 2026-11-08 (online editor demo)
+
+- **Download the generated Python** -- built 2026-11-08: **Download .py** in the Compiled source panel, both the
+  installed editor and the demo. The file holds the resolved WiFi password and broker login, like the panel
+  (`docs/user-guide/faq.md`).

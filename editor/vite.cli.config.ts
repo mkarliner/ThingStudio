@@ -4,7 +4,7 @@
 import { defineConfig } from "vite";
 
 export default defineConfig({
-  define: { __RUNTIME_BUILD_SHA__: JSON.stringify(null), __EDITOR_BUILD__: JSON.stringify(null) },
+  define: { __RUNTIME_BUILD_SHA__: JSON.stringify(null), __EDITOR_BUILD__: JSON.stringify(null), __DEMO__: JSON.stringify(false) },
   build: {
     ssr: "src/cli/thingstudio-compile.ts",
     outDir: "dist-cli",

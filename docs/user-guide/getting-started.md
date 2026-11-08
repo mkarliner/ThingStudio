@@ -1,5 +1,8 @@
 # Getting started
 
+Want a look first? [Try the editor in your browser](https://demo.thingstudio.net/) before you install anything.
+The demo doesn't connect to a board, but you can build a flow and read the MicroPython it makes.
+
 From a new board to a blinking LED, in six steps:
 
 1. **[Install Thingstudio](#step-1-install-thingstudio)** on your computer.

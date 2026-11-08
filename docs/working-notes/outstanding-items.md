@@ -70,7 +70,30 @@ ThingStudioMarketing repo, not here.
   `test-flows/ai-authoring/`, a round 3 with tasks that have no example, then the copy-into-your-assistant
   block and a skill; the first-run workspace `AGENTS.md` waits for a workspace folder. Scoping:
   `ai-authoring-doc-scoping.md`; rounds: `ai-authoring-test-rounds.md`.
-- **[LAUNCH-NICE]** **Download the generated Python** (viewing already works).
+- **[LAUNCH-NICE]** **Online editor demo on thingstudio.net -- built 2026-11-08, not live yet.** The editor
+  as a static page with nothing behind it: no board, deploy or install; goes as far as generated code. Code,
+  request check, release zip, deploy script and Caddy config are in (`npm run build:demo`). Left: the server,
+  DNS and TLS (Mike), `caddy validate`, a `workflow_dispatch` run, the first deploy and the browser matrix,
+  final banner copy from the marketing repo. Plan: `online-editor-demo-scoping.md`;
+  `outstanding-items/online-editor-demo.md`.
+- **[BACKLOG]** **Full editor both online and fully offline (proposed 2026-11-08; timing open).** The same
+  editor hosted and installed, each doing everything. Runtime install, flashing, the credential store and custom
+  node packages are backend-only today. `outstanding-items/online-and-offline-editor.md`.
+- **[LAUNCH-NICE]** **Docs site: no third-party requests (Mike, 2026-11-08: "squeaky clean").** Fonts are
+  already off (`font: false`). Left: Material calls `api.github.com` on page load to show the repo's stars and
+  latest release, because `repo_url` is set. Fix by overriding the `source` partial (keep the plain link, drop
+  the facts), or by moving the GitHub link out of `repo_url`. Then check a built page in a browser: only
+  own-origin requests and GoatCounter. The landing page was cleaned the same day (self-hosted fonts, signup form
+  on click).
+- **[LAUNCH-NICE]** **Hardware report issue form and credits (proposed 2026-11-08, marketing).** An issue form,
+  `.github/ISSUE_TEMPLATE/hardware-report.yml`, labelled `hardware-report`; `supported-hardware.md` links to it
+  and credits reporters under each table ("Reports from: @name"). Draft form and reasons: ThingStudioMarketing
+  `drafts/community/hardware-reports.md`.
+- **[LAUNCH-NICE]** **Custom node quick start: wrap an existing MicroPython driver (proposed 2026-11-08,
+  marketing).** `custom-nodes.md` is a full reference (514 lines); there's no short path. A page that takes one
+  real driver from micropython-lib or a vendor, and makes it a node in a few steps, answers "does it support my
+  sensor?" with "you can add it". Linked from the top of `custom-nodes.md` and from `supported-hardware.md`. No
+  time claim until someone new has been timed doing it.
 - **[LAUNCH-NICE]** **Landing page and README rewrite: technical side.** Content comes from the
   ThingStudioMarketing repo; hosting, GoatCounter on the page, and a docs/README note saying GoatCounter is
   used and what it counts.

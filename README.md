@@ -7,6 +7,9 @@ cloud, and no editor connected.
 
 **User guide:** https://docs.thingstudio.net/
 
+**Try it in your browser:** https://demo.thingstudio.net/ is the editor with nothing to install. Build a flow and
+read the MicroPython it makes. The demo doesn't connect to a board.
+
 **Built with AI:** Thingstudio is written with heavy use of AI coding tools. Every change is reviewed by a person,
 and the boards and nodes marked tested in
 [Supported hardware](https://docs.thingstudio.net/supported-hardware/) have run on real hardware. If that rules it

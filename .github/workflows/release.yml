@@ -9,6 +9,11 @@ name: Release
 # is a manual step, so nothing reaches users without a look first.
 # "Run workflow" (workflow_dispatch) -> the same build and smoke tests, archives left as run artifacts, no
 # release. Use it to test a change to the packaging without cutting a version.
+#
+# The online editor demo (demo.thingstudio.net, docs/working-notes/online-editor-demo-scoping.md) is built from
+# the same commit, checked in a browser (tools/demo_request_check.py: every example compiles, no request leaves
+# the page), and zipped as thingstudio-demo-<version>.zip. A tag adds the zip, its line in SHA256SUMS and the
+# check's reports to the draft release; tools/deploy_demo.sh installs it from there.
 
 on:
   push:
@@ -75,6 +80,49 @@ jobs:
         with:
           name: assets
           path: backend/src/thingstudio_backend/_assets
+          if-no-files-found: error
+          retention-days: 7
+
+  demo:
+    name: build and check the online demo
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0 # vite.config.ts stamps the last commit touching device-runtime/src
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: editor/package-lock.json
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
+        with:
+          python-version: "3.12"
+      - name: Build the demo
+        working-directory: editor
+        run: |
+          npm ci --ignore-scripts
+          npm run build:demo
+      # The reports are the evidence behind "the demo sends nothing": kept with the release. The second run
+      # serves the policy as a <meta> tag, as the GitHub Pages standby copy does.
+      - name: Browser check
+        run: |
+          mkdir -p dist
+          pip install -r docs/screenshots/requirements.txt
+          playwright install --with-deps chromium
+          python tools/demo_request_check.py --report dist/demo-request-report.json
+          python tools/demo_request_check.py --csp meta --report dist/demo-request-report-pages.json
+      - name: Zip
+        run: |
+          version=$(sed -n 's/^version *= *"\(.*\)"/\1/p' backend/pyproject.toml | head -1)
+          (cd editor/dist-demo && zip -qr -X "../../dist/thingstudio-demo-$version.zip" .)
+          (cd dist && sha256sum thingstudio-demo-*.zip)
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: demo
+          path: |
+            dist/thingstudio-demo-*.zip
+            dist/demo-request-report*.json
           if-no-files-found: error
           retention-days: 7
 
@@ -232,7 +280,7 @@ jobs:
   release:
     name: draft GitHub release
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: bundle
+    needs: [bundle, demo]
     runs-on: ubuntu-24.04
     permissions:
       contents: write
@@ -243,6 +291,10 @@ jobs:
           pattern: bundle-*
           path: dist
           merge-multiple: true
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: demo
+          path: dist
       # install.sh and install.ps1 go out with each release, so .../releases/latest/download/install.sh (and
       # install.ps1) are the stable install URLs and the scripts always match the archives beside them.
       - name: Checksums

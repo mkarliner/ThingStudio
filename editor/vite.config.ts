@@ -3,7 +3,7 @@
 import { execSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
 import vue from "@vitejs/plugin-vue";
 
 // Belt-and-braces runtime-build check (CLAUDE.md's "Device-runtime
@@ -61,19 +61,38 @@ function editorBuild(): { version: string | null; commit: string | null; dirty: 
 // registered before any build touches a `.vue` import, so it's added here
 // alongside the dependency itself rather than deferred to when main.ts
 // actually imports one.
-export default defineConfig({
-  plugins: [vue()],
+// The demo's page carries class="demo" from the start, so index.html's CSS hides the controls that need a board
+// before any script runs (no flash of Connect and Deploy), and the narrow-screen message works without JavaScript.
+function demoPage(mode: string): Plugin {
+  return {
+    name: "thingstudio-demo-page",
+    transformIndexHtml(html) {
+      if (mode !== "demo") return html;
+      const out = html.replace("<body>", '<body class="demo">').replace("<title>Thingstudio</title>", "<title>Thingstudio editor demo</title>");
+      if (!out.includes('<body class="demo">')) throw new Error("demo build: index.html has no plain <body> tag to mark");
+      return out;
+    },
+  };
+}
+
+// The online demo (`vite build --mode demo`, docs/working-notes/online-editor-demo-scoping.md): the same editor with
+// nothing behind it -- no board, no backend. __DEMO__ is a compile-time constant, so every `if (!__DEMO__)` branch is
+// dropped from the demo bundle along with the transports, the admin-API client and the firmware dialog it alone
+// reaches (test/demo-build.test.ts checks). Output goes to dist-demo/, beside the normal dist/.
+export default defineConfig(({ mode }) => ({
+  plugins: [vue(), demoPage(mode)],
   define: {
     __RUNTIME_BUILD_SHA__: JSON.stringify(runtimeBuildSha()),
     __EDITOR_BUILD__: JSON.stringify(editorBuild()),
+    __DEMO__: JSON.stringify(mode === "demo"),
   },
   // The editor is one ~600 kB chunk (~170 kB gzipped), mostly Vue, Rete and our own code. Vite's 500 kB warning is
   // aimed at sites loaded over the internet; the editor is served by the local backend, so splitting it would add
   // complexity for no load-time gain (2026-10-12). Raise the limit rather than ignore a standing warning, so a
   // real jump (a large dependency pulled in by mistake) still shows up.
-  build: { chunkSizeWarningLimit: 800 },
+  build: { chunkSizeWarningLimit: 800, outDir: mode === "demo" ? "dist-demo" : "dist" },
   test: {
     include: ["test/**/*.test.ts"],
     environment: "node",
   },
-});
+}));

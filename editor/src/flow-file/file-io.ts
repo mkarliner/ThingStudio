@@ -120,11 +120,28 @@ export async function currentLastModified(handle: FlowFileHandle): Promise<numbe
   }
 }
 
+/** Offers `text` to the user as a file download named `fileName` (the browser's own download, every browser). */
+export function downloadTextFile(text: string, fileName: string, mimeType: string): void {
+  const url = URL.createObjectURL(new Blob([text], { type: mimeType }));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = fileName;
+  a.click();
+  // Revoked a moment later rather than at once: some browsers start the download after click() returns.
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+/** Whether to use the File System Access pickers where the browser has them. The online demo passes
+ * `picker: false`: a plain file input and download behave the same in every browser. */
+export interface FilePickerOptions {
+  picker?: boolean;
+}
+
 /** Save As: asks where to save and writes there. Resolves to the new file, `null` if the user cancels,
  * or `"downloaded"` on a browser without the picker (a plain download, nothing to save back to). */
-export async function saveFlowFileAs(text: string, suggestedName: string): Promise<FlowFileRef | null | "downloaded"> {
+export async function saveFlowFileAs(text: string, suggestedName: string, options: FilePickerOptions = {}): Promise<FlowFileRef | null | "downloaded"> {
   const w = window as unknown as FileSystemAccessWindow;
-  if (w.showSaveFilePicker) {
+  if (w.showSaveFilePicker && options.picker !== false) {
     let handle: FlowFileHandle;
     try {
       handle = await w.showSaveFilePicker({ suggestedName, types: FLOW_FILE_TYPES });
@@ -139,24 +156,15 @@ export async function saveFlowFileAs(text: string, suggestedName: string): Promi
   // matches design doc §4's "manual export/import" framing for Safari/
   // Firefox exactly (there's no File System Access API there to pick a
   // real save target, only a browser-driven download).
-  const blob = new Blob([text], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  try {
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = suggestedName;
-    a.click();
-  } finally {
-    URL.revokeObjectURL(url);
-  }
+  downloadTextFile(text, suggestedName, "application/json");
   return "downloaded";
 }
 
 /** Open: resolves to the file's text and, where the browser gives one, its handle; `null` if the user
  * cancels. */
-export async function openFlowFileFromDisk(): Promise<{ text: string; ref: FlowFileRef | null } | null> {
+export async function openFlowFileFromDisk(options: FilePickerOptions = {}): Promise<{ text: string; ref: FlowFileRef | null } | null> {
   const w = window as unknown as FileSystemAccessWindow;
-  if (w.showOpenFilePicker) {
+  if (w.showOpenFilePicker && options.picker !== false) {
     let handles: FlowFileHandle[];
     try {
       handles = await w.showOpenFilePicker({ types: FLOW_FILE_TYPES });
