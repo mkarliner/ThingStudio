@@ -44,6 +44,7 @@
         <button type="button" class="icon-btn" title="add new" @click="addNew">+</button>
       </div>
     </label>
+    <p v-if="DEMO" class="credential-note">{{ DEMO_CREDENTIAL_NOTE }}</p>
     <p v-if="error" class="credential-error">{{ error }}</p>
 
     <div v-if="editing" class="credential-edit-panel">
@@ -67,9 +68,10 @@
 
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from "vue";
-import { backendWsUrl } from "./store";
 import { CREDENTIAL_TYPES, type CredentialType } from "./credential-types";
-import { AdminApiError, listCredentials, getCredential, putCredential } from "../../flow-file/admin-api-client";
+import { DEMO_CREDENTIAL_NOTE, errorText, getCredential, listCredentials, putCredential } from "./saved-values";
+
+const DEMO = __DEMO__;
 
 const props = defineProps<{
   credentialType: CredentialType;
@@ -94,9 +96,9 @@ async function refresh(): Promise<void> {
   loading.value = true;
   error.value = null;
   try {
-    names.value = await listCredentials(backendWsUrl.value, props.credentialType);
+    names.value = await listCredentials(props.credentialType);
   } catch (err) {
-    error.value = err instanceof AdminApiError || err instanceof Error ? err.message : String(err);
+    error.value = errorText(err);
   } finally {
     loading.value = false;
   }
@@ -131,10 +133,10 @@ async function openEdit(name: string): Promise<void> {
   for (const key of Object.keys(draft)) delete draft[key];
   Object.assign(draft, descriptor.value.defaults);
   try {
-    const data = await getCredential(backendWsUrl.value, props.credentialType, name);
+    const data = await getCredential(props.credentialType, name);
     Object.assign(draft, data);
   } catch (err) {
-    editError.value = err instanceof AdminApiError || err instanceof Error ? err.message : String(err);
+    editError.value = errorText(err);
   }
 }
 
@@ -157,12 +159,12 @@ async function saveEdit(): Promise<void> {
   saving.value = true;
   editError.value = null;
   try {
-    await putCredential(backendWsUrl.value, props.credentialType, name, { ...draft });
+    await putCredential(props.credentialType, name, { ...draft });
     await refresh();
     emit("update:modelValue", name);
     editing.value = false;
   } catch (err) {
-    editError.value = err instanceof AdminApiError || err instanceof Error ? err.message : String(err);
+    editError.value = errorText(err);
   } finally {
     saving.value = false;
   }
@@ -223,6 +225,11 @@ watch(
 .icon-btn:disabled {
   opacity: 0.4;
   cursor: default;
+}
+.credential-note {
+  color: #c8b070;
+  font-size: 11px;
+  margin: 4px 0 0;
 }
 .credential-error {
   color: #e08080;

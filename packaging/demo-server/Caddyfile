@@ -1,0 +1,57 @@
+# Thingstudio online editor demo: static files only (docs/working-notes/online-editor-demo-scoping.md).
+#
+# Serves <root>/current, which tools/deploy_demo.sh points at the release in use. Caddy gets TLS from Let's
+# Encrypt by itself. Check after any change: `caddy validate --config Caddyfile`, then `caddy reload`.
+#
+# tools/demo_request_check.py reads the Content-Security-Policy line below and tests the demo against it, so
+# this file is the one place the policy is written. Keep it on one line, in double quotes.
+
+demo.thingstudio.net {
+	root * /srv/thingstudio-demo/current
+	encode zstd gzip
+
+	# Static files, no directory listing (no `browse`), nothing else.
+	file_server
+
+	header {
+		Content-Security-Policy "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; connect-src 'self'; worker-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "serial=(), usb=(), hid=(), camera=(), microphone=(), geolocation=()"
+		Strict-Transport-Security "max-age=31536000"
+		Cross-Origin-Opener-Policy "same-origin"
+		-Server
+	}
+
+	# Streaming WebAssembly compile refuses any other type. Caddy already maps .wasm this way; set it anyway.
+	@wasm path *.wasm
+	header @wasm Content-Type "application/wasm"
+
+	# Vite names everything under /assets/ by its content hash, so it can be cached for good. index.html and the
+	# unhashed files (the vendored WASM, icons) are checked again on each visit, so a new release shows at once.
+	@hashed path /assets/*
+	header @hashed Cache-Control "public, max-age=31536000, immutable"
+	@unhashed not path /assets/*
+	header @unhashed Cache-Control "no-cache"
+
+	# Access log, kept 3 days, with the end of every IP address masked, so it holds no personal data.
+	# GoatCounter can count page views from it (`goatcounter import -format caddy`), with no script on the page.
+	log {
+		output file /var/log/caddy/thingstudio-demo.access.log {
+			roll_keep_for 72h
+		}
+		format filter {
+			wrap json
+			fields {
+				request>remote_ip ip_mask {
+					ipv4 24
+					ipv6 48
+				}
+				request>client_ip ip_mask {
+					ipv4 24
+					ipv6 48
+				}
+			}
+		}
+	}
+}

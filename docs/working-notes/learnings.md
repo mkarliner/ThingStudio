@@ -92,7 +92,8 @@ flake in `test_exchanges.py` on a busy box -- rerun before suspecting code. 34 e
 ## Headless browser testing
 
 Chromium aborts on the editor page on a machine with no fonts at all; point `FONTCONFIG_FILE` at a fonts.conf
-listing a TTF. 1 entry: `docs/working-notes/learnings/headless-browser-testing.md`.
+listing a TTF; Playwright expression waits vs a strict CSP; hidden console lines vs `innerText`; no
+Chromium download in the device VM. 4 entries: `docs/working-notes/learnings/headless-browser-testing.md`.
 
 ## Hardware bring-up / HIL rig
 

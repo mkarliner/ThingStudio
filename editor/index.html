@@ -16,6 +16,24 @@
     font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 13px; overflow: hidden; }
   #app { display: flex; flex-direction: column; width: 100%; height: 100%; }
 
+  /* The online demo (vite.config.ts, mode "demo", puts class="demo" on <body>): no board, no backend. Controls
+     that need one are marked device-only and not shown; demo-only ones show only there. CSS rather than the
+     hidden attribute, because main.ts sets `hidden` on some of these as the connection changes. */
+  body:not(.demo) .demo-only { display: none !important; }
+  body.demo .device-only { display: none !important; }
+  #demo-banner { flex: 0 0 auto; padding: 7px 12px; background: #2a2412; color: #e8d9a8;
+    border-bottom: 1px solid #4a3f1c; font-size: 12px; line-height: 1.4; }
+  #demo-banner a { color: #ffd479; }
+  #demo-banner .demo-version { color: #a8996a; margin-left: 8px; font-size: 11px; }
+  /* Narrow screens get a message instead of a canvas that can't be used there. */
+  #narrow-screen { display: none; }
+  @media (max-width: 899px) {
+    body.demo #app { display: none; }
+    body.demo #narrow-screen { display: flex; flex-direction: column; gap: 12px; align-items: center;
+      justify-content: center; height: 100%; padding: 24px; text-align: center; font-size: 15px; line-height: 1.5; }
+    body.demo #narrow-screen a { color: var(--accent); }
+  }
+
   #toolbar { flex: 0 0 auto; display: flex; align-items: center; gap: 6px; padding: 8px 12px;
     background: var(--panel); border-bottom: 1px solid var(--border); flex-wrap: wrap; }
   #toolbar h1 { font-size: 13px; font-weight: 600; margin: 0 4px 0 0; color: var(--dim);
@@ -197,6 +215,13 @@
 </head>
 <body>
 <div id="app">
+  <!-- Demo banner (online demo only). Placeholder copy; the final wording comes from the ThingStudioMarketing
+       repo. main.ts fills in the version. -->
+  <div id="demo-banner" class="demo-only" role="note">
+    This is a demo of the Thingstudio editor. It doesn't connect to a board. Try an example, change it, and press
+    Compile to see the Python it makes. To run it on a board, <a href="https://thingstudio.net/">download Thingstudio</a>.
+    <span id="demo-version" class="demo-version"></span>
+  </div>
   <div id="toolbar">
     <!-- Order follows what a user does, left to right (Mike, 2026-09-23): the flow, then the board, then
          deploy. 2026-09-30 (Mike, "top menu streamline"): Open/Save/New in a File menu; the connection
@@ -210,13 +235,18 @@
         <div id="fileMenuList" class="menu-list" role="menu" hidden>
           <button id="clear-canvas" role="menuitem" title="Start a new, empty flow: removes every node, pane and setting">New flow</button>
           <button id="btnOpenFlow" role="menuitem" title="Open a flow file, via the OS's own open dialog">Open…<span class="menu-key" data-key="O"></span></button>
-          <button id="btnSaveFlow" role="menuitem" title="Save to this flow's file. A flow that has no file yet asks where, like Save As.">Save<span class="menu-key" data-key="S"></span></button>
+          <button id="btnSaveFlow" class="device-only" role="menuitem" title="Save to this flow's file. A flow that has no file yet asks where, like Save As.">Save<span class="menu-key" data-key="S"></span></button>
           <button id="btnSaveFlowAs" role="menuitem" title="Save this flow to a file you choose, via the OS's own save dialog">Save As…<span class="menu-key" data-key="S" data-shift="1"></span></button>
           <hr id="recentSep" />
           <div id="recentHeading" class="menu-row">Open recent</div>
           <!-- main.ts inserts the recent files here, before Clear. -->
           <button id="btnClearRecent" role="menuitem" title="Forget the recent files in this browser. The files themselves are untouched." hidden>Clear recent files</button>
         </div>
+      </div>
+      <!-- Examples (online demo only): flows bundled with the demo, listed by demo-examples.ts. -->
+      <div class="menu demo-only">
+        <button class="menu-button" aria-haspopup="menu" aria-expanded="false">Examples ▾</button>
+        <div id="examplesMenuList" class="menu-list" role="menu" hidden></div>
       </div>
       <input id="flowNameInput" type="text" placeholder="untitled flow" title="This flow's name -- saved in the flow file, sent with every deploy so you can tell which flow a connected board is running" />
       <span id="flowFileName" class="flow-file" hidden></span>
@@ -228,7 +258,7 @@
       <button id="btnRefreshFlows" title="Ask the backend for its current list of saved flows" hidden>⟳ flows</button>
       <button id="btnDeleteFlow" title="Delete the flow selected above from the backend" hidden>Delete flow</button>
     </div>
-    <div class="tb-group">
+    <div class="tb-group device-only">
       <!-- connModeSelect: hidden, 2026-09-23 (Mike: "it's always via backend"). The backend serves the
            editor now, so there's nothing to choose. Kept in the DOM, value "backend", because main.ts
            still reads it and the frozen "direct" WebSerial path still exists in git. -->
@@ -254,11 +284,12 @@
       </select>
       <!-- btnBoardPins (2026-09-30): the readable page for the board/processor above (definition-page.ts). -->
       <button id="btnBoardPins" disabled title="Pick a board in the Board menu, or connect one, to see its pins.">Pins…</button>
-      <button id="btnDeploy" disabled class="primary">Compile → Deploy</button>
+      <button id="btnDeploy" disabled class="primary device-only">Compile → Deploy</button>
+      <button id="btnCompile" class="primary demo-only" title="Compile the flow and show the Python it makes">Compile</button>
     </div>
     <div class="spacer"></div>
     <div class="tb-group">
-      <div class="menu">
+      <div class="menu device-only">
         <button class="menu-button" aria-haspopup="menu" aria-expanded="false">Tools ▾</button>
         <div class="menu-list menu-right" role="menu" hidden>
           <button id="btnCheckStatus" role="menuitem" disabled hidden title="Ask the board to identify itself again -- no reset, no redeploy">Check status</button>
@@ -298,13 +329,14 @@
         <textarea id="flowNotes" rows="8" spellcheck="true" placeholder="What this flow does and how to use it. Saved in the flow file."></textarea>
       </details>
 
-      <details class="panel">
+      <details class="panel" id="previewPanel">
         <summary>Compiled source (preview)</summary>
+        <button id="btnDownloadPython" class="panel-action" title="Save the generated Python as a .py file">Download .py</button>
         <div id="source-preview">—</div>
       </details>
 
       <details class="panel" open>
-        <summary>Device console</summary>
+        <summary><span class="device-only">Device console</span><span class="demo-only">Console</span></summary>
         <label class="panel-action console-level" title="How much to show. Normal: your flow's output, warnings, errors and results. Info: also routine reports (board detected, memory, libraries, network status). Debug: also raw protocol messages and boot output.">
           Show <select id="consoleLevel">
             <option value="normal">Normal</option>
@@ -315,18 +347,22 @@
         <div id="console"></div>
         <!-- Command box and board tools (2026-09-23). Commands run in the listener while a flow is
              running (EXEC), or go straight to MicroPython's prompt after "Stop flow". -->
-        <div class="row console-tools">
+        <div class="row console-tools device-only">
           <input id="cmdInput" type="text" disabled spellcheck="false" autocomplete="off"
                  placeholder="Python command, e.g. gc.mem_free()" title="Runs on the board; output appears above. Up/down arrows recall earlier commands." />
           <button id="btnSendCmd" disabled>Send</button>
         </div>
-        <div class="row console-tools">
+        <div class="row console-tools device-only">
           <button id="btnStopToPrompt" disabled title="Stop the flow and Thingstudio on the board, leaving MicroPython's own >>> prompt. Nothing is deleted.">Stop flow &amp; open prompt</button>
           <button id="btnResume" hidden title="Soft-reset the board (Ctrl-D): Thingstudio and the saved flow start again">Restart Thingstudio</button>
         </div>
       </details>
     </div>
   </div>
+</div>
+<div id="narrow-screen" class="demo-only">
+  <p>The editor needs a desktop browser.</p>
+  <p><a href="https://thingstudio.net/">Back to thingstudio.net</a></p>
 </div>
 
 <!-- WiFi transport (2026-09-24): main.ts opens these. -->

@@ -104,7 +104,7 @@
       </template>
       <p v-if="groupedRows.length === 0" class="hint">No nodes match "{{ filter }}".</p>
 
-      <button class="palette-row load-custom-row" title="Read the custom node folder again, after you change a file there" @click="emit('reloadCustomNodes')">
+      <button v-if="!DEMO" class="palette-row load-custom-row" title="Read the custom node folder again, after you change a file there" @click="emit('reloadCustomNodes')">
         <span class="palette-icon">⟳</span>
         <span class="palette-label">Reload custom nodes</span>
       </button>
@@ -117,6 +117,9 @@ import { computed, ref } from "vue";
 import { NODE_PALETTE, DEFAULT_KIND_STYLE, DEFAULT_NODE_GROUPS, DRAG_MIME, CUSTOM_DRAG_MIME, type NodeKind } from "./palette";
 import { paletteStyleFor, builtinDescriptors } from "./node-descriptors";
 import { customNodePackages, customNodesVersion } from "./custom-nodes-store";
+
+// The online demo has no custom node folder to read (no backend), so no "Reload custom nodes".
+const DEMO = __DEMO__;
 import { activeTarget } from "./store";
 import { buildRegistry } from "../../node-library/registry";
 import { isFolded, parseFolds, toggleFold, PALETTE_FOLDS_KEY, type FoldState } from "./palette-folds";

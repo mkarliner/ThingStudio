@@ -70,10 +70,11 @@ ThingStudioMarketing repo, not here.
   `test-flows/ai-authoring/`, a round 3 with tasks that have no example, then the copy-into-your-assistant
   block and a skill; the first-run workspace `AGENTS.md` waits for a workspace folder. Scoping:
   `ai-authoring-doc-scoping.md`; rounds: `ai-authoring-test-rounds.md`.
-- **[LAUNCH-NICE]** **Download the generated Python** (viewing already works).
-- **[LAUNCH-NICE]** **Online editor demo on thingstudio.net (proposed 2026-11-08; Mike wants it soon).** The
-  editor as a static page with nothing behind it: no board, deploy or install. A feel for the product before the
-  15-minute install. Goes as far as generated code. Plan: `online-editor-demo-scoping.md`;
+- **[LAUNCH-NICE]** **Online editor demo on thingstudio.net -- built 2026-11-08, not live yet.** The editor
+  as a static page with nothing behind it: no board, deploy or install; goes as far as generated code. Code,
+  request check, release zip, deploy script and Caddy config are in (`npm run build:demo`). Left: the server,
+  DNS and TLS (Mike), `caddy validate`, a `workflow_dispatch` run, the first deploy and the browser matrix,
+  final banner copy from the marketing repo. Plan: `online-editor-demo-scoping.md`;
   `outstanding-items/online-editor-demo.md`.
 - **[BACKLOG]** **Full editor both online and fully offline (proposed 2026-11-08; timing open).** The same
   editor hosted and installed, each doing everything. Runtime install, flashing, the credential store and custom

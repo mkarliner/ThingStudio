@@ -12,7 +12,7 @@
 //   - `protocol/` is the wire layer and imports no other editor subsystem.
 //   - `compiler/` (the engine) does not import `node-library/` (which registers
 //     into it) or `app/` (the canvas).
-//   - no editor source imports outside editor/src.
+//   - no editor source imports outside editor/src (except the demo's example flows, as text).
 // Adding a legitimate new cross-layer edge means updating this list on purpose,
 // in the change that adds it.
 import { readFileSync, readdirSync } from "node:fs";
@@ -69,8 +69,14 @@ describe("editor module boundaries", () => {
     expect(bad, `compiler/ must not depend on the node library or the canvas: ${bad.join(", ")}`).toEqual([]);
   });
 
+  // The one exception, on purpose: the online demo's Examples menu bundles flow files as text from the repo's
+  // tutorials/ and test-flows/ (2026-11-08, online-editor-demo-scoping.md). Data, not code, from the folders
+  // that own those flows, so they can't drift from a copy kept under src.
+  const allowedOutside = (e: Edge): boolean =>
+    e.from === "app/demo-examples.ts" && /^\.\.\/\.\.\/\.\.\/(tutorials|test-flows)\/[^/]+\.flow\.json\?raw$/.test(e.spec);
+
   it("no editor source imports outside editor/src", () => {
-    const bad = violations((e) => e.toTop === "(outside src)");
+    const bad = violations((e) => e.toTop === "(outside src)" && !allowedOutside(e));
     expect(bad, `relative imports must resolve inside editor/src: ${bad.join(", ")}`).toEqual([]);
   });
 

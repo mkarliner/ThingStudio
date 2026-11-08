@@ -1,6 +1,7 @@
 # Online editor demo: plan (code, hosting, security)
 
-Status: plan, 2026-11-08. Not started. Item: `outstanding-items/online-editor-demo.md`. Marketing side (site,
+Status: plan, 2026-11-08; code items 1-11 and the hosting files built the same day (branch
+`online-editor-demo`). Not live yet. Item: `outstanding-items/online-editor-demo.md`. Marketing side (site,
 copy, rollout): ThingStudioMarketing `briefings/online-editor-demo-briefing.md`.
 
 ## Goal and scope
@@ -169,3 +170,33 @@ marketing plan, and it removes the step the outside review named (trusting a bin
 
 **Why to wait:** the newcomer test on the local install hasn't passed yet. A second path splits the first few
 testers' reports, and every board quirk then has two places to show up. Build the code-only demo first.
+
+## Built, 2026-11-08
+
+What the build session chose where the plan left room. Mike to confirm the first two.
+
+- **The examples compile as they open.** The WiFi and MQTT tutorials have no credential, so in the demo they
+  failed with "no SSID". When the demo opens one of its own examples, each WiFi and broker config gets a
+  credential with made-up values, held in page memory only (`editor/src/app/demo.ts`). A flow the visitor opens
+  from disk is left alone.
+- **No GoatCounter script on the page; count from the access log.** The CSP has no third-party host. The
+  Caddyfile keeps the log 3 days with the end of each IP masked; `goatcounter import -format caddy` reads it.
+  Adding the script means its host in the CSP and `--allow-host ts-stats.minus1.com` for the request check.
+- **Gating:** `__DEMO__` (Vite `define`, `--mode demo`). Device-only startup and listeners in `main.ts` sit
+  behind `if (!__DEMO__)`; the transport is a never-connected stand-in. `editor/test/demo-build.test.ts` checks
+  the bundle has no backend API, Web Serial, WebSocket, admin client or firmware dialog.
+- **Credentials and presets** go through `editor/src/app/rete/saved-values.ts`: the backend store normally, page
+  memory in the demo. The fields show "Demo: nothing is saved or sent. Use made-up values."
+- **Examples list:** `editor/src/app/demo-examples.ts`, the one place to change it. The showreel opens with the
+  Freenove board picked. `module-boundaries.test.ts` allows that file's `*.flow.json?raw` imports.
+- **Hidden in the demo** by CSS (`device-only` / `demo-only` classes, `<body class="demo">` set at build time):
+  the connection group, Deploy, Tools, Save (Save As downloads), the console's command rows, recent files.
+- **Server:** Caddy (`packaging/demo-server/`), the only place the CSP is written; `tools/demo_request_check.py`
+  reads it from there and `add_meta_csp.py` makes the Pages `<meta>` copy. `bluetooth` is left out of
+  Permissions-Policy: Chrome logs it as unrecognised.
+- **Release:** `release.yml`'s `demo` job builds, runs the request check (header and `<meta>` modes) and zips
+  `thingstudio-demo-<version>.zip`; a tag adds the zip and the reports to the draft release, the zip into
+  SHA256SUMS. `tools/deploy_demo.sh` installs from a published release.
+- **Checked:** both builds; 1379 vitest tests; the request check in Chromium, both CSP modes: five examples
+  compile, 14 requests, none off-origin, no console errors; `compile_hook_smoke.py` against the normal build.
+  Not checked: `caddy validate`, a real `workflow_dispatch` run, Firefox/Safari.

@@ -14,7 +14,8 @@ Its **Show** menu sets how much it shows:
 
 Hidden lines are kept, so choosing Info or Debug later shows what was already logged.
 
-The **Compiled source** panel shows the MicroPython your flow compiles to.
+The **Compiled source** panel shows the MicroPython your flow compiles to. **Download .py** saves it as a file, named
+after the flow.
 
 The editor's version is next to its name in the toolbar, and in **Help → About Thingstudio**. A `+` after it means
 you built it from uncommitted changes. Include the versions when you report a problem.

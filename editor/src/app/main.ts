@@ -192,8 +192,10 @@ import { catalogueLine, choiceProblem, doneLine, flashBoard, jobLine, type Firmw
 // filename, even though nothing here treats it as an actual storage key
 // anymore. AdminApiError and the flow CRUD functions aren't imported --
 // nothing in this file calls them; see the header comment above.
-import { saveFlowFileAs, openFlowFileFromDisk, writeFlowFile, readFlowFile, currentLastModified, supportsFileHandles, FilePermissionError, type FlowFileRef } from "../flow-file/file-io.js";
+import { downloadTextFile, saveFlowFileAs, openFlowFileFromDisk, writeFlowFile, readFlowFile, currentLastModified, supportsFileHandles, FilePermissionError, type FlowFileRef } from "../flow-file/file-io.js";
 import { addRecent, removeRecent, loadRecents, storeRecents, type RecentFile } from "../flow-file/recent-files.js";
+import { getCredential as getSavedCredential } from "./rete/saved-values.js";
+import { startDemo } from "./demo.js";
 
 const el = <T extends HTMLElement = HTMLElement>(id: string): T => document.getElementById(id) as T;
 
@@ -315,7 +317,7 @@ createApp(PaletteSidebar, {
     void addCustomNodeOfType(type);
   },
   onReloadCustomNodes: () => {
-    void loadCustomNodes(true);
+    if (!__DEMO__) void loadCustomNodes(true);
   },
 }).mount(el("palette-mount"));
 
@@ -483,6 +485,8 @@ function extractConfigsSnapshot(): FlowFileConfig[] {
 // Now a changed name is fetched as soon as it's picked (the configsVersion watch below), and every
 // Deploy re-fetches all of them (a credential's values may have been edited since).
 const resolvedCredentialNames = new Map<string, string>();
+// The demo's credentials that had no values when a flow named them, so each is reported only once.
+const demoReportedCredentials = new Set<string>();
 
 async function resolveConfigCredentials(onlyChanged = false): Promise<void> {
   const credentialTypeByConfigType: Record<string, CredentialType> = {
@@ -496,10 +500,19 @@ async function resolveConfigCredentials(onlyChanged = false): Promise<void> {
     if (!name) continue;
     if (onlyChanged && resolvedCredentialNames.get(cfg.id) === name) continue;
     try {
-      const data = await getCredential(backendWsUrl.value, credentialType, name);
+      const data = await getSavedCredential(credentialType, name);
       updateConfig(cfg.id, data);
       resolvedCredentialNames.set(cfg.id, name);
     } catch (err) {
+      if (__DEMO__) {
+        // A flow names a credential nobody has filled in here yet: not an error in the demo. Said once per name.
+        const key = `${credentialType}:${name}`;
+        if (!demoReportedCredentials.has(key)) {
+          demoReportedCredentials.add(key);
+          logLine(`[demo] ${credentialType} "${name}" has no values here. Open its config in the node's panel to fill in made-up ones.`, "");
+        }
+        continue;
+      }
       logLine(
         `[load: could not resolve ${credentialType} credential "${name}" for config ${cfg.id}] ${err instanceof Error ? err.message : String(err)}`,
         "err",
@@ -699,7 +712,7 @@ function renderRecentFiles(): void {
   const list = el("fileMenuList");
   for (const old of Array.from(list.querySelectorAll(".recent-item"))) old.remove();
   const clear = el<HTMLButtonElement>("btnClearRecent");
-  const supported = supportsFileHandles();
+  const supported = !__DEMO__ && supportsFileHandles();
   el("recentSep").hidden = !supported;
   el("recentHeading").hidden = !supported;
   el("recentHeading").textContent = recentFiles.length > 0 ? "Open recent" : "No recent files";
@@ -736,7 +749,7 @@ function fileErrorText(err: unknown, fileName: string | null): string {
 
 async function saveFlowAs(): Promise<void> {
   try {
-    const result = await saveFlowFileAs(currentFlowText(), suggestedFileName());
+    const result = await saveFlowFileAs(currentFlowText(), suggestedFileName(), { picker: !__DEMO__ });
     if (result === null) return; // cancelled
     if (result === "downloaded") {
       logLine("[flow saved -- downloaded]", "ok");
@@ -784,7 +797,7 @@ async function loadFlowText(text: string, ref: FlowFileRef | null): Promise<void
 
 async function openFlow(): Promise<void> {
   try {
-    const opened = await openFlowFileFromDisk();
+    const opened = await openFlowFileFromDisk({ picker: !__DEMO__ });
     if (opened === null) return; // user cancelled the picker
     await loadFlowText(opened.text, opened.ref);
   } catch (err) {
@@ -838,10 +851,12 @@ document.addEventListener("keydown", (e) => {
 
 showCurrentFile();
 renderRecentFiles();
-void loadRecents().then((list) => {
-  recentFiles = list;
-  renderRecentFiles();
-});
+if (!__DEMO__) {
+  void loadRecents().then((list) => {
+    recentFiles = list;
+    renderRecentFiles();
+  });
+}
 
 // ---------------------------------------------------------------------
 // Console
@@ -883,9 +898,13 @@ function logLine(text: string, cls?: "ok" | "err" | "", nodeId?: string): void {
   if (following) consoleEl.scrollTop = consoleEl.scrollHeight;
 }
 
+/** The public docs site, which the demo links to: it has no backend serving a local copy. */
+const PUBLIC_DOCS_URL = "https://docs.thingstudio.net/";
+
 /** URL of a docs page on the backend's locally served copy (docs_site.py) -- works offline. Falls
  * back to the site root on a malformed backend URL rather than throwing out of an error path. */
 function docUrl(doc: DocLink): string {
+  if (__DEMO__) return `${PUBLIC_DOCS_URL}${doc.path}`;
   let base: string;
   try {
     base = backendHttpBaseUrl(currentBackendWsUrl());
@@ -1574,7 +1593,16 @@ const transportEvents: TransportEvents = {
 // click-to-fire -- is written once against that contract rather than
 // duplicated per mode. Reassigned to a freshly-constructed instance of the
 // right kind each time Connect succeeds; never mutated in place.
-let transport: DeviceTransport = new WebSerialTransport(transportEvents);
+// The demo has no transport at all: a stand-in that is never connected, so the code below that asks
+// `transport.isConnected` still works and nothing in the bundle can open a port or a socket.
+const NO_TRANSPORT: DeviceTransport = {
+  isConnected: false,
+  disconnect: async () => {},
+  send: async () => {
+    throw new Error("the demo has no board");
+  },
+};
+let transport: DeviceTransport = __DEMO__ ? NO_TRANSPORT : new WebSerialTransport(transportEvents);
 
 
 // --- Inject click-only live-fire (2026-09-02) ---------------------------
@@ -1601,7 +1629,7 @@ let transport: DeviceTransport = new WebSerialTransport(transportEvents);
 // one click racing to decide which it was.
 fireInjectNode.value = (node) => {
   if (!transport.isConnected) {
-    logLine("[inject: connect to a device first -- clicking only fires while live]", "");
+    logLine(__DEMO__ ? "[demo] ▶ fires an inject on a connected board. The demo has no board." : "[inject: connect to a device first -- clicking only fires while live]", "");
     return;
   }
   logLine(`[inject: firing node ${node.id}]`, "");
@@ -1855,11 +1883,11 @@ el("btnBoardPins").addEventListener("click", async () => {
     logLine("[board] The browser blocked the pins page from opening. Allow pop-ups for this page, then try again.", "err");
     return;
   }
-  await loadUserDefinitions(); // re-reads ~/.thingstudio's files and re-resolves the target
+  if (!__DEMO__) await loadUserDefinitions(); // re-reads ~/.thingstudio's files and re-resolves the target
   const resolution = resolveTarget(definitions, el<HTMLSelectElement>("boardSelect").value || "auto", lastHelloChipType);
   const opts = {
-    generated: `Read from the files ${new Date().toLocaleString()}. Click Pins… again after changing them.`,
-    docsUrl: `${backendHttpBaseUrl(currentBackendWsUrl())}/docs/boards/`,
+    generated: __DEMO__ ? `Thingstudio's built-in definition, ${new Date().toLocaleString()}.` : `Read from the files ${new Date().toLocaleString()}. Click Pins… again after changing them.`,
+    docsUrl: __DEMO__ ? `${PUBLIC_DOCS_URL}boards/` : `${backendHttpBaseUrl(currentBackendWsUrl())}/docs/boards/`,
     // Auto found the processor but not the board: the page says the board's own pins are missing.
     unlistedBoard: resolution.how === "detected" && !resolution.target?.board ? lastHelloChipType : null,
   };
@@ -1982,11 +2010,15 @@ function updateConnModeUi(): void {
   el("btnInstallRuntime").hidden = !backend;
   el("btnInstallFirmware").hidden = !backend;
 }
-el("connModeSelect").addEventListener("change", updateConnModeUi);
-updateConnModeUi();
+if (!__DEMO__) {
+  el("connModeSelect").addEventListener("change", updateConnModeUi);
+  updateConnModeUi();
+}
 
 // Start from wherever this page was served (the backend, normally) -- see initialBackendWsUrl().
-el<HTMLInputElement>("backendUrlInput").value = initialBackendWsUrl(import.meta.env.DEV, window.location);
+if (!__DEMO__) {
+  el<HTMLInputElement>("backendUrlInput").value = initialBackendWsUrl(import.meta.env.DEV, window.location);
+}
 
 // Mirrors backendUrlInput into store.ts's backendWsUrl (2026-09-08) --
 // the credential and preset fields (ConfigRefField.vue and friends) talk to the admin
@@ -1995,16 +2027,20 @@ el<HTMLInputElement>("backendUrlInput").value = initialBackendWsUrl(import.meta.
 // it reads this reactive ref instead. Initialized once here, then kept in
 // sync on every edit; not read reactively anywhere else in this file
 // (every other call site here already calls currentBackendWsUrl() fresh).
-backendWsUrl.value = currentBackendWsUrl();
-el("backendUrlInput").addEventListener("input", () => {
+if (!__DEMO__) {
   backendWsUrl.value = currentBackendWsUrl();
-});
+  el("backendUrlInput").addEventListener("input", () => {
+    backendWsUrl.value = currentBackendWsUrl();
+  });
+}
 
 // The user's own board/processor files. Read again on Connect and on Deploy, so an edit made in a
 // text editor takes effect without reloading the page.
-void loadUserDefinitions();
-void loadCustomNodes();
-window.addEventListener("focus", () => void loadCustomNodes());
+if (!__DEMO__) {
+  void loadUserDefinitions();
+  void loadCustomNodes();
+  window.addEventListener("focus", () => void loadCustomNodes());
+}
 
 /** Populates backendPortSelect from the backend's own list_ports control
  * message. Uses a short-lived BackendTransport just for this one
@@ -2107,7 +2143,9 @@ async function refreshBackendPorts(onLoad = false): Promise<void> {
     await probe.disconnect();
   }
 }
-el("btnRefreshPorts").addEventListener("click", () => void refreshBackendPorts());
+if (!__DEMO__) {
+  el("btnRefreshPorts").addEventListener("click", () => void refreshBackendPorts());
+}
 
 function addOption(parent: HTMLElement, value: string, label: string): void {
   const opt = document.createElement("option");
@@ -2122,35 +2160,37 @@ function addOption(parent: HTMLElement, value: string, label: string): void {
 // has none saved, and Board settings… (hostname and password, over USB only).
 
 let portSelectPrevious = "";
-el("backendPortSelect").addEventListener("focus", () => {
-  portSelectPrevious = el<HTMLSelectElement>("backendPortSelect").value;
-});
-el("backendPortSelect").addEventListener("change", async () => {
-  const select = el<HTMLSelectElement>("backendPortSelect");
-  if (select.value !== MANUAL_NETWORK_VALUE) {
-    portSelectPrevious = select.value;
-    const board = discoveredBoards.get(select.value);
-    if (board && !board.wifiTransport) logLine(noPasswordHelp(board.hostname), "err");
-    return;
-  }
-  const target = await askNetworkAddress();
-  if (!target) {
-    select.value = portSelectPrevious;
-    return;
-  }
-  const value = `net:${target.host}:${target.tcpPort}`;
-  const label = `${target.host}${target.tcpPort === 7462 ? "" : `:${target.tcpPort}`} -- WiFi`;
-  if (!manualNetworkTargets.has(value)) {
-    manualNetworkTargets.set(value, label);
-    const manual = select.querySelector(`option[value="${MANUAL_NETWORK_VALUE}"]`);
-    const opt = document.createElement("option");
-    opt.value = value;
-    opt.textContent = label;
-    manual?.parentElement?.insertBefore(opt, manual);
-  }
-  select.value = value;
-  portSelectPrevious = value;
-});
+if (!__DEMO__) {
+  el("backendPortSelect").addEventListener("focus", () => {
+    portSelectPrevious = el<HTMLSelectElement>("backendPortSelect").value;
+  });
+  el("backendPortSelect").addEventListener("change", async () => {
+    const select = el<HTMLSelectElement>("backendPortSelect");
+    if (select.value !== MANUAL_NETWORK_VALUE) {
+      portSelectPrevious = select.value;
+      const board = discoveredBoards.get(select.value);
+      if (board && !board.wifiTransport) logLine(noPasswordHelp(board.hostname), "err");
+      return;
+    }
+    const target = await askNetworkAddress();
+    if (!target) {
+      select.value = portSelectPrevious;
+      return;
+    }
+    const value = `net:${target.host}:${target.tcpPort}`;
+    const label = `${target.host}${target.tcpPort === 7462 ? "" : `:${target.tcpPort}`} -- WiFi`;
+    if (!manualNetworkTargets.has(value)) {
+      manualNetworkTargets.set(value, label);
+      const manual = select.querySelector(`option[value="${MANUAL_NETWORK_VALUE}"]`);
+      const opt = document.createElement("option");
+      opt.value = value;
+      opt.textContent = label;
+      manual?.parentElement?.insertBefore(opt, manual);
+    }
+    select.value = value;
+    portSelectPrevious = value;
+  });
+}
 
 /** Resolves with the dialog's return value once it closes ("" when dismissed with Escape). */
 function dialogResult(dialog: HTMLDialogElement): Promise<string> {
@@ -2295,22 +2335,24 @@ function updateBoardSettingsButton(): void {
     : "The board's network name and WiFi password. Changes are made over USB.";
 }
 
-el("btnBoardSettings").addEventListener("click", () => {
-  const hello = lastHello;
-  if (!hello || !hello.hostname) return;
-  // Says which board is about to change: with two boards on the bench it's easy to rename the wrong one
-  // (2026-09-25 -- the ESP32-C3 was renamed "picow-1").
-  el("bsBoard").textContent = boardSettingsTarget(hello, el<HTMLSelectElement>("backendPortSelect").value);
-  el<HTMLInputElement>("bsHostname").value = hello.hostname;
-  el<HTMLInputElement>("bsPassword").value = "";
-  el<HTMLInputElement>("bsConfirm").value = "";
-  el<HTMLInputElement>("bsClearPassword").checked = false;
-  el<HTMLInputElement>("bsClearPassword").disabled = !hello.authRequired;
-  el("bsError").textContent = "";
-  const dialog = el<HTMLDialogElement>("boardSettingsDialog");
-  dialog.returnValue = "";
-  dialog.showModal();
-});
+if (!__DEMO__) {
+  el("btnBoardSettings").addEventListener("click", () => {
+    const hello = lastHello;
+    if (!hello || !hello.hostname) return;
+    // Says which board is about to change: with two boards on the bench it's easy to rename the wrong one
+    // (2026-09-25 -- the ESP32-C3 was renamed "picow-1").
+    el("bsBoard").textContent = boardSettingsTarget(hello, el<HTMLSelectElement>("backendPortSelect").value);
+    el<HTMLInputElement>("bsHostname").value = hello.hostname;
+    el<HTMLInputElement>("bsPassword").value = "";
+    el<HTMLInputElement>("bsConfirm").value = "";
+    el<HTMLInputElement>("bsClearPassword").checked = false;
+    el<HTMLInputElement>("bsClearPassword").disabled = !hello.authRequired;
+    el("bsError").textContent = "";
+    const dialog = el<HTMLDialogElement>("boardSettingsDialog");
+    dialog.returnValue = "";
+    dialog.showModal();
+  });
+}
 
 function boardSettingsTarget(hello: HelloMessage, portValue: string): string {
   const selection = parsePortSelection(portValue);
@@ -2319,11 +2361,13 @@ function boardSettingsTarget(hello: HelloMessage, portValue: string): string {
   return `Changing the ${hello.chipType} board${port}, currently named ${hello.hostname}${flow}.`;
 }
 
-el("bsSave").addEventListener("click", (e) => {
-  // Validate and save before the dialog closes, so a problem is shown in it rather than lost.
-  e.preventDefault();
-  void saveBoardSettings();
-});
+if (!__DEMO__) {
+  el("bsSave").addEventListener("click", (e) => {
+    // Validate and save before the dialog closes, so a problem is shown in it rather than lost.
+    e.preventDefault();
+    void saveBoardSettings();
+  });
+}
 
 async function saveBoardSettings(): Promise<void> {
   const hello = lastHello;
@@ -2380,7 +2424,9 @@ async function saveBoardSettings(): Promise<void> {
   );
   el<HTMLDialogElement>("boardSettingsDialog").close("save");
 }
-void refreshBackendPorts(true);
+if (!__DEMO__) {
+  void refreshBackendPorts(true);
+}
 
 // Backend restarts (2026-09-25, Mike: "lots of dead tabs"). This tab checks the backend is there -- every
 // 5 s while it is, every second while it isn't -- and picks it back up when it returns, so restarting the
@@ -2406,7 +2452,9 @@ async function watchBackend(): Promise<void> {
   backendAlive = ok;
   setTimeout(() => void watchBackend(), ok ? 5000 : 1000);
 }
-setTimeout(() => void watchBackend(), 5000);
+if (!__DEMO__) {
+  setTimeout(() => void watchBackend(), 5000);
+}
 
 {
   const picker = el<HTMLSelectElement>("consoleLevel");
@@ -2437,7 +2485,8 @@ el("btnDocsGettingStarted").addEventListener("click", () => {
 // backend (/api/alive); the board's runtime from the last HELLO.
 el("btnAbout").addEventListener("click", async () => {
   const lines: string[] = [];
-  try {
+  if (__DEMO__) lines.push("Thingstudio online demo: no board, no backend");
+  else try {
     const res = await fetch(`${backendHttpBaseUrl(currentBackendWsUrl())}/api/alive`, { cache: "no-store" });
     const body = (await res.json()) as { version?: string };
     lines.push(`Thingstudio ${body.version ?? "(version not reported)"}`);
@@ -2736,126 +2785,132 @@ async function refreshFirmwareTargets(): Promise<void> {
   }
 }
 
-el("btnInstallFirmware").addEventListener("click", () => {
-  fwFile = null;
-  fwUploaded = null;
-  fwLogLines = 0;
-  el<HTMLInputElement>("fwFile").value = "";
-  el<HTMLInputElement>("fwTargetPath").value = "";
-  el<HTMLInputElement>("fwAddress").value = "";
-  el<HTMLSelectElement>("fwBaud").value = "";
-  el<HTMLInputElement>("fwNoStub").checked = false;
-  el<HTMLInputElement>("fwErase").checked = true;
-  // A finished flash offers one thing to do next: close. Flash comes back only if the user changes something.
-  el("fwClose").textContent = "Cancel";
-  el<HTMLButtonElement>("fwFlash").hidden = false;
-  el("fwLog").hidden = true;
-  el("fwLog").textContent = "";
-  el("fwError").textContent = "";
-  el("fwProgress").textContent = "";
-  el("fwTargets").innerHTML = "";
-  const dialog = el<HTMLDialogElement>("firmwareDialog");
-  dialog.returnValue = "";
-  dialog.showModal();
-  void (async () => {
-    try {
-      fwCatalogue = await listFirmwareCatalogue(currentBackendWsUrl());
-      el("fwCatalogueNote").textContent = catalogueLine(fwCatalogue.catalogue);
-    } catch (err) {
-      fwCatalogue = null;
-      el("fwCatalogueNote").textContent = "";
-      el("fwError").textContent = err instanceof Error ? err.message : String(err);
-    }
-    renderFwFamilies();
-    fwPreselectFromBoard();
-    renderFwAdvanced();
-    await refreshFirmwareTargets();
-  })();
-});
+if (!__DEMO__) {
+  el("btnInstallFirmware").addEventListener("click", () => {
+    fwFile = null;
+    fwUploaded = null;
+    fwLogLines = 0;
+    el<HTMLInputElement>("fwFile").value = "";
+    el<HTMLInputElement>("fwTargetPath").value = "";
+    el<HTMLInputElement>("fwAddress").value = "";
+    el<HTMLSelectElement>("fwBaud").value = "";
+    el<HTMLInputElement>("fwNoStub").checked = false;
+    el<HTMLInputElement>("fwErase").checked = true;
+    // A finished flash offers one thing to do next: close. Flash comes back only if the user changes something.
+    el("fwClose").textContent = "Cancel";
+    el<HTMLButtonElement>("fwFlash").hidden = false;
+    el("fwLog").hidden = true;
+    el("fwLog").textContent = "";
+    el("fwError").textContent = "";
+    el("fwProgress").textContent = "";
+    el("fwTargets").innerHTML = "";
+    const dialog = el<HTMLDialogElement>("firmwareDialog");
+    dialog.returnValue = "";
+    dialog.showModal();
+    void (async () => {
+      try {
+        fwCatalogue = await listFirmwareCatalogue(currentBackendWsUrl());
+        el("fwCatalogueNote").textContent = catalogueLine(fwCatalogue.catalogue);
+      } catch (err) {
+        fwCatalogue = null;
+        el("fwCatalogueNote").textContent = "";
+        el("fwError").textContent = err instanceof Error ? err.message : String(err);
+      }
+      renderFwFamilies();
+      fwPreselectFromBoard();
+      renderFwAdvanced();
+      await refreshFirmwareTargets();
+    })();
+  });
 
-for (const radio of Array.from(document.querySelectorAll<HTMLInputElement>('input[name="fwTransport"]'))) {
-  radio.addEventListener("change", () => {
-    renderFwFamilies();
+  for (const radio of Array.from(document.querySelectorAll<HTMLInputElement>('input[name="fwTransport"]'))) {
+    radio.addEventListener("change", () => {
+      renderFwFamilies();
+      renderFwAdvanced();
+      void refreshFirmwareTargets();
+    });
+  }
+
+  el("fwRefreshTargets").addEventListener("click", () => void refreshFirmwareTargets());
+  el("fwTargets").addEventListener("change", () => {
+    el<HTMLInputElement>("fwTargetPath").value = "";
+    fwButtonsForNewChoice();
+  });
+  el("fwFamily").addEventListener("change", () => {
+    fwButtonsForNewChoice();
+    renderFwSuppliers();
     renderFwAdvanced();
-    void refreshFirmwareTargets();
+  });
+  el("fwSupplier").addEventListener("change", () => {
+    fwButtonsForNewChoice();
+    fwFile = null;
+    fwUploaded = null;
+    el<HTMLInputElement>("fwFile").value = "";
+    renderFwBuilds();
+    renderFwAdvanced();
+  });
+  el("fwBuild").addEventListener("change", () => {
+    fwButtonsForNewChoice();
+    renderFwAdvanced();
+    // Picking a catalogue build drops a file the user had chosen: one answer to "what goes on the board".
+    fwFile = null;
+    fwUploaded = null;
+    el<HTMLInputElement>("fwFile").value = "";
+    renderFwVersions();
+    renderFwFileNote();
+  });
+  el("fwVersion").addEventListener("change", () => {
+    fwButtonsForNewChoice();
+    renderFwFileNote();
   });
 }
 
-el("fwRefreshTargets").addEventListener("click", () => void refreshFirmwareTargets());
-el("fwTargets").addEventListener("change", () => {
-  el<HTMLInputElement>("fwTargetPath").value = "";
-  fwButtonsForNewChoice();
-});
-el("fwFamily").addEventListener("change", () => {
-  fwButtonsForNewChoice();
-  renderFwSuppliers();
-  renderFwAdvanced();
-});
-el("fwSupplier").addEventListener("change", () => {
-  fwButtonsForNewChoice();
-  fwFile = null;
-  fwUploaded = null;
-  el<HTMLInputElement>("fwFile").value = "";
-  renderFwBuilds();
-  renderFwAdvanced();
-});
-el("fwBuild").addEventListener("change", () => {
-  fwButtonsForNewChoice();
-  renderFwAdvanced();
-  // Picking a catalogue build drops a file the user had chosen: one answer to "what goes on the board".
-  fwFile = null;
-  fwUploaded = null;
-  el<HTMLInputElement>("fwFile").value = "";
-  renderFwVersions();
-  renderFwFileNote();
-});
-el("fwVersion").addEventListener("change", () => {
-  fwButtonsForNewChoice();
-  renderFwFileNote();
-});
-
 // A file is uploaded as soon as it is picked, because the image's own header says which chip it is for -- the
 // family comes from the file, not from the user guessing.
-el<HTMLInputElement>("fwFile").addEventListener("change", (event) => {
-  const input = event.target as HTMLInputElement;
-  const picked = input.files?.[0];
-  fwFile = null;
-  fwUploaded = null;
-  if (!picked) {
-    renderFwFileNote();
-    return;
-  }
-  fwButtonsForNewChoice();
-  void (async () => {
-    el("fwProgress").textContent = `uploading ${picked.name}`;
-    try {
-      const saved = await uploadFirmwareImage(currentBackendWsUrl(), picked.name, picked);
-      fwUploaded = { name: saved.name, path: saved.path, family: saved.family };
-      if (saved.family) {
-        const family = fwCatalogue?.families.find((item) => item.id === saved.family);
-        if (family && familyTransport(family) === fwTransport()) el<HTMLSelectElement>("fwFamily").value = family.id;
-      }
-      renderFwSuppliers();
-      renderFwVersions();
-      el("fwProgress").textContent = "";
+if (!__DEMO__) {
+  el<HTMLInputElement>("fwFile").addEventListener("change", (event) => {
+    const input = event.target as HTMLInputElement;
+    const picked = input.files?.[0];
+    fwFile = null;
+    fwUploaded = null;
+    if (!picked) {
       renderFwFileNote();
-    } catch (err) {
-      el("fwProgress").textContent = "";
-      el("fwError").textContent = err instanceof Error ? err.message : String(err);
+      return;
     }
-  })();
-});
+    fwButtonsForNewChoice();
+    void (async () => {
+      el("fwProgress").textContent = `uploading ${picked.name}`;
+      try {
+        const saved = await uploadFirmwareImage(currentBackendWsUrl(), picked.name, picked);
+        fwUploaded = { name: saved.name, path: saved.path, family: saved.family };
+        if (saved.family) {
+          const family = fwCatalogue?.families.find((item) => item.id === saved.family);
+          if (family && familyTransport(family) === fwTransport()) el<HTMLSelectElement>("fwFamily").value = family.id;
+        }
+        renderFwSuppliers();
+        renderFwVersions();
+        el("fwProgress").textContent = "";
+        renderFwFileNote();
+      } catch (err) {
+        el("fwProgress").textContent = "";
+        el("fwError").textContent = err instanceof Error ? err.message : String(err);
+      }
+    })();
+  });
+}
 
 // A flash in flight keeps the dialog open: closing it would leave the job running with nothing saying so.
-el<HTMLDialogElement>("firmwareDialog").addEventListener("cancel", (event) => {
-  if (fwFlashing) event.preventDefault();
-});
+if (!__DEMO__) {
+  el<HTMLDialogElement>("firmwareDialog").addEventListener("cancel", (event) => {
+    if (fwFlashing) event.preventDefault();
+  });
 
-el("fwFlash").addEventListener("click", (event) => {
-  // Flash before the dialog closes, so a refusal is shown in it rather than lost.
-  event.preventDefault();
-  void runFirmwareFlash();
-});
+  el("fwFlash").addEventListener("click", (event) => {
+    // Flash before the dialog closes, so a refusal is shown in it rather than lost.
+    event.preventDefault();
+    void runFirmwareFlash();
+  });
+}
 
 /** Changing any choice after a finished flash means there is something new to flash, so the buttons go back. */
 function fwButtonsForNewChoice(): void {
@@ -2948,150 +3003,152 @@ async function runFirmwareFlash(): Promise<void> {
   }
 }
 
-el("btnInstallRuntime").addEventListener("click", exclusiveBoardJob(async () => {
-  const wsUrl = currentBackendWsUrl();
-  const portName = el<HTMLSelectElement>("backendPortSelect").value;
-  if (!portName) {
-    logLine('[install runtime failed] choose a serial port from the list first (⟳ next to it looks for boards again)', "err");
-    return;
-  }
-  if (parsePortSelection(portName).kind !== "serial") {
-    logLine("[install runtime failed] installing the runtime needs the board on USB -- choose its serial port", "err");
-    return;
-  }
-  if (transport.isConnected) {
-    // The running listener ignores Ctrl-C, and a Pico doesn't reset when the port opens, so ask a
-    // board that's still answering to stop at the prompt first -- same as "Remove flow" (2026-09-24).
-    // Otherwise the backend keeps trying and asks for a reset or replug.
-    if (!boardAtPrompt && lastHelloVersion !== null) {
-      try {
-        await transport.send({ type: "STOP_TO_PROMPT" });
-        await new Promise((r) => setTimeout(r, 300));
-      } catch {
-        // The backend's own wait-for-a-prompt covers this.
-      }
-    }
-    logLine("[install runtime] disconnecting the current session first -- installing needs exclusive use of the port", "");
-    await transport.disconnect();
-    setConnectedUi(false);
-  }
-  const compiled = await precompileRuntime();
-  logLine(`[install runtime] checking the board on ${portName}, then installing the runtime -- this resets the board`, "");
-  const installer = new BackendTransport({ onDebugLine: (line) => logLine(`[backend] ${line}`, "") });
-  try {
-    await installer.open(wsUrl);
-    await installer.installRuntime(
-      portName,
-      undefined,
-      (p) => logLine(`[install runtime] ${p.index}/${p.total} ${p.file}`, ""),
-      undefined,
-      (text) => logLine(`[install runtime] ${text}`, ""),
-      compiled,
-    );
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    const diagnosis = err instanceof InstallRuntimeError ? err.diagnosis : null;
-    logAdvice("[install runtime failed]", explainInstallFailure(message, diagnosis), "err");
-    return;
-  } finally {
-    await installer.disconnect();
-  }
-  // installRuntime() resolving means the backend pushed every file and
-  // hard-reset the board (raw_repl.py's install_runtime()) -- the backend
-  // deliberately does not auto-reconnect afterward (USB re-enumeration
-  // timing after a reset isn't something to chase per board, per CLAUDE.md's
-  // "make the failure legible instead" corollary), so this editor doesn't
-  // either. The board is rebooting into the newly-installed listener as
-  // this line prints; "⟳ ports" may need a moment before the port
-  // reappears if the OS re-enumerates the device.
-  logLine('[install runtime OK] board restarting. Click "Connect" (⟳ the port list if it\'s missing).', "ok");
-}));
-
-el("btnConnect").addEventListener("click", async () => {
-  lastHelloVersion = null;
-  lastHelloChipType = null;
-  void loadUserDefinitions();
-  const mode = currentConnMode();
-
-  if (mode === "direct") {
-    // Frozen fallback per design doc §4's 2026-08-16 addendum: local-only,
-    // no remote access, no auth story -- kept alongside the backend path
-    // rather than retired. Genuinely still useful, not just legacy: it
-    // needs no backend process installed or running at all (lowest-
-    // friction path for a quick one-off session), and it stays usable as
-    // an independent fallback if the backend itself is ever the thing
-    // that's broken. All new investment still goes into the backend path
-    // per that same addendum -- this mode is deliberately not being
-    // extended further here.
-    const nav = navigator as unknown as { serial?: { requestPort(): Promise<WebSerialPort> } };
-    if (!nav.serial) {
-      logLine('[Web Serial API not available -- use Chrome or Edge, served over http(s)://, or switch to "Via backend"]', "err");
-      return;
-    }
-    const t = new WebSerialTransport(transportEvents);
-    try {
-      const port = await nav.serial.requestPort();
-      await t.connect(port);
-    } catch (err) {
-      logLine(`[connect failed] ${err instanceof Error ? err.message : String(err)}`, "err");
-      return;
-    }
-    transport = t;
-    setConnectedUi(true);
-    logLine("[connected @ 115200 baud, direct WebSerial -- opening the port does not reset the board]", "");
-  } else {
+if (!__DEMO__) {
+  el("btnInstallRuntime").addEventListener("click", exclusiveBoardJob(async () => {
     const wsUrl = currentBackendWsUrl();
     const portName = el<HTMLSelectElement>("backendPortSelect").value;
-    const selection = parsePortSelection(portName);
-    if (selection.kind === "none" || selection.kind === "manual") {
-      logLine('[connect failed] choose a serial port or a WiFi board from the list first (⟳ next to it looks for boards again)', "err");
+    if (!portName) {
+      logLine('[install runtime failed] choose a serial port from the list first (⟳ next to it looks for boards again)', "err");
       return;
     }
-    if (selection.kind === "network") {
-      const t = new BackendTransport(transportEvents);
+    if (parsePortSelection(portName).kind !== "serial") {
+      logLine("[install runtime failed] installing the runtime needs the board on USB -- choose its serial port", "err");
+      return;
+    }
+    if (transport.isConnected) {
+      // The running listener ignores Ctrl-C, and a Pico doesn't reset when the port opens, so ask a
+      // board that's still answering to stop at the prompt first -- same as "Remove flow" (2026-09-24).
+      // Otherwise the backend keeps trying and asks for a reset or replug.
+      if (!boardAtPrompt && lastHelloVersion !== null) {
+        try {
+          await transport.send({ type: "STOP_TO_PROMPT" });
+          await new Promise((r) => setTimeout(r, 300));
+        } catch {
+          // The backend's own wait-for-a-prompt covers this.
+        }
+      }
+      logLine("[install runtime] disconnecting the current session first -- installing needs exclusive use of the port", "");
+      await transport.disconnect();
+      setConnectedUi(false);
+    }
+    const compiled = await precompileRuntime();
+    logLine(`[install runtime] checking the board on ${portName}, then installing the runtime -- this resets the board`, "");
+    const installer = new BackendTransport({ onDebugLine: (line) => logLine(`[backend] ${line}`, "") });
+    try {
+      await installer.open(wsUrl);
+      await installer.installRuntime(
+        portName,
+        undefined,
+        (p) => logLine(`[install runtime] ${p.index}/${p.total} ${p.file}`, ""),
+        undefined,
+        (text) => logLine(`[install runtime] ${text}`, ""),
+        compiled,
+      );
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      const diagnosis = err instanceof InstallRuntimeError ? err.diagnosis : null;
+      logAdvice("[install runtime failed]", explainInstallFailure(message, diagnosis), "err");
+      return;
+    } finally {
+      await installer.disconnect();
+    }
+    // installRuntime() resolving means the backend pushed every file and
+    // hard-reset the board (raw_repl.py's install_runtime()) -- the backend
+    // deliberately does not auto-reconnect afterward (USB re-enumeration
+    // timing after a reset isn't something to chase per board, per CLAUDE.md's
+    // "make the failure legible instead" corollary), so this editor doesn't
+    // either. The board is rebooting into the newly-installed listener as
+    // this line prints; "⟳ ports" may need a moment before the port
+    // reappears if the OS re-enumerates the device.
+    logLine('[install runtime OK] board restarting. Click "Connect" (⟳ the port list if it\'s missing).', "ok");
+  }));
+
+  el("btnConnect").addEventListener("click", async () => {
+    lastHelloVersion = null;
+    lastHelloChipType = null;
+    void loadUserDefinitions();
+    const mode = currentConnMode();
+
+    if (mode === "direct") {
+      // Frozen fallback per design doc §4's 2026-08-16 addendum: local-only,
+      // no remote access, no auth story -- kept alongside the backend path
+      // rather than retired. Genuinely still useful, not just legacy: it
+      // needs no backend process installed or running at all (lowest-
+      // friction path for a quick one-off session), and it stays usable as
+      // an independent fallback if the backend itself is ever the thing
+      // that's broken. All new investment still goes into the backend path
+      // per that same addendum -- this mode is deliberately not being
+      // extended further here.
+      const nav = navigator as unknown as { serial?: { requestPort(): Promise<WebSerialPort> } };
+      if (!nav.serial) {
+        logLine('[Web Serial API not available -- use Chrome or Edge, served over http(s)://, or switch to "Via backend"]', "err");
+        return;
+      }
+      const t = new WebSerialTransport(transportEvents);
       try {
-        await t.open(wsUrl);
+        const port = await nav.serial.requestPort();
+        await t.connect(port);
       } catch (err) {
         logLine(`[connect failed] ${err instanceof Error ? err.message : String(err)}`, "err");
         return;
       }
-      if (!(await connectOverNetwork(t, selection.host, selection.tcpPort))) {
-        await t.disconnect().catch(() => undefined);
+      transport = t;
+      setConnectedUi(true);
+      logLine("[connected @ 115200 baud, direct WebSerial -- opening the port does not reset the board]", "");
+    } else {
+      const wsUrl = currentBackendWsUrl();
+      const portName = el<HTMLSelectElement>("backendPortSelect").value;
+      const selection = parsePortSelection(portName);
+      if (selection.kind === "none" || selection.kind === "manual") {
+        logLine('[connect failed] choose a serial port or a WiFi board from the list first (⟳ next to it looks for boards again)', "err");
+        return;
+      }
+      if (selection.kind === "network") {
+        const t = new BackendTransport(transportEvents);
+        try {
+          await t.open(wsUrl);
+        } catch (err) {
+          logLine(`[connect failed] ${err instanceof Error ? err.message : String(err)}`, "err");
+          return;
+        }
+        if (!(await connectOverNetwork(t, selection.host, selection.tcpPort))) {
+          await t.disconnect().catch(() => undefined);
+          return;
+        }
+        transport = t;
+        setConnectedUi(true);
+        logLine(`[connected over WiFi via backend -- ${selection.host}]`, "");
+        await requestHelloOrExplain();
+        return;
+      }
+      const t = new BackendTransport(transportEvents);
+      try {
+        await t.open(wsUrl);
+        await t.connectPort(portName);
+      } catch (err) {
+        // connectPort() rejections carry the backend's own NODE_ERROR text
+        // (serial_relay.py's SerialRelayError) verbatim; open() rejections
+        // (backend unreachable) don't and shouldn't be pattern-matched
+        // against connect-failure causes they were never meant to describe.
+        const message = err instanceof Error ? err.message : String(err);
+        const explained = message.startsWith("NODE_ERROR:") ? explainBackendConnectError(message) : message;
+        logLine(`[connect failed] ${explained}`, "err");
+        try {
+          await t.disconnect();
+        } catch {
+          // best-effort cleanup of a half-open socket -- not worth its own error path
+        }
         return;
       }
       transport = t;
       setConnectedUi(true);
-      logLine(`[connected over WiFi via backend -- ${selection.host}]`, "");
-      await requestHelloOrExplain();
-      return;
+      logLine(`[connected @ 115200 baud via backend -- ${wsUrl}, port ${portName}]`, "");
     }
-    const t = new BackendTransport(transportEvents);
-    try {
-      await t.open(wsUrl);
-      await t.connectPort(portName);
-    } catch (err) {
-      // connectPort() rejections carry the backend's own NODE_ERROR text
-      // (serial_relay.py's SerialRelayError) verbatim; open() rejections
-      // (backend unreachable) don't and shouldn't be pattern-matched
-      // against connect-failure causes they were never meant to describe.
-      const message = err instanceof Error ? err.message : String(err);
-      const explained = message.startsWith("NODE_ERROR:") ? explainBackendConnectError(message) : message;
-      logLine(`[connect failed] ${explained}`, "err");
-      try {
-        await t.disconnect();
-      } catch {
-        // best-effort cleanup of a half-open socket -- not worth its own error path
-      }
-      return;
-    }
-    transport = t;
-    setConnectedUi(true);
-    logLine(`[connected @ 115200 baud via backend -- ${wsUrl}, port ${portName}]`, "");
-  }
 
-  // Same for both connection modes -- transport.send() doesn't care which one is live.
-  await requestHelloOrExplain();
-});
+    // Same for both connection modes -- transport.send() doesn't care which one is live.
+    await requestHelloOrExplain();
+  });
+}
 
 /** Sends HELLO_REQUEST and waits up to HELLO_WAIT_MS for a HELLO. On timeout, says what the board
  * did print instead and what to do next (board-diagnosis.ts) -- road-to-mvp.md's "no silent
@@ -3132,18 +3189,20 @@ async function requestHelloOrExplain(): Promise<void> {
   }
 }
 
-el("btnCheckStatus").addEventListener("click", async () => {
-  // Same HELLO_REQUEST as the Connect handler above, available any time
-  // while connected -- no reset, no redeploy, just "tell me what you are
-  // right now." transport.onMessage already logs the resulting HELLO (and
-  // re-runs both version checks) the same way any other HELLO does.
-  await requestHelloOrExplain();
-});
+if (!__DEMO__) {
+  el("btnCheckStatus").addEventListener("click", async () => {
+    // Same HELLO_REQUEST as the Connect handler above, available any time
+    // while connected -- no reset, no redeploy, just "tell me what you are
+    // right now." transport.onMessage already logs the resulting HELLO (and
+    // re-runs both version checks) the same way any other HELLO does.
+    await requestHelloOrExplain();
+  });
 
-el("btnDisconnect").addEventListener("click", async () => {
-  await transport.disconnect();
-  setConnectedUi(false);
-});
+  el("btnDisconnect").addEventListener("click", async () => {
+    await transport.disconnect();
+    setConnectedUi(false);
+  });
+}
 
 // --- Flow dependencies (2026-10-07, docs/working-notes/flow-dependencies-scoping.md) ----------------
 // A board holds only the libraries its flow imports, in /lib. Before DEPLOY, the editor works out which
@@ -3338,178 +3397,180 @@ function reportPiecesFailed(failure: TransferFailure): void {
   if (memory) logAdvice("[deploy failed]", { text: memory, doc: DEPLOY_MEMORY_DOC }, "err");
 }
 
-el("btnDeploy").addEventListener("click", async () => {
-  const btn = el<HTMLButtonElement>("btnDeploy");
-  btn.disabled = true;
-  clearNodeHighlights(); // stale red from a previous failed attempt shouldn't linger past a new one
-  clearNodeStatuses(); // Mike's "clear all statuses on every redeploy" call -- same staleness reasoning, one state field over
-  try {
-    // Gate the attempt itself, before any compile work -- §5's own
-    // framing for why this check exists. Soft on absence (no HELLO seen
-    // this connection -- proceed, warned), hard on a real mismatch (a
-    // HELLO reporting an incompatible major version -- refuse outright).
-    // See the "WebSerial connect / deploy" section header for why
-    // absence is common and not itself a red flag.
-    if (lastHelloVersion) {
-      const decision = decideDeploy(lastHelloVersion, EDITOR_TARGET_VERSION);
-      if (!decision.allowed) {
-        logLine(`[deploy blocked -- version mismatch] ${decision.reason}`, "err");
+if (!__DEMO__) {
+  el("btnDeploy").addEventListener("click", async () => {
+    const btn = el<HTMLButtonElement>("btnDeploy");
+    btn.disabled = true;
+    clearNodeHighlights(); // stale red from a previous failed attempt shouldn't linger past a new one
+    clearNodeStatuses(); // Mike's "clear all statuses on every redeploy" call -- same staleness reasoning, one state field over
+    try {
+      // Gate the attempt itself, before any compile work -- §5's own
+      // framing for why this check exists. Soft on absence (no HELLO seen
+      // this connection -- proceed, warned), hard on a real mismatch (a
+      // HELLO reporting an incompatible major version -- refuse outright).
+      // See the "WebSerial connect / deploy" section header for why
+      // absence is common and not itself a red flag.
+      if (lastHelloVersion) {
+        const decision = decideDeploy(lastHelloVersion, EDITOR_TARGET_VERSION);
+        if (!decision.allowed) {
+          logLine(`[deploy blocked -- version mismatch] ${decision.reason}`, "err");
+          return;
+        }
+      } else {
+        logLine("[deploying without a version check -- no HELLO received this connection]", "");
+      }
+
+      await loadUserDefinitions();
+      await resolveConfigCredentials();
+      logTargetResolution(updateActiveTarget());
+      const preview = await refreshPreviewNow();
+      if ("error" in preview) {
+        logLine(`[compile error] ${preview.error}`, "err");
         return;
       }
-    } else {
-      logLine("[deploying without a version check -- no HELLO received this connection]", "");
-    }
+      for (const w of lastCompileWarnings) logLine(`[compile warning] ${w}`, "");
 
-    await loadUserDefinitions();
-    await resolveConfigCredentials();
-    logTargetResolution(updateActiveTarget());
-    const preview = await refreshPreviewNow();
-    if ("error" in preview) {
-      logLine(`[compile error] ${preview.error}`, "err");
-      return;
-    }
-    for (const w of lastCompileWarnings) logLine(`[compile warning] ${w}`, "");
+      await mpyReadyPromise;
 
-    await mpyReadyPromise;
-
-    // Board-aware -march (MVP item 3) -- see currentNativeArch()'s own
-    // header for the auto/manual split. Logged unconditionally, not just
-    // on a problem, so which arch a given Deploy actually used is always
-    // visible in the console, not just inferable after the fact.
-    const nativeArch = currentNativeArch();
-    const usesNativeCode = /@micropython\.(viper|native)\b/.test(preview.source);
-    logLine(
-      `[compile] targeting mpy-cross -march=${nativeArch.arch}` +
-        (nativeArch.manual
-          ? " (manual override)"
-          : activeTarget.value
-            ? ` (auto, from the ${activeTarget.value.processor.name} definition)`
-            : lastHelloChipType
-              ? nativeArch.confirmed
-                ? ` (auto, from "${lastHelloChipType}")`
-                : ` (a guess: no processor definition or known chip matches "${lastHelloChipType}")`
-              : " (auto, no board chipType known yet)"),
-      "",
-    );
-    if (!nativeArch.confirmed && usesNativeCode) {
-      // Only a real risk when the compiled flow actually emits native
-      // code -- see native-arch.ts's header: a wrong -march is byte-
-      // identical-harmless for plain bytecode, but MicroPython's .mpy
-      // loader checks a native module's required arch against the
-      // running device's own at import time, so a wrong guess here fails
-      // on-device at Deploy/import time, not silently. Surfaced loud
-      // (err-styled) specifically because this is the one case that can
-      // actually bite, not just a generic "unconfirmed" footnote.
+      // Board-aware -march (MVP item 3) -- see currentNativeArch()'s own
+      // header for the auto/manual split. Logged unconditionally, not just
+      // on a problem, so which arch a given Deploy actually used is always
+      // visible in the console, not just inferable after the fact.
+      const nativeArch = currentNativeArch();
+      const usesNativeCode = /@micropython\.(viper|native)\b/.test(preview.source);
       logLine(
-        `[compile] viper/native code, -march=${nativeArch.arch} is a guess for this board. ` +
-          "If Deploy fails with an arch error, set native arch and redeploy",
-        "err",
+        `[compile] targeting mpy-cross -march=${nativeArch.arch}` +
+          (nativeArch.manual
+            ? " (manual override)"
+            : activeTarget.value
+              ? ` (auto, from the ${activeTarget.value.processor.name} definition)`
+              : lastHelloChipType
+                ? nativeArch.confirmed
+                  ? ` (auto, from "${lastHelloChipType}")`
+                  : ` (a guess: no processor definition or known chip matches "${lastHelloChipType}")`
+                : " (auto, no board chipType known yet)"),
+        "",
       );
-    }
-
-    let mpyBytes: Uint8Array;
-    try {
-      mpyBytes = compileToMpy(preview.source, nativeArch.arch);
-    } catch (err) {
-      logLine(`[mpy-cross error] ${err instanceof Error ? err.message : String(err)}`, "err");
-      highlightNodeFromMpyError(mpyStderrLines.join("\n"));
-      return;
-    }
-    logLine(`[compiled -- ${mpyBytes.length} bytes of bytecode]`, "");
-    // Small board, big flow: say so once and carry on (see lowFlowMemoryWarning's own note -- a nudge from a
-    // figure that predicts badly, never a gate).
-    const flowMemoryWarning = lowFlowMemoryWarning(lastHello, mpyBytes.length);
-    if (flowMemoryWarning) logLine(`[deploy] ${flowMemoryWarning}`, "");
-
-    // Libraries the flow imports go onto the board first (flow dependencies, 2026-10-07). A failure
-    // here is logged and leaves the board's current flow untouched.
-    const dependencies = await installFlowDependencies(preview.source);
-    if (dependencies === null) return;
-
-    // Flow identity (2026-09-05, "flow identity" -- decisions.md): a
-    // fresh id every single Deploy click, deliberately not reused even
-    // for a redeploy of the identical unchanged flow -- this identifies
-    // *this deploy action*, not the flow itself (flowName, read from the
-    // input, is the stable half). See messages.ts's DeployMessage doc
-    // comment for the full reasoning.
-    const deployId = crypto.randomUUID();
-    const flowName = currentFlowNameInput();
-    logLine(`[deploying "${flowName}" as ${deployId}]`, "");
-    // The pieces, then FLOW_COMMIT, then its one answer: SPEC §7.3/§7.4, protocol/transfer.ts. Always in pieces: a
-    // whole DEPLOY needs one contiguous block the size of the message, which a split heap on a classic ESP32 may not
-    // have even with 100 KB free (2026-10-22), so there is no whole-DEPLOY fallback. Older boards are refused up
-    // front by the version gate above, when a HELLO was seen.
-    //
-    // A HELLO in place of an answer means the board restarted (2026-10-07, CYD: an ESP32 abort() while the new flow
-    // started); it says what's running, so it answers the deploy as well as an ack does.
-    //
-    // There is deliberately no recovery sequence here (Mike, 2026-10-22): no retry after a MemoryError, no
-    // stopping the flow for the user, no escalating free-then-restart. A deploy that does not fit says so once,
-    // with the board's own figures and what the user can do (memory-advice.ts); the next move is theirs. The only
-    // repeats are a piece's bounded resends, which SPEC §7.2 makes safe.
-    try {
-      // lastWifiProvision was computed alongside this same compile, by the currentSource() call
-      // refreshPreview() (above) just made -- see that field's own doc comment.
-      const outcome = await transferSession.deploy(mpyBytes, {
-        flowName,
-        deployId,
-        wifiProvision: lastWifiProvision,
-        dependencies,
-        staticData: new Uint8Array(0),
-      });
-      if (outcome.kind === "restarted") {
-        // boardDependencies already came from this HELLO: the board may not have removed unused
-        // libraries before restarting, so its own report beats what this deploy asked for.
-        if (reportRestartDuringDeploy(outcome.hello, deployId)) deployedClean = true;
-      } else if (outcome.kind === "pieces-failed") {
-        reportPiecesFailed(outcome.failure);
-      } else if (outcome.kind === "refused") {
-        logLine(`[deploy failed] ${outcome.code}: ${outcome.message}`, "err");
-        const importAdvice = outcome.code === "ImportError" ? explainDeployImportError(outcome.message, libraryModules) : null;
-        if (importAdvice) logAdvice("[deploy failed]", importAdvice, "err");
-        const deployMemory = deployMemoryAdvice(outcome.code, outcome.message);
-        if (deployMemory) logAdvice("[deploy failed]", { text: deployMemory, doc: DEPLOY_MEMORY_DOC }, "err");
-        if (outcome.code === "MissingDependency") {
-          // This editor's idea of the board's libraries was wrong (changed by another editor, or a
-          // failed write). Forget it, so the next Deploy sends every library the flow needs.
-          boardDependencies = null;
-          logLine("[deploy failed] the flow wasn't changed. Deploy again to send the missing libraries.", "err");
-        }
-      } else if (outcome.kind === "no-answer") {
-        logLine(`[deploy timeout] no DEPLOY_ACK/DEPLOY_ERROR within ${outcome.timeoutMs}ms`, "err");
-      } else if (outcome.kind === "deployed") {
-        // The board removes libraries the new flow doesn't use once it's running.
-        boardDependencies = { ...dependencies };
-        logLine("[deploy OK -- flow is running on the device]", "ok");
-        logLine(formatMemoryLine(outcome.ack), "");
-        // Only the real success path marks the button clean (Mike's ask,
-        // 2026-09-09) -- a DEPLOY_ERROR or a timeout both mean the
-        // device does NOT have this flow running, so the button must stay
-        // available to retry, not go stale-disabled on a failed attempt.
-        deployedClean = true;
+      if (!nativeArch.confirmed && usesNativeCode) {
+        // Only a real risk when the compiled flow actually emits native
+        // code -- see native-arch.ts's header: a wrong -march is byte-
+        // identical-harmless for plain bytecode, but MicroPython's .mpy
+        // loader checks a native module's required arch against the
+        // running device's own at import time, so a wrong guess here fails
+        // on-device at Deploy/import time, not silently. Surfaced loud
+        // (err-styled) specifically because this is the one case that can
+        // actually bite, not just a generic "unconfirmed" footnote.
+        logLine(
+          `[compile] viper/native code, -march=${nativeArch.arch} is a guess for this board. ` +
+            "If Deploy fails with an arch error, set native arch and redeploy",
+          "err",
+        );
       }
-    } catch (err) {
-      logLine(`[deploy failed] ${err instanceof Error ? err.message : String(err)} before confirming the deploy. Connect again and check its status.`, "err");
-    }
-  } finally {
-    updateDeployButtonEnabled();
-  }
-});
 
-if (!("serial" in navigator)) {
-  // Only "Direct" mode needs navigator.serial -- "Via backend" (the
-  // default per Mike's 2026-09-07 call) works in any browser that can
-  // open a WebSocket, so Connect itself stays enabled; only the Direct
-  // option is disabled, and the mode select is forced off it if it
-  // somehow started there (e.g. a saved/bookmarked page state).
-  const directOption = el<HTMLOptionElement>("connModeOptionDirect");
-  directOption.disabled = true;
-  directOption.textContent += " (unavailable in this browser)";
-  if (currentConnMode() === "direct") {
-    el<HTMLSelectElement>("connModeSelect").value = "backend";
-    updateConnModeUi();
+      let mpyBytes: Uint8Array;
+      try {
+        mpyBytes = compileToMpy(preview.source, nativeArch.arch);
+      } catch (err) {
+        logLine(`[mpy-cross error] ${err instanceof Error ? err.message : String(err)}`, "err");
+        highlightNodeFromMpyError(mpyStderrLines.join("\n"));
+        return;
+      }
+      logLine(`[compiled -- ${mpyBytes.length} bytes of bytecode]`, "");
+      // Small board, big flow: say so once and carry on (see lowFlowMemoryWarning's own note -- a nudge from a
+      // figure that predicts badly, never a gate).
+      const flowMemoryWarning = lowFlowMemoryWarning(lastHello, mpyBytes.length);
+      if (flowMemoryWarning) logLine(`[deploy] ${flowMemoryWarning}`, "");
+
+      // Libraries the flow imports go onto the board first (flow dependencies, 2026-10-07). A failure
+      // here is logged and leaves the board's current flow untouched.
+      const dependencies = await installFlowDependencies(preview.source);
+      if (dependencies === null) return;
+
+      // Flow identity (2026-09-05, "flow identity" -- decisions.md): a
+      // fresh id every single Deploy click, deliberately not reused even
+      // for a redeploy of the identical unchanged flow -- this identifies
+      // *this deploy action*, not the flow itself (flowName, read from the
+      // input, is the stable half). See messages.ts's DeployMessage doc
+      // comment for the full reasoning.
+      const deployId = crypto.randomUUID();
+      const flowName = currentFlowNameInput();
+      logLine(`[deploying "${flowName}" as ${deployId}]`, "");
+      // The pieces, then FLOW_COMMIT, then its one answer: SPEC §7.3/§7.4, protocol/transfer.ts. Always in pieces: a
+      // whole DEPLOY needs one contiguous block the size of the message, which a split heap on a classic ESP32 may not
+      // have even with 100 KB free (2026-10-22), so there is no whole-DEPLOY fallback. Older boards are refused up
+      // front by the version gate above, when a HELLO was seen.
+      //
+      // A HELLO in place of an answer means the board restarted (2026-10-07, CYD: an ESP32 abort() while the new flow
+      // started); it says what's running, so it answers the deploy as well as an ack does.
+      //
+      // There is deliberately no recovery sequence here (Mike, 2026-10-22): no retry after a MemoryError, no
+      // stopping the flow for the user, no escalating free-then-restart. A deploy that does not fit says so once,
+      // with the board's own figures and what the user can do (memory-advice.ts); the next move is theirs. The only
+      // repeats are a piece's bounded resends, which SPEC §7.2 makes safe.
+      try {
+        // lastWifiProvision was computed alongside this same compile, by the currentSource() call
+        // refreshPreview() (above) just made -- see that field's own doc comment.
+        const outcome = await transferSession.deploy(mpyBytes, {
+          flowName,
+          deployId,
+          wifiProvision: lastWifiProvision,
+          dependencies,
+          staticData: new Uint8Array(0),
+        });
+        if (outcome.kind === "restarted") {
+          // boardDependencies already came from this HELLO: the board may not have removed unused
+          // libraries before restarting, so its own report beats what this deploy asked for.
+          if (reportRestartDuringDeploy(outcome.hello, deployId)) deployedClean = true;
+        } else if (outcome.kind === "pieces-failed") {
+          reportPiecesFailed(outcome.failure);
+        } else if (outcome.kind === "refused") {
+          logLine(`[deploy failed] ${outcome.code}: ${outcome.message}`, "err");
+          const importAdvice = outcome.code === "ImportError" ? explainDeployImportError(outcome.message, libraryModules) : null;
+          if (importAdvice) logAdvice("[deploy failed]", importAdvice, "err");
+          const deployMemory = deployMemoryAdvice(outcome.code, outcome.message);
+          if (deployMemory) logAdvice("[deploy failed]", { text: deployMemory, doc: DEPLOY_MEMORY_DOC }, "err");
+          if (outcome.code === "MissingDependency") {
+            // This editor's idea of the board's libraries was wrong (changed by another editor, or a
+            // failed write). Forget it, so the next Deploy sends every library the flow needs.
+            boardDependencies = null;
+            logLine("[deploy failed] the flow wasn't changed. Deploy again to send the missing libraries.", "err");
+          }
+        } else if (outcome.kind === "no-answer") {
+          logLine(`[deploy timeout] no DEPLOY_ACK/DEPLOY_ERROR within ${outcome.timeoutMs}ms`, "err");
+        } else if (outcome.kind === "deployed") {
+          // The board removes libraries the new flow doesn't use once it's running.
+          boardDependencies = { ...dependencies };
+          logLine("[deploy OK -- flow is running on the device]", "ok");
+          logLine(formatMemoryLine(outcome.ack), "");
+          // Only the real success path marks the button clean (Mike's ask,
+          // 2026-09-09) -- a DEPLOY_ERROR or a timeout both mean the
+          // device does NOT have this flow running, so the button must stay
+          // available to retry, not go stale-disabled on a failed attempt.
+          deployedClean = true;
+        }
+      } catch (err) {
+        logLine(`[deploy failed] ${err instanceof Error ? err.message : String(err)} before confirming the deploy. Connect again and check its status.`, "err");
+      }
+    } finally {
+      updateDeployButtonEnabled();
+    }
+  });
+
+  if (!("serial" in navigator)) {
+    // Only "Direct" mode needs navigator.serial -- "Via backend" (the
+    // default per Mike's 2026-09-07 call) works in any browser that can
+    // open a WebSocket, so Connect itself stays enabled; only the Direct
+    // option is disabled, and the mode select is forced off it if it
+    // somehow started there (e.g. a saved/bookmarked page state).
+    const directOption = el<HTMLOptionElement>("connModeOptionDirect");
+    directOption.disabled = true;
+    directOption.textContent += " (unavailable in this browser)";
+    if (currentConnMode() === "direct") {
+      el<HTMLSelectElement>("connModeSelect").value = "backend";
+      updateConnModeUi();
+    }
+    logLine('[Web Serial API not available in this browser -- "Direct" mode is disabled; use "Via backend" instead]', "");
   }
-  logLine('[Web Serial API not available in this browser -- "Direct" mode is disabled; use "Via backend" instead]', "");
 }
 
 
@@ -3546,7 +3607,7 @@ function updateBoardToolsUi(): void {
 updateBoardToolsUi();
 
 function backendTransportOrNull(): BackendTransport | null {
-  return transport instanceof BackendTransport ? transport : null;
+  return !__DEMO__ && transport instanceof BackendTransport ? transport : null;
 }
 
 async function sendCommand(): Promise<void> {
@@ -3570,43 +3631,45 @@ async function sendCommand(): Promise<void> {
   }
 }
 
-el("btnSendCmd").addEventListener("click", () => void sendCommand());
-el<HTMLInputElement>("cmdInput").addEventListener("keydown", (ev) => {
-  const input = ev.target as HTMLInputElement;
-  if (ev.key === "Enter") {
-    ev.preventDefault();
-    void sendCommand();
-  } else if (ev.key === "ArrowUp" && historyIndex > 0) {
-    ev.preventDefault();
-    historyIndex -= 1;
-    input.value = commandHistory[historyIndex] ?? "";
-  } else if (ev.key === "ArrowDown" && historyIndex < commandHistory.length) {
-    ev.preventDefault();
-    historyIndex += 1;
-    input.value = commandHistory[historyIndex] ?? "";
-  }
-});
+if (!__DEMO__) {
+  el("btnSendCmd").addEventListener("click", () => void sendCommand());
+  el<HTMLInputElement>("cmdInput").addEventListener("keydown", (ev) => {
+    const input = ev.target as HTMLInputElement;
+    if (ev.key === "Enter") {
+      ev.preventDefault();
+      void sendCommand();
+    } else if (ev.key === "ArrowUp" && historyIndex > 0) {
+      ev.preventDefault();
+      historyIndex -= 1;
+      input.value = commandHistory[historyIndex] ?? "";
+    } else if (ev.key === "ArrowDown" && historyIndex < commandHistory.length) {
+      ev.preventDefault();
+      historyIndex += 1;
+      input.value = commandHistory[historyIndex] ?? "";
+    }
+  });
 
-el("btnStopToPrompt").addEventListener("click", async () => {
-  try {
-    await transport.send({ type: "STOP_TO_PROMPT" });
-  } catch (err) {
-    logLine(`[stop failed] ${err instanceof Error ? err.message : String(err)}`, "err");
-    return;
-  }
-  boardAtPrompt = true;
-  lastHelloVersion = null;
-  updateBoardToolsUi();
-  logAdvice(
-    "[prompt]",
-    {
-      text:
-        "Flow stopped; commands go to MicroPython's prompt. Deploy is off until \"Restart Thingstudio\".",
-      doc: DOC_COMMANDS,
-    },
-    "",
-  );
-});
+  el("btnStopToPrompt").addEventListener("click", async () => {
+    try {
+      await transport.send({ type: "STOP_TO_PROMPT" });
+    } catch (err) {
+      logLine(`[stop failed] ${err instanceof Error ? err.message : String(err)}`, "err");
+      return;
+    }
+    boardAtPrompt = true;
+    lastHelloVersion = null;
+    updateBoardToolsUi();
+    logAdvice(
+      "[prompt]",
+      {
+        text:
+          "Flow stopped; commands go to MicroPython's prompt. Deploy is off until \"Restart Thingstudio\".",
+        doc: DOC_COMMANDS,
+      },
+      "",
+    );
+  });
+}
 
 // Tools → Restart board (soft) / Reset board (hard) (Mike, 2026-10-07). Suggested by the console when
 // memory is the likely problem (memory-advice.ts). At the ">>>" prompt there's no listener to ask, so a
@@ -3631,115 +3694,174 @@ async function waitForBoardBack(): Promise<void> {
   }
 }
 
-el("btnRestartSoft").addEventListener("click", async () => {
-  if (boardAtPrompt) {
-    el<HTMLButtonElement>("btnResume").click();
-    return;
-  }
-  try {
-    await transport.send({ type: "RESTART", hard: false });
-  } catch (err) {
-    logLine(`[restart failed] ${err instanceof Error ? err.message : String(err)}`, "err");
-    return;
-  }
-  logLine("[restart] soft reset, Deploy off until the board is back…", "");
-  await waitForBoardBack();
-});
-
-el("btnRestartHard").addEventListener("click", async () => {
-  try {
-    await transport.send({ type: "RESTART", hard: true });
-  } catch (err) {
-    logLine(`[reset failed] ${err instanceof Error ? err.message : String(err)}`, "err");
-    return;
-  }
-  logLine(
-    "[reset] hard reset, Deploy off until the board is back. Native-USB boards disconnect: click Connect.",
-    "",
-  );
-  await waitForBoardBack();
-});
-
-el("btnResume").addEventListener("click", async () => {
-  const bt = backendTransportOrNull();
-  if (!bt) return;
-  try {
-    bt.rawWrite("\x04"); // Ctrl-D: MicroPython soft reset -> main.py -> listener + saved flow
-  } catch (err) {
-    logLine(`[restart failed] ${err instanceof Error ? err.message : String(err)}`, "err");
-    return;
-  }
-  boardAtPrompt = false;
-  updateBoardToolsUi();
-  logLine("[restart] restarting Thingstudio on the board (about 3 seconds)…", "");
-  await new Promise((r) => setTimeout(r, RESTART_WAIT_MS));
-  if (transport.isConnected) await requestHelloOrExplain();
-});
-
-el("btnRemoveFlow").addEventListener("click", exclusiveBoardJob(async () => {
-  const portName = el<HTMLSelectElement>("backendPortSelect").value;
-  if (!portName) {
-    logLine('[remove flow failed] choose the board\'s port first (⟳ next to it looks for boards again)', "err");
-    return;
-  }
-  if (parsePortSelection(portName).kind !== "serial") {
-    logLine("[remove flow failed] removing a flow needs the board on USB -- choose its serial port", "err");
-    return;
-  }
-  if (!window.confirm("Remove the saved flow from the board? The flow on your canvas isn't affected.")) return;
-  if (transport.isConnected) {
-    // A board that's still answering can stop at the prompt by itself, so no reset is needed.
-    if (!boardAtPrompt && lastHelloVersion !== null) {
-      try {
-        await transport.send({ type: "STOP_TO_PROMPT" });
-        await new Promise((r) => setTimeout(r, 300));
-      } catch {
-        // Falls through to the reset path below -- the backend keeps trying either way.
-      }
+if (!__DEMO__) {
+  el("btnRestartSoft").addEventListener("click", async () => {
+    if (boardAtPrompt) {
+      el<HTMLButtonElement>("btnResume").click();
+      return;
     }
-    await transport.disconnect();
-    setConnectedUi(false);
-  }
-  logLine(`[remove flow] stopping the board on ${portName}…`, "");
-  const remover = new BackendTransport({ onDebugLine: (line) => logLine(`[backend] ${line}`, "") });
-  try {
-    await remover.open(currentBackendWsUrl());
-    await remover.removeFlow(portName, (text) => logLine(`[remove flow] ${text}`, ""));
-  } catch (err) {
-    logAdvice(
-      "[remove flow failed]",
-      { text: err instanceof Error ? err.message : String(err), doc: DOC_BOARD_STUCK },
-      "err",
+    try {
+      await transport.send({ type: "RESTART", hard: false });
+    } catch (err) {
+      logLine(`[restart failed] ${err instanceof Error ? err.message : String(err)}`, "err");
+      return;
+    }
+    logLine("[restart] soft reset, Deploy off until the board is back…", "");
+    await waitForBoardBack();
+  });
+
+  el("btnRestartHard").addEventListener("click", async () => {
+    try {
+      await transport.send({ type: "RESTART", hard: true });
+    } catch (err) {
+      logLine(`[reset failed] ${err instanceof Error ? err.message : String(err)}`, "err");
+      return;
+    }
+    logLine(
+      "[reset] hard reset, Deploy off until the board is back. Native-USB boards disconnect: click Connect.",
+      "",
     );
+    await waitForBoardBack();
+  });
+
+  el("btnResume").addEventListener("click", async () => {
+    const bt = backendTransportOrNull();
+    if (!bt) return;
+    try {
+      bt.rawWrite("\x04"); // Ctrl-D: MicroPython soft reset -> main.py -> listener + saved flow
+    } catch (err) {
+      logLine(`[restart failed] ${err instanceof Error ? err.message : String(err)}`, "err");
+      return;
+    }
+    boardAtPrompt = false;
+    updateBoardToolsUi();
+    logLine("[restart] restarting Thingstudio on the board (about 3 seconds)…", "");
+    await new Promise((r) => setTimeout(r, RESTART_WAIT_MS));
+    if (transport.isConnected) await requestHelloOrExplain();
+  });
+
+  el("btnRemoveFlow").addEventListener("click", exclusiveBoardJob(async () => {
+    const portName = el<HTMLSelectElement>("backendPortSelect").value;
+    if (!portName) {
+      logLine('[remove flow failed] choose the board\'s port first (⟳ next to it looks for boards again)', "err");
+      return;
+    }
+    if (parsePortSelection(portName).kind !== "serial") {
+      logLine("[remove flow failed] removing a flow needs the board on USB -- choose its serial port", "err");
+      return;
+    }
+    if (!window.confirm("Remove the saved flow from the board? The flow on your canvas isn't affected.")) return;
+    if (transport.isConnected) {
+      // A board that's still answering can stop at the prompt by itself, so no reset is needed.
+      if (!boardAtPrompt && lastHelloVersion !== null) {
+        try {
+          await transport.send({ type: "STOP_TO_PROMPT" });
+          await new Promise((r) => setTimeout(r, 300));
+        } catch {
+          // Falls through to the reset path below -- the backend keeps trying either way.
+        }
+      }
+      await transport.disconnect();
+      setConnectedUi(false);
+    }
+    logLine(`[remove flow] stopping the board on ${portName}…`, "");
+    const remover = new BackendTransport({ onDebugLine: (line) => logLine(`[backend] ${line}`, "") });
+    try {
+      await remover.open(currentBackendWsUrl());
+      await remover.removeFlow(portName, (text) => logLine(`[remove flow] ${text}`, ""));
+    } catch (err) {
+      logAdvice(
+        "[remove flow failed]",
+        { text: err instanceof Error ? err.message : String(err), doc: DOC_BOARD_STUCK },
+        "err",
+      );
+      return;
+    } finally {
+      await remover.disconnect();
+    }
+    logLine('[remove flow OK] The saved flow is gone and the board has restarted without it. Click "Connect".', "ok");
+  }));
+
+  el("btnClearSettings").addEventListener("click", () => {
+    const dialog = el<HTMLDialogElement>("clearSettingsDialog");
+    const flowName = lastHello?.currentFlowName ?? null;
+    el("clearSettingsText").textContent = flowName
+      ? `The board is running "${flowName}". Clear that flow's values, or every flow's?`
+      : "No flow is running. Only clearing every flow's values is available.";
+    el<HTMLButtonElement>("clearSettingsFlow").disabled = !flowName;
+    dialog.returnValue = "";
+    dialog.showModal();
+  });
+
+  el("clearSettingsDialog").addEventListener("close", () => {
+    const choice = el<HTMLDialogElement>("clearSettingsDialog").returnValue;
+    if (choice !== "flow" && choice !== "all") return;
+    // The listener preloads the store as `settings` (listener.py's _exec_globals). EXEC has no
+    // reply, so the command prints a marker that shows in the console.
+    const code =
+      choice === "flow"
+        ? "settings.clear(); print('SETTINGS_CLEARED current flow')"
+        : "settings.clear_all(); print('SETTINGS_CLEARED all flows')";
+    void transport.send({ type: "EXEC", code }).then(
+      () => logLine(`[clear settings] requested: ${choice === "flow" ? "this flow" : "all flows"}`, ""),
+      (err) => logLine(`[clear settings failed] ${err instanceof Error ? err.message : String(err)}`, "err"),
+    );
+  });
+}
+
+// --- Download the generated Python (2026-11-08) ------------------------------------------------------
+// The preview's "Download .py": the flow compiled now (not the possibly older preview text), saved as
+// <flow name>.py. The same file a Deploy sends to the board, before mpy-cross turns it into bytecode.
+async function downloadPython(): Promise<void> {
+  const result = await refreshPreviewNow();
+  if ("error" in result) {
+    logLine(`[download] The flow doesn't compile, so there's no Python yet. ${result.error}`, "err");
     return;
-  } finally {
-    await remover.disconnect();
   }
-  logLine('[remove flow OK] The saved flow is gone and the board has restarted without it. Click "Connect".', "ok");
-}));
+  const fileName = `${slugifyFlowName(currentFlowNameInput())}.py`;
+  downloadTextFile(result.source, fileName, "text/x-python");
+  logLine(`[download] ${fileName}`, "ok");
+}
+el("btnDownloadPython").addEventListener("click", () => void downloadPython());
 
-el("btnClearSettings").addEventListener("click", () => {
-  const dialog = el<HTMLDialogElement>("clearSettingsDialog");
-  const flowName = lastHello?.currentFlowName ?? null;
-  el("clearSettingsText").textContent = flowName
-    ? `The board is running "${flowName}". Clear that flow's values, or every flow's?`
-    : "No flow is running. Only clearing every flow's values is available.";
-  el<HTMLButtonElement>("clearSettingsFlow").disabled = !flowName;
-  dialog.returnValue = "";
-  dialog.showModal();
-});
+// --- The online demo (__DEMO__, docs/working-notes/online-editor-demo-scoping.md) ---------------------
+// No board and no backend: Compile runs the same compile and mpy-cross pass as Deploy, then stops. Everything
+// else that needs a board is gated out above (`if (!__DEMO__)`) and hidden by index.html's CSS.
+async function demoCompile(): Promise<void> {
+  clearNodeHighlights();
+  await resolveConfigCredentials(); // as Deploy does: values typed into a credential since it was picked
+  const preview = await refreshPreviewNow();
+  if ("error" in preview) {
+    logLine(`[compile error] ${preview.error}`, "err");
+    return;
+  }
+  for (const w of lastCompileWarnings) logLine(`[compile warning] ${w}`, "");
+  await mpyReadyPromise;
+  const nativeArch = currentNativeArch();
+  let mpyBytes: Uint8Array;
+  try {
+    mpyBytes = compileToMpy(preview.source, nativeArch.arch);
+  } catch (err) {
+    logLine(`[mpy-cross error] ${err instanceof Error ? err.message : String(err)}`, "err");
+    highlightNodeFromMpyError(mpyStderrLines.join("\n"));
+    return;
+  }
+  const lines = preview.source.split("\n").length;
+  logLine(`[compiled] ${lines} lines of Python, ${mpyBytes.length} bytes of bytecode for ${nativeArch.arch}. The Python is under Compiled source.`, "ok");
+}
 
-el("clearSettingsDialog").addEventListener("close", () => {
-  const choice = el<HTMLDialogElement>("clearSettingsDialog").returnValue;
-  if (choice !== "flow" && choice !== "all") return;
-  // The listener preloads the store as `settings` (listener.py's _exec_globals). EXEC has no
-  // reply, so the command prints a marker that shows in the console.
-  const code =
-    choice === "flow"
-      ? "settings.clear(); print('SETTINGS_CLEARED current flow')"
-      : "settings.clear_all(); print('SETTINGS_CLEARED all flows')";
-  void transport.send({ type: "EXEC", code }).then(
-    () => logLine(`[clear settings] requested: ${choice === "flow" ? "this flow" : "all flows"}`, ""),
-    (err) => logLine(`[clear settings failed] ${err instanceof Error ? err.message : String(err)}`, "err"),
-  );
-});
+if (__DEMO__) {
+  void startDemo({
+    openFlowText: async (text) => {
+      await loadFlowText(text, null);
+      await reteHandle.fitView(); // an example opens whole, whatever the window size
+    },
+    chooseBoard: (choice) => {
+      el<HTMLSelectElement>("boardSelect").value = choice;
+      logTargetResolution(updateActiveTarget());
+    },
+    compile: demoCompile,
+    log: logLine,
+    versionLabel: editorVersionLabel(__EDITOR_BUILD__),
+  });
+}

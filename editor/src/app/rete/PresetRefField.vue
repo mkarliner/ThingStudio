@@ -73,8 +73,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
-import { backendWsUrl } from "./store";
-import { AdminApiError, listPresets, getPreset, putPreset, type PresetInfo } from "../../flow-file/admin-api-client";
+import { errorText, getPreset, listPresets, putPreset, type PresetInfo } from "./saved-values";
 
 // Config references (e.g. i2cConfigId, 2026-09-26) point at a config inside one flow, so a preset neither
 // saves nor applies them -- the preset stays usable in any flow.
@@ -126,9 +125,9 @@ async function refresh(): Promise<void> {
   loading.value = true;
   error.value = null;
   try {
-    presets.value = await listPresets(backendWsUrl.value, props.presetType);
+    presets.value = await listPresets(props.presetType);
   } catch (err) {
-    error.value = err instanceof AdminApiError || err instanceof Error ? err.message : String(err);
+    error.value = errorText(err);
   } finally {
     loading.value = false;
   }
@@ -143,7 +142,7 @@ async function onSelect(name: string): Promise<void> {
   if (!name) return;
   error.value = null;
   try {
-    const data = await getPreset(backendWsUrl.value, props.presetType, name);
+    const data = await getPreset(props.presetType, name);
     // Copy-on-apply: every key the saved preset carries is written onto
     // this node's own properties object once, right now. Keys the node
     // doesn't have yet are added; keys the preset doesn't mention are left
@@ -153,7 +152,7 @@ async function onSelect(name: string): Promise<void> {
     selectedName.value = name;
     emit("applied");
   } catch (err) {
-    error.value = err instanceof AdminApiError || err instanceof Error ? err.message : String(err);
+    error.value = errorText(err);
   }
 }
 
@@ -180,12 +179,12 @@ async function confirmSave(): Promise<void> {
     // A full snapshot of node.properties, as it stands right now -- not a
     // curated subset. See this file's header on why there's no field
     // descriptor deciding what belongs in a preset of this type.
-    await putPreset(backendWsUrl.value, props.presetType, name, withoutConfigRefs(props.properties));
+    await putPreset(props.presetType, name, withoutConfigRefs(props.properties));
     await refresh();
     selectedName.value = name;
     showSavePanel.value = false;
   } catch (err) {
-    saveError.value = err instanceof AdminApiError || err instanceof Error ? err.message : String(err);
+    saveError.value = errorText(err);
   } finally {
     savingInFlight.value = false;
   }

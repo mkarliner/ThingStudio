@@ -50,7 +50,8 @@ The right-hand side holds the selected node's settings and what the board sends 
 
 - **Selected node's settings:** the properties panel.
 - **Notes on this flow:** the **Notes** panel, free text saved with the flow.
-- **Generated MicroPython:** the **Compiled source** panel. Click it to open it.
+- **Generated MicroPython:** the **Compiled source** panel. Click it to open it. **Download .py** saves it as a
+  file. Like the panel, the file holds your WiFi password and broker login.
 - **Messages from the board:** the **Device console**, with messages from Thingstudio and the board, including your
   flow's output. Its **Show** menu sets how much it shows: **Normal** for your flow's output, results and errors,
   **Info** to add routine reports such as memory, **Debug** for everything.

@@ -11,8 +11,8 @@ lines around the problem. Share the flow file, not compiled output; see the next
 
 Share the flow file: **File → Save**, then attach or paste the `.flow.json`. It holds the nodes and wiring and no
 passwords: the WiFi and broker logins stay on your computer
-([The Thingstudio folder](thingstudio-folder.md#credentials)). Don't paste the **Compiled source** panel or the
-console's compiled output: it contains the resolved WiFi password and broker login. If you pasted it somewhere
+([The Thingstudio folder](thingstudio-folder.md#credentials)). Don't paste the **Compiled source** panel, a downloaded
+`.py` or the console's compiled output: they contain the resolved WiFi password and broker login. If you pasted it somewhere
 public, change the password.
 
 ## Why does my ESP32 have so little free memory?

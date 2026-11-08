@@ -1,6 +1,7 @@
 # Online editor demo on thingstudio.net (proposed 2026-11-08)
 
-Status: planned 2026-11-08: `../online-editor-demo-scoping.md`. Wanted soon (Mike). Scope: as far as
+Status: built 2026-11-08, not live yet (`npm run build:demo` -> `editor/dist-demo/`; what's left is in
+`../outstanding-items.md`'s entry). Plan: `../online-editor-demo-scoping.md`. Scope: as far as
 generating code at least (Mike, 2026-11-08). Split from the full online-and-offline item
 (`online-and-offline-editor.md`), which keeps the findings on what is backend-only today.
 

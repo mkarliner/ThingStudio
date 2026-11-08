@@ -123,8 +123,8 @@
       <template v-if="editingCredentialName">
         <p v-if="credentialLoading" class="field-note">loading...</p>
         <p v-else-if="credentialMissing" class="field-note">
-          No saved {{ descriptor.label }} called "{{ editingCredentialName }}" on this computer. Fill it in and save to
-          create it.
+          No saved {{ descriptor.label }} called "{{ editingCredentialName }}" {{ DEMO ? "in this demo" : "on this computer" }}.
+          Fill it in and save to create it.
         </p>
         <label v-for="cf in credentialDescriptor?.fields ?? []" :key="cf.name" class="field-row">
           <span class="field-label">{{ cf.label }}</span>
@@ -147,7 +147,8 @@
         </label>
         <p v-if="f.help" class="field-help">{{ f.help }}</p>
       </template>
-      <p v-if="editingCredentialName" class="field-note">
+      <p v-if="editingCredentialName && DEMO" class="field-note demo-note">{{ DEMO_CREDENTIAL_NOTE }}</p>
+      <p v-else-if="editingCredentialName" class="field-note">
         Saved on this computer, not in the flow. Every flow that uses "{{ editingCredentialName }}" gets the change.
       </p>
       <p v-if="editError" class="field-error">{{ editError }}</p>
@@ -201,7 +202,8 @@
 
     <div v-if="creatingNew" class="config-edit-panel">
       <div class="config-edit-header">new {{ descriptor.label }}</div>
-      <p v-if="credentialDescriptor" class="field-note">Saved on this computer, not in the flow.</p>
+      <p v-if="credentialDescriptor && DEMO" class="field-note demo-note">{{ DEMO_CREDENTIAL_NOTE }}</p>
+      <p v-else-if="credentialDescriptor" class="field-note">Saved on this computer, not in the flow.</p>
       <label class="field-row">
         <span class="field-label">name</span>
         <input v-model="newName" :placeholder="credentialDescriptor?.namePlaceholder ?? 'e.g. home'" />
@@ -240,11 +242,13 @@
 
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from "vue";
-import { backendWsUrl, configs, configsVersion, createConfig, getConfig, keepOnlyConfig, listConfigsOfType, nextFreeKey, updateConfig } from "./store";
+import { configs, configsVersion, createConfig, getConfig, keepOnlyConfig, listConfigsOfType, nextFreeKey, updateConfig } from "./store";
 import { CONFIG_TYPES, type ConfigFieldDescriptor } from "./config-types";
 import { applyThemePreset, GUI_THEME_CONFIG_TYPE } from "../../node-library/gui-theme-shared";
 import { CREDENTIAL_TYPES } from "./credential-types";
-import { AdminApiError, getCredential, listCredentials, putCredential } from "../../flow-file/admin-api-client";
+import { DEMO_CREDENTIAL_NOTE, errorText, getCredential, isMissing, listCredentials, putCredential } from "./saved-values";
+
+const DEMO = __DEMO__;
 import PinField from "./PinField.vue";
 import PresetRefField from "./PresetRefField.vue";
 
@@ -299,7 +303,7 @@ async function refreshCredentialNames(): Promise<void> {
     return;
   }
   try {
-    credentialNames.value = await listCredentials(backendWsUrl.value, credField.credentialType);
+    credentialNames.value = await listCredentials(credField.credentialType);
   } catch {
     // Same posture as CredentialRefField.vue's own refresh(): a failed
     // fetch here just means the merged list falls back to "this flow's
@@ -430,11 +434,11 @@ async function loadCredential(type: NonNullable<ConfigFieldDescriptor["credentia
   if (!name) return; // an unmanaged WiFi config: no credential at all
   credentialLoading.value = true;
   try {
-    Object.assign(editCredentialDraft, await getCredential(backendWsUrl.value, type, name));
+    Object.assign(editCredentialDraft, await getCredential(type, name));
   } catch (err) {
     // A flow from another computer names a credential this one doesn't have: let the user create it here.
-    if (err instanceof AdminApiError && err.status === 404) credentialMissing.value = true;
-    else editError.value = err instanceof Error ? err.message : String(err);
+    if (isMissing(err)) credentialMissing.value = true;
+    else editError.value = errorText(err);
   } finally {
     credentialLoading.value = false;
   }
@@ -448,7 +452,7 @@ async function saveEdit(): Promise<void> {
   editError.value = null;
   try {
     const name = editingCredentialName.value;
-    if (name) await putCredential(backendWsUrl.value, credField.credentialType, name, { ...editCredentialDraft });
+    if (name) await putCredential(credField.credentialType, name, { ...editCredentialDraft });
     const config: Record<string, unknown> = {};
     for (const f of otherFields.value) config[f.name] = draft[f.name];
     // The resolved values go on the in-memory config too, so the next compile sees them without a reload.
@@ -456,7 +460,7 @@ async function saveEdit(): Promise<void> {
     editingId.value = null;
     void refreshCredentialNames();
   } catch (err) {
-    editError.value = err instanceof AdminApiError || err instanceof Error ? err.message : String(err);
+    editError.value = errorText(err);
   } finally {
     saving.value = false;
   }
@@ -521,13 +525,13 @@ async function saveNew(): Promise<void> {
   creating.value = true;
   createError.value = null;
   try {
-    await putCredential(backendWsUrl.value, credField.credentialType, name, { ...newCredentialDraft });
+    await putCredential(credField.credentialType, name, { ...newCredentialDraft });
     const id = createConfig(props.configType, { ...descriptor.value.defaults, ...newConfigDraft, [credField.name]: name });
     emit("update:modelValue", id);
     creatingNew.value = false;
     void refreshCredentialNames();
   } catch (err) {
-    createError.value = err instanceof AdminApiError || err instanceof Error ? err.message : String(err);
+    createError.value = errorText(err);
   } finally {
     creating.value = false;
   }
@@ -683,6 +687,9 @@ watch(
   color: #999;
   font-size: 11px;
   margin: 0 0 6px 0;
+}
+.field-note.demo-note {
+  color: #c8b070;
 }
 .field-error {
   color: #e08080;

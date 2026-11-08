@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:demo": "vite build --mode demo",
     "test": "vitest run",
     "test:watch": "vitest",
     "build:cli": "vite build --config vite.cli.config.ts",
