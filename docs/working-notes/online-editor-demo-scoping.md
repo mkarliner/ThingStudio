@@ -191,7 +191,9 @@ What the build session chose where the plan left room. Mike to confirm the first
   Freenove board picked. `module-boundaries.test.ts` allows that file's `*.flow.json?raw` imports.
 - **Hidden in the demo** by CSS (`device-only` / `demo-only` classes, `<body class="demo">` set at build time):
   the connection group, Deploy, Tools, Save (Save As downloads), the console's command rows, recent files.
-- **Server:** Caddy (`packaging/demo-server/`), the only place the CSP is written; `tools/demo_request_check.py`
+- **Server:** Caddy (`packaging/demo-server/`) on plain HTTP port 8080 behind Pangolin (Mike, 2026-11-08):
+  Pangolin's Traefik does TLS, the Pangolin resource has authentication off, and Caddy trusts the tunnel's
+  forwarded IP for its log. Caddy is the only place the CSP is written; `tools/demo_request_check.py`
   reads it from there and `add_meta_csp.py` makes the Pages `<meta>` copy. `bluetooth` is left out of
   Permissions-Policy: Chrome logs it as unrecognised.
 - **Release:** `release.yml`'s `demo` job builds, runs the request check (header and `<meta>` modes) and zips

@@ -11,12 +11,21 @@ reasons: `docs/working-notes/online-editor-demo-scoping.md`.
 
 ## On the server
 
+The demo sits behind Pangolin, which terminates TLS in its Traefik and forwards plain HTTP down its tunnel.
+
 1. A container or VM of its own, with Caddy, kept apart from the rest of the lab. Automatic security updates on.
 2. A deploy user that owns `/srv/thingstudio-demo` and nothing else. Caddy reads that folder and can't write it.
-3. DNS: `demo.thingstudio.net` to the server, with a short TTL so the Pages standby is a quick switch. A CAA
-   record allowing only `letsencrypt.org` is a cheap extra.
-4. Copy `Caddyfile` into place, `caddy validate`, then start Caddy. It gets the certificate itself.
-5. As the deploy user: `tools/deploy_demo.sh v0.13.0` (any released version with a demo zip).
+3. Copy `Caddyfile` into place, `caddy validate`, then start Caddy. It listens on plain HTTP, port 8080.
+4. In Pangolin, add a resource for `demo.thingstudio.net` pointing at `http://<this host>:8080`, with
+   **authentication off**: the demo is public, and with it on, visitors get Pangolin's login page. Pangolin's
+   Traefik gets the certificate.
+5. DNS: `demo.thingstudio.net` to Pangolin, with a short TTL so the Pages standby is a quick switch. A CAA record
+   allowing only `letsencrypt.org` is a cheap extra.
+6. As the deploy user: `tools/deploy_demo.sh v0.13.0` (any released version with a demo zip).
+
+The security headers come from Caddy and pass through Traefik. If Pangolin or a Traefik middleware adds its own
+`Content-Security-Policy` or other security headers, the browser applies both; take them off that route, so the
+Caddyfile stays the one place they're set.
 
 After the first deploy, check:
 

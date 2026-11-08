@@ -2,6 +2,7 @@
 # Installs a Thingstudio release's online demo on the demo server, and switches to it.
 #
 #   tools/deploy_demo.sh v0.13.0          download, check, unpack, switch to it
+#   tools/deploy_demo.sh --file demo.zip 0.13.0-test   install a zip you copied here (local build, CI artifact)
 #   tools/deploy_demo.sh --rollback v0.12.1   switch back to a version already unpacked
 #   tools/deploy_demo.sh --list           show the unpacked versions and which one is live
 #
@@ -88,13 +89,32 @@ deploy() {
   got=$(sha256_of "$work/$file")
   [ "$got" = "$expected" ] || fail "$file has SHA-256 $got, but SHA256SUMS says $expected; nothing changed"
   say "SHA-256 matches: $got"
+  install_zip "$work/$file" "$version"
+}
 
+# --file: a zip that isn't from a published release, so there's no SHA256SUMS to check it against. Its SHA-256 is
+# printed, to compare with what the build or CI run reported.
+deploy_file() {
+  zip=$1
+  version=$(plain_version "$2")
+  [ -f "$zip" ] || fail "no such file: $zip"
+  [ ! -d "$ROOT/releases/$version" ] || fail "$ROOT/releases/$version already exists; pick another name, or --rollback to it"
+  mkdir -p "$ROOT/releases"
+  work=$(mktemp -d "$ROOT/.incoming.XXXXXX")
+  trap 'rm -rf "$work"' EXIT INT TERM
+  say "installing $zip as $version (SHA-256 $(sha256_of "$zip"); not checked against a release)"
+  install_zip "$zip" "$version"
+}
+
+# Unpacks a checked zip into releases/<version> and switches to it. Needs $work.
+install_zip() {
+  dest="$ROOT/releases/$2"
   # unzip refuses absolute paths and ../ in entries; the check after it catches a zip that isn't a demo.
-  unzip -q "$work/$file" -d "$work/unpacked"
-  [ -f "$work/unpacked/index.html" ] || fail "$file has no index.html at its top; nothing changed"
+  unzip -q "$1" -d "$work/unpacked"
+  [ -f "$work/unpacked/index.html" ] || fail "$1 has no index.html at its top; nothing changed"
   chmod -R a+rX "$work/unpacked"
   mv "$work/unpacked" "$dest"
-  switch_to "$version"
+  switch_to "$2"
 }
 
 list() {
@@ -110,6 +130,10 @@ list() {
 case ${1:-} in
   "" | -h | --help) usage ;;
   --list) list ;;
+  --file)
+    [ $# -eq 3 ] || usage
+    deploy_file "$2" "$3"
+    ;;
   --rollback)
     [ $# -eq 2 ] || usage
     switch_to "$(plain_version "$2")"
