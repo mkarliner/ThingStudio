@@ -257,9 +257,11 @@ ThingStudioMarketing repo, not here.
   that uses GPIO 10, pulses whatever is wired there, and on a classic ESP32 GPIO 10 is one of the pins the processor
   definition marks reserved for flash ("Using them crashes the board"); on an nRF52840 it is an NFC pin. Found by the
   first Discussions tester (#19, EdgeS3 on Linux Mint), who couldn't stop "a blinky on IO10" by changing the flow.
-  FAQ entry added in the meantime. Fix: make it opt-in for the rig, e.g. a pin number in device settings or a
-  marker file the HIL setup writes, and off by default; the HIL README then says how the rig turns it on. Runtime
-  minor bump (no codegen or message change).
+  **Fixed in runtime 15.1.0 (2026-11-09):** the heartbeat runs only when `/hil_heartbeat` exists on the board;
+  `test/hil/README.md` setup step 4 writes it; editor target 15.1.0; FAQ entry says to reinstall the runtime. Left:
+  (1) re-run `run_fault_isolation_checks.py` on the rig with the marker to confirm `HEARTBEAT_WATCH` still passes;
+  (2) the Thingstudio custom images (classic ESP32, C3, C5) freeze the listener, so their users keep the toggle
+  until the images are rebuilt and republished; (3) check the editor offers the reinstall to a 15.0.0 board.
 
 - **[P3]** **`machine.reset()` before each deploy, for a known-clean device state -- raised 2026-09-04, not
   scoped.** +3s deploy time, likely worth it. A full reset gets the clean-slate effect "a power cycle fixed
