@@ -27,7 +27,7 @@
     
     
       
-        <title>Supported hardware - Thingstudio</title>
+        <title>Supported hardware - ThingStudio</title>
       
     
     
@@ -88,7 +88,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="Thingstudio" class="md-header__button md-logo" aria-label="Thingstudio" data-md-component="logo">
+    <a href=".." title="ThingStudio" class="md-header__button md-logo" aria-label="ThingStudio" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -102,7 +102,7 @@
       <div class="md-header__ellipsis">
         <div class="md-header__topic">
           <span class="md-ellipsis">
-            Thingstudio
+            ThingStudio
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
@@ -226,13 +226,13 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="Thingstudio" class="md-nav__button md-logo" aria-label="Thingstudio" data-md-component="logo">
+    <a href=".." title="ThingStudio" class="md-nav__button md-logo" aria-label="ThingStudio" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
 
     </a>
-    Thingstudio
+    ThingStudio
   </label>
   
     <div class="md-nav__source">
@@ -656,7 +656,7 @@
   <span class="md-ellipsis">
     
   
-    1. Install Thingstudio
+    1. Install ThingStudio
   
 
     
@@ -1194,7 +1194,7 @@
   <span class="md-ellipsis">
     
   
-    The Thingstudio folder
+    The ThingStudio folder
   
 
     
@@ -3663,6 +3663,9 @@
 been deployed and run on that hardware. Pin details for boards and processors are in
 <a href="../boards/">Boards and processors</a>.</p>
 <h2 id="boards">Boards</h2>
+<p>Each board below has a definition: a pin cheat sheet that names the board's own pins, such as its LED, marks the
+pins that are reserved and why, and lists the pins each SPI and I2C bus can use. <strong>Pins…</strong> in the editor shows it.
+See <a href="../boards/#seeing-a-boards-pins">Seeing a board's pins</a>.</p>
 <table>
 <thead>
 <tr>
@@ -3720,7 +3723,7 @@ been deployed and run on that hardware. Pin details for boards and processors ar
 <tr>
 <td>Pyboard v1.0</td>
 <td>STM32F405</td>
-<td>Untested</td>
+<td>Yes</td>
 </tr>
 <tr>
 <td>Seeed XIAO nRF52840 (Sense)</td>
@@ -3882,12 +3885,14 @@ Deploy refuses them.</p>
 </tbody>
 </table>
 <h2 id="other-boards">Other boards</h2>
-<p>Other boards that run MicroPython may work. Thingstudio needs a processor definition for the chip, and a board
-definition if you want the board's own pins labelled. See <a href="../boards/#adding-a-board">Adding a board</a> and
-<a href="../boards/#adding-a-processor">Adding a processor</a>.</p>
-<p>An AI assistant can draft a definition file. Give it the board's pinout or the chip's datasheet, and one of the
-existing files in <code>~/.thingstudio/boards/</code> or <code>~/.thingstudio/processors/</code> as an example. Check the result against
-the datasheet. A missing reserved pin means the compile won't stop a flow that crashes the board.</p>
+<p>Other boards that run MicroPython may work. ThingStudio needs a processor definition for the chip, and a board
+definition if you want the board's own pins labelled.</p>
+<p>You can write definition files yourself: <a href="../boards/#adding-a-board">Adding a board</a> and <a href="../boards/#adding-a-processor">Adding a
+processor</a> describe every field of the JSON. Or an AI assistant can draft one. Point
+it at the board maker's web page for the board, and it can usually write the file in seconds. For a processor, give
+it the chip's datasheet. One of the existing files in <code>~/.thingstudio/boards/</code> or <code>~/.thingstudio/processors/</code> makes
+a good example to include. Check the result against the datasheet. A missing reserved pin means the compile won't
+stop a flow that crashes the board.</p>
 <h2 id="reporting-hardware">Reporting hardware</h2>
 <p>Reports on any board, display or sensor, listed or not, are welcome. Open an issue on
 <a href="https://github.com/mkarliner/ThingStudio/issues">GitHub</a> with:</p>

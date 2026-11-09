@@ -7,49 +7,36 @@
 
 Source: https://docs.thingstudio.net/
 
-# Thingstudio
+# ThingStudio
 
-Thingstudio is a visual, low-code way to program microcontrollers. You build a program, called a flow, in a
+ThingStudio is a visual, low-code way to program microcontrollers. You build a program, called a flow, in a
 node-based editor in your web browser. Nodes are functional blocks, and wires carry data between them. The design is
 inspired by [Node-RED](https://nodered.org/).
 
-Thingstudio converts the flow to [MicroPython](https://micropython.org/), a version of Python for microcontrollers,
+ThingStudio converts the flow to [MicroPython](https://micropython.org/), a version of Python for microcontrollers,
 compiles it, and sends it to your board. The flow is saved on the board. It will then run without the editor connected, and
 will start again after a reset or power cycle.
 
 <figure markdown="span">
-  [![The Thingstudio editor, showing a three-node flow: timer, function and gpio out](images/editor.png)](images/editor.png)<figcaption>The editor: nodes to drag in on the left, your flow in the middle, and on the right the selected
+  [![The ThingStudio editor, showing a three-node flow: timer, function and gpio out](images/editor.png)](images/editor.png)<figcaption>The editor: nodes to drag in on the left, your flow in the middle, and on the right the selected
   node's settings and the board's console. Click to see it full size. [Tour the editor](editor-tour.md) labels every
   part.</figcaption>
 </figure>
 
-!!! tip "For the impatient"
-
-    If you read nothing else, read this:
-
-    1. [Install Thingstudio](getting-started.md#step-1-install-thingstudio) and start it. The editor
-       opens in your browser.
-    2. [Tour the editor](editor-tour.md): the palette, the canvas, the console.
-    3. [Install MicroPython](installing-micropython.md) on your board. A standard ESP32 takes the advised
-       [custom image](custom-firmware.md).
-    4. [Connect your board](connecting.md), then [install the runtime](installing-runtime.md).
-    5. [Blink an LED](first-flow.md) — three nodes and deploy. Not in a building mood? Open
-       `tutorials/blink.flow.json` (the [tutorials folder](tutorial-flows.md#where-the-folder-is)) with
-       **File → Open…**, point the pin at your board's own LED, deploy.
-
-    When something doesn't work, [Debugging](debugging.md) and the [FAQ](faq.md) go by what you see on screen.
+!!! tip "In a hurry?"
+    [Getting started](getting-started.md) takes you from a new board to a blinking LED in six steps.
 
 ThingStudio is designed to be private, and as open and hackable as possible:
 
-- **Local dev.** Development happens locally; there is no cloud service.
+- **Fully local.** Development happens on your computer. There's no cloud service and no account.
 - **Works offline.** Once installed, it needs no internet connection, docs included.
-- **Git friendly.** Thingstudio's files, your programs and your board definitions, are plain, indented
+- **Git friendly.** ThingStudio's files, your programs and your board definitions, are plain, indented
   JSON that you save where you like. They diff cleanly and sit happily in a git repository. Passwords and
   other credentials are stored separately, so a committed program holds no secrets.
 - **Made to be extended.** Write your own [custom nodes](custom-nodes.md), and add your own
   [boards](boards.md#adding-a-board) and [processors](boards.md#adding-a-processor). You drop their files into
   a folder. There's nothing to rebuild.
-- **Free and open source.** Thingstudio is under the
+- **Free and open source.** ThingStudio is under the
   [Apache 2.0 license](https://github.com/mkarliner/ThingStudio/blob/main/LICENSE). You can use it, change it and
   build on it, including in commercial products.
 
@@ -66,7 +53,7 @@ ThingStudio is designed to be private, and as open and hackable as possible:
 ThingStudio is designed for developers with a reasonable amount of programming experience, it doesn't aim to teach programming fundamentals.
 You should also have some level of experience in working with microcontrollers. You don't have to be an EE graduate, but you should be comfortable wiring a breadboard. You should also be able to do basic commands from the terminal or PowerShell.
 
-## What's different about programming with Thingstudio?
+## What's different about programming with ThingStudio?
 
 A typical microcontroller program, in Arduino for example, has a `setup()` section that runs once at boot, then a
 main loop that runs forever. The loop might:
@@ -80,14 +67,14 @@ main loop that runs forever. The loop might:
 Each new job makes the loop longer. A slow step, such as a network call, holds up everything else, and the timing
 gets hard to reason about.
 
-Thingstudio programs respond to events instead. When a button is pressed, turn on a light. Every ten seconds, read
+ThingStudio programs respond to events instead. When a button is pressed, turn on a light. Every ten seconds, read
 the temperature. When a message arrives from the network, update the display. Each response runs only when its event
 happens, and the board waits for many events at once. This is
 [event-driven programming](background/event-driven.md).
 
 MicroPython supports this style natively with
 [`asyncio`](https://docs.micropython.org/en/latest/library/asyncio.html). An `asyncio` program no longer reads top to
-bottom, which makes it harder to see what it does. Thingstudio's graphical editor of events, functions and outputs
+bottom, which makes it harder to see what it does. ThingStudio's graphical editor of events, functions and outputs
 makes an event-driven program easier to build and follow.
 
 ## Events, nodes and wires
@@ -105,7 +92,7 @@ Nodes pass **messages** along the wires. A message is a dict, with its main valu
 in more detail in [flows, nodes and messages](background/flows-and-nodes.md).
 
 This way of working comes from [Node-RED](background/node-red.md), a popular tool for home automation and IoT. In
-Node-RED, flows run on a server or a Raspberry Pi. In Thingstudio, they run on the microcontroller.
+Node-RED, flows run on a server or a Raspberry Pi. In ThingStudio, they run on the microcontroller.
 
 ## Including your own code
 
@@ -136,7 +123,7 @@ changing a flow and trying it again takes seconds. The board keeps the flow and 
 
 ## Built on standard parts
 
-Thingstudio tries not to reinvent the wheel.
+ThingStudio tries not to reinvent the wheel.
 
 - MicroPython's [`asyncio`](https://docs.micropython.org/en/latest/library/asyncio.html) provides the event-driven
   primitives.
@@ -146,16 +133,10 @@ Thingstudio tries not to reinvent the wheel.
   [`micropython-lib`](https://github.com/micropython/micropython-lib).
 - What comes out is plain MicroPython. You can read it in the editor's **Compiled source** panel.
 
-## Built with AI
-
-Thingstudio is written with heavy use of AI coding tools. Every change is reviewed by a person, and the boards and
-nodes marked tested in [Supported hardware](supported-hardware.md) have run on real hardware. If that rules it out
-for you, fair enough.
-
 ## What you need
 
-- A board with an ESP32 or RP2040/RP2350 processor. [Supported hardware](supported-hardware.md) lists what's been
-  tested. Other boards that run MicroPython may work.
+- A board with one of the processors in [Supported hardware](supported-hardware.md). Other boards that run
+  MicroPython may work.
 - A USB cable that carries data, not only power.
 
 ## Next
@@ -163,7 +144,7 @@ for you, fair enough.
 [Getting started](getting-started.md) lists the steps from a new board to a blinking LED, and starts you on the first
 step.
 
-The docs on [docs.thingstudio.net](https://docs.thingstudio.net/) follow the latest code. The docs installed with Thingstudio
+The docs on [docs.thingstudio.net](https://docs.thingstudio.net/) follow the latest code. The docs installed with ThingStudio
 (**Help → User guide**) match the version you have installed.
 
 
@@ -202,12 +183,12 @@ Written as events, each job stands on its own:
 Nothing is checked in a loop. The board sleeps until an event arrives, runs its handler, and waits again. Jobs
 with different timing don't get in each other's way.
 
-## How Thingstudio does it
+## How ThingStudio does it
 
-Thingstudio is built on `asyncio`, MicroPython's built-in module for event-driven programming. It provides an
+ThingStudio is built on `asyncio`, MicroPython's built-in module for event-driven programming. It provides an
 event loop: one scheduler that runs many tasks, switching between them whenever one is waiting.
 
-In Thingstudio, each chain of nodes that starts at a source (a `timer`, an `interrupt`, an `mqtt subscribe`) is
+In ThingStudio, each chain of nodes that starts at a source (a `timer`, an `interrupt`, an `mqtt subscribe`) is
 one handler. When you deploy, the flow is turned into MicroPython code in which each source becomes an `asyncio`
 task. While one task waits, for a timer or the network, the others run.
 
@@ -238,7 +219,7 @@ Source: https://docs.thingstudio.net/background/flows-and-nodes/
 
 # Flows, nodes and messages
 
-A Thingstudio program is a **flow**: a set of **nodes** joined by **wires**. You build it by dragging nodes onto
+A ThingStudio program is a **flow**: a set of **nodes** joined by **wires**. You build it by dragging nodes onto
 a canvas and wiring them together, rather than writing a program top to bottom.
 
 ## Nodes
@@ -281,7 +262,7 @@ once and pick it from each node that uses it. See [Editor in depth](../working-i
 ## Background
 
 Node-and-wire programming has a long history, from J. Paul Morrison's
-[flow-based programming](https://jpaulm.github.io/fbp/) to tools like LabVIEW, Max and Node-RED. Thingstudio
+[flow-based programming](https://jpaulm.github.io/fbp/) to tools like LabVIEW, Max and Node-RED. ThingStudio
 follows [Node-RED](node-red.md)'s version of the idea, with the same message shape and very similar nodes.
 
 
@@ -306,10 +287,10 @@ dashboard for building web UIs.
 Node-RED runs on Node.js, on a server, a PC or a Raspberry Pi. Microcontrollers usually talk to it over the
 network, often by MQTT, and run their own separate firmware.
 
-## Where Thingstudio fits
+## Where ThingStudio fits
 
-Thingstudio takes Node-RED's way of working onto the microcontroller. The flow runs on the board itself, so the
-board doesn't need a server to decide what to do. The two work well together: a Thingstudio board can publish
+ThingStudio takes Node-RED's way of working onto the microcontroller. The flow runs on the board itself, so the
+board doesn't need a server to decide what to do. The two work well together: a ThingStudio board can publish
 readings over MQTT to a Node-RED flow on your server.
 
 If you already use Node-RED, see [if you know Node-RED](../coming-from/node-red.md) for what's different.
@@ -351,13 +332,13 @@ led.on()
 Microcontrollers are limited. A board typically has hundreds of kilobytes of RAM, and MicroPython itself uses some
 of it. Python is also much slower than C, though fast enough for most sensing, switching and networking jobs.
 
-## Where Thingstudio fits
+## Where ThingStudio fits
 
-Thingstudio runs on top of MicroPython. It installs a runtime onto the board, and turns each flow you deploy
+ThingStudio runs on top of MicroPython. It installs a runtime onto the board, and turns each flow you deploy
 into MicroPython code. The function node runs your own MicroPython. See
 [installing MicroPython](../installing-micropython.md) to get it onto your board.
 
-If you already use MicroPython, see [if you know MicroPython](../coming-from/micropython.md) for how Thingstudio
+If you already use MicroPython, see [if you know MicroPython](../coming-from/micropython.md) for how ThingStudio
 uses your board.
 
 ## More
@@ -428,7 +409,7 @@ saying which node, and the rest of the flow keeps running. See [debugging](../de
 
 ## Using both
 
-Node-RED is the better place for dashboards, databases and cloud services. A common setup is Thingstudio
+Node-RED is the better place for dashboards, databases and cloud services. A common setup is ThingStudio
 boards publishing over MQTT to a Node-RED flow on a server or Raspberry Pi.
 
 Next: [getting started](../getting-started.md).
@@ -440,13 +421,13 @@ Source: https://docs.thingstudio.net/coming-from/micropython/
 
 # If you know MicroPython
 
-Thingstudio sits on top of the MicroPython you already have. It doesn't replace your firmware. It adds a runtime
+ThingStudio sits on top of the MicroPython you already have. It doesn't replace your firmware. It adds a runtime
 and a way to write programs as flows, while the REPL and your own Python stay within reach.
 
 ## What goes on the board
 
 **Tools → Install runtime…** copies a set of Python files onto the board's filesystem, including a `main.py` that
-starts the Thingstudio runtime at boot. The runtime listens on USB or WiFi for the editor, and runs the last flow
+starts the ThingStudio runtime at boot. The runtime listens on USB or WiFi for the editor, and runs the last flow
 you deployed.
 
 If your board already has a `main.py` of your own, copy it off first.
@@ -487,7 +468,7 @@ Source: https://docs.thingstudio.net/coming-from/arduino/
 
 # If you know Arduino and C
 
-If you've written `setup()` and `loop()` in C or C++, Thingstudio will feel different in three ways. It uses
+If you've written `setup()` and `loop()` in C or C++, ThingStudio will feel different in three ways. It uses
 Python rather than C, you wire events together instead of writing a loop, and a change goes to the board in
 seconds without reflashing.
 
@@ -515,7 +496,7 @@ board swaps it in. Changing a flow and trying it again takes seconds.
 
 ## What stays the same
 
-Thingstudio checks your pin
+ThingStudio checks your pin
 numbers against the board before deploying, and refuses pins that would crash it, such as those wired to the
 flash chip. See [boards and processors](../boards.md).
 
@@ -533,19 +514,24 @@ The demo doesn't connect to a board, but you can build a flow and read the Micro
 
 From a new board to a blinking LED, in six steps:
 
-1. **[Install Thingstudio](#step-1-install-thingstudio)** on your computer.
+1. **[Install ThingStudio](#step-1-install-thingstudio)** on your computer.
 2. **[Tour the editor](editor-tour.md)**: what each part of the screen does.
-3. **[Install MicroPython](installing-micropython.md)** on your board.
-4. **[Connect your board](connecting.md)** to Thingstudio.
-5. **[Install the runtime](installing-runtime.md)**, the part of Thingstudio that runs on the board.
-6. **[Blink an LED](first-flow.md)**: build your first flow and deploy it.
+3. **[Install MicroPython](installing-micropython.md)** on your board. A standard ESP32 takes the advised
+   [custom image](custom-firmware.md).
+4. **[Connect your board](connecting.md)** to ThingStudio.
+5. **[Install the runtime](installing-runtime.md)**, the part of ThingStudio that runs on the board.
+6. **[Blink an LED](first-flow.md)**: build your first flow and deploy it. Or open `tutorials/blink.flow.json`
+   (the [tutorials folder](tutorial-flows.md#where-the-folder-is)) with **File → Open…**, point the pin at your
+   board's own LED, and deploy.
 
-You need a board that runs MicroPython, and a USB cable that carries data, not only power.
-[Supported hardware](supported-hardware.md) lists the boards Thingstudio is tested on.
+When something doesn't work, [Debugging](debugging.md) and the [FAQ](faq.md) go by what you see on screen.
 
-## Step 1: Install Thingstudio
+You need a board with one of the processors in [Supported hardware](supported-hardware.md), and a USB cable that
+carries data, not only power. Installing uses a terminal, or PowerShell on Windows.
 
-Thingstudio is a program you run on your computer. It opens its editor in your web browser. It brings its own
+## Step 1: Install ThingStudio
+
+ThingStudio is a program you run on your computer. It opens its editor in your web browser. It brings its own
 Python, so nothing else needs installing to run it.
 
 There are two ways to install it. Both give you the same program.
@@ -560,10 +546,10 @@ Download the package for your computer from the
 [releases page](https://github.com/mkarliner/ThingStudio/releases/latest).
 [Installation details](installation-details.md#packages) lists the package for each platform.
 
-**macOS and Linux:** unpack it with `tar -xzf thingstudio-VERSION-PLATFORM.tar.gz`. Thingstudio is the
+**macOS and Linux:** unpack it with `tar -xzf thingstudio-VERSION-PLATFORM.tar.gz`. ThingStudio is the
 `thingstudio` file in the unpacked folder.
 
-**Windows:** unzip it anywhere, for example into your Documents folder. Thingstudio is `thingstudio.cmd` in the
+**Windows:** unzip it anywhere, for example into your Documents folder. ThingStudio is `thingstudio.cmd` in the
 unzipped folder. If Windows says "Windows protected your PC", click **More info**, then **Run anyway**. The Windows
 package isn't signed.
 
@@ -592,12 +578,12 @@ if your account isn't in the group, and prints the command to fix it.
 irm https://github.com/mkarliner/ThingStudio/releases/latest/download/install.ps1 | iex
 ```
 
-To upgrade or remove Thingstudio, or build it from source, see
+To upgrade or remove ThingStudio, or build it from source, see
 [Installation details](installation-details.md).
 
-## Start Thingstudio
+## Start ThingStudio
 
-How you start Thingstudio depends on how you installed it:
+How you start ThingStudio depends on how you installed it:
 
 - **Installer script:** run `thingstudio` in a terminal. If the command isn't found, see
   [If the command isn't found](#if-the-command-isnt-found).
@@ -605,9 +591,9 @@ How you start Thingstudio depends on how you installed it:
 - **Package on Windows:** run `thingstudio.cmd` in the unzipped folder.
 
 The editor opens in your browser at `http://127.0.0.1:8765/`. Leave the terminal open while you work. Press Ctrl-C
-there to stop Thingstudio.
+there to stop ThingStudio.
 
-Thingstudio also serves this user guide, so it works offline. **Help → User guide** opens it.
+ThingStudio also serves this user guide, so it works offline. **Help → User guide** opens it.
 
 ### Where it is installed
 
@@ -646,9 +632,9 @@ window that was already open doesn't see it. Open a new window, or run this in t
 $env:Path = [Environment]::GetEnvironmentVariable('Path','User') + ';' + [Environment]::GetEnvironmentVariable('Path','Machine')
 ```
 
-If the command still isn't found, start Thingstudio by its full path, from the list above.
+If the command still isn't found, start ThingStudio by its full path, from the list above.
 
-### Remove Thingstudio
+### Remove ThingStudio
 
 [Installation details](installation-details.md#remove) has the commands for the installer script. To remove a package,
 delete its folder. Removing never touches your flows or your settings in `.thingstudio`.
@@ -671,10 +657,10 @@ Source: https://docs.thingstudio.net/editor-tour/
 
 # Step 2: Tour the editor
 
-Start Thingstudio if it isn't running: see [step 1](getting-started.md#start-thingstudio).
+Start ThingStudio if it isn't running: see [step 1](getting-started.md#start-thingstudio).
 
 <figure markdown="span">
-  [![The Thingstudio editor with each part labelled](images/editor-parts.png)](images/editor-parts.png)<figcaption>The parts of the editor. Click to see it full size.</figcaption>
+  [![The ThingStudio editor with each part labelled](images/editor-parts.png)](images/editor-parts.png)<figcaption>The parts of the editor. Click to see it full size.</figcaption>
 </figure>
 
 <!-- The labels on the picture come from EDITOR_PARTS in tools/screenshots.py. Keep the names below in step. -->
@@ -723,13 +709,13 @@ The right-hand side holds the selected node's settings and what the board sends 
 - **Notes on this flow:** the **Notes** panel, free text saved with the flow.
 - **Generated MicroPython:** the **Compiled source** panel. Click it to open it. **Download .py** saves it as a
   file. Like the panel, the file holds your WiFi password and broker login.
-- **Messages from the board:** the **Device console**, with messages from Thingstudio and the board, including your
+- **Messages from the board:** the **Device console**, with messages from ThingStudio and the board, including your
   flow's output. Its **Show** menu sets how much it shows: **Normal** for your flow's output, results and errors,
   **Info** to add routine reports such as memory, **Debug** for everything.
 - **Run Python on the board:** type a line of Python and click **Send**. It runs on the board alongside the flow.
   See [Commands and the Python prompt](debugging.md#commands-and-the-python-prompt).
 - **Escape to REPL:** **Stop flow & open prompt** stops the flow and gives you MicroPython's own `>>>` prompt.
-  **Restart Thingstudio** starts the flow again.
+  **Restart ThingStudio** starts the flow again.
 
 To make the notes, compiled source and console column wider or narrower, drag its left edge. Double-click the edge
 to reset it.
@@ -747,17 +733,17 @@ Source: https://docs.thingstudio.net/installing-micropython/
 
 # Step 3: Install MicroPython
 
-Thingstudio runs on top of [MicroPython](background/micropython.md), so the board needs it first. You install it once
+ThingStudio runs on top of [MicroPython](background/micropython.md), so the board needs it first. You install it once
 per board.
 
 A new board usually doesn't have MicroPython. If yours already has it, or you're not sure, go to
 [step 4](connecting.md). If MicroPython is missing, the console says so when you connect, and links back here.
 
-Thingstudio can install it for you, on the chips it can write.
+ThingStudio can install it for you, on the chips it can write.
 
-## Install from Thingstudio
+## Install from ThingStudio
 
-Thingstudio writes the firmware itself: over a serial port for the ESP32 family, and onto a mounted drive for
+ThingStudio writes the firmware itself: over a serial port for the ESP32 family, and onto a mounted drive for
 RP2040, RP2350 and nRF52 boards.
 
 !!! tip "ESP32 without PSRAM? Use a custom image"
@@ -767,12 +753,12 @@ RP2040, RP2350 and nRF52 boards.
     release significant memory for your flow.
 
 On a classic ESP32 with 4 MB of flash and no PSRAM, an ESP32-C3 or an ESP32-C5, pick
-**Thingstudio custom image** as the **Firmware** when the dialog lists one for the chip. Its **Version** list holds
+**ThingStudio custom image** as the **Firmware** when the dialog lists one for the chip. Its **Version** list holds
 the published releases.
 After flashing it, **Install runtime** writes only the boot script.
 
-The list of builds comes from docs.thingstudio.net, so a new image appears without updating Thingstudio. Thingstudio
-uses that list only when it carries Thingstudio's signature; offline, it uses the last list it saved, or the one it
+The list of builds comes from docs.thingstudio.net, so a new image appears without updating ThingStudio. ThingStudio
+uses that list only when it carries ThingStudio's signature; offline, it uses the last list it saved, or the one it
 was installed with. The line under **Version** says which.
 
 1. Plug the board into USB. A Pico needs **BOOTSEL** held while you plug it in.
@@ -781,7 +767,7 @@ was installed with. The line under **Version** says which.
    the path and the adapter's name (for example `/dev/ttyUSB0 -- CH340`). If an ESP32 isn't listed, hold **BOOT**,
    tap **RESET** and click ⟳; the line under the list says how many it found. If it still isn't listed, type the
    path in the box (on macOS a mounted Pico is `/Volumes/RPI-RP2`).
-4. Pick the **Chip family**, the **Firmware** (**Official MicroPython (micropython.org)** or **Thingstudio custom
+4. Pick the **Chip family**, the **Firmware** (**Official MicroPython (micropython.org)** or **ThingStudio custom
    image**), the **Build** and the **Version**. A board that names its own build is preselected.
 5. Click **Flash**. **Erase all flash first** is ticked: it clears an old partition table, which is the usual
    reason a board doesn't boot after a successful install. The dialog shows each line the tool prints; a failure
@@ -792,10 +778,10 @@ The **Build** matters for the heap as much as for compatibility: an ESP32 with e
 chip families the editor can write are listed, and only builds whose hash is pinned, so what you flash is what was
 tested.
 
-The list covers every build Thingstudio pins, so **Or use your own image file** is only for the rest: a build for a
-board Thingstudio doesn't list, a chip with no pinned build yet (the ESP32-C5), or an image you downloaded yourself. Pick the `.bin` or `.uf2`; the chip family you
+The list covers every build ThingStudio pins, so **Or use your own image file** is only for the rest: a build for a
+board ThingStudio doesn't list, a chip with no pinned build yet (the ESP32-C5), or an image you downloaded yourself. Pick the `.bin` or `.uf2`; the chip family you
 choose decides the address, and the file's own header usually decides the family. **Address**, under **Install
-options**, overrides the family's address. A Thingstudio custom image for a classic ESP32 needs `0x0` there: see
+options**, overrides the family's address. A ThingStudio custom image for a classic ESP32 needs `0x0` there: see
 [Custom firmware](custom-firmware.md#install-by-hand).
 
 Flashing erases the flow and all settings on the board. Afterwards, [connect](connecting.md) it
@@ -803,7 +789,7 @@ and [install the runtime](installing-runtime.md).
 
 ## Doing it yourself
 
-For a chip Thingstudio can't write, or a build it doesn't pin, install MicroPython without the editor.
+For a chip ThingStudio can't write, or a build it doesn't pin, install MicroPython without the editor.
 
 ### Get the firmware
 
@@ -834,7 +820,7 @@ The board restarts into MicroPython by itself.
 
 ### ESP32 family: esptool
 
-If Thingstudio is connected to the board, click **Disconnect** first. Only one program can use the board's port at
+If ThingStudio is connected to the board, click **Disconnect** first. Only one program can use the board's port at
 a time. If another program has it open, esptool reports `Resource busy` or `could not open port`.
 
 Install `esptool` once:
@@ -875,7 +861,7 @@ a different port afterwards.
 When it's done, close Thonny. Like esptool, it needs the board's port to itself.
 
 Thonny can't install MicroPython on an ESP32-C5. It writes the image at `0`, but a C5 needs `0x2000`, and Thonny
-doesn't offer that address. The board then restarts in a loop printing `invalid header`. Use Thingstudio or
+doesn't offer that address. The board then restarts in a loop printing `invalid header`. Use ThingStudio or
 esptool instead. ([Thonny issue #3963](https://github.com/thonny/thonny/issues/3963))
 
 ### Other microcontrollers
@@ -884,12 +870,12 @@ Other chips, such as STM32, nRF or SAMD, each have their own way of installing M
 on [micropython.org/download](https://micropython.org/download/) and the
 [MicroPython documentation](https://docs.micropython.org/en/latest/).
 
-[Supported hardware](supported-hardware.md) lists the chips Thingstudio is tested on. Another chip needs a
+[Supported hardware](supported-hardware.md) lists the chips ThingStudio is tested on. Another chip needs a
 processor definition: see [Other boards](supported-hardware.md#other-boards).
 
 ## Next
 
-Step 4: [connect your board](connecting.md) to Thingstudio.
+Step 4: [connect your board](connecting.md) to ThingStudio.
 
 
 ---
@@ -898,7 +884,7 @@ Source: https://docs.thingstudio.net/connecting/
 
 # Step 4: Connect your board
 
-Connect the board over USB so the editor can talk to it. Start Thingstudio if it isn't running: see
+Connect the board over USB so the editor can talk to it. Start ThingStudio if it isn't running: see
 [step 1](getting-started.md#start-thingstudio).
 
 To connect:
@@ -914,7 +900,7 @@ click **⟳** again. The port that appears is your board.
 
 ## What the console says
 
-A board with MicroPython but no Thingstudio runtime gives this message:
+A board with MicroPython but no ThingStudio runtime gives this message:
 
 ```text
 No reply from the runtime. MicroPython but no Thingstudio runtime: Tools → Install runtime…
@@ -942,18 +928,18 @@ Source: https://docs.thingstudio.net/installing-runtime/
 
 # Step 5: Install the runtime
 
-The runtime is the part of Thingstudio that runs on the board: it receives your flows and runs them. Each board
+The runtime is the part of ThingStudio that runs on the board: it receives your flows and runs them. Each board
 needs it once. Libraries that a flow's nodes need are installed later, by Deploy.
 
 1. Check the board's port is selected in the port list, as in [step 4](connecting.md).
-2. Choose **Tools → Install runtime…**. If you're connected, Thingstudio disconnects first. The console shows
+2. Choose **Tools → Install runtime…**. If you're connected, ThingStudio disconnects first. The console shows
    progress; set the console's **Show** menu to **Info** to see each file.
 3. If the board is busy and doesn't stop, the console asks you to press its reset button. On a board without one,
    such as a Pico, unplug it and plug it back in.
 4. The board restarts when the install is done. Click **Connect**. If the port has gone from the list, click **⟳**
    first.
 
-After upgrading Thingstudio, the board's runtime may no longer match the editor. Deploy then stops, and the
+After upgrading ThingStudio, the board's runtime may no longer match the editor. Deploy then stops, and the
 console says to install the runtime again.
 
 If the install fails, the console says what the board sent back and what to do. See
@@ -980,7 +966,7 @@ Your board should be connected, with the runtime installed: steps [4](connecting
 ## Find your LED's pin
 
 Many boards have an LED wired to a GPIO pin. To find it, click **Pins…** next to the **Board** menu. Pins that the
-board names, such as `LED`, are listed first. [Supported hardware](supported-hardware.md) lists the boards Thingstudio
+board names, such as `LED`, are listed first. [Supported hardware](supported-hardware.md) lists the boards ThingStudio
 has definitions for. For any other board, check its documentation.
 
 The Pico W and Pico 2 W LEDs are wired through the WiFi chip, not a GPIO pin, so `gpio out` can't reach them. On
@@ -1068,7 +1054,7 @@ Source: https://docs.thingstudio.net/installation-details/
 
 # Installation details
 
-How Thingstudio is packaged, where it puts its files, how to upgrade and remove it, and how to build it from source.
+How ThingStudio is packaged, where it puts its files, how to upgrade and remove it, and how to build it from source.
 [Getting started](getting-started.md#step-1-install-thingstudio) has the install steps.
 
 ## Packages
@@ -1092,17 +1078,17 @@ the folder with a newer one. To remove it, delete the folder. On Linux, add your
 
 ## Installer script
 
-On macOS and Linux, the installer puts Thingstudio in `~/.local/share/thingstudio` and the `thingstudio` command in
-`~/.local/bin`. Your settings live in `~/.thingstudio` (see [The Thingstudio folder](thingstudio-folder.md)).
+On macOS and Linux, the installer puts ThingStudio in `~/.local/share/thingstudio` and the `thingstudio` command in
+`~/.local/bin`. Your settings live in `~/.thingstudio` (see [The ThingStudio folder](thingstudio-folder.md)).
 
-On Windows, it puts Thingstudio in `%LOCALAPPDATA%\Thingstudio` and adds the `thingstudio` command to your PATH.
+On Windows, it puts ThingStudio in `%LOCALAPPDATA%\Thingstudio` and adds the `thingstudio` command to your PATH.
 Your settings live in `%USERPROFILE%\.thingstudio`.
 
 To upgrade, run the installer script again.
 
 ### Remove
 
-To remove Thingstudio on macOS and Linux:
+To remove ThingStudio on macOS and Linux:
 
 ```sh
 curl -fsSL https://github.com/mkarliner/ThingStudio/releases/latest/download/install.sh | sh -s -- --uninstall
@@ -1124,10 +1110,10 @@ Every install has a `tutorials` folder. [Tutorial flows](tutorial-flows.md#where
 
 ## From source
 
-For working on Thingstudio itself. You need Python 3.10 or later, Node.js 22.12 or later, and `make`. On a Mac,
+For working on ThingStudio itself. You need Python 3.10 or later, Node.js 22.12 or later, and `make`. On a Mac,
 `make` comes with the Xcode command line tools (`xcode-select --install`).
 
-In the repository folder, run `make`. This builds the editor and the user guide, installs Thingstudio into a `.venv`
+In the repository folder, run `make`. This builds the editor and the user guide, installs ThingStudio into a `.venv`
 folder, and puts the `thingstudio-backend` command on your PATH. Run `make` again after updating the repository. It
 only rebuilds what changed. If your `python3` is older than 3.10, name a newer one: `make PYTHON=python3.12`.
 
@@ -1200,7 +1186,7 @@ The Windows path contains the version, so it changes when you upgrade.
 - **A flow with a WiFi or MQTT node holds no passwords.** The network name, password and broker address are kept in a
   saved credential on your computer, never in the flow file. Open the node's **WiFi** or **MQTT Broker** field and
   click ✎: fill in your own details and save, or pick one you have already saved from the drop-down. See
-  [The Thingstudio folder](thingstudio-folder.md#credentials).
+  [The ThingStudio folder](thingstudio-folder.md#credentials).
 
 ## The flows
 
@@ -1313,7 +1299,7 @@ the **Board** menu lists your board's pins.
     - Recovery is doing nothing: the next message starts clean. A crashed stateful component needs its data
       restored to an acceptable earlier version, with nothing to say which that is.
 
-    When a flow does need to remember, Thingstudio's answer is a **context** — state held between messages, either
+    When a flow does need to remember, ThingStudio's answer is a **context** — state held between messages, either
     private to one node (`context`) or shared across the whole flow (`flow`). This blink's LED level belongs to one
     function node, so its private store is the one to use. All three stores, `context` and `flow` among them, are
     in [Context, flow and settings](../nodes/function.md#context-flow-and-settings); `settings` even survives a
@@ -1397,7 +1383,7 @@ The board joins the network named in the flow — so tell the flow which network
 passwords or other secrets: the WiFi details live in the `.thingstudio` folder in your home directory
 (`~/.thingstudio/credentials/`), as **credentials**. Each credential is named, and you can keep
 several — one per network — and pick the right one per flow. See
-[The Thingstudio folder](../thingstudio-folder.md#credentials).
+[The ThingStudio folder](../thingstudio-folder.md#credentials).
 
 1. On the `http in` node's property panel, click **+** next to the **WiFi** field to make a new credential (✎
    edits an existing one). Give the credential a name, your network's SSID and its password, and save.
@@ -1593,7 +1579,7 @@ with its own parts, listed under What you need.
 
 The flow is a **bme280** sensor feeding GUI nodes that draw the readings, with an **mqtt publish** that sends them on.
 
-The finished flow is in the Thingstudio repository:
+The finished flow is in the ThingStudio repository:
 [`test-flows/gui-headliner-sensor-freenove-s3-4in.flow.json`](https://github.com/mkarliner/ThingStudio/blob/main/test-flows/gui-headliner-sensor-freenove-s3-4in.flow.json).
 Open it in one of two ways:
 
@@ -1800,7 +1786,7 @@ Applying a preset copies the values once. Later changes to the node or the prese
 
 Each preset is a JSON file in `~/.thingstudio/presets/<node type>/`, which you can also write by hand. A file that
 isn't valid JSON appears in the menu disabled, with the file named. See
-[The Thingstudio folder](thingstudio-folder.md#presets).
+[The ThingStudio folder](thingstudio-folder.md#presets).
 
 ## Config nodes
 
@@ -1823,7 +1809,7 @@ secrets. Two flows that use the same credential share its values: edit it once a
 Pick a saved WiFi network or broker from the field's list. ✎ opens the saved values, such as a broker's host, port
 and login, with the config's other settings; **Save** stores them and **Cancel** discards the changes. **+** makes a
 new one: give it a name, fill it in and save. If a flow names a credential that isn't saved on this computer, ✎ says
-so, and saving creates it. See [The Thingstudio folder](thingstudio-folder.md#credentials).
+so, and saving creates it. See [The ThingStudio folder](thingstudio-folder.md#credentials).
 
 A flow has one WiFi network and one MQTT broker. Every node that uses WiFi has a **WiFi** field, and every MQTT node
 an **MQTT Broker** field. They all show the flow's one setting: change it on one node and it changes on all. A flow
@@ -1888,7 +1874,7 @@ and punctuation become dashes), but you can type over that suggestion freely.
 Custom node packages and saved credentials live in `~/.thingstudio/custom-nodes/` and `~/.thingstudio/credentials/`.
 They're shared across flows rather than tied to one project, unlike a flow itself — a saved credential referenced by
 name from a config node is never written into the `.flow.json` file. See
-[The Thingstudio folder](thingstudio-folder.md).
+[The ThingStudio folder](thingstudio-folder.md).
 
 ## Deploy
 
@@ -1929,14 +1915,14 @@ why.
 
 Source: https://docs.thingstudio.net/thingstudio-folder/
 
-# The Thingstudio folder
+# The ThingStudio folder
 
-Thingstudio keeps its own files in one folder on your computer:
+ThingStudio keeps its own files in one folder on your computer:
 
 - macOS and Linux: `~/.thingstudio`
 - Windows: `%USERPROFILE%\.thingstudio`
 
-Thingstudio creates the folder the first time it starts. Your flows are not kept here. They are saved wherever you
+ThingStudio creates the folder the first time it starts. Your flows are not kept here. They are saved wherever you
 choose (see [Flow lifecycle](flow-lifecycle.md#save-and-open)).
 
 ## What's in it
@@ -1950,7 +1936,7 @@ choose (see [Flow lifecycle](flow-lifecycle.md#save-and-open)).
 | `processors/` | Processor definitions | Yes |
 
 Every file is plain JSON, except the `.node.py` file of a custom node. The editor reads these folders through the
-Thingstudio backend, so they aren't available when the editor talks to the board directly over USB.
+ThingStudio backend, so they aren't available when the editor talks to the board directly over USB.
 
 ## Credentials
 
@@ -1971,12 +1957,12 @@ and load presets from a node's property panel (see [Presets](working-in-the-edit
 ## Custom nodes
 
 A custom node is two files with the same base name: `<name>.node.json` and `<name>.node.py`. The first time
-Thingstudio starts, it puts two examples here. Deleted examples don't come back. See
+ThingStudio starts, it puts two examples here. Deleted examples don't come back. See
 [Custom nodes](custom-nodes.md).
 
 ## Boards and processors
 
-At every start, Thingstudio writes the built-in definitions into `boards/` and `processors/`, replacing files of the
+At every start, ThingStudio writes the built-in definitions into `boards/` and `processors/`, replacing files of the
 same name. An upgrade's changes therefore arrive on the next start.
 
 - To keep your own version of a built-in, save it under a different name (for example `my-cyd.json`). It is then a
@@ -1987,7 +1973,7 @@ See [Boards and processors](boards.md).
 
 ## Using a different folder
 
-Start Thingstudio with `--data-dir`:
+Start ThingStudio with `--data-dir`:
 
 ```sh
 thingstudio --data-dir ~/projects/greenhouse/thingstudio-data
@@ -2008,6 +1994,10 @@ been deployed and run on that hardware. Pin details for boards and processors ar
 
 ## Boards
 
+Each board below has a definition: a pin cheat sheet that names the board's own pins, such as its LED, marks the
+pins that are reserved and why, and lists the pins each SPI and I2C bus can use. **Pins…** in the editor shows it.
+See [Seeing a board's pins](boards.md#seeing-a-boards-pins).
+
 | Board | Processor | Tested |
 | --- | --- | --- |
 | Raspberry Pi Pico | RP2040 | Yes |
@@ -2019,7 +2009,7 @@ been deployed and run on that hardware. Pin details for boards and processors ar
 | ESP32-C5-340X (ESP32-C5-KITC-A) | ESP32-C5 | Yes, with the ble nodes (scan, advertise, characteristics, UART) |
 | CYD (ESP32-2432S028, ST7789) | ESP32 | Yes, display only. |
 | Freenove ESP32-S3 Display 4.0" (FNK0104S) | ESP32-S3 | Yes, with the display and touch |
-| Pyboard v1.0 | STM32F405 | Untested |
+| Pyboard v1.0 | STM32F405 | Yes |
 | Seeed XIAO nRF52840 (Sense) | nRF52840 | Smoke tested, including the IMU |
 | Wemos D1 R32 | ESP32 | Yes, with an RM68090 parallel TFT shield (rewired, custom node) |
 
@@ -2084,13 +2074,15 @@ Other I2C devices can be read with a [function](nodes/function.md) node and the 
 
 ## Other boards
 
-Other boards that run MicroPython may work. Thingstudio needs a processor definition for the chip, and a board
-definition if you want the board's own pins labelled. See [Adding a board](boards.md#adding-a-board) and
-[Adding a processor](boards.md#adding-a-processor).
+Other boards that run MicroPython may work. ThingStudio needs a processor definition for the chip, and a board
+definition if you want the board's own pins labelled.
 
-An AI assistant can draft a definition file. Give it the board's pinout or the chip's datasheet, and one of the
-existing files in `~/.thingstudio/boards/` or `~/.thingstudio/processors/` as an example. Check the result against
-the datasheet. A missing reserved pin means the compile won't stop a flow that crashes the board.
+You can write definition files yourself: [Adding a board](boards.md#adding-a-board) and [Adding a
+processor](boards.md#adding-a-processor) describe every field of the JSON. Or an AI assistant can draft one. Point
+it at the board maker's web page for the board, and it can usually write the file in seconds. For a processor, give
+it the chip's datasheet. One of the existing files in `~/.thingstudio/boards/` or `~/.thingstudio/processors/` makes
+a good example to include. Check the result against the datasheet. A missing reserved pin means the compile won't
+stop a flow that crashes the board.
 
 ## Reporting hardware
 
@@ -2112,9 +2104,9 @@ Source: https://docs.thingstudio.net/boards/
 
 Each board and processor has a definition file that says which pins a flow may use. This page covers picking a board, seeing its pins, what gets checked, and writing your own definition files.
 
-Thingstudio checks every pin in a flow against the board the flow is for. If a pin doesn't exist on that board, or using it would crash the board, the compile stops and says why.
+ThingStudio checks every pin in a flow against the board the flow is for. If a pin doesn't exist on that board, or using it would crash the board, the compile stops and says why.
 
-Each board has a definition file, and so does each processor. Thingstudio comes with definitions for the boards and processors below. You can [change them or add your own](#your-definition-files).
+Each board has a definition file, and so does each processor. ThingStudio comes with definitions for the boards and processors below. You can [change them or add your own](#your-definition-files).
 
 ## Picking the board
 
@@ -2132,8 +2124,8 @@ If no board is connected and none is picked, pins are only checked against the r
 
 ## Seeing a board's pins
 
-Click **Pins…** next to the **Board** menu. It opens a page, in its own tab, for the board or processor picked
-there. The page lists, in order:
+Click **Pins…** next to the **Board** menu. It opens the pin cheat sheet, in its own tab, for the board or
+processor picked there. The cheat sheet lists, in order:
 
 - the pins the board names, such as its LED
 - for boards whose definition has a `header`, such as the Pico family, the physical pins, laid out like the board,
@@ -2143,7 +2135,7 @@ there. The page lists, in order:
 
 The page is read from the definition files each time you click. After changing a file, click **Pins…** again.
 
-If Thingstudio knows the board's processor but not the board, the page shows the processor's pins and says the
+If ThingStudio knows the board's processor but not the board, the page shows the processor's pins and says the
 board's own ones, like its LED, are missing. It gives a starter file to add them: see
 [Adding a board](#adding-a-board). If it doesn't know the processor either, the page says what the board reports:
 see [Adding a processor](#adding-a-processor).
@@ -2210,14 +2202,14 @@ The definition files list every pin to avoid, with the reason.
 
 ## Your definition files
 
-Definition files live in `~/.thingstudio/boards/` and `~/.thingstudio/processors/`. When Thingstudio starts, it writes
+Definition files live in `~/.thingstudio/boards/` and `~/.thingstudio/processors/`. When ThingStudio starts, it writes
 every built-in file there, replacing a file of the same name, so an upgrade's changes arrive on the next start.
 
 To keep your own version of a built-in board, save it under a different name (for example `my-cyd.json`) and give it its
 own name in the file. It is then a board of its own in the Board menu, and is never overwritten. Editing a built-in
 file in place lasts until the next start.
 
-Thingstudio reads these files when the editor starts, when you connect, and when you deploy. If a file has a mistake, it isn't loaded and the built-in is used instead. The console says what's wrong, and the Board menu lists the file under **Invalid files**.
+ThingStudio reads these files when the editor starts, when you connect, and when you deploy. If a file has a mistake, it isn't loaded and the built-in is used instead. The console says what's wrong, and the Board menu lists the file under **Invalid files**.
 
 ## Adding a board
 
@@ -2371,7 +2363,7 @@ Source: https://docs.thingstudio.net/custom-firmware/
 
 # Custom firmware
 
-A Thingstudio custom image is MicroPython with Thingstudio's runtime and every flow library built in. Stock
+A ThingStudio custom image is MicroPython with ThingStudio's runtime and every flow library built in. Stock
 MicroPython loads the runtime, the libraries and the flow into RAM. With a custom image, the runtime and libraries
 run from flash instead, which leaves the RAM for the flow. On a small board, that is the difference between a flow
 starting and failing with `MemoryError`.
@@ -2427,8 +2419,8 @@ Flashing erases the board: its saved flow and all settings are gone afterwards.
 
 1. Put the board in download mode if it needs it: hold **BOOT** and tap **RESET**.
 2. Choose **Tools → Install firmware…**, pick **Serial port**, then the board's port.
-3. Set **Chip family** to the board's chip and **Firmware** to **Thingstudio custom image**. If there is no
-   **Thingstudio custom image** for the chip, no image for it has been published yet: use official MicroPython.
+3. Set **Chip family** to the board's chip and **Firmware** to **ThingStudio custom image**. If there is no
+   **ThingStudio custom image** for the chip, no image for it has been published yet: use official MicroPython.
 4. Pick a **Version**. Each version listed ran on a board before it was published, and the editor checks the
    download against its recorded SHA-256 before writing it.
 5. Click **Flash**. The editor writes the image at the address in the table above.
@@ -2439,7 +2431,7 @@ Flashing erases the board: its saved flow and all settings are gone afterwards.
 
 You need `esptool` and `mpremote` on the computer: `pip install esptool mpremote`.
 
-Each image is attached to the Thingstudio release it was published with. On the
+Each image is attached to the ThingStudio release it was published with. On the
 [releases page](https://github.com/mkarliner/ThingStudio/releases), open the release whose assets include the image
 version you want (the versions are the ones the editor lists), and download three files from it: the image for your
 chip, its `.sha256` file and `main.py`.
@@ -2542,13 +2534,13 @@ over USB: deploy, the console, **Tools → Check status**, and clicking an injec
 
 ## What you need
 
-- A board with WiFi and the Thingstudio runtime. Plain Raspberry Pi Pico and Pico 2 boards have no
+- A board with WiFi and the ThingStudio runtime. Plain Raspberry Pi Pico and Pico 2 boards have no
   WiFi.
 - A flow on the board that uses WiFi and has joined your network. The board is only reachable while that flow is
   running. It starts again by itself after a reset.
 - A board password, set over USB.
 - This computer on the same network as the board.
-- On a Mac, Thingstudio started from Apple's Terminal app. See [If it doesn't connect](#if-it-doesnt-connect).
+- On a Mac, ThingStudio started from Apple's Terminal app. See [If it doesn't connect](#if-it-doesnt-connect).
 
 ## Set the password and name
 
@@ -2594,10 +2586,10 @@ Connected over USB, the console says whether the board can take a WiFi connectio
 
 The console says what went wrong:
 
-- **No route to host (Mac):** macOS is blocking local network access. The first time Thingstudio reaches for the
+- **No route to host (Mac):** macOS is blocking local network access. The first time ThingStudio reaches for the
   network, macOS asks whether it may find devices on your local network; choose **Allow**, then click **Connect**
   again (the attempt that raised the question can fail). If you chose **Don't Allow**, turn **thingstudio-python**
-  on in System Settings → Privacy & Security → Local Network, then restart Thingstudio. When running from source
+  on in System Settings → Privacy & Security → Local Network, then restart ThingStudio. When running from source
   (`thingstudio-backend`), macOS may block it without asking: start it from Apple's **Terminal** app instead, which
   macOS always allows.
 - **No answer:** check the board is on, its flow has joined WiFi, and this computer is on the
@@ -2997,7 +2989,7 @@ With one output, a returned list is passed on as the message itself. Set **outpu
 ## Behavior
 
 The code is the body of an `async def`, so `return` and `await` work at its top level. `asyncio` and `runtime` are
-already defined; import anything else in the code, such as `import machine`. A library Thingstudio provides, such as
+already defined; import anything else in the code, such as `import machine`. A library ThingStudio provides, such as
 `mqtt_as`, is installed on the board when you deploy (see [Libraries](../flow-lifecycle.md#libraries)).
 
 Don't call `time.sleep()` or run a long loop: either stops every other chain while it runs. Use
@@ -5215,17 +5207,17 @@ A custom node has the following limits:
 
 Source: https://docs.thingstudio.net/custom-nodes/
 
-# Writing a custom node for Thingstudio
+# Writing a custom node for ThingStudio
 
 A custom node is two files sharing a base name: `<name>.node.json` (the
 descriptor) and `<name>.node.py` (the behavior), placed in the backend's
-`~/.thingstudio/custom-nodes/` directory. Thingstudio loads it for you,
+`~/.thingstudio/custom-nodes/` directory. ThingStudio loads it for you,
 and you drag it onto the canvas like any built-in node.
 
 ## Loading a custom node
 
 Put both files in `~/.thingstudio/custom-nodes/` on the computer running
-Thingstudio.
+ThingStudio.
 
 The editor loads every package in that folder when it starts, and again
 when you switch back to its window. After changing a file, you can also
@@ -5238,7 +5230,7 @@ first one by file name is loaded and the other is reported.
 
 The folder starts with two examples, `doubler` and `dht22`, under
 **examples** in the palette. Read them, change them or delete them.
-Thingstudio adds them only the first time it runs, so deleted examples
+ThingStudio adds them only the first time it runs, so deleted examples
 stay deleted.
 
 ## The descriptor: `<name>.node.json`
@@ -5533,7 +5525,7 @@ redeployed flow can leave the old socket open and fail with
 
 ### Libraries you can import
 
-When a node imports one of these, Thingstudio sends it to the board with the flow:
+When a node imports one of these, ThingStudio sends it to the board with the flow:
 
 | Library | For |
 | --- | --- |
@@ -5624,7 +5616,7 @@ closure, so `nonlocal` works across them).
 
 ### Run-once sources
 
-A source that runs once, at flow start, sets `"runOnce": true` instead. It defines only `emit`; Thingstudio calls
+A source that runs once, at flow start, sets `"runOnce": true` instead. It defines only `emit`; ThingStudio calls
 it once, with no `intervalMs` and no `wait`.
 
 ```json
@@ -5713,7 +5705,7 @@ node dist-cli/thingstudio-compile.mjs --board board:cyd my.flow.json
 ```
 
 **Deploy time** — `.node.py` is spliced into the flow as-is;
-Thingstudio doesn't check it. A typo surfaces as a runtime error (e.g.
+ThingStudio doesn't check it. A typo surfaces as a runtime error (e.g.
 `NameError`) reported from the device, attributed to your node.
 
 ## Limitations
@@ -5721,11 +5713,11 @@ Thingstudio doesn't check it. A typo surfaces as a runtime error (e.g.
 A polled `source` node's `emit` runs on a fixed `intervalMs` schedule; an `eventSource` source waits on `wait` instead.
 
 Two instances of the same custom node get independent setup. For a `pin` field that declares `pinUse`,
-Thingstudio checks it against the board and claims it at compile time; a pin you build in Python yourself (or
+ThingStudio checks it against the board and claims it at compile time; a pin you build in Python yourself (or
 read from a plain `number` field) it can't see, so use `runtime.shared()` for those, and a clash is caught when
 the flow starts.
 
-Custom node Python runs with the same trust as any other node, including Thingstudio's `function` node. Loading a
+Custom node Python runs with the same trust as any other node, including ThingStudio's `function` node. Loading a
 package only adds it to the palette; its Python runs on a board only when you place the node and deploy. Only files
 you place in the folder are loaded — there's no registry and no URL install — so don't put a package there that you
 haven't read.
@@ -5737,7 +5729,7 @@ Source: https://docs.thingstudio.net/ai-authoring/
 
 # Writing flows with an AI assistant
 
-This page is for an AI assistant (or a person) writing a Thingstudio flow file or a custom node in the user's folder,
+This page is for an AI assistant (or a person) writing a ThingStudio flow file or a custom node in the user's folder,
 without the editor. It is complete on its own, with two companions: the generated [node catalog](nodes-catalog.md), and
 the `thingstudio-compile` command ([Check a flow without the editor](check-a-flow.md)). With a board attached,
 `device_cli.py` deploys and runs the flow ([Command line](command-line.md#deploy-and-run-a-flow-without-the-editor)).
@@ -5758,7 +5750,7 @@ Never say a flow works on the board unless you deployed it there and saw its out
 passes the check. No HTTPS in http_request.
 ```
 
-Claude users can add the Thingstudio skill instead: `thingstudio-flow-author-<version>.zip`, from the releases page,
+Claude users can add the ThingStudio skill instead: `thingstudio-flow-author-<version>.zip`, from the releases page,
 carries this guide, the node catalog, the examples and the check command, so the assistant needs nothing else.
 Upload the zip as a skill in Claude, or unzip it into `~/.claude/skills/` for Claude Code. Use the skill whose
 version matches your editor. Otherwise the check needs Node and the built `thingstudio-compile.mjs`.
@@ -5988,7 +5980,7 @@ Read [GUI nodes](nodes/gui.md) for the details, and copy from
 
 If no node does the job and a function node is not enough, write a custom node: `<name>.node.json` and
 `<name>.node.py`. [Writing custom nodes](custom-nodes.md) is complete on its own. The two files go in `~/.thingstudio/custom-nodes/` on the
-computer running Thingstudio. The check command loads that folder (or the one given with `--custom-nodes <dir>`), so
+computer running ThingStudio. The check command loads that folder (or the one given with `--custom-nodes <dir>`), so
 check a flow that uses the node: a bad descriptor is reported by file, and the node's wires, properties and compile
 hook are checked like a built-in's. What the Python does on the board isn't checked: test its body on its own with
 sample messages.
@@ -6104,7 +6096,7 @@ Source: https://docs.thingstudio.net/command-line/
 
 # Command line
 
-Options for starting Thingstudio, a way to install the runtime and run flows without the editor, and a check for a
+Options for starting ThingStudio, a way to install the runtime and run flows without the editor, and a check for a
 flow file. To check a flow file from the command line, see [Check a flow without the editor](check-a-flow.md).
 
 ## Starting options
@@ -6115,10 +6107,10 @@ Add these after `thingstudio` (or `thingstudio-backend`, from source). `thingstu
 | --- | --- |
 | `--no-browser` | Don't open the editor in a browser. Open `http://127.0.0.1:8765/` yourself. |
 | `--port N` | Serve the editor on port `N` instead of 8765. |
-| `--data-dir DIR` | Use `DIR` instead of `~/.thingstudio`. See [The Thingstudio folder](thingstudio-folder.md#using-a-different-folder). |
-| `--log-level LEVEL` | How much Thingstudio prints in its terminal: `DEBUG`, `INFO` (default), `WARNING` or `ERROR`. |
+| `--data-dir DIR` | Use `DIR` instead of `~/.thingstudio`. See [The ThingStudio folder](thingstudio-folder.md#using-a-different-folder). |
+| `--log-level LEVEL` | How much ThingStudio prints in its terminal: `DEBUG`, `INFO` (default), `WARNING` or `ERROR`. |
 
-If you restart Thingstudio with the editor still open, that tab reconnects and no new one opens.
+If you restart ThingStudio with the editor still open, that tab reconnects and no new one opens.
 
 ## Installing the runtime from the command line
 
@@ -7229,7 +7221,7 @@ Source: https://docs.thingstudio.net/debugging/
 
 ## Console and compiled source
 
-The **console** shows what the board and Thingstudio report: deploy results, node errors, and what `debug` nodes
+The **console** shows what the board and ThingStudio report: deploy results, node errors, and what `debug` nodes
 and `print()` send. **Clear** empties it. Scroll up to read or copy: the console stops following new lines until you
 scroll back to the bottom.
 
@@ -7244,7 +7236,7 @@ Hidden lines are kept, so choosing Info or Debug later shows what was already lo
 The **Compiled source** panel shows the MicroPython your flow compiles to. **Download .py** saves it as a file, named
 after the flow.
 
-The editor's version is next to its name in the toolbar, and in **Help → About Thingstudio**. A `+` after it means
+The editor's version is next to its name in the toolbar, and in **Help → About ThingStudio**. A `+` after it means
 you built it from uncommitted changes. Include the versions when you report a problem.
 
 ### Memory
@@ -7304,7 +7296,7 @@ immediately; the next read returns the default. **Tools → Clear device setting
 choose the current flow, or every flow.
 
 For MicroPython's own `>>>` prompt, click **Stop flow & open prompt**. The flow and the runtime stop; nothing is
-deleted. What you type in the box now goes to that prompt, and Deploy is off. Click **Restart Thingstudio** to start
+deleted. What you type in the box now goes to that prompt, and Deploy is off. Click **Restart ThingStudio** to start
 the runtime and the saved flow again.
 
 To use the prompt from another program, such as Thonny or `mpremote`, click **Connected · Disconnect** first.
@@ -7316,7 +7308,7 @@ monitor that doesn't send Ctrl-C when it opens. A working runtime prints `LISTEN
 `LISTENER_READY`.
 
 `mpremote repl` and Thonny's Shell interrupt the board as they connect, which looks like a board that never starts.
-Close them before connecting from Thingstudio: only one program can use the port at a time.
+Close them before connecting from ThingStudio: only one program can use the port at a time.
 
 ## Board won't connect
 
@@ -7326,12 +7318,12 @@ what the board sent instead, and what to do:
 | Console says | What to do |
 | --- | --- |
 | Nothing came back | Usually no MicroPython. [Install MicroPython](installing-micropython.md). If it's there, press reset, then **Tools → Check status**. |
-| MicroPython but no Thingstudio runtime | **Tools → Install runtime…**. |
+| MicroPython but no ThingStudio runtime | **Tools → Install runtime…**. |
 | MicroPython replied but didn't enter install mode | Press reset and install again. |
 | Board is in its bootloader | An ESP32 in download mode. Press reset, not BOOT. If it repeats, install MicroPython. |
 | Board runs CircuitPython, or replied but not as MicroPython | [Install MicroPython](installing-micropython.md). |
 | Runtime still starting | Wait, then **Tools → Check status**. |
-| Install stalled | Replug the board, click **⟳**, and try again. If it repeats, restart Thingstudio. |
+| Install stalled | Replug the board, click **⟳**, and try again. If it repeats, restart ThingStudio. |
 
 If the port itself won't open, the console says why:
 
@@ -7354,11 +7346,11 @@ The raw error stays in the message, in brackets. Include it if you report a prob
 | A port named `/dev/ttyS0`, `/dev/ttyS1`… | Those are the computer's own serial ports, not the board. USB ports are listed above them, labelled with their path and the adapter's name (`/dev/ttyUSB0 -- CH340`). |
 | (no build for this chip — choose a file) | The catalog has no pinned image for that chip family. Under **Or use your own image file**, pick the `.bin` or `.uf2` from [micropython.org/download](https://micropython.org/download/). |
 | The chip family list is empty, or the catalog can't be read | This install's `firmware/builds.json` is missing or malformed; the dialog says which line. A reinstall replaces it. |
-| The catalog from docs.thingstudio.net was refused | The list on the site didn't carry a valid Thingstudio signature, or is older than one this computer already has. The dialog uses the saved or installed list instead, so flashing still works. Report it ([Help → Report a problem](faq.md#where-do-i-ask-a-question-or-report-a-problem)) with the reason in the line. |
+| The catalog from docs.thingstudio.net was refused | The list on the site didn't carry a valid ThingStudio signature, or is older than one this computer already has. The dialog uses the saved or installed list instead, so flashing still works. Report it ([Help → Report a problem](faq.md#where-do-i-ask-a-question-or-report-a-problem)) with the reason in the line. |
 | … is not a .uf2, or is a .uf2 sent to a serial port | A mounted drive takes the `.uf2` build, a serial port the `.bin`. Pick the matching file. |
 | choose the chip family, so esptool knows which chip and address to use | A file on its own doesn't say which chip it is for. Pick the family; if the image is the reason, the editor reads it out of the file. |
-| The board doesn't start after flashing, or its serial output repeats `invalid header` | The address or the family was wrong: `0x1000` for an ESP32 or ESP32-S2, `0x2000` for an ESP32-C5, `0` for an ESP32-S3, C3, C6 or ESP8266, and `0` for a [Thingstudio custom image](custom-firmware.md) on a classic ESP32. A board maker's manual may give another address for its own demo images; for MicroPython, use these. Thonny can't write a C5 at `0x2000` ([Install MicroPython](installing-micropython.md#without-a-terminal-thonny)). Flash again with the right family; the board is recoverable. |
-| esptool is not installed on this machine | The backend's Python has no `esptool`: `pip install esptool`, then restart Thingstudio. |
+| The board doesn't start after flashing, or its serial output repeats `invalid header` | The address or the family was wrong: `0x1000` for an ESP32 or ESP32-S2, `0x2000` for an ESP32-C5, `0` for an ESP32-S3, C3, C6 or ESP8266, and `0` for a [ThingStudio custom image](custom-firmware.md) on a classic ESP32. A board maker's manual may give another address for its own demo images; for MicroPython, use these. Thonny can't write a C5 at `0x2000` ([Install MicroPython](installing-micropython.md#without-a-terminal-thonny)). Flash again with the right family; the board is recoverable. |
+| esptool is not installed on this machine | The backend's Python has no `esptool`: `pip install esptool`, then restart ThingStudio. |
 | esptool exited N at … on PORT | The write stopped; the dialog's log has the tool's own lines. Check the cable and the bootloader mode, and retry. In **Install options**, try a slower speed, or tick **Disable the stub loader**. |
 | the flash did not finish within … | The tool stopped answering. Unplug and replug the board, then flash again. |
 
@@ -7366,12 +7358,12 @@ The raw error stays in the message, in brackets. Include it if you report a prob
 vendor image) needs it, or the new image can be written and still not boot.
 
 A flash that finishes but leaves the board silent usually means it is waiting for **Tools → Install runtime…**: a
-stock MicroPython build has no runtime at all, and the Thingstudio custom image carries one but not the boot script that
+stock MicroPython build has no runtime at all, and the ThingStudio custom image carries one but not the boot script that
 starts it.
 
 ## A full runtime on a custom-image board
 
-On the Thingstudio custom image, **Tools → Install runtime…** writes only the boot script, `main.py`; the runtime
+On the ThingStudio custom image, **Tools → Install runtime…** writes only the boot script, `main.py`; the runtime
 is already in the firmware. A full copy of the runtime on the board's filesystem can only come from flashing the
 image without **Erase all flash first** over an older install that had one.
 
@@ -7390,7 +7382,7 @@ own files. Flash the image again with **Erase all flash first** ticked, then ins
 
 - the editor isn't connected to a board;
 - the flow on the board is the one on the canvas, deployed and unchanged since;
-- the flow is stopped at the Python prompt (click **Restart Thingstudio**);
+- the flow is stopped at the Python prompt (click **Restart ThingStudio**);
 - the board is restarting.
 
 ## Module missing on the board
@@ -7406,7 +7398,7 @@ Other modules differ between ports and builds. If the import is in your own func
 for your board in the [MicroPython docs](https://docs.micropython.org/). A board that should have it may need a
 different [MicroPython build](https://micropython.org/download/).
 
-Thingstudio's own libraries, such as the MQTT client and display drivers, are sent by Deploy. See
+ThingStudio's own libraries, such as the MQTT client and display drivers, are sent by Deploy. See
 [Libraries](flow-lifecycle.md#libraries).
 
 ## MemoryError or a library that won't load
@@ -7509,7 +7501,7 @@ over WiFi.
 
 The editor and the board follow a fixed set of moves when they talk. A line starting `[protocol] illegal` (from the
 editor) or `PROTOCOL_ILLEGAL` (from the board) means one of them made a move that isn't in that set. It is a bug in
-Thingstudio, not something you did. Deploy carries on or fails cleanly either way. Please
+ThingStudio, not something you did. Deploy carries on or fails cleanly either way. Please
 [report it](https://github.com/mkarliner/ThingStudio/issues) with the console lines around it.
 
 ## Reading a node error
@@ -7593,7 +7585,7 @@ and deploy it again, or remove it.
 **Tools → Remove flow…** deletes the saved flow from the board, for any flow that stops the board answering:
 
 1. Select the board's port and choose **Tools → Remove flow…**.
-2. If the console asks, press the board's reset button. Thingstudio keeps trying for a minute.
+2. If the console asks, press the board's reset button. ThingStudio keeps trying for a minute.
 3. When it's done, click **Connect**.
 
 The board then starts with the runtime only, as after a fresh install. The flow on your canvas isn't affected.
@@ -7609,14 +7601,14 @@ Source: https://docs.thingstudio.net/faq/
 
 Ask questions, and show what you've built, in [GitHub Discussions](https://github.com/mkarliner/ThingStudio/discussions).
 Report a bug or a missing feature on the [issue tracker](https://github.com/mkarliner/ThingStudio/issues), or with
-**Help → Report a problem**. Include the editor's version (**Help → About Thingstudio**), your board, and the console
+**Help → Report a problem**. Include the editor's version (**Help → About ThingStudio**), your board, and the console
 lines around the problem. Share the flow file, not compiled output; see the next question.
 
 ## How do I share a flow when I ask for help?
 
 Share the flow file: **File → Save**, then attach or paste the `.flow.json`. It holds the nodes and wiring and no
 passwords: the WiFi and broker logins stay on your computer
-([The Thingstudio folder](thingstudio-folder.md#credentials)). Don't paste the **Compiled source** panel, a downloaded
+([The ThingStudio folder](thingstudio-folder.md#credentials)). Don't paste the **Compiled source** panel, a downloaded
 `.py` or the console's compiled output: they contain the resolved WiFi password and broker login. If you pasted it somewhere
 public, change the password.
 
@@ -7661,7 +7653,7 @@ board. See [MemoryError or a library that won't load](debugging.md#memoryerror-o
 ## Redeploying a BLE flow on an ESP32-C5 fails with "MemoryError". Why?
 
 On stock MicroPython, the Bluetooth stack keeps its memory between flows, and the runtime, libraries and new flow
-have to fit in what is left. Install the [Thingstudio custom image](custom-firmware.md): it redeploys the same flow
+have to fit in what is left. Install the [ThingStudio custom image](custom-firmware.md): it redeploys the same flow
 with room to spare. Or choose **Tools → Remove flow…**, power cycle the board, then deploy.
 
 ## Why does http request fail with "MemoryError" fetching a page?
@@ -7681,7 +7673,7 @@ The console then shows megabytes free. Freenove's S3 display boards are an examp
 
 No. The generic ESP32-C5 build looks for PSRAM, and many C5 modules have none. It reports the failure, says
 "continuing without it", and starts MicroPython with the chip's own RAM. The
-[Thingstudio C5 image](custom-firmware.md) doesn't look for PSRAM, so it doesn't print this.
+[ThingStudio C5 image](custom-firmware.md) doesn't look for PSRAM, so it doesn't print this.
 
 ## Which board should I use for a display and WiFi together?
 
@@ -7713,7 +7705,7 @@ Connect and deploy again.
 
 ## How do I tell which version of the editor I'm running?
 
-It's next to **Thingstudio** in the toolbar, and in **Help → About Thingstudio**. A `+` after it means you built the editor
+It's next to **ThingStudio** in the toolbar, and in **Help → About ThingStudio**. A `+` after it means you built the editor
 from uncommitted changes.
 
 ## My clock shows `--` and never the time. Why?
@@ -7771,7 +7763,7 @@ fields then list the chip's own pins rather than take a number. See
 ## Why can't I use SPI bus 0 or 1 on an nRF52840?
 
 On the nRF52840, SPI 0 and 1 share hardware with I2C 0 and 1, so a flow using both would fail on the board.
-Thingstudio offers SPI on buses 2 and 3 only. See [Boards and processors](boards.md#built-in-processors).
+ThingStudio offers SPI on buses 2 and 3 only. See [Boards and processors](boards.md#built-in-processors).
 
 ## Why did my saved settings reset after I renamed the flow?
 
@@ -7787,7 +7779,7 @@ to A3 (CS) and GPIO 32 to A4 (RST), then set those pins in the display node.
 
 ## Do I need a terminal to install MicroPython?
 
-No, for boards Thingstudio can flash: the ESP32 family over a serial port, and a board whose bootloader mounts as a
+No, for boards ThingStudio can flash: the ESP32 family over a serial port, and a board whose bootloader mounts as a
 drive (RP2040, RP2350, nRF52). Put the board in its bootloader and use **Tools → Install firmware…**. Other chips
 have their own installation routes; see [Install MicroPython](installing-micropython.md).
 

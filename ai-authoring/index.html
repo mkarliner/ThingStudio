@@ -27,7 +27,7 @@
     
     
       
-        <title>Writing flows with an AI assistant - Thingstudio</title>
+        <title>Writing flows with an AI assistant - ThingStudio</title>
       
     
     
@@ -88,7 +88,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="Thingstudio" class="md-header__button md-logo" aria-label="Thingstudio" data-md-component="logo">
+    <a href=".." title="ThingStudio" class="md-header__button md-logo" aria-label="ThingStudio" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -102,7 +102,7 @@
       <div class="md-header__ellipsis">
         <div class="md-header__topic">
           <span class="md-ellipsis">
-            Thingstudio
+            ThingStudio
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
@@ -226,13 +226,13 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="Thingstudio" class="md-nav__button md-logo" aria-label="Thingstudio" data-md-component="logo">
+    <a href=".." title="ThingStudio" class="md-nav__button md-logo" aria-label="ThingStudio" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
 
     </a>
-    Thingstudio
+    ThingStudio
   </label>
   
     <div class="md-nav__source">
@@ -656,7 +656,7 @@
   <span class="md-ellipsis">
     
   
-    1. Install Thingstudio
+    1. Install ThingStudio
   
 
     
@@ -1194,7 +1194,7 @@
   <span class="md-ellipsis">
     
   
-    The Thingstudio folder
+    The ThingStudio folder
   
 
     
@@ -3747,7 +3747,7 @@
 
 
 <h1 id="writing-flows-with-an-ai-assistant">Writing flows with an AI assistant</h1>
-<p>This page is for an AI assistant (or a person) writing a Thingstudio flow file or a custom node in the user's folder,
+<p>This page is for an AI assistant (or a person) writing a ThingStudio flow file or a custom node in the user's folder,
 without the editor. It is complete on its own, with two companions: the generated <a href="../nodes-catalog/">node catalog</a>, and
 the <code>thingstudio-compile</code> command (<a href="../check-a-flow/">Check a flow without the editor</a>). With a board attached,
 <code>device_cli.py</code> deploys and runs the flow (<a href="../command-line/#deploy-and-run-a-flow-without-the-editor">Command line</a>).
@@ -3763,7 +3763,7 @@ names I must create, what you assumed about wiring, and what you could not check
 Never say a flow works on the board unless you deployed it there and saw its output; otherwise say it
 passes the check. No HTTPS in http_request.
 </code></pre></div>
-<p>Claude users can add the Thingstudio skill instead: <code>thingstudio-flow-author-&lt;version&gt;.zip</code>, from the releases page,
+<p>Claude users can add the ThingStudio skill instead: <code>thingstudio-flow-author-&lt;version&gt;.zip</code>, from the releases page,
 carries this guide, the node catalog, the examples and the check command, so the assistant needs nothing else.
 Upload the zip as a skill in Claude, or unzip it into <code>~/.claude/skills/</code> for Claude Code. Use the skill whose
 version matches your editor. Otherwise the check needs Node and the built <code>thingstudio-compile.mjs</code>.</p>
@@ -4045,7 +4045,7 @@ plug), <code>gui.md</code> has the wiring.</p>
 <h2 id="custom-nodes">Custom nodes</h2>
 <p>If no node does the job and a function node is not enough, write a custom node: <code>&lt;name&gt;.node.json</code> and
 <code>&lt;name&gt;.node.py</code>. <a href="../custom-nodes/">Writing custom nodes</a> is complete on its own. The two files go in <code>~/.thingstudio/custom-nodes/</code> on the
-computer running Thingstudio. The check command loads that folder (or the one given with <code>--custom-nodes &lt;dir&gt;</code>), so
+computer running ThingStudio. The check command loads that folder (or the one given with <code>--custom-nodes &lt;dir&gt;</code>), so
 check a flow that uses the node: a bad descriptor is reported by file, and the node's wires, properties and compile
 hook are checked like a built-in's. What the Python does on the board isn't checked: test its body on its own with
 sample messages.</p>

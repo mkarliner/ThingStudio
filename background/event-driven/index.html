@@ -27,7 +27,7 @@
     
     
       
-        <title>Event-driven programming - Thingstudio</title>
+        <title>Event-driven programming - ThingStudio</title>
       
     
     
@@ -88,7 +88,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../.." title="Thingstudio" class="md-header__button md-logo" aria-label="Thingstudio" data-md-component="logo">
+    <a href="../.." title="ThingStudio" class="md-header__button md-logo" aria-label="ThingStudio" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -102,7 +102,7 @@
       <div class="md-header__ellipsis">
         <div class="md-header__topic">
           <span class="md-ellipsis">
-            Thingstudio
+            ThingStudio
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
@@ -226,13 +226,13 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../.." title="Thingstudio" class="md-nav__button md-logo" aria-label="Thingstudio" data-md-component="logo">
+    <a href="../.." title="ThingStudio" class="md-nav__button md-logo" aria-label="ThingStudio" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
 
     </a>
-    Thingstudio
+    ThingStudio
   </label>
   
     <div class="md-nav__source">
@@ -422,7 +422,7 @@
   <a href="#how-thingstudio-does-it" class="md-nav__link">
     <span class="md-ellipsis">
       
-        How Thingstudio does it
+        How ThingStudio does it
       
     </span>
   </a>
@@ -760,7 +760,7 @@
   <span class="md-ellipsis">
     
   
-    1. Install Thingstudio
+    1. Install ThingStudio
   
 
     
@@ -1298,7 +1298,7 @@
   <span class="md-ellipsis">
     
   
-    The Thingstudio folder
+    The ThingStudio folder
   
 
     
@@ -3543,7 +3543,7 @@
   <a href="#how-thingstudio-does-it" class="md-nav__link">
     <span class="md-ellipsis">
       
-        How Thingstudio does it
+        How ThingStudio does it
       
     </span>
   </a>
@@ -3614,10 +3614,10 @@ A <code>sleep</code> long enough to pace one job stalls all of them. Adding a jo
 </ul>
 <p>Nothing is checked in a loop. The board sleeps until an event arrives, runs its handler, and waits again. Jobs
 with different timing don't get in each other's way.</p>
-<h2 id="how-thingstudio-does-it">How Thingstudio does it</h2>
-<p>Thingstudio is built on <code>asyncio</code>, MicroPython's built-in module for event-driven programming. It provides an
+<h2 id="how-thingstudio-does-it">How ThingStudio does it</h2>
+<p>ThingStudio is built on <code>asyncio</code>, MicroPython's built-in module for event-driven programming. It provides an
 event loop: one scheduler that runs many tasks, switching between them whenever one is waiting.</p>
-<p>In Thingstudio, each chain of nodes that starts at a source (a <code>timer</code>, an <code>interrupt</code>, an <code>mqtt subscribe</code>) is
+<p>In ThingStudio, each chain of nodes that starts at a source (a <code>timer</code>, an <code>interrupt</code>, an <code>mqtt subscribe</code>) is
 one handler. When you deploy, the flow is turned into MicroPython code in which each source becomes an <code>asyncio</code>
 task. While one task waits, for a timer or the network, the others run.</p>
 <h2 id="the-one-rule-dont-block">The one rule: don't block</h2>

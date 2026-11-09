@@ -27,7 +27,7 @@
     
     
       
-        <title>Debugging & troubleshooting - Thingstudio</title>
+        <title>Debugging & troubleshooting - ThingStudio</title>
       
     
     
@@ -88,7 +88,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="Thingstudio" class="md-header__button md-logo" aria-label="Thingstudio" data-md-component="logo">
+    <a href=".." title="ThingStudio" class="md-header__button md-logo" aria-label="ThingStudio" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -102,7 +102,7 @@
       <div class="md-header__ellipsis">
         <div class="md-header__topic">
           <span class="md-ellipsis">
-            Thingstudio
+            ThingStudio
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
@@ -226,13 +226,13 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="Thingstudio" class="md-nav__button md-logo" aria-label="Thingstudio" data-md-component="logo">
+    <a href=".." title="ThingStudio" class="md-nav__button md-logo" aria-label="ThingStudio" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
 
     </a>
-    Thingstudio
+    ThingStudio
   </label>
   
     <div class="md-nav__source">
@@ -656,7 +656,7 @@
   <span class="md-ellipsis">
     
   
-    1. Install Thingstudio
+    1. Install ThingStudio
   
 
     
@@ -1194,7 +1194,7 @@
   <span class="md-ellipsis">
     
   
-    The Thingstudio folder
+    The ThingStudio folder
   
 
     
@@ -3982,7 +3982,7 @@
 
 <h1 id="debugging-troubleshooting">Debugging &amp; troubleshooting</h1>
 <h2 id="console-and-compiled-source">Console and compiled source</h2>
-<p>The <strong>console</strong> shows what the board and Thingstudio report: deploy results, node errors, and what <code>debug</code> nodes
+<p>The <strong>console</strong> shows what the board and ThingStudio report: deploy results, node errors, and what <code>debug</code> nodes
 and <code>print()</code> send. <strong>Clear</strong> empties it. Scroll up to read or copy: the console stops following new lines until you
 scroll back to the bottom.</p>
 <p>Its <strong>Show</strong> menu sets how much it shows:</p>
@@ -3994,7 +3994,7 @@ scroll back to the bottom.</p>
 <p>Hidden lines are kept, so choosing Info or Debug later shows what was already logged.</p>
 <p>The <strong>Compiled source</strong> panel shows the MicroPython your flow compiles to. <strong>Download .py</strong> saves it as a file, named
 after the flow.</p>
-<p>The editor's version is next to its name in the toolbar, and in <strong>Help → About Thingstudio</strong>. A <code>+</code> after it means
+<p>The editor's version is next to its name in the toolbar, and in <strong>Help → About ThingStudio</strong>. A <code>+</code> after it means
 you built it from uncommitted changes. Include the versions when you report a problem.</p>
 <h3 id="memory">Memory</h3>
 <p>With <strong>Show</strong> set to <strong>Info</strong>, the console prints a <code>[memory]</code> line after each connect and deploy. On an ESP32 it
@@ -4040,7 +4040,7 @@ as a <code>sleep</code> or a loop, holds up the flow until it finishes.</p>
 immediately; the next read returns the default. <strong>Tools → Clear device settings…</strong> does the same from the editor:
 choose the current flow, or every flow.</p>
 <p>For MicroPython's own <code>&gt;&gt;&gt;</code> prompt, click <strong>Stop flow &amp; open prompt</strong>. The flow and the runtime stop; nothing is
-deleted. What you type in the box now goes to that prompt, and Deploy is off. Click <strong>Restart Thingstudio</strong> to start
+deleted. What you type in the box now goes to that prompt, and Deploy is off. Click <strong>Restart ThingStudio</strong> to start
 the runtime and the saved flow again.</p>
 <p>To use the prompt from another program, such as Thonny or <code>mpremote</code>, click <strong>Connected · Disconnect</strong> first.</p>
 <h3 id="watching-a-board-start-up">Watching a board start up</h3>
@@ -4048,7 +4048,7 @@ the runtime and the saved flow again.</p>
 monitor that doesn't send Ctrl-C when it opens. A working runtime prints <code>LISTENER_BOOTING</code>, then
 <code>LISTENER_READY</code>.</p>
 <p><code>mpremote repl</code> and Thonny's Shell interrupt the board as they connect, which looks like a board that never starts.
-Close them before connecting from Thingstudio: only one program can use the port at a time.</p>
+Close them before connecting from ThingStudio: only one program can use the port at a time.</p>
 <h2 id="board-wont-connect">Board won't connect</h2>
 <p>When <strong>Connect</strong>, <strong>Tools → Check status</strong> or <strong>Tools → Install runtime…</strong> gets no proper reply, the console says
 what the board sent instead, and what to do:</p>
@@ -4065,7 +4065,7 @@ what the board sent instead, and what to do:</p>
 <td>Usually no MicroPython. <a href="../installing-micropython/">Install MicroPython</a>. If it's there, press reset, then <strong>Tools → Check status</strong>.</td>
 </tr>
 <tr>
-<td>MicroPython but no Thingstudio runtime</td>
+<td>MicroPython but no ThingStudio runtime</td>
 <td><strong>Tools → Install runtime…</strong>.</td>
 </tr>
 <tr>
@@ -4086,7 +4086,7 @@ what the board sent instead, and what to do:</p>
 </tr>
 <tr>
 <td>Install stalled</td>
-<td>Replug the board, click <strong>⟳</strong>, and try again. If it repeats, restart Thingstudio.</td>
+<td>Replug the board, click <strong>⟳</strong>, and try again. If it repeats, restart ThingStudio.</td>
 </tr>
 </tbody>
 </table>
@@ -4146,7 +4146,7 @@ what the board sent instead, and what to do:</p>
 </tr>
 <tr>
 <td>The catalog from docs.thingstudio.net was refused</td>
-<td>The list on the site didn't carry a valid Thingstudio signature, or is older than one this computer already has. The dialog uses the saved or installed list instead, so flashing still works. Report it (<a href="../faq/#where-do-i-ask-a-question-or-report-a-problem">Help → Report a problem</a>) with the reason in the line.</td>
+<td>The list on the site didn't carry a valid ThingStudio signature, or is older than one this computer already has. The dialog uses the saved or installed list instead, so flashing still works. Report it (<a href="../faq/#where-do-i-ask-a-question-or-report-a-problem">Help → Report a problem</a>) with the reason in the line.</td>
 </tr>
 <tr>
 <td>… is not a .uf2, or is a .uf2 sent to a serial port</td>
@@ -4158,11 +4158,11 @@ what the board sent instead, and what to do:</p>
 </tr>
 <tr>
 <td>The board doesn't start after flashing, or its serial output repeats <code>invalid header</code></td>
-<td>The address or the family was wrong: <code>0x1000</code> for an ESP32 or ESP32-S2, <code>0x2000</code> for an ESP32-C5, <code>0</code> for an ESP32-S3, C3, C6 or ESP8266, and <code>0</code> for a <a href="../custom-firmware/">Thingstudio custom image</a> on a classic ESP32. A board maker's manual may give another address for its own demo images; for MicroPython, use these. Thonny can't write a C5 at <code>0x2000</code> (<a href="../installing-micropython/#without-a-terminal-thonny">Install MicroPython</a>). Flash again with the right family; the board is recoverable.</td>
+<td>The address or the family was wrong: <code>0x1000</code> for an ESP32 or ESP32-S2, <code>0x2000</code> for an ESP32-C5, <code>0</code> for an ESP32-S3, C3, C6 or ESP8266, and <code>0</code> for a <a href="../custom-firmware/">ThingStudio custom image</a> on a classic ESP32. A board maker's manual may give another address for its own demo images; for MicroPython, use these. Thonny can't write a C5 at <code>0x2000</code> (<a href="../installing-micropython/#without-a-terminal-thonny">Install MicroPython</a>). Flash again with the right family; the board is recoverable.</td>
 </tr>
 <tr>
 <td>esptool is not installed on this machine</td>
-<td>The backend's Python has no <code>esptool</code>: <code>pip install esptool</code>, then restart Thingstudio.</td>
+<td>The backend's Python has no <code>esptool</code>: <code>pip install esptool</code>, then restart ThingStudio.</td>
 </tr>
 <tr>
 <td>esptool exited N at … on PORT</td>
@@ -4177,10 +4177,10 @@ what the board sent instead, and what to do:</p>
 <p><strong>Erase all flash first</strong> is on by default: a board that had a different layout (a previous MicroPython, or a
 vendor image) needs it, or the new image can be written and still not boot.</p>
 <p>A flash that finishes but leaves the board silent usually means it is waiting for <strong>Tools → Install runtime…</strong>: a
-stock MicroPython build has no runtime at all, and the Thingstudio custom image carries one but not the boot script that
+stock MicroPython build has no runtime at all, and the ThingStudio custom image carries one but not the boot script that
 starts it.</p>
 <h2 id="a-full-runtime-on-a-custom-image-board">A full runtime on a custom-image board</h2>
-<p>On the Thingstudio custom image, <strong>Tools → Install runtime…</strong> writes only the boot script, <code>main.py</code>; the runtime
+<p>On the ThingStudio custom image, <strong>Tools → Install runtime…</strong> writes only the boot script, <code>main.py</code>; the runtime
 is already in the firmware. A full copy of the runtime on the board's filesystem can only come from flashing the
 image without <strong>Erase all flash first</strong> over an older install that had one.</p>
 <p>To see what is on the filesystem, type this in the command box:</p>
@@ -4193,7 +4193,7 @@ own files. Flash the image again with <strong>Erase all flash first</strong> tic
 <ul>
 <li>the editor isn't connected to a board;</li>
 <li>the flow on the board is the one on the canvas, deployed and unchanged since;</li>
-<li>the flow is stopped at the Python prompt (click <strong>Restart Thingstudio</strong>);</li>
+<li>the flow is stopped at the Python prompt (click <strong>Restart ThingStudio</strong>);</li>
 <li>the board is restarting.</li>
 </ul>
 <h2 id="module-missing-on-the-board">Module missing on the board</h2>
@@ -4205,7 +4205,7 @@ console warns you before the deploy.</p>
 <p>Other modules differ between ports and builds. If the import is in your own function node, check the module exists
 for your board in the <a href="https://docs.micropython.org/">MicroPython docs</a>. A board that should have it may need a
 different <a href="https://micropython.org/download/">MicroPython build</a>.</p>
-<p>Thingstudio's own libraries, such as the MQTT client and display drivers, are sent by Deploy. See
+<p>ThingStudio's own libraries, such as the MQTT client and display drivers, are sent by Deploy. See
 <a href="../flow-lifecycle/#libraries">Libraries</a>.</p>
 <h2 id="memoryerror-or-a-library-that-wont-load">MemoryError or a library that won't load</h2>
 <p>The <code>[memory]</code> line can show free RAM while a deploy still fails with <code>MemoryError</code>: the free RAM is in pieces, and
@@ -4289,7 +4289,7 @@ over WiFi.</p>
 <h2 id="the-console-shows-protocol-illegal-or-protocol_illegal">The console shows <code>[protocol] illegal</code> or <code>PROTOCOL_ILLEGAL</code></h2>
 <p>The editor and the board follow a fixed set of moves when they talk. A line starting <code>[protocol] illegal</code> (from the
 editor) or <code>PROTOCOL_ILLEGAL</code> (from the board) means one of them made a move that isn't in that set. It is a bug in
-Thingstudio, not something you did. Deploy carries on or fails cleanly either way. Please
+ThingStudio, not something you did. Deploy carries on or fails cleanly either way. Please
 <a href="https://github.com/mkarliner/ThingStudio/issues">report it</a> with the console lines around it.</p>
 <h2 id="reading-a-node-error">Reading a node error</h2>
 <p>When a node fails on the board, the console shows a <code>[NODE_ERROR]</code> line naming the node and the error, and the node
@@ -4353,7 +4353,7 @@ and deploy it again, or remove it.</p>
 <p><strong>Tools → Remove flow…</strong> deletes the saved flow from the board, for any flow that stops the board answering:</p>
 <ol>
 <li>Select the board's port and choose <strong>Tools → Remove flow…</strong>.</li>
-<li>If the console asks, press the board's reset button. Thingstudio keeps trying for a minute.</li>
+<li>If the console asks, press the board's reset button. ThingStudio keeps trying for a minute.</li>
 <li>When it's done, click <strong>Connect</strong>.</li>
 </ol>
 <p>The board then starts with the runtime only, as after a fresh install. The flow on your canvas isn't affected.</p>

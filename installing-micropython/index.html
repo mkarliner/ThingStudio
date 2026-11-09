@@ -27,7 +27,7 @@
     
     
       
-        <title>3. Install MicroPython - Thingstudio</title>
+        <title>3. Install MicroPython - ThingStudio</title>
       
     
     
@@ -88,7 +88,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="Thingstudio" class="md-header__button md-logo" aria-label="Thingstudio" data-md-component="logo">
+    <a href=".." title="ThingStudio" class="md-header__button md-logo" aria-label="ThingStudio" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -102,7 +102,7 @@
       <div class="md-header__ellipsis">
         <div class="md-header__topic">
           <span class="md-ellipsis">
-            Thingstudio
+            ThingStudio
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
@@ -226,13 +226,13 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="Thingstudio" class="md-nav__button md-logo" aria-label="Thingstudio" data-md-component="logo">
+    <a href=".." title="ThingStudio" class="md-nav__button md-logo" aria-label="ThingStudio" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
 
     </a>
-    Thingstudio
+    ThingStudio
   </label>
   
     <div class="md-nav__source">
@@ -658,7 +658,7 @@
   <span class="md-ellipsis">
     
   
-    1. Install Thingstudio
+    1. Install ThingStudio
   
 
     
@@ -770,7 +770,7 @@
   <a href="#install-from-thingstudio" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Install from Thingstudio
+        Install from ThingStudio
       
     </span>
   </a>
@@ -1337,7 +1337,7 @@
   <span class="md-ellipsis">
     
   
-    The Thingstudio folder
+    The ThingStudio folder
   
 
     
@@ -3560,7 +3560,7 @@
   <a href="#install-from-thingstudio" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Install from Thingstudio
+        Install from ThingStudio
       
     </span>
   </a>
@@ -3671,13 +3671,13 @@
 
 
 <h1 id="step-3-install-micropython">Step 3: Install MicroPython</h1>
-<p>Thingstudio runs on top of <a href="../background/micropython/">MicroPython</a>, so the board needs it first. You install it once
+<p>ThingStudio runs on top of <a href="../background/micropython/">MicroPython</a>, so the board needs it first. You install it once
 per board.</p>
 <p>A new board usually doesn't have MicroPython. If yours already has it, or you're not sure, go to
 <a href="../connecting/">step 4</a>. If MicroPython is missing, the console says so when you connect, and links back here.</p>
-<p>Thingstudio can install it for you, on the chips it can write.</p>
-<h2 id="install-from-thingstudio">Install from Thingstudio</h2>
-<p>Thingstudio writes the firmware itself: over a serial port for the ESP32 family, and onto a mounted drive for
+<p>ThingStudio can install it for you, on the chips it can write.</p>
+<h2 id="install-from-thingstudio">Install from ThingStudio</h2>
+<p>ThingStudio writes the firmware itself: over a serial port for the ESP32 family, and onto a mounted drive for
 RP2040, RP2350 and nRF52 boards.</p>
 <div class="admonition tip">
 <p class="admonition-title">ESP32 without PSRAM? Use a custom image</p>
@@ -3687,11 +3687,11 @@ bit of RAM. We strongly suggest that you flash these boards with one of our
 release significant memory for your flow.</p>
 </div>
 <p>On a classic ESP32 with 4 MB of flash and no PSRAM, an ESP32-C3 or an ESP32-C5, pick
-<strong>Thingstudio custom image</strong> as the <strong>Firmware</strong> when the dialog lists one for the chip. Its <strong>Version</strong> list holds
+<strong>ThingStudio custom image</strong> as the <strong>Firmware</strong> when the dialog lists one for the chip. Its <strong>Version</strong> list holds
 the published releases.
 After flashing it, <strong>Install runtime</strong> writes only the boot script.</p>
-<p>The list of builds comes from docs.thingstudio.net, so a new image appears without updating Thingstudio. Thingstudio
-uses that list only when it carries Thingstudio's signature; offline, it uses the last list it saved, or the one it
+<p>The list of builds comes from docs.thingstudio.net, so a new image appears without updating ThingStudio. ThingStudio
+uses that list only when it carries ThingStudio's signature; offline, it uses the last list it saved, or the one it
 was installed with. The line under <strong>Version</strong> says which.</p>
 <ol>
 <li>Plug the board into USB. A Pico needs <strong>BOOTSEL</strong> held while you plug it in.</li>
@@ -3700,7 +3700,7 @@ was installed with. The line under <strong>Version</strong> says which.</p>
    the path and the adapter's name (for example <code>/dev/ttyUSB0 -- CH340</code>). If an ESP32 isn't listed, hold <strong>BOOT</strong>,
    tap <strong>RESET</strong> and click ⟳; the line under the list says how many it found. If it still isn't listed, type the
    path in the box (on macOS a mounted Pico is <code>/Volumes/RPI-RP2</code>).</li>
-<li>Pick the <strong>Chip family</strong>, the <strong>Firmware</strong> (<strong>Official MicroPython (micropython.org)</strong> or <strong>Thingstudio custom
+<li>Pick the <strong>Chip family</strong>, the <strong>Firmware</strong> (<strong>Official MicroPython (micropython.org)</strong> or <strong>ThingStudio custom
    image</strong>), the <strong>Build</strong> and the <strong>Version</strong>. A board that names its own build is preselected.</li>
 <li>Click <strong>Flash</strong>. <strong>Erase all flash first</strong> is ticked: it clears an old partition table, which is the usual
    reason a board doesn't boot after a successful install. The dialog shows each line the tool prints; a failure
@@ -3710,15 +3710,15 @@ was installed with. The line under <strong>Version</strong> says which.</p>
 <strong>ESP32 with PSRAM (WROVER / SPIRAM)</strong>, and a single-core SOLO wants <strong>ESP32 single-core (SOLO / UNICORE)</strong>. Only the
 chip families the editor can write are listed, and only builds whose hash is pinned, so what you flash is what was
 tested.</p>
-<p>The list covers every build Thingstudio pins, so <strong>Or use your own image file</strong> is only for the rest: a build for a
-board Thingstudio doesn't list, a chip with no pinned build yet (the ESP32-C5), or an image you downloaded yourself. Pick the <code>.bin</code> or <code>.uf2</code>; the chip family you
+<p>The list covers every build ThingStudio pins, so <strong>Or use your own image file</strong> is only for the rest: a build for a
+board ThingStudio doesn't list, a chip with no pinned build yet (the ESP32-C5), or an image you downloaded yourself. Pick the <code>.bin</code> or <code>.uf2</code>; the chip family you
 choose decides the address, and the file's own header usually decides the family. <strong>Address</strong>, under <strong>Install
-options</strong>, overrides the family's address. A Thingstudio custom image for a classic ESP32 needs <code>0x0</code> there: see
+options</strong>, overrides the family's address. A ThingStudio custom image for a classic ESP32 needs <code>0x0</code> there: see
 <a href="../custom-firmware/#install-by-hand">Custom firmware</a>.</p>
 <p>Flashing erases the flow and all settings on the board. Afterwards, <a href="../connecting/">connect</a> it
 and <a href="../installing-runtime/">install the runtime</a>.</p>
 <h2 id="doing-it-yourself">Doing it yourself</h2>
-<p>For a chip Thingstudio can't write, or a build it doesn't pin, install MicroPython without the editor.</p>
+<p>For a chip ThingStudio can't write, or a build it doesn't pin, install MicroPython without the editor.</p>
 <h3 id="get-the-firmware">Get the firmware</h3>
 <p>Download the firmware for your board from <a href="https://micropython.org/download/">micropython.org/download</a>. Pick your
 exact board if it's listed, or the generic build for your chip:</p>
@@ -3778,7 +3778,7 @@ exact board if it's listed, or the generic build for your chip:</p>
 </ol>
 <p>The board restarts into MicroPython by itself.</p>
 <h3 id="esp32-family-esptool">ESP32 family: esptool</h3>
-<p>If Thingstudio is connected to the board, click <strong>Disconnect</strong> first. Only one program can use the board's port at
+<p>If ThingStudio is connected to the board, click <strong>Disconnect</strong> first. Only one program can use the board's port at
 a time. If another program has it open, esptool reports <code>Resource busy</code> or <code>could not open port</code>.</p>
 <p>Install <code>esptool</code> once:</p>
 <div class="highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>esptool
@@ -3822,16 +3822,16 @@ a different port afterwards.</p>
 <strong>Tools → Options → Interpreter</strong> and use <strong>Install or update MicroPython</strong>.</p>
 <p>When it's done, close Thonny. Like esptool, it needs the board's port to itself.</p>
 <p>Thonny can't install MicroPython on an ESP32-C5. It writes the image at <code>0</code>, but a C5 needs <code>0x2000</code>, and Thonny
-doesn't offer that address. The board then restarts in a loop printing <code>invalid header</code>. Use Thingstudio or
+doesn't offer that address. The board then restarts in a loop printing <code>invalid header</code>. Use ThingStudio or
 esptool instead. (<a href="https://github.com/thonny/thonny/issues/3963">Thonny issue #3963</a>)</p>
 <h3 id="other-microcontrollers">Other microcontrollers</h3>
 <p>Other chips, such as STM32, nRF or SAMD, each have their own way of installing MicroPython. See your board's page
 on <a href="https://micropython.org/download/">micropython.org/download</a> and the
 <a href="https://docs.micropython.org/en/latest/">MicroPython documentation</a>.</p>
-<p><a href="../supported-hardware/">Supported hardware</a> lists the chips Thingstudio is tested on. Another chip needs a
+<p><a href="../supported-hardware/">Supported hardware</a> lists the chips ThingStudio is tested on. Another chip needs a
 processor definition: see <a href="../supported-hardware/#other-boards">Other boards</a>.</p>
 <h2 id="next">Next</h2>
-<p>Step 4: <a href="../connecting/">connect your board</a> to Thingstudio.</p>
+<p>Step 4: <a href="../connecting/">connect your board</a> to ThingStudio.</p>
 
 
 

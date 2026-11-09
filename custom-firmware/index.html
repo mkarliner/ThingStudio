@@ -27,7 +27,7 @@
     
     
       
-        <title>Custom firmware - Thingstudio</title>
+        <title>Custom firmware - ThingStudio</title>
       
     
     
@@ -88,7 +88,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="Thingstudio" class="md-header__button md-logo" aria-label="Thingstudio" data-md-component="logo">
+    <a href=".." title="ThingStudio" class="md-header__button md-logo" aria-label="ThingStudio" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -102,7 +102,7 @@
       <div class="md-header__ellipsis">
         <div class="md-header__topic">
           <span class="md-ellipsis">
-            Thingstudio
+            ThingStudio
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
@@ -226,13 +226,13 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="Thingstudio" class="md-nav__button md-logo" aria-label="Thingstudio" data-md-component="logo">
+    <a href=".." title="ThingStudio" class="md-nav__button md-logo" aria-label="ThingStudio" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
 
     </a>
-    Thingstudio
+    ThingStudio
   </label>
   
     <div class="md-nav__source">
@@ -656,7 +656,7 @@
   <span class="md-ellipsis">
     
   
-    1. Install Thingstudio
+    1. Install ThingStudio
   
 
     
@@ -1194,7 +1194,7 @@
   <span class="md-ellipsis">
     
   
-    The Thingstudio folder
+    The ThingStudio folder
   
 
     
@@ -3659,7 +3659,7 @@
 
 
 <h1 id="custom-firmware">Custom firmware</h1>
-<p>A Thingstudio custom image is MicroPython with Thingstudio's runtime and every flow library built in. Stock
+<p>A ThingStudio custom image is MicroPython with ThingStudio's runtime and every flow library built in. Stock
 MicroPython loads the runtime, the libraries and the flow into RAM. With a custom image, the runtime and libraries
 run from flash instead, which leaves the RAM for the flow. On a small board, that is the difference between a flow
 starting and failing with <code>MemoryError</code>.</p>
@@ -3723,8 +3723,8 @@ one image serves any board with that chip.</p>
 <ol>
 <li>Put the board in download mode if it needs it: hold <strong>BOOT</strong> and tap <strong>RESET</strong>.</li>
 <li>Choose <strong>Tools → Install firmware…</strong>, pick <strong>Serial port</strong>, then the board's port.</li>
-<li>Set <strong>Chip family</strong> to the board's chip and <strong>Firmware</strong> to <strong>Thingstudio custom image</strong>. If there is no
-   <strong>Thingstudio custom image</strong> for the chip, no image for it has been published yet: use official MicroPython.</li>
+<li>Set <strong>Chip family</strong> to the board's chip and <strong>Firmware</strong> to <strong>ThingStudio custom image</strong>. If there is no
+   <strong>ThingStudio custom image</strong> for the chip, no image for it has been published yet: use official MicroPython.</li>
 <li>Pick a <strong>Version</strong>. Each version listed ran on a board before it was published, and the editor checks the
    download against its recorded SHA-256 before writing it.</li>
 <li>Click <strong>Flash</strong>. The editor writes the image at the address in the table above.</li>
@@ -3733,7 +3733,7 @@ one image serves any board with that chip.</p>
 </ol>
 <h2 id="install-by-hand">Install by hand</h2>
 <p>You need <code>esptool</code> and <code>mpremote</code> on the computer: <code>pip install esptool mpremote</code>.</p>
-<p>Each image is attached to the Thingstudio release it was published with. On the
+<p>Each image is attached to the ThingStudio release it was published with. On the
 <a href="https://github.com/mkarliner/ThingStudio/releases">releases page</a>, open the release whose assets include the image
 version you want (the versions are the ones the editor lists), and download three files from it: the image for your
 chip, its <code>.sha256</code> file and <code>main.py</code>.</p>

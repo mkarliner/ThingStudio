@@ -27,7 +27,7 @@
     
     
       
-        <title>Writing custom nodes - Thingstudio</title>
+        <title>Writing custom nodes - ThingStudio</title>
       
     
     
@@ -88,7 +88,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="Thingstudio" class="md-header__button md-logo" aria-label="Thingstudio" data-md-component="logo">
+    <a href=".." title="ThingStudio" class="md-header__button md-logo" aria-label="ThingStudio" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -102,7 +102,7 @@
       <div class="md-header__ellipsis">
         <div class="md-header__topic">
           <span class="md-ellipsis">
-            Thingstudio
+            ThingStudio
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
@@ -226,13 +226,13 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="Thingstudio" class="md-nav__button md-logo" aria-label="Thingstudio" data-md-component="logo">
+    <a href=".." title="ThingStudio" class="md-nav__button md-logo" aria-label="ThingStudio" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
 
     </a>
-    Thingstudio
+    ThingStudio
   </label>
   
     <div class="md-nav__source">
@@ -656,7 +656,7 @@
   <span class="md-ellipsis">
     
   
-    1. Install Thingstudio
+    1. Install ThingStudio
   
 
     
@@ -1194,7 +1194,7 @@
   <span class="md-ellipsis">
     
   
-    The Thingstudio folder
+    The ThingStudio folder
   
 
     
@@ -3846,14 +3846,14 @@
   
 
 
-<h1 id="writing-a-custom-node-for-thingstudio">Writing a custom node for Thingstudio</h1>
+<h1 id="writing-a-custom-node-for-thingstudio">Writing a custom node for ThingStudio</h1>
 <p>A custom node is two files sharing a base name: <code>&lt;name&gt;.node.json</code> (the
 descriptor) and <code>&lt;name&gt;.node.py</code> (the behavior), placed in the backend's
-<code>~/.thingstudio/custom-nodes/</code> directory. Thingstudio loads it for you,
+<code>~/.thingstudio/custom-nodes/</code> directory. ThingStudio loads it for you,
 and you drag it onto the canvas like any built-in node.</p>
 <h2 id="loading-a-custom-node">Loading a custom node</h2>
 <p>Put both files in <code>~/.thingstudio/custom-nodes/</code> on the computer running
-Thingstudio.</p>
+ThingStudio.</p>
 <p>The editor loads every package in that folder when it starts, and again
 when you switch back to its window. After changing a file, you can also
 click <strong>Reload custom nodes</strong> at the bottom of the palette. The console
@@ -3863,7 +3863,7 @@ and why. The others still load. If two packages use the same <code>type</code>, 
 first one by file name is loaded and the other is reported.</p>
 <p>The folder starts with two examples, <code>doubler</code> and <code>dht22</code>, under
 <strong>examples</strong> in the palette. Read them, change them or delete them.
-Thingstudio adds them only the first time it runs, so deleted examples
+ThingStudio adds them only the first time it runs, so deleted examples
 stay deleted.</p>
 <h2 id="the-descriptor-namenodejson">The descriptor: <code>&lt;name&gt;.node.json</code></h2>
 <p>Example — a node that doubles a numeric payload:</p>
@@ -4089,7 +4089,7 @@ typically — register it:</p>
 redeployed flow can leave the old socket open and fail with
 <code>EADDRINUSE</code> on the next deploy.</p>
 <h3 id="libraries-you-can-import">Libraries you can import</h3>
-<p>When a node imports one of these, Thingstudio sends it to the board with the flow:</p>
+<p>When a node imports one of these, ThingStudio sends it to the board with the flow:</p>
 <table>
 <thead>
 <tr>
@@ -4189,7 +4189,7 @@ register the handler:</p>
 <p>Keep any state the two share at the top of the file (both functions come from one per-instance
 closure, so <code>nonlocal</code> works across them).</p>
 <h3 id="run-once-sources">Run-once sources</h3>
-<p>A source that runs once, at flow start, sets <code>"runOnce": true</code> instead. It defines only <code>emit</code>; Thingstudio calls
+<p>A source that runs once, at flow start, sets <code>"runOnce": true</code> instead. It defines only <code>emit</code>; ThingStudio calls
 it once, with no <code>intervalMs</code> and no <code>wait</code>.</p>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
 <span class="w">  </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"custom/boot"</span><span class="p">,</span>
@@ -4276,15 +4276,15 @@ Check a flow that uses your node and it reports load and compile errors the same
 <div class="highlight"><pre><span></span><code>node<span class="w"> </span>dist-cli/thingstudio-compile.mjs<span class="w"> </span>--board<span class="w"> </span>board:cyd<span class="w"> </span>my.flow.json
 </code></pre></div>
 <p><strong>Deploy time</strong> — <code>.node.py</code> is spliced into the flow as-is;
-Thingstudio doesn't check it. A typo surfaces as a runtime error (e.g.
+ThingStudio doesn't check it. A typo surfaces as a runtime error (e.g.
 <code>NameError</code>) reported from the device, attributed to your node.</p>
 <h2 id="limitations">Limitations</h2>
 <p>A polled <code>source</code> node's <code>emit</code> runs on a fixed <code>intervalMs</code> schedule; an <code>eventSource</code> source waits on <code>wait</code> instead.</p>
 <p>Two instances of the same custom node get independent setup. For a <code>pin</code> field that declares <code>pinUse</code>,
-Thingstudio checks it against the board and claims it at compile time; a pin you build in Python yourself (or
+ThingStudio checks it against the board and claims it at compile time; a pin you build in Python yourself (or
 read from a plain <code>number</code> field) it can't see, so use <code>runtime.shared()</code> for those, and a clash is caught when
 the flow starts.</p>
-<p>Custom node Python runs with the same trust as any other node, including Thingstudio's <code>function</code> node. Loading a
+<p>Custom node Python runs with the same trust as any other node, including ThingStudio's <code>function</code> node. Loading a
 package only adds it to the palette; its Python runs on a board only when you place the node and deploy. Only files
 you place in the folder are loaded — there's no registry and no URL install — so don't put a package there that you
 haven't read.</p>

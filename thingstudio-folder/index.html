@@ -27,7 +27,7 @@
     
     
       
-        <title>The Thingstudio folder - Thingstudio</title>
+        <title>The ThingStudio folder - ThingStudio</title>
       
     
     
@@ -88,7 +88,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="Thingstudio" class="md-header__button md-logo" aria-label="Thingstudio" data-md-component="logo">
+    <a href=".." title="ThingStudio" class="md-header__button md-logo" aria-label="ThingStudio" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -102,13 +102,13 @@
       <div class="md-header__ellipsis">
         <div class="md-header__topic">
           <span class="md-ellipsis">
-            Thingstudio
+            ThingStudio
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              The Thingstudio folder
+              The ThingStudio folder
             
           </span>
         </div>
@@ -226,13 +226,13 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="Thingstudio" class="md-nav__button md-logo" aria-label="Thingstudio" data-md-component="logo">
+    <a href=".." title="ThingStudio" class="md-nav__button md-logo" aria-label="ThingStudio" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
 
     </a>
-    Thingstudio
+    ThingStudio
   </label>
   
     <div class="md-nav__source">
@@ -656,7 +656,7 @@
   <span class="md-ellipsis">
     
   
-    1. Install Thingstudio
+    1. Install ThingStudio
   
 
     
@@ -1205,7 +1205,7 @@
   <span class="md-ellipsis">
     
   
-    The Thingstudio folder
+    The ThingStudio folder
   
 
     
@@ -1223,7 +1223,7 @@
   <span class="md-ellipsis">
     
   
-    The Thingstudio folder
+    The ThingStudio folder
   
 
     
@@ -3614,13 +3614,13 @@
   
 
 
-<h1 id="the-thingstudio-folder">The Thingstudio folder</h1>
-<p>Thingstudio keeps its own files in one folder on your computer:</p>
+<h1 id="the-thingstudio-folder">The ThingStudio folder</h1>
+<p>ThingStudio keeps its own files in one folder on your computer:</p>
 <ul>
 <li>macOS and Linux: <code>~/.thingstudio</code></li>
 <li>Windows: <code>%USERPROFILE%\.thingstudio</code></li>
 </ul>
-<p>Thingstudio creates the folder the first time it starts. Your flows are not kept here. They are saved wherever you
+<p>ThingStudio creates the folder the first time it starts. Your flows are not kept here. They are saved wherever you
 choose (see <a href="../flow-lifecycle/#save-and-open">Flow lifecycle</a>).</p>
 <h2 id="whats-in-it">What's in it</h2>
 <table>
@@ -3660,7 +3660,7 @@ choose (see <a href="../flow-lifecycle/#save-and-open">Flow lifecycle</a>).</p>
 </tbody>
 </table>
 <p>Every file is plain JSON, except the <code>.node.py</code> file of a custom node. The editor reads these folders through the
-Thingstudio backend, so they aren't available when the editor talks to the board directly over USB.</p>
+ThingStudio backend, so they aren't available when the editor talks to the board directly over USB.</p>
 <h2 id="credentials">Credentials</h2>
 <p>A WiFi or MQTT broker config node holds only the name of a credential. The SSID, password, broker address and login
 are stored in <code>credentials/wifi/&lt;name&gt;.json</code> or <code>credentials/mqtt-broker/&lt;name&gt;.json</code>. This keeps secrets out of flow
@@ -3674,10 +3674,10 @@ and load presets from a node's property panel (see <a href="../working-in-the-ed
 <code>presets/&lt;node type&gt;/&lt;name&gt;.json</code>. A file that isn't valid JSON appears in the list disabled, with the file named.</p>
 <h2 id="custom-nodes">Custom nodes</h2>
 <p>A custom node is two files with the same base name: <code>&lt;name&gt;.node.json</code> and <code>&lt;name&gt;.node.py</code>. The first time
-Thingstudio starts, it puts two examples here. Deleted examples don't come back. See
+ThingStudio starts, it puts two examples here. Deleted examples don't come back. See
 <a href="../custom-nodes/">Custom nodes</a>.</p>
 <h2 id="boards-and-processors">Boards and processors</h2>
-<p>At every start, Thingstudio writes the built-in definitions into <code>boards/</code> and <code>processors/</code>, replacing files of the
+<p>At every start, ThingStudio writes the built-in definitions into <code>boards/</code> and <code>processors/</code>, replacing files of the
 same name. An upgrade's changes therefore arrive on the next start.</p>
 <ul>
 <li>To keep your own version of a built-in, save it under a different name (for example <code>my-cyd.json</code>). It is then a
@@ -3686,7 +3686,7 @@ same name. An upgrade's changes therefore arrive on the next start.</p>
 </ul>
 <p>See <a href="../boards/">Boards and processors</a>.</p>
 <h2 id="using-a-different-folder">Using a different folder</h2>
-<p>Start Thingstudio with <code>--data-dir</code>:</p>
+<p>Start ThingStudio with <code>--data-dir</code>:</p>
 <div class="highlight"><pre><span></span><code>thingstudio<span class="w"> </span>--data-dir<span class="w"> </span>~/projects/greenhouse/thingstudio-data
 </code></pre></div>
 <p>This keeps separate sets of credentials, presets and custom nodes, for example one per project.</p>

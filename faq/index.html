@@ -25,7 +25,7 @@
     
     
       
-        <title>FAQ - Thingstudio</title>
+        <title>FAQ - ThingStudio</title>
       
     
     
@@ -86,7 +86,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="Thingstudio" class="md-header__button md-logo" aria-label="Thingstudio" data-md-component="logo">
+    <a href=".." title="ThingStudio" class="md-header__button md-logo" aria-label="ThingStudio" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -100,7 +100,7 @@
       <div class="md-header__ellipsis">
         <div class="md-header__topic">
           <span class="md-ellipsis">
-            Thingstudio
+            ThingStudio
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
@@ -224,13 +224,13 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="Thingstudio" class="md-nav__button md-logo" aria-label="Thingstudio" data-md-component="logo">
+    <a href=".." title="ThingStudio" class="md-nav__button md-logo" aria-label="ThingStudio" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
 
     </a>
-    Thingstudio
+    ThingStudio
   </label>
   
     <div class="md-nav__source">
@@ -654,7 +654,7 @@
   <span class="md-ellipsis">
     
   
-    1. Install Thingstudio
+    1. Install ThingStudio
   
 
     
@@ -1192,7 +1192,7 @@
   <span class="md-ellipsis">
     
   
-    The Thingstudio folder
+    The ThingStudio folder
   
 
     
@@ -4276,12 +4276,12 @@
 <h2 id="where-do-i-ask-a-question-or-report-a-problem">Where do I ask a question or report a problem?</h2>
 <p>Ask questions, and show what you've built, in <a href="https://github.com/mkarliner/ThingStudio/discussions">GitHub Discussions</a>.
 Report a bug or a missing feature on the <a href="https://github.com/mkarliner/ThingStudio/issues">issue tracker</a>, or with
-<strong>Help → Report a problem</strong>. Include the editor's version (<strong>Help → About Thingstudio</strong>), your board, and the console
+<strong>Help → Report a problem</strong>. Include the editor's version (<strong>Help → About ThingStudio</strong>), your board, and the console
 lines around the problem. Share the flow file, not compiled output; see the next question.</p>
 <h2 id="how-do-i-share-a-flow-when-i-ask-for-help">How do I share a flow when I ask for help?</h2>
 <p>Share the flow file: <strong>File → Save</strong>, then attach or paste the <code>.flow.json</code>. It holds the nodes and wiring and no
 passwords: the WiFi and broker logins stay on your computer
-(<a href="../thingstudio-folder/#credentials">The Thingstudio folder</a>). Don't paste the <strong>Compiled source</strong> panel, a downloaded
+(<a href="../thingstudio-folder/#credentials">The ThingStudio folder</a>). Don't paste the <strong>Compiled source</strong> panel, a downloaded
 <code>.py</code> or the console's compiled output: they contain the resolved WiFi password and broker login. If you pasted it somewhere
 public, change the password.</p>
 <h2 id="why-does-my-esp32-have-so-little-free-memory">Why does my ESP32 have so little free memory?</h2>
@@ -4331,7 +4331,7 @@ See <a href="../debugging/#memoryerror-or-a-library-that-wont-load">MemoryError 
 board. See <a href="../debugging/#memoryerror-or-a-library-that-wont-load">MemoryError or a library that won't load</a> for what to do.</p>
 <h2 id="redeploying-a-ble-flow-on-an-esp32-c5-fails-with-memoryerror-why">Redeploying a BLE flow on an ESP32-C5 fails with "MemoryError". Why?</h2>
 <p>On stock MicroPython, the Bluetooth stack keeps its memory between flows, and the runtime, libraries and new flow
-have to fit in what is left. Install the <a href="../custom-firmware/">Thingstudio custom image</a>: it redeploys the same flow
+have to fit in what is left. Install the <a href="../custom-firmware/">ThingStudio custom image</a>: it redeploys the same flow
 with room to spare. Or choose <strong>Tools → Remove flow…</strong>, power cycle the board, then deploy.</p>
 <h2 id="why-does-http-request-fail-with-memoryerror-fetching-a-page">Why does http request fail with "MemoryError" fetching a page?</h2>
 <p>The node reads the whole response body into memory at once. A page larger than the largest free block fails, even
@@ -4345,7 +4345,7 @@ The console then shows megabytes free. Freenove's S3 display boards are an examp
 <h2 id="my-esp32-c5-prints-psram-chip-is-not-connected-at-boot-is-it-broken">My ESP32-C5 prints "PSRAM chip is not connected" at boot. Is it broken?</h2>
 <p>No. The generic ESP32-C5 build looks for PSRAM, and many C5 modules have none. It reports the failure, says
 "continuing without it", and starts MicroPython with the chip's own RAM. The
-<a href="../custom-firmware/">Thingstudio C5 image</a> doesn't look for PSRAM, so it doesn't print this.</p>
+<a href="../custom-firmware/">ThingStudio C5 image</a> doesn't look for PSRAM, so it doesn't print this.</p>
 <h2 id="which-board-should-i-use-for-a-display-and-wifi-together">Which board should I use for a display and WiFi together?</h2>
 <p>An ESP32 with external RAM (PSRAM), such as many ESP32-S3 boards. MicroPython puts its heap in the external RAM,
 leaving the chip's own RAM for WiFi. A classic ESP32 or ESP32-C3 without PSRAM can run a display and WiFi, but
@@ -4367,7 +4367,7 @@ nothing is written until you press Save.</p>
 runtime can't run flows from the newer editor, so Deploy stops and says so. Use <strong>Tools → Install runtime…</strong>, then
 Connect and deploy again.</p>
 <h2 id="how-do-i-tell-which-version-of-the-editor-im-running">How do I tell which version of the editor I'm running?</h2>
-<p>It's next to <strong>Thingstudio</strong> in the toolbar, and in <strong>Help → About Thingstudio</strong>. A <code>+</code> after it means you built the editor
+<p>It's next to <strong>ThingStudio</strong> in the toolbar, and in <strong>Help → About ThingStudio</strong>. A <code>+</code> after it means you built the editor
 from uncommitted changes.</p>
 <h2 id="my-clock-shows-and-never-the-time-why">My clock shows <code>--</code> and never the time. Why?</h2>
 <p>The ntp node hasn't synced yet. Its status says why: <strong>waiting for WiFi</strong>, or <strong>NTP from <em>server</em> failed</strong> when the
@@ -4405,7 +4405,7 @@ fields then list the chip's own pins rather than take a number. See
 <a href="../boards/#pins-that-arent-numbers">Pins that aren't numbers</a>.</p>
 <h2 id="why-cant-i-use-spi-bus-0-or-1-on-an-nrf52840">Why can't I use SPI bus 0 or 1 on an nRF52840?</h2>
 <p>On the nRF52840, SPI 0 and 1 share hardware with I2C 0 and 1, so a flow using both would fail on the board.
-Thingstudio offers SPI on buses 2 and 3 only. See <a href="../boards/#built-in-processors">Boards and processors</a>.</p>
+ThingStudio offers SPI on buses 2 and 3 only. See <a href="../boards/#built-in-processors">Boards and processors</a>.</p>
 <h2 id="why-did-my-saved-settings-reset-after-i-renamed-the-flow">Why did my saved settings reset after I renamed the flow?</h2>
 <p>Saved values are kept per flow name. Renaming the flow makes it a new name to the board, so its values start from
 the defaults. The old values are still on the board: rename the flow back to use them again, or clear them from the
@@ -4415,7 +4415,7 @@ the defaults. The old values are still on the board: rename the flow back to use
 TFT shield drives its RS, CS and RST lines from those pins, so it can't start. Wire GPIO 15 to A2 (RS), GPIO 33
 to A3 (CS) and GPIO 32 to A4 (RST), then set those pins in the display node.</p>
 <h2 id="do-i-need-a-terminal-to-install-micropython">Do I need a terminal to install MicroPython?</h2>
-<p>No, for boards Thingstudio can flash: the ESP32 family over a serial port, and a board whose bootloader mounts as a
+<p>No, for boards ThingStudio can flash: the ESP32 family over a serial port, and a board whose bootloader mounts as a
 drive (RP2040, RP2350, nRF52). Put the board in its bootloader and use <strong>Tools → Install firmware…</strong>. Other chips
 have their own installation routes; see <a href="../installing-micropython/">Install MicroPython</a>.</p>
 <h2 id="why-are-the-ble-nodes-grayed-out">Why are the ble nodes grayed out?</h2>

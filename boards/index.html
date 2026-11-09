@@ -27,7 +27,7 @@
     
     
       
-        <title>Boards and processors - Thingstudio</title>
+        <title>Boards and processors - ThingStudio</title>
       
     
     
@@ -88,7 +88,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="Thingstudio" class="md-header__button md-logo" aria-label="Thingstudio" data-md-component="logo">
+    <a href=".." title="ThingStudio" class="md-header__button md-logo" aria-label="ThingStudio" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -102,7 +102,7 @@
       <div class="md-header__ellipsis">
         <div class="md-header__topic">
           <span class="md-ellipsis">
-            Thingstudio
+            ThingStudio
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
@@ -226,13 +226,13 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="Thingstudio" class="md-nav__button md-logo" aria-label="Thingstudio" data-md-component="logo">
+    <a href=".." title="ThingStudio" class="md-nav__button md-logo" aria-label="ThingStudio" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
 
     </a>
-    Thingstudio
+    ThingStudio
   </label>
   
     <div class="md-nav__source">
@@ -656,7 +656,7 @@
   <span class="md-ellipsis">
     
   
-    1. Install Thingstudio
+    1. Install ThingStudio
   
 
     
@@ -1194,7 +1194,7 @@
   <span class="md-ellipsis">
     
   
-    The Thingstudio folder
+    The ThingStudio folder
   
 
     
@@ -3682,8 +3682,8 @@
 
 <h1 id="boards-and-processors">Boards and processors</h1>
 <p>Each board and processor has a definition file that says which pins a flow may use. This page covers picking a board, seeing its pins, what gets checked, and writing your own definition files.</p>
-<p>Thingstudio checks every pin in a flow against the board the flow is for. If a pin doesn't exist on that board, or using it would crash the board, the compile stops and says why.</p>
-<p>Each board has a definition file, and so does each processor. Thingstudio comes with definitions for the boards and processors below. You can <a href="#your-definition-files">change them or add your own</a>.</p>
+<p>ThingStudio checks every pin in a flow against the board the flow is for. If a pin doesn't exist on that board, or using it would crash the board, the compile stops and says why.</p>
+<p>Each board has a definition file, and so does each processor. ThingStudio comes with definitions for the boards and processors below. You can <a href="#your-definition-files">change them or add your own</a>.</p>
 <h2 id="picking-the-board">Picking the board</h2>
 <p>Pick the board a flow is for from the <strong>Board</strong> menu in the toolbar. The default, <strong>Auto</strong>, uses the connected board. Auto recognises a board by the name MicroPython reports for it, and the menu shows what it found, for example <strong>Auto: LOLIN S2 Mini</strong>.</p>
 <p>Some boards report only their processor. The CYD, for example, reports itself as a generic ESP32. Pick those boards from the menu by hand. You can also pick a processor without a board, for example <strong>ESP32 (any board)</strong>.</p>
@@ -3693,8 +3693,8 @@ firmware.</p>
 <p>A board picked by hand stays picked when you reconnect. If you then connect a board with a different processor, the menu goes back to <strong>Auto</strong> and the console says so.</p>
 <p>If no board is connected and none is picked, pins are only checked against the range 0–48.</p>
 <h2 id="seeing-a-boards-pins">Seeing a board's pins</h2>
-<p>Click <strong>Pins…</strong> next to the <strong>Board</strong> menu. It opens a page, in its own tab, for the board or processor picked
-there. The page lists, in order:</p>
+<p>Click <strong>Pins…</strong> next to the <strong>Board</strong> menu. It opens the pin cheat sheet, in its own tab, for the board or
+processor picked there. The cheat sheet lists, in order:</p>
 <ul>
 <li>the pins the board names, such as its LED</li>
 <li>for boards whose definition has a <code>header</code>, such as the Pico family, the physical pins, laid out like the board,
@@ -3703,7 +3703,7 @@ there. The page lists, in order:</p>
 <li>which pins each SPI and I2C bus can use</li>
 </ul>
 <p>The page is read from the definition files each time you click. After changing a file, click <strong>Pins…</strong> again.</p>
-<p>If Thingstudio knows the board's processor but not the board, the page shows the processor's pins and says the
+<p>If ThingStudio knows the board's processor but not the board, the page shows the processor's pins and says the
 board's own ones, like its LED, are missing. It gives a starter file to add them: see
 <a href="#adding-a-board">Adding a board</a>. If it doesn't know the processor either, the page says what the board reports:
 see <a href="#adding-a-processor">Adding a processor</a>.</p>
@@ -3858,12 +3858,12 @@ see <a href="#adding-a-processor">Adding a processor</a>.</p>
 <p>On the nRF52840, any pin works for SPI and I2C. SPI uses buses 2 and 3, up to 8 MHz; I2C uses buses 0 and 1.</p>
 <p>The definition files list every pin to avoid, with the reason.</p>
 <h2 id="your-definition-files">Your definition files</h2>
-<p>Definition files live in <code>~/.thingstudio/boards/</code> and <code>~/.thingstudio/processors/</code>. When Thingstudio starts, it writes
+<p>Definition files live in <code>~/.thingstudio/boards/</code> and <code>~/.thingstudio/processors/</code>. When ThingStudio starts, it writes
 every built-in file there, replacing a file of the same name, so an upgrade's changes arrive on the next start.</p>
 <p>To keep your own version of a built-in board, save it under a different name (for example <code>my-cyd.json</code>) and give it its
 own name in the file. It is then a board of its own in the Board menu, and is never overwritten. Editing a built-in
 file in place lasts until the next start.</p>
-<p>Thingstudio reads these files when the editor starts, when you connect, and when you deploy. If a file has a mistake, it isn't loaded and the built-in is used instead. The console says what's wrong, and the Board menu lists the file under <strong>Invalid files</strong>.</p>
+<p>ThingStudio reads these files when the editor starts, when you connect, and when you deploy. If a file has a mistake, it isn't loaded and the built-in is used instead. The console says what's wrong, and the Board menu lists the file under <strong>Invalid files</strong>.</p>
 <h2 id="adding-a-board">Adding a board</h2>
 <p>Save a JSON file in <code>~/.thingstudio/boards/</code>. The file name, without <code>.json</code>, is the board's id. Use lowercase letters, digits, <code>-</code> and <code>_</code>.</p>
 <p>A board file can't build on another one. To describe a built-in board with parts you have wired to it, copy the
