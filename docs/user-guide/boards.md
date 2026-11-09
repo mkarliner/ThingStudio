@@ -2,9 +2,9 @@
 
 Each board and processor has a definition file that says which pins a flow may use. This page covers picking a board, seeing its pins, what gets checked, and writing your own definition files.
 
-Thingstudio checks every pin in a flow against the board the flow is for. If a pin doesn't exist on that board, or using it would crash the board, the compile stops and says why.
+ThingStudio checks every pin in a flow against the board the flow is for. If a pin doesn't exist on that board, or using it would crash the board, the compile stops and says why.
 
-Each board has a definition file, and so does each processor. Thingstudio comes with definitions for the boards and processors below. You can [change them or add your own](#your-definition-files).
+Each board has a definition file, and so does each processor. ThingStudio comes with definitions for the boards and processors below. You can [change them or add your own](#your-definition-files).
 
 ## Picking the board
 
@@ -22,8 +22,8 @@ If no board is connected and none is picked, pins are only checked against the r
 
 ## Seeing a board's pins
 
-Click **Pins…** next to the **Board** menu. It opens a page, in its own tab, for the board or processor picked
-there. The page lists, in order:
+Click **Pins…** next to the **Board** menu. It opens the pin cheat sheet, in its own tab, for the board or
+processor picked there. The cheat sheet lists, in order:
 
 - the pins the board names, such as its LED
 - for boards whose definition has a `header`, such as the Pico family, the physical pins, laid out like the board,
@@ -33,7 +33,7 @@ there. The page lists, in order:
 
 The page is read from the definition files each time you click. After changing a file, click **Pins…** again.
 
-If Thingstudio knows the board's processor but not the board, the page shows the processor's pins and says the
+If ThingStudio knows the board's processor but not the board, the page shows the processor's pins and says the
 board's own ones, like its LED, are missing. It gives a starter file to add them: see
 [Adding a board](#adding-a-board). If it doesn't know the processor either, the page says what the board reports:
 see [Adding a processor](#adding-a-processor).
@@ -100,14 +100,14 @@ The definition files list every pin to avoid, with the reason.
 
 ## Your definition files
 
-Definition files live in `~/.thingstudio/boards/` and `~/.thingstudio/processors/`. When Thingstudio starts, it writes
+Definition files live in `~/.thingstudio/boards/` and `~/.thingstudio/processors/`. When ThingStudio starts, it writes
 every built-in file there, replacing a file of the same name, so an upgrade's changes arrive on the next start.
 
 To keep your own version of a built-in board, save it under a different name (for example `my-cyd.json`) and give it its
 own name in the file. It is then a board of its own in the Board menu, and is never overwritten. Editing a built-in
 file in place lasts until the next start.
 
-Thingstudio reads these files when the editor starts, when you connect, and when you deploy. If a file has a mistake, it isn't loaded and the built-in is used instead. The console says what's wrong, and the Board menu lists the file under **Invalid files**.
+ThingStudio reads these files when the editor starts, when you connect, and when you deploy. If a file has a mistake, it isn't loaded and the built-in is used instead. The console says what's wrong, and the Board menu lists the file under **Invalid files**.
 
 ## Adding a board
 

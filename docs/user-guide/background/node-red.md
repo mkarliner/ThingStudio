@@ -15,10 +15,10 @@ dashboard for building web UIs.
 Node-RED runs on Node.js, on a server, a PC or a Raspberry Pi. Microcontrollers usually talk to it over the
 network, often by MQTT, and run their own separate firmware.
 
-## Where Thingstudio fits
+## Where ThingStudio fits
 
-Thingstudio takes Node-RED's way of working onto the microcontroller. The flow runs on the board itself, so the
-board doesn't need a server to decide what to do. The two work well together: a Thingstudio board can publish
+ThingStudio takes Node-RED's way of working onto the microcontroller. The flow runs on the board itself, so the
+board doesn't need a server to decide what to do. The two work well together: a ThingStudio board can publish
 readings over MQTT to a Node-RED flow on your server.
 
 If you already use Node-RED, see [if you know Node-RED](../coming-from/node-red.md) for what's different.

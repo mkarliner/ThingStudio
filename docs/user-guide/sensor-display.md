@@ -12,7 +12,7 @@ with its own parts, listed under What you need.
 
 The flow is a **bme280** sensor feeding GUI nodes that draw the readings, with an **mqtt publish** that sends them on.
 
-The finished flow is in the Thingstudio repository:
+The finished flow is in the ThingStudio repository:
 [`test-flows/gui-headliner-sensor-freenove-s3-4in.flow.json`](https://github.com/mkarliner/ThingStudio/blob/main/test-flows/gui-headliner-sensor-freenove-s3-4in.flow.json).
 Open it in one of two ways:
 

@@ -5,13 +5,13 @@ over USB: deploy, the console, **Tools → Check status**, and clicking an injec
 
 ## What you need
 
-- A board with WiFi and the Thingstudio runtime. Plain Raspberry Pi Pico and Pico 2 boards have no
+- A board with WiFi and the ThingStudio runtime. Plain Raspberry Pi Pico and Pico 2 boards have no
   WiFi.
 - A flow on the board that uses WiFi and has joined your network. The board is only reachable while that flow is
   running. It starts again by itself after a reset.
 - A board password, set over USB.
 - This computer on the same network as the board.
-- On a Mac, Thingstudio started from Apple's Terminal app. See [If it doesn't connect](#if-it-doesnt-connect).
+- On a Mac, ThingStudio started from Apple's Terminal app. See [If it doesn't connect](#if-it-doesnt-connect).
 
 ## Set the password and name
 
@@ -57,10 +57,10 @@ Connected over USB, the console says whether the board can take a WiFi connectio
 
 The console says what went wrong:
 
-- **No route to host (Mac):** macOS is blocking local network access. The first time Thingstudio reaches for the
+- **No route to host (Mac):** macOS is blocking local network access. The first time ThingStudio reaches for the
   network, macOS asks whether it may find devices on your local network; choose **Allow**, then click **Connect**
   again (the attempt that raised the question can fail). If you chose **Don't Allow**, turn **thingstudio-python**
-  on in System Settings → Privacy & Security → Local Network, then restart Thingstudio. When running from source
+  on in System Settings → Privacy & Security → Local Network, then restart ThingStudio. When running from source
   (`thingstudio-backend`), macOS may block it without asking: start it from Apple's **Terminal** app instead, which
   macOS always allows.
 - **No answer:** check the board is on, its flow has joined WiFi, and this computer is on the

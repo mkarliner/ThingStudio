@@ -1,4 +1,4 @@
-# Project rules for Thingstudio
+# Project rules for ThingStudio
 
 Behavior Preferences
 Keep responses concise and focused on code. Do not repeat large blocks of unchanged code in explanations.
@@ -17,6 +17,12 @@ is the one key every generic downstream node reads and the one a port's declared
 prints only `msg['payload']`). `topic` is a routing/identification string, required on every message even when a
 node has no natural topic — set it to `''` rather than omitting it. Anything else rides along unchecked. Full
 explanation and examples: `docs/user-guide/custom-nodes.md`.
+
+## The name is ThingStudio
+
+ThingStudio, with a capital S, is the official name (Mike, 2026-11-09): in docs, the README, UI text and comments.
+Exact strings the code produces or the user types keep their own spelling until the code changes: the `thingstudio`
+command, `%LOCALAPPDATA%\Thingstudio`, the **Thingstudio-Setup-XXXX** network, console messages.
 
 ## Do not use the following phrases/words
 - load bearing
@@ -59,7 +65,7 @@ further effort pays off. Incident: `outstanding-items/wifi-status-mqtt-connect-o
 
 ## Unsupported boards: expect them anyway
 
-Thingstudio has a list of supported processors (ESP32 family, RP2040/RP2350), but expect people to connect anything
+ThingStudio has a list of supported processors (ESP32 family, RP2040/RP2350), but expect people to connect anything
 that runs MicroPython -- STM32, nRF, SAMD, whatever they have to hand. We may not have tested it; they'll try it
 anyway. Docs and console messages shouldn't assume the board is on the list. Where a step differs by chip
 (installing MicroPython, pins, flashing), say what we cover and point the rest at the MicroPython docs

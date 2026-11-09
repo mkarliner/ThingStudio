@@ -5,19 +5,24 @@ The demo doesn't connect to a board, but you can build a flow and read the Micro
 
 From a new board to a blinking LED, in six steps:
 
-1. **[Install Thingstudio](#step-1-install-thingstudio)** on your computer.
+1. **[Install ThingStudio](#step-1-install-thingstudio)** on your computer.
 2. **[Tour the editor](editor-tour.md)**: what each part of the screen does.
-3. **[Install MicroPython](installing-micropython.md)** on your board.
-4. **[Connect your board](connecting.md)** to Thingstudio.
-5. **[Install the runtime](installing-runtime.md)**, the part of Thingstudio that runs on the board.
-6. **[Blink an LED](first-flow.md)**: build your first flow and deploy it.
+3. **[Install MicroPython](installing-micropython.md)** on your board. A standard ESP32 takes the advised
+   [custom image](custom-firmware.md).
+4. **[Connect your board](connecting.md)** to ThingStudio.
+5. **[Install the runtime](installing-runtime.md)**, the part of ThingStudio that runs on the board.
+6. **[Blink an LED](first-flow.md)**: build your first flow and deploy it. Or open `tutorials/blink.flow.json`
+   (the [tutorials folder](tutorial-flows.md#where-the-folder-is)) with **File → Open…**, point the pin at your
+   board's own LED, and deploy.
 
-You need a board that runs MicroPython, and a USB cable that carries data, not only power.
-[Supported hardware](supported-hardware.md) lists the boards Thingstudio is tested on.
+When something doesn't work, [Debugging](debugging.md) and the [FAQ](faq.md) go by what you see on screen.
 
-## Step 1: Install Thingstudio
+You need a board with one of the processors in [Supported hardware](supported-hardware.md), and a USB cable that
+carries data, not only power. Installing uses a terminal, or PowerShell on Windows.
 
-Thingstudio is a program you run on your computer. It opens its editor in your web browser. It brings its own
+## Step 1: Install ThingStudio
+
+ThingStudio is a program you run on your computer. It opens its editor in your web browser. It brings its own
 Python, so nothing else needs installing to run it.
 
 There are two ways to install it. Both give you the same program.
@@ -32,10 +37,10 @@ Download the package for your computer from the
 [releases page](https://github.com/mkarliner/ThingStudio/releases/latest).
 [Installation details](installation-details.md#packages) lists the package for each platform.
 
-**macOS and Linux:** unpack it with `tar -xzf thingstudio-VERSION-PLATFORM.tar.gz`. Thingstudio is the
+**macOS and Linux:** unpack it with `tar -xzf thingstudio-VERSION-PLATFORM.tar.gz`. ThingStudio is the
 `thingstudio` file in the unpacked folder.
 
-**Windows:** unzip it anywhere, for example into your Documents folder. Thingstudio is `thingstudio.cmd` in the
+**Windows:** unzip it anywhere, for example into your Documents folder. ThingStudio is `thingstudio.cmd` in the
 unzipped folder. If Windows says "Windows protected your PC", click **More info**, then **Run anyway**. The Windows
 package isn't signed.
 
@@ -64,12 +69,12 @@ if your account isn't in the group, and prints the command to fix it.
 irm https://github.com/mkarliner/ThingStudio/releases/latest/download/install.ps1 | iex
 ```
 
-To upgrade or remove Thingstudio, or build it from source, see
+To upgrade or remove ThingStudio, or build it from source, see
 [Installation details](installation-details.md).
 
-## Start Thingstudio
+## Start ThingStudio
 
-How you start Thingstudio depends on how you installed it:
+How you start ThingStudio depends on how you installed it:
 
 - **Installer script:** run `thingstudio` in a terminal. If the command isn't found, see
   [If the command isn't found](#if-the-command-isnt-found).
@@ -77,9 +82,9 @@ How you start Thingstudio depends on how you installed it:
 - **Package on Windows:** run `thingstudio.cmd` in the unzipped folder.
 
 The editor opens in your browser at `http://127.0.0.1:8765/`. Leave the terminal open while you work. Press Ctrl-C
-there to stop Thingstudio.
+there to stop ThingStudio.
 
-Thingstudio also serves this user guide, so it works offline. **Help → User guide** opens it.
+ThingStudio also serves this user guide, so it works offline. **Help → User guide** opens it.
 
 ### Where it is installed
 
@@ -118,9 +123,9 @@ window that was already open doesn't see it. Open a new window, or run this in t
 $env:Path = [Environment]::GetEnvironmentVariable('Path','User') + ';' + [Environment]::GetEnvironmentVariable('Path','Machine')
 ```
 
-If the command still isn't found, start Thingstudio by its full path, from the list above.
+If the command still isn't found, start ThingStudio by its full path, from the list above.
 
-### Remove Thingstudio
+### Remove ThingStudio
 
 [Installation details](installation-details.md#remove) has the commands for the installer script. To remove a package,
 delete its folder. Removing never touches your flows or your settings in `.thingstudio`.

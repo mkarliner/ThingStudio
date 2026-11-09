@@ -1,6 +1,6 @@
 # Writing flows with an AI assistant
 
-This page is for an AI assistant (or a person) writing a Thingstudio flow file or a custom node in the user's folder,
+This page is for an AI assistant (or a person) writing a ThingStudio flow file or a custom node in the user's folder,
 without the editor. It is complete on its own, with two companions: the generated [node catalog](nodes-catalog.md), and
 the `thingstudio-compile` command ([Check a flow without the editor](check-a-flow.md)). With a board attached,
 `device_cli.py` deploys and runs the flow ([Command line](command-line.md#deploy-and-run-a-flow-without-the-editor)).
@@ -21,7 +21,7 @@ Never say a flow works on the board unless you deployed it there and saw its out
 passes the check. No HTTPS in http_request.
 ```
 
-Claude users can add the Thingstudio skill instead: `thingstudio-flow-author-<version>.zip`, from the releases page,
+Claude users can add the ThingStudio skill instead: `thingstudio-flow-author-<version>.zip`, from the releases page,
 carries this guide, the node catalog, the examples and the check command, so the assistant needs nothing else.
 Upload the zip as a skill in Claude, or unzip it into `~/.claude/skills/` for Claude Code. Use the skill whose
 version matches your editor. Otherwise the check needs Node and the built `thingstudio-compile.mjs`.
@@ -251,7 +251,7 @@ Read [GUI nodes](nodes/gui.md) for the details, and copy from
 
 If no node does the job and a function node is not enough, write a custom node: `<name>.node.json` and
 `<name>.node.py`. [Writing custom nodes](custom-nodes.md) is complete on its own. The two files go in `~/.thingstudio/custom-nodes/` on the
-computer running Thingstudio. The check command loads that folder (or the one given with `--custom-nodes <dir>`), so
+computer running ThingStudio. The check command loads that folder (or the one given with `--custom-nodes <dir>`), so
 check a flow that uses the node: a bad descriptor is reported by file, and the node's wires, properties and compile
 hook are checked like a built-in's. What the Python does on the board isn't checked: test its body on its own with
 sample messages.

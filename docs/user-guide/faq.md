@@ -4,14 +4,14 @@
 
 Ask questions, and show what you've built, in [GitHub Discussions](https://github.com/mkarliner/ThingStudio/discussions).
 Report a bug or a missing feature on the [issue tracker](https://github.com/mkarliner/ThingStudio/issues), or with
-**Help → Report a problem**. Include the editor's version (**Help → About Thingstudio**), your board, and the console
+**Help → Report a problem**. Include the editor's version (**Help → About ThingStudio**), your board, and the console
 lines around the problem. Share the flow file, not compiled output; see the next question.
 
 ## How do I share a flow when I ask for help?
 
 Share the flow file: **File → Save**, then attach or paste the `.flow.json`. It holds the nodes and wiring and no
 passwords: the WiFi and broker logins stay on your computer
-([The Thingstudio folder](thingstudio-folder.md#credentials)). Don't paste the **Compiled source** panel, a downloaded
+([The ThingStudio folder](thingstudio-folder.md#credentials)). Don't paste the **Compiled source** panel, a downloaded
 `.py` or the console's compiled output: they contain the resolved WiFi password and broker login. If you pasted it somewhere
 public, change the password.
 
@@ -56,7 +56,7 @@ board. See [MemoryError or a library that won't load](debugging.md#memoryerror-o
 ## Redeploying a BLE flow on an ESP32-C5 fails with "MemoryError". Why?
 
 On stock MicroPython, the Bluetooth stack keeps its memory between flows, and the runtime, libraries and new flow
-have to fit in what is left. Install the [Thingstudio custom image](custom-firmware.md): it redeploys the same flow
+have to fit in what is left. Install the [ThingStudio custom image](custom-firmware.md): it redeploys the same flow
 with room to spare. Or choose **Tools → Remove flow…**, power cycle the board, then deploy.
 
 ## Why does http request fail with "MemoryError" fetching a page?
@@ -76,7 +76,7 @@ The console then shows megabytes free. Freenove's S3 display boards are an examp
 
 No. The generic ESP32-C5 build looks for PSRAM, and many C5 modules have none. It reports the failure, says
 "continuing without it", and starts MicroPython with the chip's own RAM. The
-[Thingstudio C5 image](custom-firmware.md) doesn't look for PSRAM, so it doesn't print this.
+[ThingStudio C5 image](custom-firmware.md) doesn't look for PSRAM, so it doesn't print this.
 
 ## Which board should I use for a display and WiFi together?
 
@@ -108,7 +108,7 @@ Connect and deploy again.
 
 ## How do I tell which version of the editor I'm running?
 
-It's next to **Thingstudio** in the toolbar, and in **Help → About Thingstudio**. A `+` after it means you built the editor
+It's next to **ThingStudio** in the toolbar, and in **Help → About ThingStudio**. A `+` after it means you built the editor
 from uncommitted changes.
 
 ## My clock shows `--` and never the time. Why?
@@ -166,7 +166,7 @@ fields then list the chip's own pins rather than take a number. See
 ## Why can't I use SPI bus 0 or 1 on an nRF52840?
 
 On the nRF52840, SPI 0 and 1 share hardware with I2C 0 and 1, so a flow using both would fail on the board.
-Thingstudio offers SPI on buses 2 and 3 only. See [Boards and processors](boards.md#built-in-processors).
+ThingStudio offers SPI on buses 2 and 3 only. See [Boards and processors](boards.md#built-in-processors).
 
 ## Why did my saved settings reset after I renamed the flow?
 
@@ -182,7 +182,7 @@ to A3 (CS) and GPIO 32 to A4 (RST), then set those pins in the display node.
 
 ## Do I need a terminal to install MicroPython?
 
-No, for boards Thingstudio can flash: the ESP32 family over a serial port, and a board whose bootloader mounts as a
+No, for boards ThingStudio can flash: the ESP32 family over a serial port, and a board whose bootloader mounts as a
 drive (RP2040, RP2350, nRF52). Put the board in its bootloader and use **Tools → Install firmware…**. Other chips
 have their own installation routes; see [Install MicroPython](installing-micropython.md).
 

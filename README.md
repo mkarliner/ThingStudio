@@ -1,19 +1,16 @@
-# Thingstudio
+# ThingStudio
 
-Thingstudio is a visual, low-code way to program microcontrollers. You build a flow of nodes and wires in a
-node-based editor in your browser, in the style of [Node-RED](https://nodered.org/). Thingstudio compiles the flow
-to [MicroPython](https://micropython.org/) and sends it to your board, where it runs on its own: no server, no
-cloud, and no editor connected.
+ThingStudio is a visual, low-code way to program microcontrollers. You build a flow of nodes and wires in a
+node-based editor in your browser, in the style of [Node-RED](https://nodered.org/). ThingStudio compiles the flow
+to [MicroPython](https://micropython.org/) and sends it to your board to run. Fully local: no cloud, no account.
+
+It runs on boards with ESP32, RP2040 and RP2350 (Raspberry Pi Pico), nRF52840 and STM32 processors. It's for
+programmers who are comfortable wiring a breadboard and using a terminal; it doesn't teach programming.
 
 **User guide:** https://docs.thingstudio.net/
 
 **Try it in your browser:** https://demo.thingstudio.net/ is the editor with nothing to install. Build a flow and
-read the MicroPython it makes. The demo doesn't connect to a board.
-
-**Built with AI:** Thingstudio is written with heavy use of AI coding tools. Every change is reviewed by a person,
-and the boards and nodes marked tested in
-[Supported hardware](https://docs.thingstudio.net/supported-hardware/) have run on real hardware. If that rules it
-out for you, fair enough.
+read the MicroPython it makes. To run a flow on a real board, install ThingStudio.
 
 ## Install
 
@@ -36,12 +33,12 @@ irm https://github.com/mkarliner/ThingStudio/releases/latest/download/install.ps
 ```
 
 Then follow [Getting started](https://docs.thingstudio.net/getting-started/), from a new board to a blinking LED.
-[Supported hardware](https://docs.thingstudio.net/supported-hardware/) lists the boards Thingstudio is tested on;
-other MicroPython boards may work.
+[Supported hardware](https://docs.thingstudio.net/supported-hardware/) lists the processors and boards ThingStudio
+is tested on, and the boards that come with a pin cheat sheet. Other MicroPython boards may work.
 
 ## How it works
 
-Thingstudio has three parts:
+ThingStudio has three parts:
 
 1. **Backend:** a local Python program. It serves the editor and the user guide, talks to boards over USB serial
    or WiFi, and keeps custom nodes, board definitions and saved credentials in `~/.thingstudio`.
@@ -83,7 +80,7 @@ tools/           build, screenshot and license-scan scripts
 
 ## Documentation for contributors
 
-These files describe how Thingstudio is built and what's in progress:
+These files describe how ThingStudio is built and what's in progress:
 
 - `docs/thingstudio-design-doc.md`: the design. Read it in full before proposing architecture changes.
 - `docs/working-notes/`: planning, decisions and open items. Start with `outstanding-items.md`.

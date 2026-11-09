@@ -28,7 +28,7 @@ The Windows path contains the version, so it changes when you upgrade.
 - **A flow with a WiFi or MQTT node holds no passwords.** The network name, password and broker address are kept in a
   saved credential on your computer, never in the flow file. Open the node's **WiFi** or **MQTT Broker** field and
   click ✎: fill in your own details and save, or pick one you have already saved from the drop-down. See
-  [The Thingstudio folder](thingstudio-folder.md#credentials).
+  [The ThingStudio folder](thingstudio-folder.md#credentials).
 
 ## The flows
 

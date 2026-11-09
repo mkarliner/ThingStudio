@@ -23,13 +23,13 @@ led.on()
 Microcontrollers are limited. A board typically has hundreds of kilobytes of RAM, and MicroPython itself uses some
 of it. Python is also much slower than C, though fast enough for most sensing, switching and networking jobs.
 
-## Where Thingstudio fits
+## Where ThingStudio fits
 
-Thingstudio runs on top of MicroPython. It installs a runtime onto the board, and turns each flow you deploy
+ThingStudio runs on top of MicroPython. It installs a runtime onto the board, and turns each flow you deploy
 into MicroPython code. The function node runs your own MicroPython. See
 [installing MicroPython](../installing-micropython.md) to get it onto your board.
 
-If you already use MicroPython, see [if you know MicroPython](../coming-from/micropython.md) for how Thingstudio
+If you already use MicroPython, see [if you know MicroPython](../coming-from/micropython.md) for how ThingStudio
 uses your board.
 
 ## More

@@ -1,11 +1,11 @@
-# The Thingstudio folder
+# The ThingStudio folder
 
-Thingstudio keeps its own files in one folder on your computer:
+ThingStudio keeps its own files in one folder on your computer:
 
 - macOS and Linux: `~/.thingstudio`
 - Windows: `%USERPROFILE%\.thingstudio`
 
-Thingstudio creates the folder the first time it starts. Your flows are not kept here. They are saved wherever you
+ThingStudio creates the folder the first time it starts. Your flows are not kept here. They are saved wherever you
 choose (see [Flow lifecycle](flow-lifecycle.md#save-and-open)).
 
 ## What's in it
@@ -19,7 +19,7 @@ choose (see [Flow lifecycle](flow-lifecycle.md#save-and-open)).
 | `processors/` | Processor definitions | Yes |
 
 Every file is plain JSON, except the `.node.py` file of a custom node. The editor reads these folders through the
-Thingstudio backend, so they aren't available when the editor talks to the board directly over USB.
+ThingStudio backend, so they aren't available when the editor talks to the board directly over USB.
 
 ## Credentials
 
@@ -40,12 +40,12 @@ and load presets from a node's property panel (see [Presets](working-in-the-edit
 ## Custom nodes
 
 A custom node is two files with the same base name: `<name>.node.json` and `<name>.node.py`. The first time
-Thingstudio starts, it puts two examples here. Deleted examples don't come back. See
+ThingStudio starts, it puts two examples here. Deleted examples don't come back. See
 [Custom nodes](custom-nodes.md).
 
 ## Boards and processors
 
-At every start, Thingstudio writes the built-in definitions into `boards/` and `processors/`, replacing files of the
+At every start, ThingStudio writes the built-in definitions into `boards/` and `processors/`, replacing files of the
 same name. An upgrade's changes therefore arrive on the next start.
 
 - To keep your own version of a built-in, save it under a different name (for example `my-cyd.json`). It is then a
@@ -56,7 +56,7 @@ See [Boards and processors](boards.md).
 
 ## Using a different folder
 
-Start Thingstudio with `--data-dir`:
+Start ThingStudio with `--data-dir`:
 
 ```sh
 thingstudio --data-dir ~/projects/greenhouse/thingstudio-data

@@ -1,6 +1,6 @@
 # Command line
 
-Options for starting Thingstudio, a way to install the runtime and run flows without the editor, and a check for a
+Options for starting ThingStudio, a way to install the runtime and run flows without the editor, and a check for a
 flow file. To check a flow file from the command line, see [Check a flow without the editor](check-a-flow.md).
 
 ## Starting options
@@ -11,10 +11,10 @@ Add these after `thingstudio` (or `thingstudio-backend`, from source). `thingstu
 | --- | --- |
 | `--no-browser` | Don't open the editor in a browser. Open `http://127.0.0.1:8765/` yourself. |
 | `--port N` | Serve the editor on port `N` instead of 8765. |
-| `--data-dir DIR` | Use `DIR` instead of `~/.thingstudio`. See [The Thingstudio folder](thingstudio-folder.md#using-a-different-folder). |
-| `--log-level LEVEL` | How much Thingstudio prints in its terminal: `DEBUG`, `INFO` (default), `WARNING` or `ERROR`. |
+| `--data-dir DIR` | Use `DIR` instead of `~/.thingstudio`. See [The ThingStudio folder](thingstudio-folder.md#using-a-different-folder). |
+| `--log-level LEVEL` | How much ThingStudio prints in its terminal: `DEBUG`, `INFO` (default), `WARNING` or `ERROR`. |
 
-If you restart Thingstudio with the editor still open, that tab reconnects and no new one opens.
+If you restart ThingStudio with the editor still open, that tab reconnects and no new one opens.
 
 ## Installing the runtime from the command line
 
