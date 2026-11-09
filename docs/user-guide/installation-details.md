@@ -1,6 +1,6 @@
 # Installation details
 
-How Thingstudio is packaged, where it puts its files, how to upgrade and remove it, and how to build it from source.
+How ThingStudio is packaged, where it puts its files, how to upgrade and remove it, and how to build it from source.
 [Getting started](getting-started.md#step-1-install-thingstudio) has the install steps.
 
 ## Packages
@@ -24,17 +24,17 @@ the folder with a newer one. To remove it, delete the folder. On Linux, add your
 
 ## Installer script
 
-On macOS and Linux, the installer puts Thingstudio in `~/.local/share/thingstudio` and the `thingstudio` command in
-`~/.local/bin`. Your settings live in `~/.thingstudio` (see [The Thingstudio folder](thingstudio-folder.md)).
+On macOS and Linux, the installer puts ThingStudio in `~/.local/share/thingstudio` and the `thingstudio` command in
+`~/.local/bin`. Your settings live in `~/.thingstudio` (see [The ThingStudio folder](thingstudio-folder.md)).
 
-On Windows, it puts Thingstudio in `%LOCALAPPDATA%\Thingstudio` and adds the `thingstudio` command to your PATH.
+On Windows, it puts ThingStudio in `%LOCALAPPDATA%\Thingstudio` and adds the `thingstudio` command to your PATH.
 Your settings live in `%USERPROFILE%\.thingstudio`.
 
 To upgrade, run the installer script again.
 
 ### Remove
 
-To remove Thingstudio on macOS and Linux:
+To remove ThingStudio on macOS and Linux:
 
 ```sh
 curl -fsSL https://github.com/mkarliner/ThingStudio/releases/latest/download/install.sh | sh -s -- --uninstall
@@ -56,10 +56,10 @@ Every install has a `tutorials` folder. [Tutorial flows](tutorial-flows.md#where
 
 ## From source
 
-For working on Thingstudio itself. You need Python 3.10 or later, Node.js 22.12 or later, and `make`. On a Mac,
+For working on ThingStudio itself. You need Python 3.10 or later, Node.js 22.12 or later, and `make`. On a Mac,
 `make` comes with the Xcode command line tools (`xcode-select --install`).
 
-In the repository folder, run `make`. This builds the editor and the user guide, installs Thingstudio into a `.venv`
+In the repository folder, run `make`. This builds the editor and the user guide, installs ThingStudio into a `.venv`
 folder, and puts the `thingstudio-backend` command on your PATH. Run `make` again after updating the repository. It
 only rebuilds what changed. If your `python3` is older than 3.10, name a newer one: `make PYTHON=python3.12`.
 

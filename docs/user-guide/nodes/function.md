@@ -35,7 +35,7 @@ With one output, a returned list is passed on as the message itself. Set **outpu
 ## Behavior
 
 The code is the body of an `async def`, so `return` and `await` work at its top level. `asyncio` and `runtime` are
-already defined; import anything else in the code, such as `import machine`. A library Thingstudio provides, such as
+already defined; import anything else in the code, such as `import machine`. A library ThingStudio provides, such as
 `mqtt_as`, is installed on the board when you deploy (see [Libraries](../flow-lifecycle.md#libraries)).
 
 Don't call `time.sleep()` or run a long loop: either stops every other chain while it runs. Use

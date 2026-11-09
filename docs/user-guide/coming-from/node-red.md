@@ -53,7 +53,7 @@ saying which node, and the rest of the flow keeps running. See [debugging](../de
 
 ## Using both
 
-Node-RED is the better place for dashboards, databases and cloud services. A common setup is Thingstudio
+Node-RED is the better place for dashboards, databases and cloud services. A common setup is ThingStudio
 boards publishing over MQTT to a Node-RED flow on a server or Raspberry Pi.
 
 Next: [getting started](../getting-started.md).

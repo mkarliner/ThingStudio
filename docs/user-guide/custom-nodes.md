@@ -1,14 +1,14 @@
-# Writing a custom node for Thingstudio
+# Writing a custom node for ThingStudio
 
 A custom node is two files sharing a base name: `<name>.node.json` (the
 descriptor) and `<name>.node.py` (the behavior), placed in the backend's
-`~/.thingstudio/custom-nodes/` directory. Thingstudio loads it for you,
+`~/.thingstudio/custom-nodes/` directory. ThingStudio loads it for you,
 and you drag it onto the canvas like any built-in node.
 
 ## Loading a custom node
 
 Put both files in `~/.thingstudio/custom-nodes/` on the computer running
-Thingstudio.
+ThingStudio.
 
 The editor loads every package in that folder when it starts, and again
 when you switch back to its window. After changing a file, you can also
@@ -21,7 +21,7 @@ first one by file name is loaded and the other is reported.
 
 The folder starts with two examples, `doubler` and `dht22`, under
 **examples** in the palette. Read them, change them or delete them.
-Thingstudio adds them only the first time it runs, so deleted examples
+ThingStudio adds them only the first time it runs, so deleted examples
 stay deleted.
 
 ## The descriptor: `<name>.node.json`
@@ -316,7 +316,7 @@ redeployed flow can leave the old socket open and fail with
 
 ### Libraries you can import
 
-When a node imports one of these, Thingstudio sends it to the board with the flow:
+When a node imports one of these, ThingStudio sends it to the board with the flow:
 
 | Library | For |
 | --- | --- |
@@ -407,7 +407,7 @@ closure, so `nonlocal` works across them).
 
 ### Run-once sources
 
-A source that runs once, at flow start, sets `"runOnce": true` instead. It defines only `emit`; Thingstudio calls
+A source that runs once, at flow start, sets `"runOnce": true` instead. It defines only `emit`; ThingStudio calls
 it once, with no `intervalMs` and no `wait`.
 
 ```json
@@ -496,7 +496,7 @@ node dist-cli/thingstudio-compile.mjs --board board:cyd my.flow.json
 ```
 
 **Deploy time** — `.node.py` is spliced into the flow as-is;
-Thingstudio doesn't check it. A typo surfaces as a runtime error (e.g.
+ThingStudio doesn't check it. A typo surfaces as a runtime error (e.g.
 `NameError`) reported from the device, attributed to your node.
 
 ## Limitations
@@ -504,11 +504,11 @@ Thingstudio doesn't check it. A typo surfaces as a runtime error (e.g.
 A polled `source` node's `emit` runs on a fixed `intervalMs` schedule; an `eventSource` source waits on `wait` instead.
 
 Two instances of the same custom node get independent setup. For a `pin` field that declares `pinUse`,
-Thingstudio checks it against the board and claims it at compile time; a pin you build in Python yourself (or
+ThingStudio checks it against the board and claims it at compile time; a pin you build in Python yourself (or
 read from a plain `number` field) it can't see, so use `runtime.shared()` for those, and a clash is caught when
 the flow starts.
 
-Custom node Python runs with the same trust as any other node, including Thingstudio's `function` node. Loading a
+Custom node Python runs with the same trust as any other node, including ThingStudio's `function` node. Loading a
 package only adds it to the palette; its Python runs on a board only when you place the node and deploy. Only files
 you place in the folder are loaded — there's no registry and no URL install — so don't put a package there that you
 haven't read.

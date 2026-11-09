@@ -6,6 +6,10 @@ been deployed and run on that hardware. Pin details for boards and processors ar
 
 ## Boards
 
+Each board below has a definition: a pin cheat sheet that names the board's own pins, such as its LED, marks the
+pins that are reserved and why, and lists the pins each SPI and I2C bus can use. **Pins…** in the editor shows it.
+See [Seeing a board's pins](boards.md#seeing-a-boards-pins).
+
 | Board | Processor | Tested |
 | --- | --- | --- |
 | Raspberry Pi Pico | RP2040 | Yes |
@@ -17,7 +21,7 @@ been deployed and run on that hardware. Pin details for boards and processors ar
 | ESP32-C5-340X (ESP32-C5-KITC-A) | ESP32-C5 | Yes, with the ble nodes (scan, advertise, characteristics, UART) |
 | CYD (ESP32-2432S028, ST7789) | ESP32 | Yes, display only. |
 | Freenove ESP32-S3 Display 4.0" (FNK0104S) | ESP32-S3 | Yes, with the display and touch |
-| Pyboard v1.0 | STM32F405 | Untested |
+| Pyboard v1.0 | STM32F405 | Yes |
 | Seeed XIAO nRF52840 (Sense) | nRF52840 | Smoke tested, including the IMU |
 | Wemos D1 R32 | ESP32 | Yes, with an RM68090 parallel TFT shield (rewired, custom node) |
 
@@ -82,13 +86,15 @@ Other I2C devices can be read with a [function](nodes/function.md) node and the 
 
 ## Other boards
 
-Other boards that run MicroPython may work. Thingstudio needs a processor definition for the chip, and a board
-definition if you want the board's own pins labelled. See [Adding a board](boards.md#adding-a-board) and
-[Adding a processor](boards.md#adding-a-processor).
+Other boards that run MicroPython may work. ThingStudio needs a processor definition for the chip, and a board
+definition if you want the board's own pins labelled.
 
-An AI assistant can draft a definition file. Give it the board's pinout or the chip's datasheet, and one of the
-existing files in `~/.thingstudio/boards/` or `~/.thingstudio/processors/` as an example. Check the result against
-the datasheet. A missing reserved pin means the compile won't stop a flow that crashes the board.
+You can write definition files yourself: [Adding a board](boards.md#adding-a-board) and [Adding a
+processor](boards.md#adding-a-processor) describe every field of the JSON. Or an AI assistant can draft one. Point
+it at the board maker's web page for the board, and it can usually write the file in seconds. For a processor, give
+it the chip's datasheet. One of the existing files in `~/.thingstudio/boards/` or `~/.thingstudio/processors/` makes
+a good example to include. Check the result against the datasheet. A missing reserved pin means the compile won't
+stop a flow that crashes the board.
 
 ## Reporting hardware
 

@@ -29,7 +29,7 @@ and punctuation become dashes), but you can type over that suggestion freely.
 Custom node packages and saved credentials live in `~/.thingstudio/custom-nodes/` and `~/.thingstudio/credentials/`.
 They're shared across flows rather than tied to one project, unlike a flow itself — a saved credential referenced by
 name from a config node is never written into the `.flow.json` file. See
-[The Thingstudio folder](thingstudio-folder.md).
+[The ThingStudio folder](thingstudio-folder.md).
 
 ## Deploy
 

@@ -1,6 +1,6 @@
 # Custom firmware
 
-A Thingstudio custom image is MicroPython with Thingstudio's runtime and every flow library built in. Stock
+A ThingStudio custom image is MicroPython with ThingStudio's runtime and every flow library built in. Stock
 MicroPython loads the runtime, the libraries and the flow into RAM. With a custom image, the runtime and libraries
 run from flash instead, which leaves the RAM for the flow. On a small board, that is the difference between a flow
 starting and failing with `MemoryError`.
@@ -56,8 +56,8 @@ Flashing erases the board: its saved flow and all settings are gone afterwards.
 
 1. Put the board in download mode if it needs it: hold **BOOT** and tap **RESET**.
 2. Choose **Tools → Install firmware…**, pick **Serial port**, then the board's port.
-3. Set **Chip family** to the board's chip and **Firmware** to **Thingstudio custom image**. If there is no
-   **Thingstudio custom image** for the chip, no image for it has been published yet: use official MicroPython.
+3. Set **Chip family** to the board's chip and **Firmware** to **ThingStudio custom image**. If there is no
+   **ThingStudio custom image** for the chip, no image for it has been published yet: use official MicroPython.
 4. Pick a **Version**. Each version listed ran on a board before it was published, and the editor checks the
    download against its recorded SHA-256 before writing it.
 5. Click **Flash**. The editor writes the image at the address in the table above.
@@ -68,7 +68,7 @@ Flashing erases the board: its saved flow and all settings are gone afterwards.
 
 You need `esptool` and `mpremote` on the computer: `pip install esptool mpremote`.
 
-Each image is attached to the Thingstudio release it was published with. On the
+Each image is attached to the ThingStudio release it was published with. On the
 [releases page](https://github.com/mkarliner/ThingStudio/releases), open the release whose assets include the image
 version you want (the versions are the ones the editor lists), and download three files from it: the image for your
 chip, its `.sha256` file and `main.py`.

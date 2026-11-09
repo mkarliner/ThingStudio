@@ -1,12 +1,12 @@
 # If you know MicroPython
 
-Thingstudio sits on top of the MicroPython you already have. It doesn't replace your firmware. It adds a runtime
+ThingStudio sits on top of the MicroPython you already have. It doesn't replace your firmware. It adds a runtime
 and a way to write programs as flows, while the REPL and your own Python stay within reach.
 
 ## What goes on the board
 
 **Tools → Install runtime…** copies a set of Python files onto the board's filesystem, including a `main.py` that
-starts the Thingstudio runtime at boot. The runtime listens on USB or WiFi for the editor, and runs the last flow
+starts the ThingStudio runtime at boot. The runtime listens on USB or WiFi for the editor, and runs the last flow
 you deployed.
 
 If your board already has a `main.py` of your own, copy it off first.

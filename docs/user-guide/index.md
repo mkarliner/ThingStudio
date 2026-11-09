@@ -1,46 +1,33 @@
-# Thingstudio
+# ThingStudio
 
-Thingstudio is a visual, low-code way to program microcontrollers. You build a program, called a flow, in a
+ThingStudio is a visual, low-code way to program microcontrollers. You build a program, called a flow, in a
 node-based editor in your web browser. Nodes are functional blocks, and wires carry data between them. The design is
 inspired by [Node-RED](https://nodered.org/).
 
-Thingstudio converts the flow to [MicroPython](https://micropython.org/), a version of Python for microcontrollers,
+ThingStudio converts the flow to [MicroPython](https://micropython.org/), a version of Python for microcontrollers,
 compiles it, and sends it to your board. The flow is saved on the board. It will then run without the editor connected, and
 will start again after a reset or power cycle.
 
 <figure markdown="span">
-  [![The Thingstudio editor, showing a three-node flow: timer, function and gpio out](images/editor.png)](images/editor.png)<figcaption>The editor: nodes to drag in on the left, your flow in the middle, and on the right the selected
+  [![The ThingStudio editor, showing a three-node flow: timer, function and gpio out](images/editor.png)](images/editor.png)<figcaption>The editor: nodes to drag in on the left, your flow in the middle, and on the right the selected
   node's settings and the board's console. Click to see it full size. [Tour the editor](editor-tour.md) labels every
   part.</figcaption>
 </figure>
 
-!!! tip "For the impatient"
-
-    If you read nothing else, read this:
-
-    1. [Install Thingstudio](getting-started.md#step-1-install-thingstudio) and start it. The editor
-       opens in your browser.
-    2. [Tour the editor](editor-tour.md): the palette, the canvas, the console.
-    3. [Install MicroPython](installing-micropython.md) on your board. A standard ESP32 takes the advised
-       [custom image](custom-firmware.md).
-    4. [Connect your board](connecting.md), then [install the runtime](installing-runtime.md).
-    5. [Blink an LED](first-flow.md) — three nodes and deploy. Not in a building mood? Open
-       `tutorials/blink.flow.json` (the [tutorials folder](tutorial-flows.md#where-the-folder-is)) with
-       **File → Open…**, point the pin at your board's own LED, deploy.
-
-    When something doesn't work, [Debugging](debugging.md) and the [FAQ](faq.md) go by what you see on screen.
+!!! tip "In a hurry?"
+    [Getting started](getting-started.md) takes you from a new board to a blinking LED in six steps.
 
 ThingStudio is designed to be private, and as open and hackable as possible:
 
-- **Local dev.** Development happens locally; there is no cloud service.
+- **Fully local.** Development happens on your computer. There's no cloud service and no account.
 - **Works offline.** Once installed, it needs no internet connection, docs included.
-- **Git friendly.** Thingstudio's files, your programs and your board definitions, are plain, indented
+- **Git friendly.** ThingStudio's files, your programs and your board definitions, are plain, indented
   JSON that you save where you like. They diff cleanly and sit happily in a git repository. Passwords and
   other credentials are stored separately, so a committed program holds no secrets.
 - **Made to be extended.** Write your own [custom nodes](custom-nodes.md), and add your own
   [boards](boards.md#adding-a-board) and [processors](boards.md#adding-a-processor). You drop their files into
   a folder. There's nothing to rebuild.
-- **Free and open source.** Thingstudio is under the
+- **Free and open source.** ThingStudio is under the
   [Apache 2.0 license](https://github.com/mkarliner/ThingStudio/blob/main/LICENSE). You can use it, change it and
   build on it, including in commercial products.
 
@@ -57,7 +44,7 @@ ThingStudio is designed to be private, and as open and hackable as possible:
 ThingStudio is designed for developers with a reasonable amount of programming experience, it doesn't aim to teach programming fundamentals.
 You should also have some level of experience in working with microcontrollers. You don't have to be an EE graduate, but you should be comfortable wiring a breadboard. You should also be able to do basic commands from the terminal or PowerShell.
 
-## What's different about programming with Thingstudio?
+## What's different about programming with ThingStudio?
 
 A typical microcontroller program, in Arduino for example, has a `setup()` section that runs once at boot, then a
 main loop that runs forever. The loop might:
@@ -71,14 +58,14 @@ main loop that runs forever. The loop might:
 Each new job makes the loop longer. A slow step, such as a network call, holds up everything else, and the timing
 gets hard to reason about.
 
-Thingstudio programs respond to events instead. When a button is pressed, turn on a light. Every ten seconds, read
+ThingStudio programs respond to events instead. When a button is pressed, turn on a light. Every ten seconds, read
 the temperature. When a message arrives from the network, update the display. Each response runs only when its event
 happens, and the board waits for many events at once. This is
 [event-driven programming](background/event-driven.md).
 
 MicroPython supports this style natively with
 [`asyncio`](https://docs.micropython.org/en/latest/library/asyncio.html). An `asyncio` program no longer reads top to
-bottom, which makes it harder to see what it does. Thingstudio's graphical editor of events, functions and outputs
+bottom, which makes it harder to see what it does. ThingStudio's graphical editor of events, functions and outputs
 makes an event-driven program easier to build and follow.
 
 ## Events, nodes and wires
@@ -96,7 +83,7 @@ Nodes pass **messages** along the wires. A message is a dict, with its main valu
 in more detail in [flows, nodes and messages](background/flows-and-nodes.md).
 
 This way of working comes from [Node-RED](background/node-red.md), a popular tool for home automation and IoT. In
-Node-RED, flows run on a server or a Raspberry Pi. In Thingstudio, they run on the microcontroller.
+Node-RED, flows run on a server or a Raspberry Pi. In ThingStudio, they run on the microcontroller.
 
 ## Including your own code
 
@@ -127,7 +114,7 @@ changing a flow and trying it again takes seconds. The board keeps the flow and 
 
 ## Built on standard parts
 
-Thingstudio tries not to reinvent the wheel.
+ThingStudio tries not to reinvent the wheel.
 
 - MicroPython's [`asyncio`](https://docs.micropython.org/en/latest/library/asyncio.html) provides the event-driven
   primitives.
@@ -137,16 +124,10 @@ Thingstudio tries not to reinvent the wheel.
   [`micropython-lib`](https://github.com/micropython/micropython-lib).
 - What comes out is plain MicroPython. You can read it in the editor's **Compiled source** panel.
 
-## Built with AI
-
-Thingstudio is written with heavy use of AI coding tools. Every change is reviewed by a person, and the boards and
-nodes marked tested in [Supported hardware](supported-hardware.md) have run on real hardware. If that rules it out
-for you, fair enough.
-
 ## What you need
 
-- A board with an ESP32 or RP2040/RP2350 processor. [Supported hardware](supported-hardware.md) lists what's been
-  tested. Other boards that run MicroPython may work.
+- A board with one of the processors in [Supported hardware](supported-hardware.md). Other boards that run
+  MicroPython may work.
 - A USB cable that carries data, not only power.
 
 ## Next
@@ -154,5 +135,5 @@ for you, fair enough.
 [Getting started](getting-started.md) lists the steps from a new board to a blinking LED, and starts you on the first
 step.
 
-The docs on [docs.thingstudio.net](https://docs.thingstudio.net/) follow the latest code. The docs installed with Thingstudio
+The docs on [docs.thingstudio.net](https://docs.thingstudio.net/) follow the latest code. The docs installed with ThingStudio
 (**Help → User guide**) match the version you have installed.

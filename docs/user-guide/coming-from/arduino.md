@@ -1,6 +1,6 @@
 # If you know Arduino and C
 
-If you've written `setup()` and `loop()` in C or C++, Thingstudio will feel different in three ways. It uses
+If you've written `setup()` and `loop()` in C or C++, ThingStudio will feel different in three ways. It uses
 Python rather than C, you wire events together instead of writing a loop, and a change goes to the board in
 seconds without reflashing.
 
@@ -28,7 +28,7 @@ board swaps it in. Changing a flow and trying it again takes seconds.
 
 ## What stays the same
 
-Thingstudio checks your pin
+ThingStudio checks your pin
 numbers against the board before deploying, and refuses pins that would crash it, such as those wired to the
 flash chip. See [boards and processors](../boards.md).
 

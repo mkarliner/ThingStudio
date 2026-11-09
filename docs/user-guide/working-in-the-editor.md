@@ -62,7 +62,7 @@ Applying a preset copies the values once. Later changes to the node or the prese
 
 Each preset is a JSON file in `~/.thingstudio/presets/<node type>/`, which you can also write by hand. A file that
 isn't valid JSON appears in the menu disabled, with the file named. See
-[The Thingstudio folder](thingstudio-folder.md#presets).
+[The ThingStudio folder](thingstudio-folder.md#presets).
 
 ## Config nodes
 
@@ -85,7 +85,7 @@ secrets. Two flows that use the same credential share its values: edit it once a
 Pick a saved WiFi network or broker from the field's list. ✎ opens the saved values, such as a broker's host, port
 and login, with the config's other settings; **Save** stores them and **Cancel** discards the changes. **+** makes a
 new one: give it a name, fill it in and save. If a flow names a credential that isn't saved on this computer, ✎ says
-so, and saving creates it. See [The Thingstudio folder](thingstudio-folder.md#credentials).
+so, and saving creates it. See [The ThingStudio folder](thingstudio-folder.md#credentials).
 
 A flow has one WiFi network and one MQTT broker. Every node that uses WiFi has a **WiFi** field, and every MQTT node
 an **MQTT Broker** field. They all show the flow's one setting: change it on one node and it changes on all. A flow

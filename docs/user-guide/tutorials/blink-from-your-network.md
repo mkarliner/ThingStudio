@@ -44,7 +44,7 @@ The board joins the network named in the flow — so tell the flow which network
 passwords or other secrets: the WiFi details live in the `.thingstudio` folder in your home directory
 (`~/.thingstudio/credentials/`), as **credentials**. Each credential is named, and you can keep
 several — one per network — and pick the right one per flow. See
-[The Thingstudio folder](../thingstudio-folder.md#credentials).
+[The ThingStudio folder](../thingstudio-folder.md#credentials).
 
 1. On the `http in` node's property panel, click **+** next to the **WiFi** field to make a new credential (✎
    edits an existing one). Give the credential a name, your network's SSID and its password, and save.

@@ -8,7 +8,7 @@ been tested on a rewrite (`user-docs-rewrite-briefing.md`, Part 2). Built from M
 ## Reader
 
 Programmers: Node-RED users, MicroPython users, C/C++ embedded people (including PlatformIO). Not beginners to
-programming. Explain what's specific to Thingstudio, not Python, loops or MQTT.
+programming. Explain what's specific to ThingStudio, not Python, loops or MQTT.
 
 - Good: "`msg` is a dict, with the main value in `msg['payload']`. Return it to pass it on, or return nothing to
   stop it."
@@ -47,7 +47,7 @@ when the two differ, this one wins. (Mike, 2026-11-04.)
 
 Flagged so far, each with neutral text in place until Mike writes his own:
 
-- 2026-11-02 `index.md`: the opening paragraphs, which say what Thingstudio is. First thing a visitor reads; sets
+- 2026-11-02 `index.md`: the opening paragraphs, which say what ThingStudio is. First thing a visitor reads; sets
   the tone for the whole guide.
 - 2026-11-02 `getting-started.md`: the opening line, and the "Getting help" section. A welcome, and a human answer
   to "who do I ask?".
@@ -57,8 +57,6 @@ Flagged so far, each with neutral text in place until Mike writes his own:
   titles of Web Blink and Blink from anywhere. They set the mood for each project.
 - 2026-11-02 `background/` and `coming-from/`: the opening of each page. It explains why the project exists and
   speaks to newcomers from other tools.
-- 2026-11-06 `index.md` "Built with AI", and the same paragraph in `README.md`: the AI declaration (marketing plan
-  §4). A statement of how the project is made, in the maker's own words; threads link to it.
 
 Written by Mike, so settled text:
 
@@ -110,7 +108,10 @@ that asks for feedback.
 Use the terms the reader already knows ("low-code", "node-based editor", "compiles"), and the editor's own labels.
 Name the specific thing rather than "this" or "these".
 
-- Good: "The docs on docs.thingstudio.net follow the latest code. The docs inside Thingstudio ... match the version
+The product is **ThingStudio**, with a capital S (Mike, 2026-11-09). Quote an exact string from the code, such as an
+install path or a console message, as it is.
+
+- Good: "The docs on docs.thingstudio.net follow the latest code. The docs inside ThingStudio ... match the version
   you have installed."
 - Bad: "These docs follow the latest code."
 
@@ -126,22 +127,22 @@ Avoid "small", "simple", "a few", "quick" unless they're true for every case.
 Sections and pages go in the order the reader does things: understand, build, extend, run. Don't switch between
 computer and board, or between topics, unless the work does. Keep everything about one thing in one place.
 
-- Good: Getting started: install Thingstudio, tour the editor (computer), install MicroPython, connect (board).
+- Good: Getting started: install ThingStudio, tour the editor (computer), install MicroPython, connect (board).
 - Bad: package download, then installer paths, then installer upgrade, then package upgrade.
 
 ## Open with what the page is for
 
 The first sentence says what this page covers. Not a pointer to another page, not "the rest".
 
-- Good: "How Thingstudio is packaged, where it puts its files, how to upgrade and remove it, and how to build it from
+- Good: "How ThingStudio is packaged, where it puts its files, how to upgrade and remove it, and how to build it from
   source."
-- Bad: "Getting started covers installing Thingstudio. This page covers the rest."
+- Bad: "Getting started covers installing ThingStudio. This page covers the rest."
 
 ## Lists
 
 Every list has a sentence before it saying what it is. Choices between links go in a list, not a sentence.
 
-- Good: "Thingstudio tries not to reinvent the wheel." followed by the list.
+- Good: "ThingStudio tries not to reinvent the wheel." followed by the list.
 - Bad: a bare list straight after a heading.
 
 ## One home for changing facts

@@ -1,4 +1,4 @@
-# Thingstudio end-user documentation site.
+# ThingStudio end-user documentation site.
 # docs/working-notes/documentation-tech-selection.md: MkDocs + Material chosen 2026-09-07.
 # docs/working-notes/documentation-design.md: structure/nav decided the same week.
 #
@@ -6,7 +6,7 @@
 # thingstudio-design-doc.md and working-notes/, both explicitly out of scope
 # for this site (contributor-facing material, already served elsewhere).
 
-site_name: Thingstudio
+site_name: ThingStudio
 site_url: https://docs.thingstudio.net/
 site_description: Node-and-wire visual programming for microcontrollers.
 repo_url: https://github.com/mkarliner/ThingStudio
@@ -66,7 +66,7 @@ nav:
       - MicroPython: coming-from/micropython.md
       - Arduino and C: coming-from/arduino.md
   - Getting started:
-      - 1. Install Thingstudio: getting-started.md
+      - 1. Install ThingStudio: getting-started.md
       - 2. Tour the editor: editor-tour.md
       - 3. Install MicroPython: installing-micropython.md
       - 4. Connect your board: connecting.md
@@ -83,7 +83,7 @@ nav:
   - Building flows:
       - Editor in depth: working-in-the-editor.md
       - Flow lifecycle: flow-lifecycle.md
-      - The Thingstudio folder: thingstudio-folder.md
+      - The ThingStudio folder: thingstudio-folder.md
   - Boards and networks:
       - Supported hardware: supported-hardware.md
       - Boards and processors: boards.md

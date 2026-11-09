@@ -1,16 +1,16 @@
 # Step 3: Install MicroPython
 
-Thingstudio runs on top of [MicroPython](background/micropython.md), so the board needs it first. You install it once
+ThingStudio runs on top of [MicroPython](background/micropython.md), so the board needs it first. You install it once
 per board.
 
 A new board usually doesn't have MicroPython. If yours already has it, or you're not sure, go to
 [step 4](connecting.md). If MicroPython is missing, the console says so when you connect, and links back here.
 
-Thingstudio can install it for you, on the chips it can write.
+ThingStudio can install it for you, on the chips it can write.
 
-## Install from Thingstudio
+## Install from ThingStudio
 
-Thingstudio writes the firmware itself: over a serial port for the ESP32 family, and onto a mounted drive for
+ThingStudio writes the firmware itself: over a serial port for the ESP32 family, and onto a mounted drive for
 RP2040, RP2350 and nRF52 boards.
 
 !!! tip "ESP32 without PSRAM? Use a custom image"
@@ -20,12 +20,12 @@ RP2040, RP2350 and nRF52 boards.
     release significant memory for your flow.
 
 On a classic ESP32 with 4 MB of flash and no PSRAM, an ESP32-C3 or an ESP32-C5, pick
-**Thingstudio custom image** as the **Firmware** when the dialog lists one for the chip. Its **Version** list holds
+**ThingStudio custom image** as the **Firmware** when the dialog lists one for the chip. Its **Version** list holds
 the published releases.
 After flashing it, **Install runtime** writes only the boot script.
 
-The list of builds comes from docs.thingstudio.net, so a new image appears without updating Thingstudio. Thingstudio
-uses that list only when it carries Thingstudio's signature; offline, it uses the last list it saved, or the one it
+The list of builds comes from docs.thingstudio.net, so a new image appears without updating ThingStudio. ThingStudio
+uses that list only when it carries ThingStudio's signature; offline, it uses the last list it saved, or the one it
 was installed with. The line under **Version** says which.
 
 1. Plug the board into USB. A Pico needs **BOOTSEL** held while you plug it in.
@@ -34,7 +34,7 @@ was installed with. The line under **Version** says which.
    the path and the adapter's name (for example `/dev/ttyUSB0 -- CH340`). If an ESP32 isn't listed, hold **BOOT**,
    tap **RESET** and click ⟳; the line under the list says how many it found. If it still isn't listed, type the
    path in the box (on macOS a mounted Pico is `/Volumes/RPI-RP2`).
-4. Pick the **Chip family**, the **Firmware** (**Official MicroPython (micropython.org)** or **Thingstudio custom
+4. Pick the **Chip family**, the **Firmware** (**Official MicroPython (micropython.org)** or **ThingStudio custom
    image**), the **Build** and the **Version**. A board that names its own build is preselected.
 5. Click **Flash**. **Erase all flash first** is ticked: it clears an old partition table, which is the usual
    reason a board doesn't boot after a successful install. The dialog shows each line the tool prints; a failure
@@ -45,10 +45,10 @@ The **Build** matters for the heap as much as for compatibility: an ESP32 with e
 chip families the editor can write are listed, and only builds whose hash is pinned, so what you flash is what was
 tested.
 
-The list covers every build Thingstudio pins, so **Or use your own image file** is only for the rest: a build for a
-board Thingstudio doesn't list, a chip with no pinned build yet (the ESP32-C5), or an image you downloaded yourself. Pick the `.bin` or `.uf2`; the chip family you
+The list covers every build ThingStudio pins, so **Or use your own image file** is only for the rest: a build for a
+board ThingStudio doesn't list, a chip with no pinned build yet (the ESP32-C5), or an image you downloaded yourself. Pick the `.bin` or `.uf2`; the chip family you
 choose decides the address, and the file's own header usually decides the family. **Address**, under **Install
-options**, overrides the family's address. A Thingstudio custom image for a classic ESP32 needs `0x0` there: see
+options**, overrides the family's address. A ThingStudio custom image for a classic ESP32 needs `0x0` there: see
 [Custom firmware](custom-firmware.md#install-by-hand).
 
 Flashing erases the flow and all settings on the board. Afterwards, [connect](connecting.md) it
@@ -56,7 +56,7 @@ and [install the runtime](installing-runtime.md).
 
 ## Doing it yourself
 
-For a chip Thingstudio can't write, or a build it doesn't pin, install MicroPython without the editor.
+For a chip ThingStudio can't write, or a build it doesn't pin, install MicroPython without the editor.
 
 ### Get the firmware
 
@@ -87,7 +87,7 @@ The board restarts into MicroPython by itself.
 
 ### ESP32 family: esptool
 
-If Thingstudio is connected to the board, click **Disconnect** first. Only one program can use the board's port at
+If ThingStudio is connected to the board, click **Disconnect** first. Only one program can use the board's port at
 a time. If another program has it open, esptool reports `Resource busy` or `could not open port`.
 
 Install `esptool` once:
@@ -128,7 +128,7 @@ a different port afterwards.
 When it's done, close Thonny. Like esptool, it needs the board's port to itself.
 
 Thonny can't install MicroPython on an ESP32-C5. It writes the image at `0`, but a C5 needs `0x2000`, and Thonny
-doesn't offer that address. The board then restarts in a loop printing `invalid header`. Use Thingstudio or
+doesn't offer that address. The board then restarts in a loop printing `invalid header`. Use ThingStudio or
 esptool instead. ([Thonny issue #3963](https://github.com/thonny/thonny/issues/3963))
 
 ### Other microcontrollers
@@ -137,9 +137,9 @@ Other chips, such as STM32, nRF or SAMD, each have their own way of installing M
 on [micropython.org/download](https://micropython.org/download/) and the
 [MicroPython documentation](https://docs.micropython.org/en/latest/).
 
-[Supported hardware](supported-hardware.md) lists the chips Thingstudio is tested on. Another chip needs a
+[Supported hardware](supported-hardware.md) lists the chips ThingStudio is tested on. Another chip needs a
 processor definition: see [Other boards](supported-hardware.md#other-boards).
 
 ## Next
 
-Step 4: [connect your board](connecting.md) to Thingstudio.
+Step 4: [connect your board](connecting.md) to ThingStudio.

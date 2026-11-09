@@ -1,9 +1,9 @@
 # Step 2: Tour the editor
 
-Start Thingstudio if it isn't running: see [step 1](getting-started.md#start-thingstudio).
+Start ThingStudio if it isn't running: see [step 1](getting-started.md#start-thingstudio).
 
 <figure markdown="span">
-  [![The Thingstudio editor with each part labelled](images/editor-parts.png)](images/editor-parts.png)<figcaption>The parts of the editor. Click to see it full size.</figcaption>
+  [![The ThingStudio editor with each part labelled](images/editor-parts.png)](images/editor-parts.png)<figcaption>The parts of the editor. Click to see it full size.</figcaption>
 </figure>
 
 <!-- The labels on the picture come from EDITOR_PARTS in tools/screenshots.py. Keep the names below in step. -->
@@ -52,13 +52,13 @@ The right-hand side holds the selected node's settings and what the board sends 
 - **Notes on this flow:** the **Notes** panel, free text saved with the flow.
 - **Generated MicroPython:** the **Compiled source** panel. Click it to open it. **Download .py** saves it as a
   file. Like the panel, the file holds your WiFi password and broker login.
-- **Messages from the board:** the **Device console**, with messages from Thingstudio and the board, including your
+- **Messages from the board:** the **Device console**, with messages from ThingStudio and the board, including your
   flow's output. Its **Show** menu sets how much it shows: **Normal** for your flow's output, results and errors,
   **Info** to add routine reports such as memory, **Debug** for everything.
 - **Run Python on the board:** type a line of Python and click **Send**. It runs on the board alongside the flow.
   See [Commands and the Python prompt](debugging.md#commands-and-the-python-prompt).
 - **Escape to REPL:** **Stop flow & open prompt** stops the flow and gives you MicroPython's own `>>>` prompt.
-  **Restart Thingstudio** starts the flow again.
+  **Restart ThingStudio** starts the flow again.
 
 To make the notes, compiled source and console column wider or narrower, drag its left edge. Double-click the edge
 to reset it.

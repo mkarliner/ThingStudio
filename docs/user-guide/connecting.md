@@ -1,6 +1,6 @@
 # Step 4: Connect your board
 
-Connect the board over USB so the editor can talk to it. Start Thingstudio if it isn't running: see
+Connect the board over USB so the editor can talk to it. Start ThingStudio if it isn't running: see
 [step 1](getting-started.md#start-thingstudio).
 
 To connect:
@@ -16,7 +16,7 @@ click **⟳** again. The port that appears is your board.
 
 ## What the console says
 
-A board with MicroPython but no Thingstudio runtime gives this message:
+A board with MicroPython but no ThingStudio runtime gives this message:
 
 ```text
 No reply from the runtime. MicroPython but no Thingstudio runtime: Tools → Install runtime…

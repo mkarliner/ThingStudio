@@ -1,15 +1,15 @@
 ---
 name: thingstudio-flow-author
-description: Write, edit or lay out a Thingstudio flow (.flow.json) for a microcontroller board, and check it with the bundled thingstudio-compile command before handing it back.
+description: Write, edit or lay out a ThingStudio flow (.flow.json) for a microcontroller board, and check it with the bundled thingstudio-compile command before handing it back.
 ---
 
-# Writing Thingstudio flows
+# Writing ThingStudio flows
 
-Thingstudio flows are JSON files of nodes and wires that the Thingstudio editor opens, compiles to MicroPython and
+ThingStudio flows are JSON files of nodes and wires that the ThingStudio editor opens, compiles to MicroPython and
 deploys to a board. This skill carries everything needed to write one without the editor: the authoring guide, the
 node catalog, example flows, and the same compile check the editor runs.
 
-Built for Thingstudio {{VERSION}}. If the user's editor is newer, a node or property may be missing here; the online
+Built for ThingStudio {{VERSION}}. If the user's editor is newer, a node or property may be missing here; the online
 guide is at {{DOCS_URL}}ai-authoring/.
 
 `SKILL_DIR` below means the folder this file is in. The check needs Node 22 or newer (`node -v`).

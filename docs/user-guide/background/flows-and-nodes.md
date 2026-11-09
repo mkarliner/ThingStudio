@@ -1,6 +1,6 @@
 # Flows, nodes and messages
 
-A Thingstudio program is a **flow**: a set of **nodes** joined by **wires**. You build it by dragging nodes onto
+A ThingStudio program is a **flow**: a set of **nodes** joined by **wires**. You build it by dragging nodes onto
 a canvas and wiring them together, rather than writing a program top to bottom.
 
 ## Nodes
@@ -43,5 +43,5 @@ once and pick it from each node that uses it. See [Editor in depth](../working-i
 ## Background
 
 Node-and-wire programming has a long history, from J. Paul Morrison's
-[flow-based programming](https://jpaulm.github.io/fbp/) to tools like LabVIEW, Max and Node-RED. Thingstudio
+[flow-based programming](https://jpaulm.github.io/fbp/) to tools like LabVIEW, Max and Node-RED. ThingStudio
 follows [Node-RED](node-red.md)'s version of the idea, with the same message shape and very similar nodes.
