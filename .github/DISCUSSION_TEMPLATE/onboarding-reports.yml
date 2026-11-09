@@ -1,6 +1,6 @@
 # Form for the "Onboarding reports" discussion category. The file name must match
 # the category's slug, so create that category first (Settings > Discussions).
-title: "Onboarding: <board> on <computer>"
+title: "Onboarding: "
 body:
   - type: markdown
     attributes:
@@ -9,6 +9,8 @@ body:
         you down, so the rough bits are the useful bits. Rough times are fine.
 
         Prefer to keep it private? Email mike@minus1.com instead.
+
+        Please finish the title above with your board and computer, e.g. "Onboarding: Pico W on macOS".
   - type: input
     id: board
     attributes:

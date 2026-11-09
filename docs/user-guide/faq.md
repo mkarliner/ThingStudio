@@ -66,17 +66,24 @@ when the console shows more free memory than the page size. A 56 KB page on an E
 `MemoryError allocating 56722 bytes`; a 48-byte page worked. Point the node at a smaller response, or use a board
 with PSRAM for large pages.
 
-## My ESP32-S3 board has PSRAM, but the console shows only about 120 KB free. Why?
+## Which MicroPython build does my ESP32-S3 need for its PSRAM?
 
-The firmware doesn't use the PSRAM. The generic ESP32-S3 build leaves it off. Flash the build for boards with
-octal PSRAM (the `SPIRAM_OCT` variant) from [micropython.org/download](https://micropython.org/download/ESP32_GENERIC_S3/).
-The console then shows megabytes free. Freenove's S3 display boards are an example: 121 KB before, 7.8 MB after.
+The kind of PSRAM decides, not the flash size. Quad PSRAM, usually 2 MB (modules such as N8R2), works with the
+generic build: it finds the PSRAM at startup. Octal PSRAM, usually 8 MB (modules such as N16R8), needs the octal
+build (`SPIRAM_OCT`). On the generic build an octal board's PSRAM stays unused and the console shows only about
+120 KB free. Freenove's S3 display boards are octal: 121 KB free before, 7.8 MB after.
 
 ## My ESP32-C5 prints "PSRAM chip is not connected" at boot. Is it broken?
 
 No. The generic ESP32-C5 build looks for PSRAM, and many C5 modules have none. It reports the failure, says
 "continuing without it", and starts MicroPython with the chip's own RAM. The
 [ThingStudio C5 image](custom-firmware.md) doesn't look for PSRAM, so it doesn't print this.
+
+## Why does GPIO 10 pulse when my flow doesn't use it?
+
+The runtime toggles GPIO 10 every 200 ms, on every board, as a liveness signal for Thingstudio's own test rig. It
+starts with the runtime, so it runs with no flow deployed and keeps running when you change your flow. Leave
+GPIO 10 unconnected, and don't use it in a flow: the runtime and the flow would both drive it.
 
 ## Which board should I use for a display and WiFi together?
 

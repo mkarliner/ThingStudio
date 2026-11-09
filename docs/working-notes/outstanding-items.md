@@ -102,6 +102,14 @@ ThingStudioMarketing repo, not here.
 
 ## Boards / definitions
 
+- **[TR]** **[P3]** **ESP32-S3 build labels didn't say which PSRAM they fit -- new item, 2026-11-09, labels fixed.**
+  A tester (Discussions #19) with a 2 MB-PSRAM EdgeS3 saw "with 8 MB octal PSRAM" and "generic, no PSRAM" and
+  couldn't tell which applied; the right one was generic, which finds quad PSRAM at startup. Labels in
+  `firmware/builds.json` now name the PSRAM kind, and the FAQ entry is rewritten to say quad vs octal (it used to
+  say the generic build leaves PSRAM off, which is only true of octal boards). Left: confirm on a quad-PSRAM S3
+  that the console shows the PSRAM after flashing generic, and check whether the ESP32-S2 generic label
+  ("no PSRAM") has the same problem.
+
 - **[TR]** **[P2]** **A local Thingstudio classic-ESP32 image installs at the wrong address -- new item, 2026-11-06.**
   **Or use your own image file** writes at the chip family's address (`0x1000` for ESP32) unless the user sets
   **Address** under **Install options**; Thingstudio's classic image is merged and must go at `0x0`, so the board
@@ -242,6 +250,16 @@ ThingStudioMarketing repo, not here.
   complete. ([detail](outstanding-items/cbor-over-json-revisit.md))
 
 ## Redeploy / runtime
+
+- **[TR]** **[P1]** **The runtime toggles GPIO 10 on every user's board -- new item, 2026-11-09.** `listener.py`'s
+  `_heartbeat()` drives `_HEARTBEAT_PIN = 10` every 200 ms from boot, unconditionally, for the HIL witness rig's
+  `HEARTBEAT_WATCH` (`test/hil/pin-map.md`; added in `e80f937f`, 2026-08-13). On a user's board it fights any flow
+  that uses GPIO 10, pulses whatever is wired there, and on a classic ESP32 GPIO 10 is one of the pins the processor
+  definition marks reserved for flash ("Using them crashes the board"); on an nRF52840 it is an NFC pin. Found by the
+  first Discussions tester (#19, EdgeS3 on Linux Mint), who couldn't stop "a blinky on IO10" by changing the flow.
+  FAQ entry added in the meantime. Fix: make it opt-in for the rig, e.g. a pin number in device settings or a
+  marker file the HIL setup writes, and off by default; the HIL README then says how the rig turns it on. Runtime
+  minor bump (no codegen or message change).
 
 - **[P3]** **`machine.reset()` before each deploy, for a known-clean device state -- raised 2026-09-04, not
   scoped.** +3s deploy time, likely worth it. A full reset gets the clean-slate effect "a power cycle fixed

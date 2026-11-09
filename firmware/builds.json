@@ -38,7 +38,7 @@
       "id": "esp32-s3-spiram-oct",
       "supplier": "micropython",
       "family": "esp32-s3",
-      "label": "ESP32-S3 with 8 MB octal PSRAM (SPIRAM_OCT)",
+      "label": "ESP32-S3 with octal PSRAM, usually 8 MB (SPIRAM_OCT)",
       "infoUrl": "https://micropython.org/download/ESP32_GENERIC_S3/",
       "runtime": "install",
       "versions": [
@@ -184,7 +184,7 @@
       "id": "esp32-s3-generic",
       "supplier": "micropython",
       "family": "esp32-s3",
-      "label": "ESP32-S3 (generic, no PSRAM)",
+      "label": "ESP32-S3 (generic: no PSRAM, or quad PSRAM such as 2 MB)",
       "infoUrl": "https://micropython.org/download/ESP32_GENERIC_S3/",
       "runtime": "install",
       "versions": [
