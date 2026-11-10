@@ -1,0 +1,6 @@
+{
+  "$comment": "What firmware/bench.py tests this target's image with (tools/firmware_targets.py, BENCH_FIELDS).",
+  "board": "ESP32-C5-340X",
+  "flow": "test-flows/ble-scan-debug-c5.flow.json",
+  "flashing": "Hold BOOT, press and release RESET, release BOOT, then retry: the CH340E can't pull BOOT itself."
+}

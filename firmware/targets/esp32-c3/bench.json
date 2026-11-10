@@ -1,0 +1,5 @@
+{
+  "$comment": "What firmware/bench.py tests this target's image with (tools/firmware_targets.py, BENCH_FIELDS).",
+  "board": "ESP32-C3 module board",
+  "flow": "test-flows/ble-scan-debug-c5.flow.json"
+}

@@ -67,6 +67,7 @@ def repo(tmp_path, monkeypatch):
         (board / "sdkconfig.board").write_text("CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y\n")
         (board / "partitions.csv").write_text(PARTITIONS)
         (board.parent / "tested.json").write_text("{}")
+        (board.parent / "bench.json").write_text(json.dumps({"board": f"{tid} board", "flow": "test-flows/smoke.flow.json"}))
         procs = root / "editor" / "src" / "definitions" / "processors"
         procs.mkdir(parents=True, exist_ok=True)
         (procs / f"{facts['family']}.json").write_text(json.dumps({"flash": {"tool": "esptool", "chip": facts["chip"]}}))
@@ -96,6 +97,8 @@ def repo(tmp_path, monkeypatch):
     }
     path = root / "firmware" / "builds.json"
     path.write_text(json.dumps(catalogue, indent=2) + "\n")
+    (root / "test-flows").mkdir()
+    (root / "test-flows" / "smoke.flow.json").write_text('{"formatVersion": 1, "nodes": [], "edges": []}')
     listener = root / "device-runtime" / "src" / "listener.py"
     listener.parent.mkdir(parents=True)
     listener.write_text('_RUNTIME_VERSION = {"major": 15, "minor": 0, "patch": 0}\n')
@@ -231,6 +234,17 @@ def test_every_target_folder_is_found(repo):
 def test_a_new_folder_missing_a_board_file_fails_check(repo):
     (repo["root"] / "firmware" / "targets" / "esp32-c5" / "board" / "partitions.csv").unlink()
     assert any("esp32-c5: missing board/partitions.csv" in line for line in targets.check())
+
+
+def test_a_target_without_bench_facts_fails_check(repo):
+    (repo["root"] / "firmware" / "targets" / "esp32-c5" / "bench.json").unlink()
+    assert any("esp32-c5" in line and "bench.json" in line for line in targets.check())
+
+
+def test_a_bench_flow_that_is_not_in_the_repo_fails_check(repo):
+    path = repo["root"] / "firmware" / "targets" / "esp32-c5" / "bench.json"
+    path.write_text(json.dumps({"board": "C5", "flow": "test-flows/missing.flow.json"}))
+    assert any("esp32-c5/bench.json: flow 'test-flows/missing.flow.json'" in line for line in targets.check())
 
 
 def test_a_chip_that_disagrees_with_the_processor_fails_check(repo):

@@ -16,10 +16,12 @@ firmware.
 ```
 firmware/
   build.sh install.sh record-tested.sh publish.sh   shared; each takes a target, names none
+  bench.py                                          flash, check and record every target's CI image
   stage.py gen_deps_index.mjs manifest.py patches/  the frozen set and the MicroPython patches, same for every target
   builds.json                                       what the editor's Install firmware dialog offers
   targets/<target>/
     target.json     the target's facts: chip, family, pinned MicroPython and ESP-IDF tags, flash address, sdkconfig
+    bench.json      the board the bench tests it on, the flow it deploys, and any flashing hint
     board/          mpconfigboard.h, sdkconfig.board, partitions.csv
     tested.json     every image of this target that ran on a board, keyed by sha256
   out/<target>/     build output (not committed)
@@ -90,8 +92,28 @@ steps (press RESET, copy `main.py` with `mpremote`, press RESET).
 ## At every runtime bump: rebuild every target
 
 An image freezes the runtime, so a runtime bump makes every published image one the editor refuses or runs stale.
-A bump is finished when each target has a tested image at the new version. First commit the bump itself, then for
-each target:
+A bump is finished when each target has a tested image at the new version.
+
+**The bench (the usual route, from 2026-11-10).** Commit and push the bump; CI builds the images (Build, above).
+Then, with ThingStudio closed and the boards to hand:
+
+```sh
+python3 firmware/bench.py                        # every target; or name some: firmware/bench.py esp32-c5
+python3 firmware/bench.py --catalogue v0.12.0    # ... and add the images to builds.json for that release, signed
+```
+
+For each target it fetches CI's image for `HEAD`, asks for the board named in `targets/<target>/bench.json`, finds
+its port, flashes it with `install.sh`, checks HELLO (runtime version, every frozen library at its hash), deploys
+`bench.json`'s flow three times over itself, and shows the note it would record with the memory figures. Answer `y`
+and it runs `record-tested.sh`. It ends with the `git` lines to commit the records. A failed check stops that target
+and records nothing.
+
+Needs `gh` (logged in), `esptool`, `mpremote`, `pyserial`, `node` and `editor/dist-cli` (`cd editor && npm run
+build:cli`). It builds a native `mpy-cross` at the target's MicroPython tag into `~/.cache/thingstudio/` the first
+time (a C compiler: `xcode-select --install` on a Mac), unless `THINGSTUDIO_MPY_CROSS` names one. Images you built
+yourself: `--images-from firmware/out`.
+
+**By hand.** First commit the bump itself, then for each target:
 
 1. Build at the bump's commit (or later), flash it, run a flow on a board of that chip.
 2. Record it:

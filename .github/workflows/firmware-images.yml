@@ -4,7 +4,8 @@ name: Firmware images
 # container at the target's pinned tag, so no toolchain is needed on a developer machine and an image can never be
 # named -dirty. Step 1 of docs/working-notes/firmware-pipeline-scoping.md (2026-11-10).
 #
-# The images are run artifacts named firmware-<target>-<commit>, kept 90 days. They are not tested or recorded
+# The images are run artifacts named firmware-<target>-<commit> (image, .sha256, main.py and _deps.json, the
+# frozen library inventory firmware/bench.py checks the board's HELLO against), kept 90 days. They are not tested or recorded
 # here: the bench step (a board on a cable) does that, and records the exact bytes built here, so the image a
 # release attaches is the one that ran on a board.
 #
@@ -105,5 +106,6 @@ jobs:
             firmware/out/${{ matrix.target }}/${{ steps.image.outputs.image }}
             firmware/out/${{ matrix.target }}/${{ steps.image.outputs.image }}.sha256
             firmware/out/${{ matrix.target }}/main.py
+            firmware/out/${{ matrix.target }}/_deps.json
           if-no-files-found: error
           retention-days: 90

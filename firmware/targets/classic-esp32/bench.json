@@ -1,0 +1,5 @@
+{
+  "$comment": "What firmware/bench.py tests this target's image with (tools/firmware_targets.py, BENCH_FIELDS).",
+  "board": "CYD (ESP32-2432S028)",
+  "flow": "test-flows/gui-hero-cyd-theme.flow.json"
+}

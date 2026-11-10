@@ -31,6 +31,7 @@ import argparse
 import base64
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -204,7 +205,7 @@ def infer_arch(chip_type):
     """Mirror of editor/src/app/native-arch.ts, from HELLO's free-form chipType. Only matters
     for a flow that uses @micropython.viper/native; harmless otherwise."""
     s = (chip_type or "").lower()
-    if "esp32c3" in s or "esp32-c3" in s or "esp32c6" in s or "esp32-c6" in s:
+    if re.search(r"esp32-?c[356]", s):  # RISC-V, as native-arch.ts (C5 was missing here until 2026-11-10)
         return "rv32imc", True
     if "esp32" in s:
         return "xtensawin", True

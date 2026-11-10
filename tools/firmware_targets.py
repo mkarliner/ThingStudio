@@ -14,6 +14,7 @@
 # Usage:
 #   python3 tools/firmware_targets.py list                      # one id per line
 #   python3 tools/firmware_targets.py env <id>                  # shell assignments for build.sh/install.sh
+#   python3 tools/firmware_targets.py bench <id>                # the board and flow firmware/bench.py tests with
 #   python3 tools/firmware_targets.py check                     # every target and its catalogue entry
 #   python3 tools/firmware_targets.py current [--tag REF] [--warn]
 #       # each target has a tested image at the runtime version (built from a commit REF contains);
@@ -55,6 +56,15 @@ FIELDS = {
     "espIdf": (str, "ESP-IDF tag it is built with, e.g. v5.5.2"),
     "address": (int, "where the merged image is written; also merge_bin's --target-offset"),
     "portSdkconfig": (list, "the port's own sdkconfig fragments, in order (boards/sdkconfig.base, ...)"),
+}
+
+
+# bench.json: what firmware/bench.py needs to test an image of this target on a board. key -> (type, what it is,
+# required). One file per target folder, so a new target brings its own bench facts (AGENTS.md, "Scope is not shape").
+BENCH_FIELDS = {
+    "board": (str, "the board the image is tested on, as the release notes name it", True),
+    "flow": (str, "a .flow.json under the repo that exercises the chip, deployed three times over itself", True),
+    "flashing": (str, "what to do when flashing doesn't start (a board without auto-reset)", False),
 }
 
 
@@ -150,6 +160,22 @@ def load_target(folder: Path) -> Target:
     )
 
 
+def bench(t: Target) -> dict:
+    """The target's bench.json, checked: the board to test on and the flow to deploy."""
+    raw = load_json(t.dir / "bench.json")
+    for key, (kind, meaning, required) in BENCH_FIELDS.items():
+        if key not in raw and not required:
+            continue
+        if not isinstance(raw.get(key), kind) or not raw.get(key):
+            raise TargetError(f"{t.id}/bench.json: '{key}' must be a non-empty {kind.__name__} -- {meaning}")
+    unknown = sorted(set(raw) - set(BENCH_FIELDS) - {"$comment"})
+    if unknown:
+        raise TargetError(f"{t.id}/bench.json: unknown keys {', '.join(unknown)}")
+    if not raw["flow"].endswith(".flow.json") or not (REPO / raw["flow"]).is_file():
+        raise TargetError(f"{t.id}/bench.json: flow {raw['flow']!r} is not a .flow.json file in the repo")
+    return raw
+
+
 def targets() -> list[Target]:
     if not TARGETS_DIR.is_dir():
         raise TargetError("no firmware/targets/ directory")
@@ -225,6 +251,10 @@ def check() -> list[str]:
             flash = load_json(proc_path).get("flash") or {}
             if flash.get("chip") != t.chip:
                 problems.append(f"{where}: chip {t.chip!r}, but processor {t.family} flashes as {flash.get('chip')!r}")
+        try:
+            bench(t)
+        except TargetError as exc:
+            problems.append(str(exc))
         try:
             tested = t.tested()
         except TargetError as exc:
@@ -323,6 +353,8 @@ def main(argv: list[str] | None = None) -> int:
     env = sub.add_parser("env")
     env.add_argument("target")
     sub.add_parser("check")
+    bench_cmd = sub.add_parser("bench")
+    bench_cmd.add_argument("target")
     cur = sub.add_parser("current")
     cur.add_argument("--tag", help="only count images built from a commit this ref contains")
     cur.add_argument("--warn", action="store_true", help="report, but exit 0")
@@ -332,6 +364,8 @@ def main(argv: list[str] | None = None) -> int:
             print("\n".join(t.id for t in targets()))
         elif args.cmd == "env":
             print(shell_env(target(args.target)))
+        elif args.cmd == "bench":
+            print(json.dumps(bench(target(args.target)), indent=2))
         elif args.cmd == "check":
             problems = check()
             for line in problems:

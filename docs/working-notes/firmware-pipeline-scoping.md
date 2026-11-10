@@ -1,8 +1,9 @@
 # Custom firmware images: one-command pipeline (scoping)
 
-Status: scoping, 2026-11-10. Step 1 (CI builds) written the same day: `.github/workflows/firmware-images.yml`, not yet
-run. Mike: CI is fine (3000 minutes a month at most). Asked for by Mike after Discussions #19: "We need a fully automated way to create the
-custom images. There are too many steps for me to do reliably." Steps 2 and 3 not built yet; the decisions at the end are
+Status: scoping, 2026-11-10. Step 1 (CI builds) done the same day: `.github/workflows/firmware-images.yml`, green
+on its first run (about 4 minutes per target). Step 2 written the same day: `firmware/bench.py` with a `bench.json`
+per target (Mike: the checks are enough; boards C5-340X, a C3 module board, CYD); not yet run on hardware. Mike: CI is fine (3000 minutes a month at most). Asked for by Mike after Discussions #19: "We need a fully automated way to create the
+custom images. There are too many steps for me to do reliably." Step 3 not built yet; the decisions at the end are
 Mike's.
 
 ## Today's steps, per runtime bump
@@ -36,7 +37,7 @@ A `firmware-images` GitHub Actions workflow, a matrix over `tools/firmware_targe
 
 `build.sh` stays the one build recipe; the Mac can still run it, but no longer has to.
 
-### 2. One command at the bench: `firmware/bench.sh`
+### 2. One command at the bench: `firmware/bench.py`
 
 Run on the Mac with the boards to hand:
 
@@ -65,7 +66,7 @@ Instead of `publish.sh` on the Mac: on a tag, the Release workflow downloads the
 
 ```
 git push                     # CI builds the images
-firmware/bench.sh            # plug in each board when asked; type the signing passphrase once
+firmware/bench.py            # plug in each board when asked; type the signing passphrase once
 <paste the commit-and-tag lines it prints>
 ```
 
@@ -73,7 +74,7 @@ firmware/bench.sh            # plug in each board when asked; type the signing p
 
 1. CI workflow, plus `build.sh` reading the IDF/MicroPython locations from the container: half a day, mostly
    waiting on CI runs.
-2. `bench.sh` and the three smoke flows: a day. `device_cli.py` already deploys and triggers; it needs a mode that
+2. `bench.py` and the three smoke flows: a day. `device_cli.py` already deploys and triggers; it needs a mode that
    prints HELLO and `[memory]` as JSON for the script to read.
 3. Release workflow attach step, replacing `publish.sh`'s upload half: a couple of hours.
 4. `firmware/README.md` rewritten around the three steps; the old manual route kept as a short appendix.

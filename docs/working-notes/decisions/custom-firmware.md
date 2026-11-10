@@ -84,3 +84,13 @@ chip. The classic-ESP32 image's own history (why freeze, chunked deploy, local b
   `thingstudio-esp32-c3` as their `variant`, as the CYD and D1 R32 name the classic image: the C5's stock build
   could not redeploy a BLE flow, its image redeploys with 100 KB to spare. The classic build's 14.1.0 and 14.0.1
   versions leave `builds.json` (an editor on runtime 15 refuses them); their `tested.json` entries stay as history.
+- **2026-11-10 — CI builds the images; one bench command tests and records them (Mike).** "Too many steps for me to
+  do reliably" (after Discussions #19). The trigger in the 2026-11-04 entry is met, and CI is designed as the
+  release path, per target: `.github/workflows/firmware-images.yml` builds every `firmware/targets/` folder in the
+  `espressif/idf` container at its pinned tag, from a clean checkout, so the image is never `-dirty` and the bytes
+  tested are the bytes published. `firmware/bench.py` is the hands-on step: per target, the board and flow in its
+  `bench.json`, then flash, HELLO (runtime version, every frozen library at its hash), three deploys over a running
+  flow, the memory figures, and a y/n before `record-tested.sh`. Mike: those checks are enough (nothing that depends
+  on the room, like a BLE scan seeing a device); boards C5-340X, a C3 module board, CYD. A second target needs: a
+  folder with `target.json` and `bench.json`; the workflow and the bench iterate the folders. Scoping:
+  `firmware-pipeline-scoping.md`.
