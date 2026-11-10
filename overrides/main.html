@@ -1,0 +1,27 @@
+{#- Material theme override: adds schema.org JSON-LD to the docs home page only.
+    The full SoftwareApplication record lives on the landing page (ThingStudioWeb/index.html);
+    this one shares its @id so search engines and LLMs treat them as the same product.
+    No version number here on purpose: it would go stale with every release. -#}
+{% extends "base.html" %}
+
+{% block extrahead %}
+  {{ super() }}
+  {% if page and page.is_homepage %}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "@id": "https://thingstudio.net/#software",
+    "name": "ThingStudio",
+    "url": "https://thingstudio.net/",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "macOS, Linux, Windows",
+    "license": "https://www.apache.org/licenses/LICENSE-2.0",
+    "isAccessibleForFree": true,
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "GBP" },
+    "softwareHelp": { "@type": "CreativeWork", "url": "https://docs.thingstudio.net/" },
+    "sameAs": ["https://github.com/mkarliner/ThingStudio"]
+  }
+  </script>
+  {% endif %}
+{% endblock %}

@@ -29,6 +29,8 @@ copyright: "Visits are counted with <a href=\"https://www.goatcounter.com/\">Goa
 
 theme:
   name: material
+  # overrides/main.html: JSON-LD on the docs home page (shares @id with the landing page).
+  custom_dir: overrides
   # No Google Fonts: the backend serves these docs locally (/docs/) and they must work offline.
   font: false
   palette:
