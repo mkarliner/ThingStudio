@@ -139,7 +139,30 @@ const ElementRows = defineComponent({
               ? "page dots"
               : p.names(element.node ?? ""),
       }));
-      return h("div", { class: "rows" }, rows.map((r) => {
+      const go = (element: GridElement) => emit("add", { target: p.target, element });
+      const choices: Record<string, () => GridElement> = {
+        "@text": () => ({ kind: "text", text: "Text", row: 0, col: 0 }),
+        "@dots": () => ({ kind: "pagedots", row: 0, col: 0, colSpan: 2 }),
+        "@panel": () => ({ card: true, row: 0, col: 0, rowSpan: 1, colSpan: 2 }),
+      };
+      const addInto = () =>
+        h("select", {
+          class: "addsel", title: "add to this page", value: "",
+          onChange: (ev: Event) => {
+            const sel = ev.target as HTMLSelectElement;
+            const v = sel.value;
+            sel.value = "";
+            if (!v) return;
+            go(v.startsWith("@") ? choices[v]!() : { kind: "widget", node: v, row: 0, col: 0 });
+          },
+        }, [
+          h("option", { value: "" }, "+ add…"),
+          ...(p.unplaced.length ? [h("optgroup", { label: "widgets" }, p.unplaced.map((n) => h("option", { value: n.id }, n.name)))] : []),
+          h("optgroup", { label: "other" }, [
+            h("option", { value: "@text" }, "text"), h("option", { value: "@dots" }, "page dots"), h("option", { value: "@panel" }, "panel"),
+          ]),
+        ]);
+      const rowFor = (r: OutlineRow) => {
         const e = r.element;
         const field = (name: string, k: keyof GridElement, width: number, numeric: boolean) =>
           h("label", { class: "f" }, [
@@ -178,30 +201,6 @@ const ElementRows = defineComponent({
         }
         const btn = (txt: string, title: string, on: boolean, op: "up" | "down" | "remove") =>
           h("button", { title, disabled: !on, onClick: () => emit("op", { op, target: p.target, index: r.index }) }, txt);
-        const addInto = () => {
-          const go = (element: GridElement) => emit("add", { target: p.target, element });
-          const choices: Record<string, () => GridElement> = {
-            "@text": () => ({ kind: "text", text: "Text", row: 0, col: 0 }),
-            "@dots": () => ({ kind: "pagedots", row: 0, col: 0, colSpan: 2, align: "center" }),
-            "@panel": () => ({ card: true, row: 0, col: 0, rowSpan: 1, colSpan: 2 }),
-          };
-          return h("select", {
-            class: "addsel", title: "add to this page", value: "",
-            onChange: (ev: Event) => {
-              const sel = ev.target as HTMLSelectElement;
-              const v = sel.value;
-              sel.value = "";
-              if (!v) return;
-              go(v.startsWith("@") ? choices[v]!() : { kind: "widget", node: v, row: 0, col: 0 });
-            },
-          }, [
-            h("option", { value: "" }, "+ add…"),
-            ...(p.unplaced.length ? [h("optgroup", { label: "widgets" }, p.unplaced.map((n) => h("option", { value: n.id }, n.name)))] : []),
-            h("optgroup", { label: "other" }, [
-              h("option", { value: "@text" }, "text"), h("option", { value: "@dots" }, "page dots"), h("option", { value: "@panel" }, "panel"),
-            ]),
-          ]);
-        };
         return h("div", { class: "rowwrap" }, [
           h("div", { class: "row" }, [
             h("span", { class: "lbl" }, r.label),
@@ -215,10 +214,20 @@ const ElementRows = defineComponent({
           ]),
           open.value[r.index] ? h("div", { class: "extras", style: { paddingLeft: "8px" } }, extras) : null,
         ]);
-      }));
+      };
+      // An empty page has no element rows to carry the "add…" control, so it gets one of its own -- without
+      // this, a freshly added page offers no way to place anything on it.
+      if (p.elements.length === 0) {
+        return h("div", { class: "rows" }, [
+          h("div", { class: "addrow" }, [addInto()]),
+          h("div", { class: "hint" }, "nothing on this page yet"),
+        ]);
+      }
+      return h("div", { class: "rows" }, rows.map(rowFor));
     };
   },
 });
+
 </script>
 
 <style scoped>
