@@ -3663,7 +3663,8 @@ presets, custom nodes and board definitions.</p>
 <h2 id="tutorial-flows">Tutorial flows</h2>
 <p>Every install has a <code>tutorials</code> folder. <a href="../tutorial-flows/#where-the-folder-is">Tutorial flows</a> says where it is for each route.</p>
 <h2 id="from-source">From source</h2>
-<p>For working on ThingStudio itself. You need Python 3.10 or later, Node.js 22.12 or later, and <code>make</code>. On a Mac,
+<p>For working on ThingStudio itself. You need Python 3.10 or later, Node.js 22 (22.23 is known to work, 24.13 isn't), and <code>make</code>. <code>make</code> checks your
+Node.js before it builds. On a Mac,
 <code>make</code> comes with the Xcode command line tools (<code>xcode-select --install</code>).</p>
 <p>In the repository folder, run <code>make</code>. This builds the editor and the user guide, installs ThingStudio into a <code>.venv</code>
 folder, and puts the <code>thingstudio-backend</code> command on your PATH. Run <code>make</code> again after updating the repository. It
