@@ -1,7 +1,8 @@
 # Custom firmware images: one-command pipeline (scoping)
 
-Status: scoping, 2026-11-10. Asked for by Mike after Discussions #19: "We need a fully automated way to create the
-custom images. There are too many steps for me to do reliably." Not built yet; the decisions at the end are
+Status: scoping, 2026-11-10. Step 1 (CI builds) written the same day: `.github/workflows/firmware-images.yml`, not yet
+run. Mike: CI is fine (3000 minutes a month at most). Asked for by Mike after Discussions #19: "We need a fully automated way to create the
+custom images. There are too many steps for me to do reliably." Steps 2 and 3 not built yet; the decisions at the end are
 Mike's.
 
 ## Today's steps, per runtime bump

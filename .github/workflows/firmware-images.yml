@@ -1,0 +1,109 @@
+name: Firmware images
+
+# Builds every custom-firmware target's image (firmware/targets/) from a clean checkout, in Espressif's ESP-IDF
+# container at the target's pinned tag, so no toolchain is needed on a developer machine and an image can never be
+# named -dirty. Step 1 of docs/working-notes/firmware-pipeline-scoping.md (2026-11-10).
+#
+# The images are run artifacts named firmware-<target>-<commit>, kept 90 days. They are not tested or recorded
+# here: the bench step (a board on a cable) does that, and records the exact bytes built here, so the image a
+# release attaches is the one that ran on a board.
+#
+# Runs on a push to main that changes what goes into an image, and by hand ("Run workflow") on any branch.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "device-runtime/**"
+      - "firmware/**"
+      - "tools/firmware_targets.py"
+      - ".github/workflows/firmware-images.yml"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: firmware-images-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  targets:
+    name: list targets
+    runs-on: ubuntu-24.04
+    outputs:
+      matrix: ${{ steps.list.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      # One matrix entry per target, carrying its ESP-IDF tag so each build runs in the matching container.
+      - id: list
+        run: |
+          matrix=$(python3 - <<'PY'
+          import json, subprocess
+          ids = subprocess.run(["python3", "tools/firmware_targets.py", "list"], check=True,
+                               capture_output=True, text=True).stdout.split()
+          out = []
+          for target in ids:
+              env = subprocess.run(["python3", "tools/firmware_targets.py", "env", target], check=True,
+                                   capture_output=True, text=True).stdout
+              facts = dict(line.split("=", 1) for line in env.splitlines() if "=" in line)
+              out.append({"target": target,
+                          "idf": facts["TARGET_IDF_VERSION"].strip("'"),
+                          "micropython": facts["TARGET_MPY_VERSION"].strip("'")})
+          print(json.dumps({"include": out}))
+          PY
+          )
+          echo "$matrix"
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+
+  build:
+    name: build ${{ matrix.target }}
+    needs: targets
+    runs-on: ubuntu-24.04
+    # TODO: pin by digest once the first run has confirmed the tag works (the other workflows pin actions by SHA).
+    container: espressif/idf:${{ matrix.idf }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.targets.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 22
+      # The container runs as root over a checkout the runner made; without this, git refuses the repo and build.sh
+      # can't read the commit or tell a clean tree from a dirty one.
+      - name: Trust the checkouts
+        run: git config --global --add safe.directory '*'
+      - name: MicroPython ${{ matrix.micropython }}
+        shell: bash
+        run: |
+          . "$IDF_PATH/export.sh" >/dev/null
+          git clone --depth 1 --branch "${{ matrix.micropython }}" https://github.com/micropython/micropython.git "$RUNNER_TEMP/micropython"
+          make -C "$RUNNER_TEMP/micropython/ports/esp32" submodules
+      - name: Build
+        shell: bash
+        run: |
+          . "$IDF_PATH/export.sh" >/dev/null
+          MICROPY_DIR="$RUNNER_TEMP/micropython" firmware/build.sh "${{ matrix.target }}"
+      # A clean checkout must never build a -dirty image: if it does, build.sh's dirty check is seeing something
+      # the build itself wrote under device-runtime/ or firmware/, and the image could never be recorded.
+      - name: Image name
+        id: image
+        shell: bash
+        run: |
+          cd "firmware/out/${{ matrix.target }}"
+          image=$(ls thingstudio-*.bin)
+          case "$image" in *-dirty.bin) echo "::error::built $image from a clean checkout"; exit 1;; esac
+          sha256sum -c "$image.sha256"
+          echo "image=$image" >> "$GITHUB_OUTPUT"
+          echo "### ${{ matrix.target }}: \`$image\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "sha256 \`$(cut -d' ' -f1 "$image.sha256")\`, $(du -h "$image" | cut -f1)" >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: firmware-${{ matrix.target }}-${{ github.sha }}
+          path: |
+            firmware/out/${{ matrix.target }}/${{ steps.image.outputs.image }}
+            firmware/out/${{ matrix.target }}/${{ steps.image.outputs.image }}.sha256
+            firmware/out/${{ matrix.target }}/main.py
+          if-no-files-found: error
+          retention-days: 90

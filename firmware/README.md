@@ -46,7 +46,18 @@ Not in it: the flow, board settings, WiFi credentials. They live on the filesyst
 
 ## Build
 
-Needs ESP-IDF at the target's `espIdf` tag and MicroPython at its `micropython` tag. `build.sh` refuses any other
+**In CI (the usual route, from 2026-11-10):** the `Firmware images` workflow (`.github/workflows/firmware-images.yml`)
+builds every target in Espressif's ESP-IDF container on each push to `main` that changes `device-runtime/`,
+`firmware/` or `tools/firmware_targets.py`, and on demand from the Actions tab. Each target's image, `.sha256` and
+`main.py` are a run artifact named `firmware-<target>-<commit>`, kept 90 days:
+
+```sh
+gh run download --name firmware-esp32-c5-$(git rev-parse HEAD) --dir firmware/out/esp32-c5
+```
+
+Built from a clean checkout, so never `-dirty`. Install, test and record them as below.
+
+**On your own machine:** needs ESP-IDF at the target's `espIdf` tag and MicroPython at its `micropython` tag. `build.sh` refuses any other
 checkout.
 
 ```sh
