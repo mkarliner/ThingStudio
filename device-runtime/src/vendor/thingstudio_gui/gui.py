@@ -493,6 +493,7 @@ class GUI:
         self.on_error = on_error
         self.on_modal_close = None  # callback(surface_name, modal_name, reason)
         self._modal_watch = {}  # (surface name, modal name) -> [reasons, Event or None]: the modal node's output
+        self._page_watch = {}  # surface name -> [page names, Event or None]: follow_page()'s stream
         # callback(widget_id, value, state_name) on every value or state change, on or off screen: a feed of
         # the whole model for a remote view that does its own paging (e.g. one retained MQTT topic per widget).
         self.on_value = None
@@ -903,6 +904,50 @@ class GUI:
             await w[1].wait()
             w[1].clear()
         return w[0].pop(0)
+
+    # -- a remote view's streams (2026-11-06, the editor authoring story) ----------------------------------
+
+    def emit(self, wid, payload):
+        """Feeds widget `wid`'s event queue directly: the board-side remote display's own events (a submit button
+        fires this after its form's keys were written). One payload per event, the same public contract the tap
+        path appends through: `await gui.event(wid)` returns them in order. Overflow behaves like a button's:
+        the oldest is dropped and the situation reported through on_error."""
+        w = self.widgets.get(wid)
+        if w is None:
+            raise ValueError("unknown widget %r" % (wid,))
+        if len(w.events) >= EVENT_QUEUE_MAX:
+            self._error(w.id, OverflowError("events aren't being consumed; dropped one"))
+            return
+        w.events.append(payload)
+        if w.evt is not None:
+            w.evt.set()
+
+    def follow_page(self, surface_name):
+        """Registers the one listener a remote screen's source coroutine needs: `page_changed()` afterwards
+        returns each page name as board-owned navigation shows it. A second follow on the same surface
+        replaces the first (one consumer per surface)."""
+        channel = [[], None]
+
+        def on_page(name):
+            channel[0].append(name)
+            if channel[1] is not None:
+                channel[1].set()
+
+        self._surface(surface_name).on_page = on_page
+        self._page_watch[surface_name] = channel
+
+    async def page_changed(self, surface_name):
+        """Waits for the next page change on `follow_page`'d surface and returns the page name. Raises
+        unknown-display like everything else."""
+        channel = self._page_watch.get(surface_name)
+        if channel is None:
+            raise ValueError("surface %r has no page stream -- follow_page() first" % (surface_name,))
+        while not channel[0]:
+            if channel[1] is None:
+                channel[1] = _asyncio().Event()
+            await channel[1].wait()
+            channel[1].clear()
+        return channel[0].pop(0)
 
     def _report_close(self, s, name, reason):
         w = self._modal_watch.get((s.name, name))

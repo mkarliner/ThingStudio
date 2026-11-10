@@ -40,7 +40,11 @@ import type {
   TransformCodegenResult,
 } from "../compiler/node-definition.js";
 import { JOURNAL_DEFAULT_ROWS } from "./core-packages/journal.js";
-import { compileScreens, GUI_BUTTON, GUI_SCREEN, GUI_MODAL, isWidgetType, modalName, nodeLabel, pyStr, WIDGET_TYPES, type CompiledScreens, type ScreenSize } from "../gui/screens.js";
+import {
+  compileScreens, GUI_BUTTON, GUI_MODAL, GUI_SCREEN, isWidgetType, modalName, nodeLabel, pyStr,
+  WIDGET_TYPES, type CompiledScreens, type ScreenSize,
+} from "../gui/screens.js";
+import { resolveFlowWifiCredentials, wifiSetupStatement } from "./wifi-status.js";
 
 export type GuiFrameFormat = "gs4" | "gs2" | "mono" | "rgb565";
 const FRAMEBUF_FORMAT: Record<GuiFrameFormat, string> = { gs4: "GS4_HMSB", gs2: "GS2_HMSB", mono: "MONO_HMSB", rgb565: "RGB565" };
@@ -119,7 +123,10 @@ function screensFor(ctx: CodegenContext): CompiledScreens {
   let c = compiled.get(ctx);
   if (!c) {
     const nodes = guiNodes(ctx);
-    c = compileScreens(ctx.screens ?? {}, nodes, (n) => screenSize(n, ctx));
+    c = compileScreens(ctx.screens ?? {}, nodes, (n) => screenSize(n, ctx), {
+      // Remote screens put "controlled" into a button's definition config, which only the wiring knows.
+      isInputWired: (id) => ctx.isInputWired?.(id) === true,
+    });
     if (c.errors.length > 0) throw new CompileError(`GUI layout:\n  ${c.errors.join("\n  ")}`);
     for (const w of c.warnings) ctx.warn?.(w);
     // A histogram draws as many columns as its rect holds, newest on the right, but only as many rows as its
@@ -145,6 +152,10 @@ function screensFor(ctx: CodegenContext): CompiledScreens {
 export type ButtonMode = "momentary" | "toggle" | "navigate";
 export const BUTTON_PENDING_MIN_S = 5;
 const NAV_COMMANDS = ["next", "prev", "back", "home"];
+export const GUI_SUBMIT = "thingstudio/gui_submit";
+export const GUI_SLIDER = "thingstudio/gui_slider";
+export const GUI_NUMBER = "thingstudio/gui_number";
+export const GUI_TEXT = "thingstudio/gui_text";
 
 export interface ButtonConfig {
   mode: ButtonMode;
@@ -207,9 +218,12 @@ function coreBlock(ctx: CodegenContext): { imports: string[]; statements: { key:
   const lines = ["_gui = thingstudio_gui.GUI(on_error=runtime._report_error)"];
   for (const n of guiNodes(ctx)) {
     if (!isWidgetType(n.type)) continue;
+    // A widget on a remote screen is registered by ts_remote (same _noop draw stubs; registering it here as
+    // well would raise "registered twice" on the board).
+    if (c.remoteWidgets.has(n.id)) continue;
     const staleMs = Math.max(0, Math.round(Number(n.properties.staleAfter ?? 0) * 1000)) || 0;
     const draw = c.widgetDraws.get(n.id) ?? "lambda _s, _r, _v, _st: None";
-    lines.push(`_gui.widget(${pyStr(n.id)}, ${draw}, ${staleMs}${n.type === GUI_BUTTON ? ", True" : ""})`);
+    lines.push(`_gui.widget(${pyStr(n.id)}, ${draw}, ${staleMs}${n.type === GUI_BUTTON || n.type === GUI_SUBMIT ? ", True" : ""})`);
     if (n.type === GUI_BUTTON) lines.push(buttonRegistration(n, ctx));
   }
   lines.push(`runtime.spawn(_gui.run(), None)`);
@@ -230,6 +244,75 @@ function screenId(ctx: CodegenContext, node: GraphNode, prop = "screen"): string
   throw new CompileError(`${nodeLabel(node)}: choose which GUI screen it acts on (the flow has ${screens.length})`);
 }
 
+/** The remote branch (displayKind "remote") of gui_screen's codegen. Emits the screens definition (compiled
+ * by screens.ts's remote branch) and one setup: the shared ts_http_server on the web server config's port,
+ * the ts_wifi bring-up, and ts_remote.Remote staged + started. The screen node's own event source waits on
+ * the page-change stream, so a flow can react to board-owned navigation. Claimed invariants of Mike's
+ * decision 8: the server is a general facility (`mount()` from any other code adds routes beside this);
+ * remote display code owns only /ts/remote/ and one socket. */
+function remoteScreenCodegen(node: GraphNode, ctx: CodegenContext): EventSourceCodegenResult {
+  const screenName = typeof node.properties.name === "string" && node.properties.name ? node.properties.name : node.id;
+  const base = ctx.uniqueName("remote_display");
+  // One remote display per board today (decisions/remote-display.md position 1: one view at a time; ts_remote's
+  // session state is per-Remote and its routes claim one prefix): a second remote screen in the same flow in
+  // fact fails at runtime, so say it at compile instead.
+  const others = (ctx.findNodesOfType?.(GUI_SCREEN) ?? []).filter(
+    (n) => n.id !== node.id && String(n.properties.displayKind ?? "panel") === "remote",
+  );
+  if (others.length > 0) {
+    throw new CompileError(
+      `GUI screens ${nodeLabel(node)} and ${nodeLabel(others[0]!)} are both remote screens: a flow has one remote display for now (a second would fight over the web server's same route prefix)`,
+    );
+  }
+  const configId = typeof node.properties.webServerConfigId === "string" ? node.properties.webServerConfigId : "";
+  if (!configId) {
+    throw new CompileError(`GUI screen ${nodeLabel(node)} is a remote screen: give it a web server config (a remote screen mounts the board's HTTP server)`);
+  }
+  const server = ctx.resolveConfig(configId);
+  const port = Math.round(Number(server.port ?? 80));
+  if (!(port >= 1 && port <= 65535)) {
+    throw new CompileError(`web server config for GUI screen ${nodeLabel(node)}: port must be between 1 and 65535, got ${String(server.port)}`);
+  }
+  // A remote display needs the station up like any network node; an mqtt node in the flow owns the
+  // connection (the same defer rule every network node follows).
+  const mqttNodes = [...(ctx.findNodesOfType?.("thingstudio/mqtt_publish") ?? []), ...(ctx.findNodesOfType?.("thingstudio/mqtt_subscribe") ?? [])];
+  const wifi = wifiSetupStatement(
+    resolveFlowWifiCredentials(ctx, `GUI screen ${nodeLabel(node)}`).ssid,
+    resolveFlowWifiCredentials(ctx, `GUI screen ${nodeLabel(node)}`).password,
+    resolveFlowWifiCredentials(ctx, `GUI screen ${nodeLabel(node)}`).security,
+    mqttNodes.length > 0,
+  );
+
+  const core = coreBlock(ctx);
+  const surface = screensFor(ctx).surfaces.find((s) => s.screen === node.id);
+  if (!surface) throw new CompileError(`GUI screen ${nodeLabel(node)} has no pages yet: lay it out in the GUI view`);
+  const def = surface.remoteDef;
+  if (def === undefined) throw new CompileError(`GUI screen ${nodeLabel(node)}: a remote screen's compiled definition is missing -- internal error, not a flow-authoring mistake`);
+
+  const policy = String(node.properties.linkPolicy ?? "stale");
+  if (policy !== "stale" && policy !== "safe") {
+    throw new CompileError(`GUI screen ${nodeLabel(node)}: link policy must be stale or safe, got "${policy}"`);
+  }
+  const deadmanMs = Math.max(1, Math.round(Number(node.properties.deadmanMs ?? 400)));
+
+  const code = [
+    `${base}_srv = runtime.shared('http_server', ${port}, 'v1', lambda: ts_http_server.Server(${port}, [], {}))`,
+    `${base}_def = ${def}`,
+    `${base}_remote = ts_remote.Remote(_gui, ${base}_srv, ${base}_def, display=${pyStr(screenName)})`,
+    `${base}_remote.stage()`,
+    `${base}_remote.set_link_policy(${pyStr(policy)}${policy === "safe" ? `, ${deadmanMs}` : ""})`,
+    `async def ${base}_start():`,
+    `    await ${base}_remote.start()`,
+    `runtime.spawn(${base}_start(), ${pyStr(node.id)})`,
+  ].join("\n");
+  return {
+    imports: [...core.imports, "import ts_remote", "import ts_http_server"],
+    statements: [wifi, ...core.statements, { key: `gui_screen_${node.id}`, code }],
+    waitStatement: `_page = await _gui.page_changed(${pyStr(screenName)})`,
+    buildMsg: `msg = {'payload': _page, 'topic': ${pyStr(screenName)}}`,
+  };
+}
+
 export const guiScreenNode: NodeDefinition = {
   type: GUI_SCREEN,
   kind: "source",
@@ -247,14 +330,46 @@ export const guiScreenNode: NodeDefinition = {
   // Save/load a named theme under ~/.thingstudio/presets/gui_theme/ (shares the config's preset type).
   presetType: "gui_theme",
   description:
-    "One per display: takes its size (the panel's own width and height) and frame format from the display this " +
-    "screen is wired to, so set them once on the display, not here. Rotation is the display's setting too. Sends a " +
-    "frame each time the screen changes. Wire it to a display node.",
+    "One per display. A panel screen: wire it to a display node; its size and frame format come from the display. " +
+    "A remote screen: the board serves the phone the page (screen-size agnostic); needs a WiFi network and a web " +
+    "server config in this flow.",
   ports: { outputs: [{ name: "frame", type: "bytes" }] },
   properties: [
     { name: "name", label: "name", kind: "text", default: "screen" },
+    {
+      name: "displayKind",
+      label: "display kind",
+      kind: "select",
+      default: "panel",
+      options: [
+        { value: "panel", label: "a physical panel, wired to a display node" },
+        { value: "remote", label: "a phone (the board's own web server)" },
+      ],
+      help:
+        "A panel screen sends frames to the display it is wired to. A remote screen is screen-size agnostic: the phone " +
+        "lays it out on its own viewport and the board serves it over its web server (a WiFi network and a web server " +
+        "config must exist in this flow).",
+    },
+    {
+      name: "webServerConfigId",
+      label: "web server",
+      kind: "configRef",
+      configType: "thingstudio/config/web-server",
+      default: "",
+      visibleWhen: { field: "displayKind", equals: "remote" },
+      help: "Which web server config this screen mounts on (the port).",
+    },
+    {
+      name: "wifiConfigId",
+      label: "WiFi",
+      kind: "configRef",
+      configType: "thingstudio/config/wifi",
+      singleton: true,
+      default: "",
+      visibleWhen: { field: "displayKind", equals: "remote" },
+    },
     // Fallback size/format for a screen not yet wired to a display; the wired display wins. Hidden: set once on
-    // the display, not shown on the screen.
+    // the display, not shown on the screen. A remote screen ignores sizes entirely.
     { name: "width", label: "width (px)", kind: "number", default: 320, min: 1, hidden: true },
     { name: "height", label: "height (px)", kind: "number", default: 240, min: 1, hidden: true },
     {
@@ -270,19 +385,36 @@ export const guiScreenNode: NodeDefinition = {
         { value: "rgb565", label: "rgb565 (colour)" },
       ],
     },
-    { name: "minInterval", label: "fastest redraw (ms)", kind: "number", default: 200, min: 0 },
-    { name: "wrap", label: "next/prev wrap round", kind: "boolean", default: true },
+    { name: "minInterval", label: "fastest redraw (ms)", kind: "number", default: 200, min: 0, help: "A panel screen's redraw rate limit, or a remote screen's message rate (minIntervalMs in its definition)." },
+    {
+      name: "linkPolicy",
+      label: "lost link means",
+      kind: "select",
+      default: "stale",
+      options: [
+        { value: "stale", label: "stale (the phone shows stale values)" },
+        { value: "safe", label: "safe (the flow is told; for remote control)" },
+      ],
+      visibleWhen: { field: "displayKind", equals: "remote" },
+      help:
+        "What the board decides when the phone goes quiet. \"safe\" drives link_change() in the flow and arms a " +
+        "deadman on slider input, so a drag that stopped turns the output safe -- wire the flow's outputs (motors, " +
+        "heaters) through something that goes off on link down.",
+    },
+    { name: "deadmanMs", label: "deadman after (ms, no slider input)", kind: "number", default: 400, min: 1, visibleWhen: { field: "linkPolicy", equals: "safe" } },
+    { name: "wrap", label: "next/prev wrap round", kind: "boolean", default: true, visibleWhen: { field: "displayKind", equals: "panel" } },
     // The layout grid (gui-grid-layout-scoping.md, 2026-10-24). Rows 0 = derived from the display's shape so a
     // cell stays roughly square: rows = round(columns * display height / display width).
     { name: "gridColumns", label: "grid columns", kind: "number", default: 12, min: 2, max: 48 },
-    { name: "gridRows", label: "grid rows (0 = from the display's shape)", kind: "number", default: 0, min: 0, max: 64 },
-    { name: "touchPanelConfigId", label: "touch panel (blank: no touch)", kind: "configRef", configType: "thingstudio/config/touch-panel", default: "" },
+    { name: "gridRows", label: "grid rows (0 = from the display's shape)", kind: "number", default: 0, min: 0, max: 64, visibleWhen: { field: "displayKind", equals: "panel" } },
+    { name: "touchPanelConfigId", label: "touch panel (blank: no touch)", kind: "configRef", configType: "thingstudio/config/touch-panel", default: "", visibleWhen: { field: "displayKind", equals: "panel" } },
     {
       name: "themeConfigId",
       label: "shared theme config (older flows)",
       kind: "configRef",
       configType: GUI_THEME_CONFIG_TYPE,
       default: "",
+      visibleWhen: { field: "displayKind", equals: "panel" },
       help:
         "Only used when the theme fields below are empty. Kept so a flow saved with a shared theme still renders; " +
         "the screen's own colours win.",
@@ -295,11 +427,13 @@ export const guiScreenNode: NodeDefinition = {
       kind: "select",
       default: "",
       options: themePresetOptions(),
+      visibleWhen: { field: "displayKind", equals: "panel" },
       help: "A starting point replaces the colours below; editing a colour makes the theme custom.",
     },
-    ...THEME_ROLES.map((role) => ({ name: role, label: THEME_ROLE_LABELS[role], kind: "colour" as const })),
+    ...THEME_ROLES.map((role) => ({ name: role, label: THEME_ROLE_LABELS[role], kind: "colour" as const, visibleWhen: { field: "displayKind", equals: "panel" } })),
   ],
   codegenEventSource(node: GraphNode, ctx: CodegenContext): EventSourceCodegenResult {
+    if (String(node.properties.displayKind ?? "panel") === "remote") return remoteScreenCodegen(node, ctx);
     const { width, height, format } = screenSize(node, ctx);
     // A theme is optional; without one this resolves to the built-in colours, so existing flows are unchanged.
     const theme = resolveScreenTheme(ctx, node);
@@ -646,6 +780,184 @@ export const guiButtonNode: NodeDefinition = {
   },
 };
 
+// --- the phone-input widgets (2026-11-06, the editor authoring story for remote displays) -----------------
+// All four live on a remote screen only (screens.ts refuses them on a panel table). On the board they are
+// ts_remote's kinds, so no draw routine is registered in the flow's gui_core block: a widget on a remote
+// screen is registered there with the same _noop stubs every remote widget gets.
+
+export const guiNumberNode: NodeDefinition = {
+  type: GUI_NUMBER,
+  kind: "sink",
+  // The board registers a remote-screen widget itself (ts_remote), so a field needs no message feed to
+  // exist: it is placed, its key is read at boot, and its value reaches it through the page's own act.
+  allowUnwired: true,
+  paletteId: "gui_number",
+  label: "number field",
+  title: "number field",
+  group: "GUI",
+  priority: 46,
+  color: "#4a6e3f",
+  bgcolor: "#2a3a1f",
+  icon: "⌨",
+  width: 110,
+  description:
+    "An editable number on a remote display, read from and written to a settings key: the field shows the key's " +
+    "value, a submit button writes it, and it survives a reboot. Its input turns the field into a display bound " +
+    "to whatever feeds it.",
+  ports: { inputs: [{ name: "msg", type: "any" }] },
+  properties: [
+    { name: "name", label: "label", kind: "text", default: "" },
+    {
+      name: "settingsKey",
+      label: "settings key",
+      kind: "text",
+      default: "",
+      help: "The runtime.settings key this field reads and writes. Empty means the field shows its input only and submits nothing.",
+    },
+    { name: "form", label: "form", kind: "text", default: "", help: "Which submit button this field belongs to. Fields with the same form name submit together." },
+    { name: "defaultValue", label: "default value", kind: "number", default: 0 },
+    { name: "staleAfter", label: "stale after (s, 0 = never)", kind: "number", default: 0, min: 0 },
+  ],
+  codegenSink(node: GraphNode, ctx: CodegenContext): SinkCodegenResult {
+    if (!isFieldConfigured(node)) throw new CompileError(`${fieldLabel(node)}: give it a settings key (or wire its input)`);
+    const core = coreBlock(ctx);
+    return {
+      imports: core.imports,
+      statements: core.statements,
+      functionName: ctx.uniqueName("gui_number"),
+      functionBody: `_gui.set_value(${pyStr(node.id)}, msg.get('payload'))`,
+    };
+  },
+};
+
+export const guiTextNode: NodeDefinition = {
+  type: GUI_TEXT,
+  kind: "sink",
+  // Same reasoning as the number field above (see gui.ts's phone-input widgets header).
+  allowUnwired: true,
+  paletteId: "gui_text",
+  label: "text field",
+  title: "text field",
+  group: "GUI",
+  priority: 47,
+  color: "#4a6e3f",
+  bgcolor: "#2a3a1f",
+  icon: "¶",
+  width: 110,
+  description:
+    "An editable text on a remote display, read from and written to a settings key: the field shows the key's " +
+    "value, a submit button writes it, and it survives a reboot. Its input turns the field into a display bound " +
+    "to whatever feeds it.",
+  ports: { inputs: [{ name: "msg", type: "any" }] },
+  properties: [
+    { name: "name", label: "label", kind: "text", default: "" },
+    {
+      name: "settingsKey",
+      label: "settings key",
+      kind: "text",
+      default: "",
+      help: "The runtime.settings key this field reads and writes. Empty means the field shows its input only and submits nothing.",
+    },
+    { name: "form", label: "form", kind: "text", default: "", help: "Which submit button this field belongs to. Fields with the same form name submit together." },
+    { name: "defaultValue", label: "default text", kind: "text", default: "" },
+    { name: "staleAfter", label: "stale after (s, 0 = never)", kind: "number", default: 0, min: 0 },
+  ],
+  codegenSink(node: GraphNode, ctx: CodegenContext): SinkCodegenResult {
+    if (!isFieldConfigured(node)) throw new CompileError(`${fieldLabel(node)}: give it a settings key (or wire its input)`);
+    const core = coreBlock(ctx);
+    return {
+      imports: core.imports,
+      statements: core.statements,
+      functionName: ctx.uniqueName("gui_text"),
+      functionBody: `_gui.set_value(${pyStr(node.id)}, msg.get('payload'))`,
+    };
+  },
+};
+
+export const guiSubmitNode: NodeDefinition = {
+  type: GUI_SUBMIT,
+  kind: "source",
+  eventSource: true,
+  paletteId: "gui_submit",
+  label: "submit",
+  title: "submit button",
+  group: "GUI",
+  priority: 48,
+  color: "#3f5c8c",
+  bgcolor: "#1f2a3a",
+  icon: "⏎",
+  width: 110,
+  description:
+    "Saves the fields of its form on the board: one submit writes every field with the same form name to " +
+    "runtime.settings, and its output sends a message per save ({form, keys}).",
+  ports: { outputs: [{ name: "msg", type: "any" }] },
+  properties: [
+    { name: "name", label: "label (what the button says)", kind: "text", default: "Save" },
+    { name: "form", label: "form", kind: "text", default: "", help: "The fields with this form name write when this button submits." },
+  ],
+  codegenEventSource(node: GraphNode, ctx: CodegenContext): EventSourceCodegenResult {
+    const form = typeof node.properties.form === "string" ? node.properties.form.trim() : "";
+    if (!form) throw new CompileError(`${fieldLabel(node)}: give the form a name, and the same name on the fields it saves`);
+    const core = coreBlock(ctx);
+    if (screensFor(ctx).remoteWidgets.has(node.id) === false) {
+      throw new CompileError(`${fieldLabel(node)}: place a submit button on a remote screen (it has nowhere to sit otherwise)`);
+    }
+    return {
+      imports: core.imports,
+      statements: core.statements,
+      waitStatement: `_keys = await _gui.event(${pyStr(node.id)})`,
+      buildMsg: `msg = {'payload': _keys, 'topic': ${pyStr(form)}}`,
+    };
+  },
+};
+
+export const guiSliderNode: NodeDefinition = {
+  type: GUI_SLIDER,
+  kind: "source",
+  eventSource: true,
+  paletteId: "gui_slider",
+  label: "slider",
+  title: "slider",
+  group: "GUI",
+  priority: 49,
+  color: "#3f5c8c",
+  bgcolor: "#1f2a3a",
+  icon: "⬍",
+  width: 110,
+  description:
+    "Continuous remote input: a drag on the phone sends its value at ~20 Hz, latest wins. Its output is the " +
+    "usual msg, payload = the slider's value. For driving something with a failsafe, not for picking a setting.",
+  ports: { outputs: [{ name: "msg", type: "any" }] },
+  properties: [
+    { name: "name", label: "name", kind: "text", default: "" },
+    { name: "lo", label: "low value", kind: "number", default: 0 },
+    { name: "hi", label: "high value", kind: "number", default: 100 },
+    { name: "step", label: "step (0 = continuous)", kind: "number", default: 0, min: 0 },
+  ],
+  codegenEventSource(node: GraphNode, ctx: CodegenContext): EventSourceCodegenResult {
+    if (!screensFor(ctx).remoteWidgets.has(node.id)) {
+      throw new CompileError(`${fieldLabel(node)}: place a slider on a remote screen (a remote display is what it drives through)`);
+    }
+    const core = coreBlock(ctx);
+    return {
+      imports: core.imports,
+      statements: core.statements,
+      waitStatement: `_ctl = await _remote.control()`,
+      buildMsg: `msg = {'payload': _ctl.get('payload'), 'topic': ${pyStr(node.id)}}`,
+    };
+  },
+};
+
+/** A field's settings key decides whether its form submit writes it; an unwired, keyless field is dead. */
+function isFieldConfigured(node: GraphNode): boolean {
+  return typeof node.properties.settingsKey === "string" && node.properties.settingsKey.trim() !== "";
+}
+
+function fieldLabel(node: GraphNode): string {
+  const kindName = node.type.replace("thingstudio/", "");
+  return `${kindName} ${nodeLabel(node)}`;
+}
+
 export const guiNavigatorNode: NodeDefinition = {
   type: "thingstudio/gui_navigator",
   kind: "transform",
@@ -749,4 +1061,9 @@ function modalOnScreen(ctx: CodegenContext, node: GraphNode): void {
   }
 }
 
-export const GUI_NODES: NodeDefinition[] = [guiScreenNode, guiLabelNode, guiReadoutNode, guiBarNode, guiTrendNode, guiLedNode, guiButtonNode, guiNavigatorNode, guiModalNode];
+export const GUI_NODES: NodeDefinition[] = [
+  guiScreenNode, guiLabelNode, guiReadoutNode, guiBarNode, guiTrendNode, guiLedNode, guiButtonNode,
+  // The phone-input widgets (2026-11-06), remote-display only.
+  guiNumberNode, guiTextNode, guiSubmitNode, guiSliderNode,
+  guiNavigatorNode, guiModalNode,
+];

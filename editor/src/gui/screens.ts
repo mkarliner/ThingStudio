@@ -71,11 +71,28 @@ export const WIDGET_TYPES = {
   "thingstudio/gui_trend": "trend",
   "thingstudio/gui_led": "led",
   "thingstudio/gui_button": "button",
+  // Phone-input kinds (remote-display-spike + the editor authoring story, 2026-11-06). They belong on a
+  // remote screen only: the panel draw path refuses them by name.
+  "thingstudio/gui_number": "number",
+  "thingstudio/gui_text": "text",
+  "thingstudio/gui_submit": "submit",
+  "thingstudio/gui_slider": "ctl",
 } as const;
 export type WidgetNodeType = keyof typeof WIDGET_TYPES;
 
+/** True where a node type is a GUI widget that a screens table can place. */
 export function isWidgetType(type: string): type is WidgetNodeType {
   return type in WIDGET_TYPES;
+}
+
+/** The config node a remote screen mounts its board's HTTP server on (Mike's decision 8). Not a singleton:
+ * two servers on two ports is a real setup. Referenced by remote screens (and http_in-like packages). */
+export const WEB_SERVER_CONFIG_TYPE = "thingstudio/config/web-server";
+
+/** Field/submit/slider widgets live on a remote display only -- physical panels draw none of them. */
+export function isRemoteOnlyWidgetType(type: string): type is WidgetNodeType {
+  const kind = WIDGET_TYPES[type as WidgetNodeType];
+  return kind === "number" || kind === "text" || kind === "submit" || kind === "ctl";
 }
 
 /** How errors name a node: its `name` property, else its type and short id. */
@@ -96,6 +113,9 @@ export interface CompiledSurface {
   readonly staticRegistrations: string[];
   /** Every leaf's rect, for the editor's preview and tests: element id -> rect, per page or modal name. */
   readonly rects: ReadonlyMap<string, ReadonlyMap<string, Rect>>;
+  /** Remote screens only (displayKind "remote"): the Python literal of one definition object
+   * (interfaces/remote-display/SPEC.md §4) -- the screens tree, screens-size agnostic, no rects anywhere. */
+  readonly remoteDef?: string;
 }
 
 export interface CompiledScreens {
@@ -107,6 +127,9 @@ export interface CompiledScreens {
   readonly trendColumns: ReadonlyMap<string, number>;
   /** Font modules and widget libraries the generated code imports. */
   readonly imports: ReadonlySet<string>;
+  /** Widget node ids placed on a remote screen: the compiler's gui_core block skips them (ts_remote
+   * registers them board-side with its own draw stubs); everything else is a panel widget. */
+  readonly remoteWidgets: ReadonlySet<string>;
   readonly errors: string[];
   readonly warnings: string[];
 }
@@ -158,11 +181,14 @@ function pickFont(height: number, family: readonly string[], fits?: (font: strin
 // ---- compile -----------------------------------------------------------------------------------------------
 
 /** Lays out and checks every screen. `sizeOf` gives a gui_screen node's pixel size; `modalName` a gui_modal
- * node's name. Nothing here throws for a problem in the flow: they come back in `errors`. */
+ * node's name. Nothing here throws for a problem in the flow: they come back in `errors`.
+ * `opts.isInputWired` is remote-only: a remote view's definition says which buttons the flow owns
+ * (controlled toggles), which only the compile context knows. Absent = not wired, the safe default. */
 export function compileScreens(
   screens: ScreensSection,
   nodes: readonly GraphNode[],
   sizeOf: (screen: GraphNode) => ScreenSize,
+  opts: { isInputWired?: (id: string) => boolean } = {},
 ): CompiledScreens {
   const errors: string[] = [];
   const warnings: string[] = [];
@@ -173,6 +199,7 @@ export function compileScreens(
   const surfaces: CompiledSurface[] = [];
   const byId = new Map(nodes.map((n) => [n.id, n]));
   const placedOn = new Map<string, { screen: string; where: string }>(); // widget node id -> first placement
+  const remoteWidgets = new Set<string>();
 
   for (const [screenId, spec] of Object.entries(screens)) {
     const screen = byId.get(screenId);
@@ -194,6 +221,202 @@ export function compileScreens(
     const carousel = spec.carousel ?? spec.pages.filter((p) => p.parent === undefined).map((p) => p.name);
     if (carousel.length === 0) errors.push(`screen ${sname} has no pages`);
     for (const c of carousel) if (!pageNames.has(c)) errors.push(`screen ${sname}: carousel names unknown page "${c}"`);
+
+    // -- remote screens (displayKind "remote"): the grid becomes a definition tree, not rects ------------------
+    // Screen-size agnostic (Mike, 2026-11-06): flexbox on the phone's real viewport, vertical scroll when a
+    // page is taller, no nominal-size check. The words the builder emits are interfaces/remote-display/SPEC.md
+    // §4; their meaning lives in ts_remote on the board and the shipped page.
+    if (String((screen.properties as Record<string, unknown>).displayKind ?? "panel") === "remote") {
+      const staticCount = { n: 0 };
+      const synthesizeId = (): string => `${screenId.slice(0, 8)}_s${staticCount.n++}`;
+
+      type Tree = Record<string, unknown>; // SPEC §4 py-nodes: containers and leaves, both objects.
+
+      const configured = (node: GraphNode, base: Record<string, unknown>): Tree => {
+        const p = node.properties as Record<string, unknown>;
+        const kind = WIDGET_TYPES[node.type as WidgetNodeType];
+        switch (kind) {
+          case "label":
+            return { wid: node.id, kind, config: {} };
+          case "readout":
+            return {
+              wid: node.id, kind,
+              config: {
+                ...base, caption: typeof p.caption === "string" ? p.caption : "", units: typeof p.units === "string" ? p.units : "",
+                decimals: Math.max(0, Math.round(num(p.decimals, 1))),
+              },
+            };
+          case "bar":
+            return {
+              wid: node.id, kind,
+              config: { ...base, lo: num(p.lo, 0), hi: num(p.hi, 100), style: p.style === "segments" ? "segments" : "solid",
+                        segments: p.style === "segments" ? Math.max(1, Math.round(num(p.segments, 10))) : undefined },
+            };
+          case "trend":
+            return { wid: node.id, kind, config: { ...base, lo: num(p.lo, 0), hi: num(p.hi, 100) } };
+          case "led":
+            return { wid: node.id, kind, config: { ...base, style: p.style === "chip" ? "chip" : "light" } };
+          case "button": {
+            const controlled = opts.isInputWired?.(node.id) === true;
+            const mode = typeof p.mode === "string" && p.mode !== "" ? p.mode : "momentary";
+            const wrapper: Tree = { wid: node.id, kind, config: { ...base, mode, controlled } };
+            if (mode === "toggle") {
+              wrapper.config = { ...wrapper.config as Record<string, unknown>,
+                                 onText: typeof p.onText === "string" && p.onText !== "" ? p.onText : "ON",
+                                 offText: typeof p.offText === "string" && p.offText !== "" ? p.offText : "OFF" };
+            } else if (mode === "momentary") {
+              const text = [p.text, p.label].map((v) => (typeof v === "string" ? v.trim() : "")).find((v) => v !== "") || "";
+              wrapper.config = { ...(wrapper.config as Record<string, unknown>), text };
+            }
+            return wrapper;
+          }
+          case "number":
+            return {
+              wid: node.id, kind,
+              config: { ...base, label: typeof p.name === "string" ? p.name : "", key: String(p.settingsKey ?? ""),
+                        form: String(p.form ?? ""), default: p.defaultValue ?? "" },
+            };
+          case "text":
+            return {
+              wid: node.id, kind,
+              config: { ...base, label: typeof p.name === "string" ? p.name : "", key: String(p.settingsKey ?? ""),
+                        form: String(p.form ?? ""), default: p.defaultValue ?? "" },
+            };
+          case "submit":
+            return { wid: node.id, kind, config: { ...base, form: String(p.form ?? ""), label: typeof p.name === "string" && p.name ? p.name : "Save" } };
+          case "ctl": {
+            const step = num(p.step, 0) > 0 ? num(p.step, 0) : undefined;
+            return { wid: node.id, kind, config: { ...base, lo: num(p.lo, 0), hi: num(p.hi, 1), step } };
+          }
+          default:
+            return { wid: node.id, kind: String(kind), config: {} };
+        }
+      };
+
+      /** The py literal of the tree/definition: keys in insertion order, None/True/False, no rects. */
+      const pyLiteral = (v: Tree): string => {
+        if (v === null || v === undefined) return "None";
+        if (typeof v === "boolean") return v ? "True" : "False";
+        if (typeof v === "number") return String(v);
+        if (typeof v === "string") return pyStr(v);
+        if (Array.isArray(v)) return `[${v.map(pyLiteral).join(", ")}]`;
+        const entries = Object.entries(v).filter(([, b]) => b !== undefined);
+        return `{${entries.map(([k, b]) => `${pyStr(k)}: ${pyLiteral(b as Tree)}`).join(", ")}}`;
+      };
+
+      const leafOf = (e: GridElement, where: string): Tree | null => {
+        if (e.card) return null; // dropped with its own page-level warning, not an error
+        if (e.kind === "text") {
+          return { wid: synthesizeId(), kind: "label", config: { text: e.text ?? "" } };
+        }
+        if (e.kind === "pagedots") {
+          warnings.push(`${where}: the page draws its page dots itself -- the phone shows one below the page, so a dots cell does nothing`);
+          return null;
+        }
+        const node = e.node ? byId.get(e.node) : undefined;
+        if (!node || !isWidgetType(node.type)) {
+          errors.push(`${where}: "${e.node ?? "?"}" isn't a GUI widget node in this flow`);
+          return null;
+        }
+        if (e.align) warnings.push(`${where}: text alignment is a panel idea; a remote view left-aligns all text (dropped)`);
+        remoteWidgets.add(node.id);
+        const prev = placedOn.get(node.id);
+        if (prev && prev.screen !== screenId) {
+          errors.push(`widget ${nodeLabel(node)} is placed on two screens (${prev.where} and ${where}); a widget belongs to one screen`);
+          return null;
+        }
+        if (!prev) placedOn.set(node.id, { screen: screenId, where });
+        return configured(node, {});
+      };
+
+      /** The remote branch's own element label (elementLabel lives in the panel branch, below). */
+      const remoteLabel = (e: GridElement): string => {
+        if (e.card) return "panel at row " + String(e.row) + ", column " + String(e.col);
+        if (e.kind === "text") return "text \"" + (e.text ?? "") + "\"";
+        if (e.kind === "pagedots") return "page dots";
+        const n = e.node ? byId.get(e.node) : undefined;
+        return n ? "widget " + nodeLabel(n) : "widget \"" + (e.node ?? "?") + "\"";
+      };
+
+      /** Rows in `row` order; grow comes from the spans: a child's weight is its colSpan, a row's weight its
+       * max rowSpan when that is over 1 (layout semantics, not pixels: nothing here has an absolute size). */
+      const treeFor = (elements: readonly GridElement[], where: string): Tree | null => {
+        checkPlacement(elements, where, remoteLabel);
+        const seen = new Set<string>();
+        const bands = new Map<number, GridElement[]>();
+        for (const e of elements) {
+          if (e.card) {
+            warnings.push(`${where}: cards aren't drawn on a remote display yet (the element is dropped)`);
+            continue;
+          }
+          const node = e.kind === undefined || e.kind === "widget" ? byId.get(e.node ?? "") : undefined;
+          if (node && seen.has(node.id)) {
+            errors.push(`"${node.id}" appears twice ${where}`);
+          }
+          if (node) seen.add(node.id);
+          const at = num(e.row, 0);
+          bands.set(at, [...(bands.get(at) ?? []), e]);
+        }
+        const rowsOrdered = [...bands.keys()].sort((a, b) => a - b);
+        const children: Tree[] = [];
+        for (const r of rowsOrdered) {
+          const cells = bands.get(r)!.slice().sort((a, b) => num(a.col, 0) - num(b.col, 0));
+          const kids: Tree[] = [];
+          let maxSpan = 1;
+          for (const e of cells) {
+            const spanOf = Math.max(1, Math.round(num(e.rowSpan, 1)));
+            maxSpan = Math.max(maxSpan, spanOf);
+            const leaf = leafOf(e, where);
+            if (leaf === null) continue;
+            const grow = Math.max(1, Math.round(num(e.colSpan, 1)));
+            kids.push({ ...leaf, grow, flex: true } as Tree); // weight, not width: equal colSpans share equally
+          }
+          if (kids.length === 0) continue;
+          const row: Tree = { kind: "row", gap: 8, children: kids };
+          if (maxSpan > 1) Object.assign(row, { grow: maxSpan, flex: true });
+          children.push(row);
+        }
+        return { kind: "column", gap: 8, padding: 8, children };
+      };
+
+      const pageDefs = spec.pages.map((p) => {
+        const where = `on page "${p.name}" of screen ${sname}`;
+        const tree = treeFor(p.elements, where);
+        if (tree === null) return "";
+        return `{${pyStr("name")}: ${pyStr(p.name)}${p.parent === undefined ? "" : `, ${pyStr("parent")}: ${pyStr(p.parent)}`}, ${pyStr("tree")}: ${pyLiteral(tree)}}`;
+      }).filter((s) => s !== "");
+
+      const modalDefs: string[] = [];
+      const modalNamesSeen = new Set<string>();
+      for (const m of spec.modals ?? []) {
+        const node = byId.get(m.node);
+        if (!node || node.type !== GUI_MODAL) {
+          errors.push(`screen ${sname}: modal "${m.node}" isn't a GUI modal node in this flow`);
+          continue;
+        }
+        const mname = modalName(node);
+        if (modalNamesSeen.has(mname) || pageNames.has(mname)) errors.push(`screen ${sname}: two pages or modals are called "${mname}"`);
+        modalNamesSeen.add(mname);
+        const tree = treeFor(m.elements, `in modal "${mname}" of screen ${sname}`);
+        if (tree === null) continue;
+        const priority = Math.round(num(node.properties.priority, 0));
+        const timeoutMs = Math.round(num(node.properties.timeout, 0) * 1000);
+        modalDefs.push(`{${pyStr("name")}: ${pyStr(mname)}, ${pyStr("tree")}: ${pyLiteral(tree)}, ${pyStr("priority")}: ${priority}, ${pyStr("timeoutMs")}: ${timeoutMs}}`);
+      }
+
+      const minInterval = Math.max(0, Math.round(num(screen.properties.minInterval, 200)));
+      const displayName = typeof screen.properties.name === "string" && screen.properties.name ? screen.properties.name : screen.id;
+      const remoteDef = `{${pyStr("v")}: 1, ${pyStr("display")}: ${pyStr(displayName)}, ${pyStr("minIntervalMs")}: ${minInterval}, \
+${pyStr("carousel")}: [${carousel.map(pyStr).join(", ")}], ${pyStr("pages")}: [${pageDefs.join(", ")}], ${pyStr("modals")}: [${modalDefs.join(", ")}]}`;
+      surfaces.push({
+        screen: screenId,
+        pagesPy: "{}", carouselPy: "[]", modalsPy: "{}",
+        staticRegistrations: [],
+        rects: new Map(),
+        remoteDef,
+      });
+      continue;
+    }
 
     let staticCount = 0;
     const staticRegistrations: string[] = [];
@@ -227,20 +450,26 @@ export function compileScreens(
       return n ? `widget ${nodeLabel(n)}` : `widget "${e.node ?? "?"}"`;
     };
 
-    /** Bounds and overlap checks for one page or modal. Cards may sit under elements, not under each other. */
-    const checkPlacement = (elements: readonly GridElement[], where: string): void => {
+    /** Bounds and overlap checks for one page or modal. Cards may sit under elements, not under each other.
+     * A function declaration (not a const arrow) so the remote branch above it can call it. Its labels come
+     * from the `labelOf` param — the panel branch passes `elementLabel` (declared just after it); the remote
+     * branch hands its own, self-contained one. */
+    function checkPlacement(elements: readonly GridElement[], where: string, labelOf: (e: GridElement) => string): void {
+      const spanOf = (e: GridElement): { rs: number; cs: number } => ({
+        rs: Math.max(1, Math.round(num(e.rowSpan, 1))),
+        cs: Math.max(1, Math.round(num(e.colSpan, 1))),
+      });
       const leafCells = new Map<string, string>();
       const cardCells = new Map<string, string>();
       for (const e of elements) {
         const { rs, cs } = spanOf(e);
-        const label = elementLabel(e);
         if (!Number.isInteger(e.row) || !Number.isInteger(e.col) || e.row < 0 || e.col < 0) {
-          errors.push(`${label} ${where}: row and column must be whole cells, got row ${String(e.row)}, column ${String(e.col)}`);
+          errors.push(`${labelOf(e)} ${where}: row and column must be whole cells, got row ${String(e.row)}, column ${String(e.col)}`);
           continue;
         }
         if (e.row + rs > rows || e.col + cs > columns) {
           errors.push(
-            `${label} ${where}: ${rs}x${cs} cells at row ${e.row}, column ${e.col} goes outside the ${rows}x${columns} grid`,
+            `${labelOf(e)} ${where}: ${rs}x${cs} cells at row ${e.row}, column ${e.col} goes outside the ${rows}x${columns} grid`,
           );
           continue;
         }
@@ -250,14 +479,14 @@ export function compileScreens(
             const key = `${r},${c}`;
             const other = grid.get(key);
             if (other) {
-              errors.push(`${label} ${where} overlaps ${other} at row ${r}, column ${c}`);
+              errors.push(`${labelOf(e)} ${where} overlaps ${other} at row ${r}, column ${c}`);
               break;
             }
-            grid.set(key, label);
+            grid.set(key, labelOf(e));
           }
         }
       }
-    };
+    }
 
     const placeWidget = (node: GraphNode, rect: Rect, where: string, align: "left" | "center" | "right"): string | null => {
       const kind = WIDGET_TYPES[node.type as WidgetNodeType];
@@ -358,6 +587,10 @@ export function compileScreens(
             }
             break;
           }
+          default:
+            // Isolated otherwise by buildTable's own check above (fields and sliders belong on a remote
+            // screen); a direct placeWidget call with one still gets this instead of an undefined draw.
+            throw new Error("fields, submit buttons and sliders are remote-display widgets; place them on a remote screen");
         }
       } catch (e) {
         errors.push(`widget ${label}: ${e instanceof Error ? e.message : String(e)} ${where}`);
@@ -374,7 +607,7 @@ export function compileScreens(
     };
 
     const buildTable = (elements: readonly GridElement[], where: string): { leaves: [string, Rect][]; cards: Rect[]; rects: Map<string, Rect> } => {
-      checkPlacement(elements, where);
+      checkPlacement(elements, where, elementLabel);
       const leaves: [string, Rect][] = [];
       const cards: Rect[] = [];
       const rects = new Map<string, Rect>();
@@ -425,6 +658,10 @@ export function compileScreens(
         const prev = placedOn.get(node.id);
         if (prev && prev.screen !== screenId) {
           errors.push(`widget ${nodeLabel(node)} is placed on two screens (${prev.where} and ${where}); a widget belongs to one screen`);
+          continue;
+        }
+        if (isRemoteOnlyWidgetType(node.type)) {
+          errors.push(`widget ${nodeLabel(node)} ${where}: a number field, text field, submit button or slider belongs on a remote screen (set that screen's display kind to "remote"), not on a physical display`);
           continue;
         }
         if (!prev) placedOn.set(node.id, { screen: screenId, where });
@@ -479,7 +716,7 @@ export function compileScreens(
       warnings.push(`widget ${nodeLabel(n)} isn't placed on any screen, so nothing shows it`);
     }
   }
-  return { surfaces, widgetDraws, trendColumns, imports, errors, warnings };
+  return { surfaces, widgetDraws, trendColumns, imports, remoteWidgets, errors, warnings };
 }
 
 /** A gui_modal node's name: its `name` property, else its short id. Unique per screen. */

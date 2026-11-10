@@ -223,11 +223,13 @@ class Remote:
         for wid in self._widgets:
             if wid in self._gui.widgets:
                 raise BadDefinition("widget %r is registered twice (definition or flow)" % (wid,))
-            self._gui.widget(wid, _noop_draw, 0, touchable=self._widgets[wid]["kind"] == "button")
+            kind = self._widgets[wid]["kind"]
+            self._gui.widget(wid, _noop_draw, 0, touchable=kind in ("button", "submit"))
         self.surface = RemoteSurface(self.display, self.send, table,
                                      self._des.get("carousel") or [pages[0]["name"]], modals,
                                      min_interval_ms=self._des.get("minIntervalMs", 100))
         self._gui.add_surface(self.surface)
+        self._gui.follow_page(self.display)
         for wid, sp in self._widgets.items():
             kind, cfg = sp["kind"], sp["config"]
             if kind == "button":
@@ -240,6 +242,10 @@ class Remote:
                                  on_press=False, target=cfg.get("target"),
                                  pending_ms=cfg.get("pendingMs", thingstudio_gui.PENDING_MS),
                                  initial=cfg.get("initial", False))
+            elif kind == "submit":
+                # The page's form submit is the one act; the board fires this widget's event queue when the
+                # writes land (_submit_form), so the flow's own `await gui.event()` is the "saved" signal.
+                self._gui.button(wid, "momentary")
             elif kind in ("number", "text"):
                 key = cfg.get("key")
                 if not isinstance(key, str) or not key:
@@ -635,6 +641,13 @@ class Remote:
             key = self._widgets[wid]["config"].get("key")
             if key in converted:
                 self._gui.set_value(wid, converted[key])
+        # The flow's "saved" signal: the submit widget's own event queue gets one message per successful
+        # write. (With no edits submitted it is still one event, with no keys -- the reader distinguishes.)
+        submit_wid = fields[0]
+        try:
+            self._gui.emit(submit_wid, {"form": form, "keys": sorted(converted.keys())})
+        except Exception as e:  # noqa: BLE001 -- an unconsumed event queue drops, it never kills the form
+            print("REMOTE_FORM_EVT %r" % (e,))
         return {"type": "form_ok", "form": form, "keys": sorted(converted.keys())}, None
 
     def _forms_by(self, form):

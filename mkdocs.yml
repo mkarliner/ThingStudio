@@ -80,6 +80,7 @@ nav:
       - Web Blink: tutorials/blink-from-your-network.md
       - Blink from anywhere: tutorials/blink-from-anywhere.md
       - A sensor display: sensor-display.md
+      - Remote displays (a phone as the screen): remote-displays.md
   - Building flows:
       - Editor in depth: working-in-the-editor.md
       - Flow lifecycle: flow-lifecycle.md

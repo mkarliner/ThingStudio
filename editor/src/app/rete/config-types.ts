@@ -234,6 +234,19 @@ export const CONFIG_TYPES: Record<string, ConfigTypeDescriptor> = {
     defaults: { addr: "", namePrefix: "", timeoutMs: 10000 },
     summarize: (p) => String(p.addr || p.namePrefix || ""),
   },
+  // -- the board's own web server (2026-11-06, remote-display decision 8): an explicit config node so the port
+  // is set once, not per node; remote display screens (and http_in, and anything the flow mounts itself)
+  // reference it. It is NOT a singleton: two web servers on different ports is a real setup (remote display on
+  // 80, a private page on 8080), so unlike WiFi this stays a plain keyed config.
+  "thingstudio/config/web-server": {
+    type: "thingstudio/config/web-server",
+    label: "web server",
+    fields: [
+      { name: "port", label: "port", kind: "number", help: "The port the board's HTTP server listens on (80 is the ordinary one). Remote displays log in at http://<board>:<port>/ts/remote/." },
+    ],
+    defaults: { port: 80 },
+    summarize: (p) => `web server :${String(p.port ?? "?")}`,
+  },
   // Touch panel (2026-10-09, button rework): the controller, its I2C bus and the panel's geometry, set once. A gui
   // screen names one and polls it itself; a touch_i2c node can name one for raw {x, y}. Using one panel from two
   // places is a compile error (node-library/touch-panel-shared.ts).

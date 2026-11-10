@@ -129,6 +129,10 @@ export type NodeKind =
   | "ble_notify"
   | "gui_led"
   | "gui_button"
+  | "gui_number"
+  | "gui_text"
+  | "gui_submit"
+  | "gui_slider"
   | "gui_navigator"
   | "gui_modal";
 

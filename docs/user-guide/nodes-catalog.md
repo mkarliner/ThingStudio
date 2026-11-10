@@ -290,6 +290,25 @@ Properties explained: [navigator](nodes/gui.md)
 | `name` | name | string | `"navigator"` |  |
 | `screen` | screen | string | `""` |  |
 
+### number field
+
+An editable number on the phone's page, read from and written to a settings key.
+
+Type: `gui_number`. Kind: sink. Palette group: GUI.
+
+Properties explained: [number field](nodes/gui.md)
+
+- Inputs: message, any payload
+- Outputs: none
+
+| Property | Editor label | Type | Default | Allowed values and notes |
+| --- | --- | --- | --- | --- |
+| `name` | label | string | `""` |  |
+| `settingsKey` | settings key | string | `""` |  |
+| `form` | form | string | `""` |  |
+| `defaultValue` | default value | number | `0` |  |
+| `staleAfter` | stale after (s, 0 = never) | number | `0` |  |
+
 ### readout
 
 Shows `msg.payload` as a number with units.
@@ -314,7 +333,7 @@ Properties explained: [readout](nodes/gui.md)
 
 ### screen
 
-Draws a display's pages of widgets and sends the screen to a display spi node.
+Draws a display's pages of widgets: on a panel (frames to a display spi node) or remote (the board serve the phone's page).
 
 Type: `gui_screen`. Kind: source. Palette group: GUI.
 
@@ -326,7 +345,12 @@ Properties explained: [screen](nodes/gui.md)
 | Property | Editor label | Type | Default | Allowed values and notes |
 | --- | --- | --- | --- | --- |
 | `name` | name | string | `"screen"` |  |
+| `displayKind` | display kind | string | `"panel"` | one of `panel`, `remote` |
+| `webServerConfigId` | web server | string | `""` | the id of a `thingstudio/config/web-server` config |
+| `wifiConfigId` | WiFi | string | `""` | the id of a `thingstudio/config/wifi` config |
 | `minInterval` | fastest redraw (ms) | number | `200` | least milliseconds between screen updates |
+| `linkPolicy` | lost link means | string | `"stale"` | one of `stale`, `safe` |
+| `deadmanMs` | deadman after (ms, no slider input) | number | `400` |  |
 | `wrap` | next/prev wrap round | boolean | `true` | whether next/prev wrap around at the ends of the pages |
 | `gridColumns` | grid columns | number | `12` |  |
 | `gridRows` | grid rows (0 = from the display's shape) | number | `0` |  |
@@ -343,6 +367,59 @@ Properties explained: [screen](nodes/gui.md)
 | `ok` | ok | colour | none |  |
 | `warn` | warn | colour | none |  |
 | `alarm` | alarm | colour | none |  |
+
+### slider
+
+A drag on the phone: continuous input at ~20 Hz, latest value wins.
+
+Type: `gui_slider`. Kind: source. Palette group: GUI.
+
+Properties explained: [slider](nodes/gui.md)
+
+- Inputs: none
+- Outputs: message, any payload
+
+| Property | Editor label | Type | Default | Allowed values and notes |
+| --- | --- | --- | --- | --- |
+| `name` | name | string | `""` |  |
+| `lo` | low value | number | `0` |  |
+| `hi` | high value | number | `100` |  |
+| `step` | step (0 = continuous) | number | `0` |  |
+
+### submit
+
+Writes the fields of its form to the board's settings and sends a message per save.
+
+Type: `gui_submit`. Kind: source. Palette group: GUI.
+
+Properties explained: [submit](nodes/gui.md)
+
+- Inputs: none
+- Outputs: message, any payload
+
+| Property | Editor label | Type | Default | Allowed values and notes |
+| --- | --- | --- | --- | --- |
+| `name` | label (what the button says) | string | `"Save"` |  |
+| `form` | form | string | `""` |  |
+
+### text field
+
+An editable text on the phone's page, read from and written to a settings key.
+
+Type: `gui_text`. Kind: sink. Palette group: GUI.
+
+Properties explained: [text field](nodes/gui.md)
+
+- Inputs: message, any payload
+- Outputs: none
+
+| Property | Editor label | Type | Default | Allowed values and notes |
+| --- | --- | --- | --- | --- |
+| `name` | label | string | `""` |  |
+| `settingsKey` | settings key | string | `""` |  |
+| `form` | form | string | `""` |  |
+| `defaultValue` | default text | string | `""` |  |
+| `staleAfter` | stale after (s, 0 = never) | number | `0` |  |
 
 ### histogram
 
@@ -1041,6 +1118,14 @@ Type: `thingstudio/config/touch-panel`.
 - `flipY`, boolean
 
 Defaults: `{"controller":"ft6336u","i2cConfigId":"","address":"0x38","rstPin":"","pollMs":20,"width":320,"height":480,"swapXY":false,"flipX":false,"flipY":false}`
+
+### web server
+
+Type: `thingstudio/config/web-server`.
+
+- `port`, number: The port the board's HTTP server listens on (80 is the ordinary one). Remote displays log in at http://<board>:<port>/ts/remote/.
+
+Defaults: `{"port":80}`
 
 ### WiFi
 

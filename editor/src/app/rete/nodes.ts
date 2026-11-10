@@ -178,7 +178,7 @@ import { descriptor as bleNotifyCoreDescriptor } from "../../node-library/core-p
 import { descriptor as bme280CoreDescriptor } from "../../node-library/core-packages/bme280.js";
 import { descriptor as touchI2cCoreDescriptor } from "../../node-library/core-packages/touch-i2c.js";
 import type { NodeDescriptor } from "../../compiler/node-definition.js";
-import { guiBarNode, guiTrendNode, guiButtonNode, guiLabelNode, guiLedNode, guiModalNode, guiNavigatorNode, guiReadoutNode, guiScreenNode } from "../../node-library/gui.js";
+import { guiBarNode, guiTrendNode, guiButtonNode, guiLabelNode, guiLedNode, guiModalNode, guiNavigatorNode, guiNumberNode, guiReadoutNode, guiScreenNode, guiSliderNode, guiSubmitNode, guiTextNode } from "../../node-library/gui.js";
 import { descriptor as i2cCoreDescriptor } from "../../node-library/core-packages/i2c.js";
 import { descriptor as mqttPublishCoreDescriptor } from "../../node-library/core-packages/mqtt-publish.js";
 import { descriptor as mqttSubscribeCoreDescriptor } from "../../node-library/core-packages/mqtt-subscribe.js";
@@ -530,6 +530,13 @@ export class GuiNavigatorNode extends buildDescriptorNodeClass(guiNavigatorNode)
 
 export class GuiModalNode extends buildDescriptorNodeClass(guiModalNode) {}
 
+// Phone-input widgets (node-library/gui.ts, 2026-11-06): remote-display only, descriptor-driven like every
+// other GUI widget. Their compile checks that they sit on a remote screen (screens.ts).
+export class GuiNumberNode extends buildDescriptorNodeClass(guiNumberNode) {}
+export class GuiTextNode extends buildDescriptorNodeClass(guiTextNode) {}
+export class GuiSubmitNode extends buildDescriptorNodeClass(guiSubmitNode) {}
+export class GuiSliderNode extends buildDescriptorNodeClass(guiSliderNode) {}
+
 // The GPIO cluster -- interrupt/eswitch/ebutton/adc/encoder/neopixel -- is descriptor-driven
 // (buildDescriptorNodeClass below). Their defaults match each node-library file's own codegen
 // fallbacks (the invariant every hardware node class here followed).
@@ -627,4 +634,8 @@ export const NODE_FACTORIES: Record<NodeKind, () => AnyThingstudioNode> = {
   gui_button: () => new GuiButtonNode(),
   gui_navigator: () => new GuiNavigatorNode(),
   gui_modal: () => new GuiModalNode(),
+  gui_number: () => new GuiNumberNode(),
+  gui_text: () => new GuiTextNode(),
+  gui_submit: () => new GuiSubmitNode(),
+  gui_slider: () => new GuiSliderNode(),
 };
