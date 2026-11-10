@@ -331,6 +331,18 @@ ThingStudioMarketing repo, not here.
 
 ## UI / editor
 
+- **[TR]** **[P2]** **The compile-hook wasm needs Wasm exnref; older browsers will fail every hooked compile -- new
+  item, 2026-11-09.** `micropython-wasi.wasm` is post-processed with Binaryen's `--translate-to-exnref`
+  (`micropython-wasi/README.md`), so loading it needs exception handling with exnref: Chrome/Edge 137+ (May 2025),
+  Firefox 131+, Safari 18.4+ (MDN browser-compat-data). Node 24.13 on Mike's Mac failed every compile-hook test with
+  `invalid value type 'exn'` (Node 22.23 passes; `learnings/editor-build-tooling.md`), and a tester on an older
+  Safari or a pinned corporate Chrome would hit the same in the editor, on any flow with a hooked node (wifi_status,
+  display_spi, ...). The user docs state no browser minimum. To do: (1) check what the editor shows when the wasm
+  won't compile, and make it one clear message naming the browser versions, not a per-node "compile hook failed";
+  (2) state the minimum in `installation-details.md`; (3) consider building without `--translate-to-exnref`
+  (legacy exception handling, Chrome 95+/Firefox 100+), if the WASI build can run that way. Found while chasing
+  Mike's `make test` failures after Discussions #19.
+
 - **Colour values in the flow file are raw decimal RGB565 -- save at least hex, and a picker where one is
   missing -- new item, 2026-10-24 (Mike, reading a theme config: `"bg": 2116, "fg": 65535`).** The GUI theme
   roles and `display_spi`'s palette are edited with a picker plus a hex field, but the saved `.flow.json` keeps

@@ -149,3 +149,13 @@ floor is now `>=22.12` with a message naming the wasm, and the box got Node 22.2
 SHASUM-verified, user-local in `~/.local/opt`, symlinked into `~/.local/bin`). Note the browser mattered too —
 WasmGC shipped clear back in Chrome 119 / Firefox 121 / Safari 17.2 (late 2023), so no practical browser is
 affected; this was purely a Node-runtime floor misstated by its only check.
+
+## Node 24.13 can't load the wasm either: exnref, 2026-11-09
+
+`make test` on Mike's Mac (Node 24.13.0): 251 failures, every compile-hook test, with
+`WebAssembly.compile(): Compiling function #178 failed: invalid value type 'exn', enable with --experimental-wasm-exnref`.
+The artifact is post-processed with Binaryen's `--translate-to-exnref` (`micropython-wasi/README.md`), so it needs
+Wasm exnref. The same tree passed in full (1375 tests) on Node 22.23.4, whose V8 (12.4.254.21-node.57) has
+`--experimental-wasm-exnref` on by default, so a higher Node major is not a safe floor. `check-node` now compiles
+the wasm itself rather than trusting the version number. Browsers matter for the same reason: the editor runs the
+hooks in the page, so an older browser without exnref will fail compile the same way (not yet checked per browser).
