@@ -7678,9 +7678,9 @@ No. The generic ESP32-C5 build looks for PSRAM, and many C5 modules have none. I
 
 ## Why does GPIO 10 pulse when my flow doesn't use it?
 
-The runtime toggles GPIO 10 every 200 ms, on every board, as a liveness signal for Thingstudio's own test rig. It
-starts with the runtime, so it runs with no flow deployed and keeps running when you change your flow. Leave
-GPIO 10 unconnected, and don't use it in a flow: the runtime and the flow would both drive it.
+Runtime 15.0.0 and earlier toggle GPIO 10 every 200 ms on every board, a signal meant only for Thingstudio's own
+test rig. It runs with no flow deployed, so changing your flow doesn't stop it. Install the runtime again with
+**Tools → Install runtime…** to get one that leaves GPIO 10 alone.
 
 ## Which board should I use for a display and WiFi together?
 
