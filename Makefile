@@ -42,11 +42,15 @@ RUNTIME_SHA := $(shell git log -1 --format=%H -- device-runtime/src 2>/dev/null)
 
 # The compile-hook interpreter runs the vendored micropython-wasi.wasm, which is built with WasmGC; Node
 # 20's V8 (11.3) fails to compile it even with --experimental-wasm-gc. Vite 8 and rolldown need >=22.12 too.
+# The wasm also uses Wasm exnref, which a newer Node can still lack (24.13 on macOS, 2026-11-09), so the last
+# check compiles the wasm itself instead of trusting the version number.
 check-node:
 	@command -v node >/dev/null || { echo "Node.js not found. Install Node.js 22 (https://nodejs.org), then rerun make."; exit 1; }
 	@command -v $(NPM) >/dev/null || { echo "npm not found. It comes with Node.js; reinstall Node.js 22, then rerun make."; exit 1; }
 	@node -e 'const [a,b]=process.versions.node.split(".").map(Number); process.exit((a===22&&b>=12)||a>22?0:1)' || \
 	  { echo "Node.js $$(node -v) is too old. The editor needs 22.12+ (the compile-hook wasm and Vite 8 both do)."; exit 1; }
+	@node -e 'WebAssembly.compile(require("fs").readFileSync("micropython-wasi/micropython-wasi.wasm")).then(()=>0,e=>{console.error(e.message);process.exit(1)})' || \
+	  { echo "Node.js $$(node -v) can't load the compile-hook wasm (above). Node 22.23 is known to work; Node 24.13 is not (2026-11-09)."; exit 1; }
 	@command -v git >/dev/null || echo "warning: git not found; the editor won't know which device-runtime it was built with."
 
 check-python:
