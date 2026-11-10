@@ -206,3 +206,37 @@ Consequence for this hardware: **runtime installs need a UART connection or an i
 Also, opening the serial port resets this board, so a `STOP_TO_PROMPT` sent immediately after opening lands during
 `LISTENER_BOOTING` (`LISTENER_IGNORED 'LISTENER_BOOTINGF64:AAINoA=='`) — wait for the listener to be up (its WiFi
 transport answering is a good proof) before sending anything.
+
+## The screen outline's edits are the editor path with no unit tests — stack of three
+
+The first real authoring session through `ScreenOutline.vue` hit three bugs in a row, every one in logic only
+the .vue actually executes: `updateScreen` handed an object instead of a function (the "add page doesn't seem
+to work" case), `GuiNodeInfo.kind` missing at the source so every "add…" filter came up empty ("screen is one
+of those"), and the add control rendered only inside existing element rows, so a fresh page offered nothing.
+And one classification miss of mine on top: the gui *screen itself* was labeled a widget in the node lister.
+The pure helpers behind it (`gui/screen-edit.ts`) have tests and were fine — the failures all lived in the
+wiring the components execute. Lesson: before feature work rides on an editor UI, walk its real authoring
+path once (create page → place → move → re-open); `npm test` cannot see these gaps, and a fix that looks
+complete after one bug in a stack is usually mid-stack.
+
+## Stale compiled `dist-cli/thingstudio-compile.mjs` is silently out of date
+
+The CLI used headlessly for deploys and the node catalog regen is a build artifact: after a pull it still
+holds the old node set — a flow using new nodes fails with "unknown node type gui_number", and a catalog
+regen "succeeds" while silently dropping the new nodes. `npm run build:cli` after every pull is part of the
+pull, not an occasional step.
+
+## A compile error that reads like the author's fault can be the editor's default placement
+
+Two labels at `row: 0, col: 0` — the outline's then-default landing cell — produced "overlaps widget at row 0,
+column 0". The compiler message was correct and local; the cause was the UI's second-element default. Fixed
+at the source (adds land in the first free cell) rather than teaching the error text to suggest placements.
+
+## A node's credential-backed config reads resolved values, never the raw `credentialName`
+
+The remote screen's compile reads ssid/password from `ctx.resolveConfig()`, which holds the raw flow-file
+shape — `credentialName: "mihome"` — until the editor's `resolveConfigCredentials()` expands it (on flow load,
+and again before every Deploy). A compile that fails with "the WiFi config has no network name" in a probe
+but not in the browser is the expansion not having run, not a codegen fault. Any new node type that reads a
+credential-backed config directly inherits this; the hook-based packages get `referencedConfigs`, where the
+same rule holds but documents itself.

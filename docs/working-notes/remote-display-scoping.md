@@ -255,7 +255,18 @@ resolver has handled `.local` since 2021, but browsers still fail against some r
 legacy unicast answers): QR stays primary, the spike tests MicroPython's responder on current Android and iOS.
 
 Not explicitly decided; the spike adopts them as working assumptions and reports on each: positions 1-8 above,
-and items **10, 11, 12, 13, 15** (14 fell with 7).
+and items **10, 11, 12, 13, 15** (14 fell with 7). Those five landed in code (`remote-display-spike-results.md`
+records 10-12 as done, 13 as not implemented), and are reported on with the hardware findings.
+
+## The spike landed; the decisions session is next (2026-11-10)
+
+The spike's code, hardware findings, and a first real authoring session through the editor are all on branch
+`remote-display-spike` (the authoring story is the production shape's first tranche, not scaffolding --
+`learnings/remote-display-spike.md` for the editor lessons). Still open design questions go through the
+decisions session first: `remote-display-design-decisions-briefing.md` (the MVP call, capability parity as the
+target instead of implementation parity, the widget-face data format per P1, the authoring vocabulary beyond the
+grid conversion, board class and images, the production security tier). This note and P1/P2 are the frame for
+it, not things it may edit.
 
 ## Where the spike stands in code (2026-11-06, branch `remote-display-spike`)
 

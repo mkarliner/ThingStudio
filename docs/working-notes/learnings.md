@@ -164,10 +164,24 @@ Building the images in a cloud session (ESP-IDF from GitHub, registry components
 target at runtime 15.0.0, NimBLE's 4-connection limit, esptool 3.x lacking the C5 (2026-11-04).
 `docs/working-notes/learnings/firmware-builds.md`.
 
-## Remote display spike MicroPython gotchas (2026-11-06)
+## Remote display and editor gotchas (2026-11-06/09)
 
-`b2a_base64` returns bytes (a lost string concat inside the server's broad `except` looks like a caller timeout); `bytes.split` needs a bytes
-needle; MicroPython floats have no `is_integer()`; the socket query string arrives with or without the leading `?`; piped micro-python output
-buffers to process end, so a test that "hangs" is an illusion; the pymock fixture is a byte-identical copy of the vendored library (edit both
-in one change); route timeouts are seconds and may be fractional, so never `int()` them; `dep_compile.mjs` needed a recursive `mkdir` for
-nested package board files; MicroPython's `writer.close()` does not release a socket until `wait_closed()` (10-socket cliff on ESP32); the TSAUTH1 salt is hashed as bytes, not hex text; `mount()`'s timeoutS/body_limit ride in the route dict; a native-USB S3 drops large console writes so use the WiFi transport; `gc.mem_free()` hides IDF-heap starvation; input frames ride under `m`, and a flat message decodes as None; a widget must paint at mount and modal widgets need their own registry; MicroPython coroutines have no `__await__` (use `send`); this S3 image's REPL is on UART0, so stopping the listener over USB strands it. 17 entries: `docs/working-notes/learnings/remote-display-spike.md`.
+Board side: `b2a_base64` returns bytes (a lost string concat inside the server's broad `except` looks like a caller
+timeout); `bytes.split` needs a bytes needle; MicroPython floats have no `is_integer()`; the socket query string
+arrives with or without the leading `?`; piped micro-python output buffers to process end, so a test that "hangs" is
+an illusion; the pymock fixture is a byte-identical copy of the vendored library (edit both in one change); route
+timeouts are seconds and may be fractional, so never `int()` them; `dep_compile.mjs` needs a recursive `mkdir` for
+nested package board files; `writer.close()` alone does not release a listening socket (`await wait_closed()`);
+TSAUTH1's salt travels as hex and hashes as bytes; `mount()` route settings ride in the route dict; the page's input
+envelope is `{"c":n,"m":{...}}`; on a native-USB S3 the console drops large writes so deploys go over the WiFi
+transport; `gc.mem_free()` can look healthy while the board stops moving packets; `__await__` does not exist on a
+MicroPython coroutine.
+
+Editor side (the first authoring session through the screen outline): the outline had a stack of three wiring bugs
+(`updateScreen` handed an object; `GuiNodeInfo.kind` missing, so "add…" filters came up empty; the add control
+rendered only inside existing rows) plus the gui screen itself being labeled a widget; adds now land in the first
+free cell; a credential-backed config reads *resolved* values, never the raw `credentialName`; a stale
+`dist-cli/thingstudio-compile.mjs` after a pull fails new-node flows as "unknown node type" and shrinks the catalog
+regen silently.
+
+21 entries: `docs/working-notes/learnings/remote-display-spike.md`.
