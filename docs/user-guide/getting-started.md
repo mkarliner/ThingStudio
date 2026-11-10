@@ -22,8 +22,8 @@ carries data, not only power. Installing uses a terminal, or PowerShell on Windo
 
 ## Step 1: Install ThingStudio
 
-ThingStudio is a program you run on your computer. It opens its editor in your web browser. It brings its own
-Python, so nothing else needs installing to run it.
+ThingStudio is a program you run on your computer. It opens its editor in your web browser: Chrome or Edge 137,
+Firefox 131 or Safari 18.4, or later. It brings its own Python, so nothing else needs installing to run it.
 
 There are two ways to install it. Both give you the same program.
 

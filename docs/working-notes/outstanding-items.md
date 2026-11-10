@@ -257,7 +257,7 @@ ThingStudioMarketing repo, not here.
   that uses GPIO 10, pulses whatever is wired there, and on a classic ESP32 GPIO 10 is one of the pins the processor
   definition marks reserved for flash ("Using them crashes the board"); on an nRF52840 it is an NFC pin. Found by the
   first Discussions tester (#19, EdgeS3 on Linux Mint), who couldn't stop "a blinky on IO10" by changing the flow.
-  **Fixed in runtime 15.1.0 (2026-11-09):** the heartbeat runs only when `/hil_heartbeat` exists on the board;
+  **Fixed in runtime 15.1.0 (2026-11-09):** the heartbeat runs only when `/hil_heartbeat` exists on the board, and toggles the pin number written in it (no built-in pin, 2026-11-10);
   `test/hil/README.md` setup step 4 writes it; editor target 15.1.0; FAQ entry says to reinstall the runtime. Left:
   (1) re-run `run_fault_isolation_checks.py` on the rig with the marker to confirm `HEARTBEAT_WATCH` still passes;
   (2) the Thingstudio custom images (classic ESP32, C3, C5) freeze the listener, so their users keep the toggle
@@ -337,11 +337,11 @@ ThingStudioMarketing repo, not here.
   Firefox 131+, Safari 18.4+ (MDN browser-compat-data). Node 24.13 on Mike's Mac failed every compile-hook test with
   `invalid value type 'exn'` (Node 22.23 passes; `learnings/editor-build-tooling.md`), and a tester on an older
   Safari or a pinned corporate Chrome would hit the same in the editor, on any flow with a hooked node (wifi_status,
-  display_spi, ...). The user docs state no browser minimum. To do: (1) check what the editor shows when the wasm
-  won't compile, and make it one clear message naming the browser versions, not a per-node "compile hook failed";
-  (2) state the minimum in `installation-details.md`; (3) consider building without `--translate-to-exnref`
-  (legacy exception handling, Chrome 95+/Firefox 100+), if the WASI build can run that way. Found while chasing
-  Mike's `make test` failures after Discussions #19.
+  display_spi, ...). **Done 2026-11-10:** `wasi.ts` turns a missing-feature CompileError into one message naming the
+  browser versions (or the Node.js version), tested in `compile-hook-load-error.test.ts`; Getting started states the
+  browser minimum and Installation details the Node.js one. Left: see the message in a real old browser, and
+  consider building without `--translate-to-exnref` (legacy exception handling, Chrome 95+/Firefox 100+) if the WASI
+  build can run that way. Found while chasing Mike's `make test` failures after Discussions #19.
 
 - **Colour values in the flow file are raw decimal RGB565 -- save at least hex, and a picker where one is
   missing -- new item, 2026-10-24 (Mike, reading a theme config: `"bg": 2116, "fg": 65535`).** The GUI theme

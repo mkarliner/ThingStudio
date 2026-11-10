@@ -287,6 +287,8 @@ def test_a_uf2_volume_states_its_own_board(monkeypatch, tmp_path):
 
 
 def test_on_linux_the_user_directory_between_the_root_and_the_drive_is_skipped(monkeypatch, tmp_path):
+    # Pin the platform: unpinned, this ran macOS's branch on a Mac and failed (2026-11-10).
+    monkeypatch.setattr(sys, "platform", "linux")
     root = tmp_path / "media"
     user = root / "mike"
     (user / "RPI-RP2").mkdir(parents=True)

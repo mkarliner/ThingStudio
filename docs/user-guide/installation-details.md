@@ -56,7 +56,8 @@ Every install has a `tutorials` folder. [Tutorial flows](tutorial-flows.md#where
 
 ## From source
 
-For working on ThingStudio itself. You need Python 3.10 or later, Node.js 22.12 or later, and `make`. On a Mac,
+For working on ThingStudio itself. You need Python 3.10 or later, Node.js 22 (22.23 is known to work, 24.13 isn't), and `make`. `make` checks your
+Node.js before it builds. On a Mac,
 `make` comes with the Xcode command line tools (`xcode-select --install`).
 
 In the repository folder, run `make`. This builds the editor and the user guide, installs ThingStudio into a `.venv`

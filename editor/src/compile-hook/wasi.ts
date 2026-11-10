@@ -165,12 +165,52 @@ function finish(host: Host & { streams?: { stdout: string; stderr: string } }, i
   return { stdout: host.streams?.stdout ?? "", stderr: host.streams?.stderr ?? "", exitCode };
 }
 
+/** The browser versions that can compile the interpreter: it needs Wasm exception handling with exnref
+ * (micropython-wasi/README.md, `--translate-to-exnref`). MDN browser-compat-data, checked 2026-11-09. */
+export const HOOK_BROWSER_MINIMUM = "Chrome or Edge 137, Firefox 131 or Safari 18.4";
+
+/** A WebAssembly.CompileError from a runtime missing a Wasm feature the interpreter uses becomes one message
+ * that names the fix, instead of V8's "invalid value type 'exn', enable with --experimental-wasm-exnref". Other
+ * errors pass through unchanged. */
+export function explainInterpreterLoadError(err: unknown): unknown {
+  const message = err instanceof Error ? err.message : String(err);
+  const missingFeature = /invalid value type|enable with --experimental-wasm|unknown type|invalid opcode|not supported/i;
+  if (!(typeof WebAssembly !== "undefined" && err instanceof WebAssembly.CompileError) || !missingFeature.test(message)) {
+    return err;
+  }
+  const nodeVersion = typeof process !== "undefined" ? process.versions?.node : undefined;
+  if (nodeVersion) {
+    return new Error(
+      `Node.js ${nodeVersion} can't load the interpreter that runs node compile steps (${message}). ` +
+        "Node.js 22.23 is known to work.",
+    );
+  }
+  return new Error(
+    "This browser can't run the interpreter Thingstudio uses to compile some nodes. " +
+      `It needs ${HOOK_BROWSER_MINIMUM}, or later. Update the browser, then compile again.`,
+  );
+}
+
+function compileModule(bytes: ArrayBuffer): Promise<WebAssembly.Module> {
+  return WebAssembly.compile(bytes).catch((err: unknown) => {
+    throw explainInterpreterLoadError(err);
+  });
+}
+
+function compileModuleSync(bytes: ArrayBuffer): WebAssembly.Module {
+  try {
+    return new WebAssembly.Module(bytes);
+  } catch (err) {
+    throw explainInterpreterLoadError(err);
+  }
+}
+
 /** Instantiate the module and run `args`. No timeout: the caller's worker owns that. */
 export async function runWasi(wasmBytes: Uint8Array, args: readonly string[]): Promise<WasiRunResult> {
   const copy = new Uint8Array(wasmBytes.length);
   copy.set(wasmBytes);
   const host = {} as Host & { streams?: { stdout: string; stderr: string } };
-  const module = await WebAssembly.compile(copy.buffer);
+  const module = await compileModule(copy.buffer);
   const instance = await WebAssembly.instantiate(module, makeImports(args, host));
   return finish(host, instance);
 }
@@ -181,6 +221,6 @@ export function runWasiSync(wasmBytes: Uint8Array, args: readonly string[]): Was
   const copy = new Uint8Array(wasmBytes.length);
   copy.set(wasmBytes);
   const host = {} as Host & { streams?: { stdout: string; stderr: string } };
-  const instance = new WebAssembly.Instance(new WebAssembly.Module(copy.buffer), makeImports(args, host));
+  const instance = new WebAssembly.Instance(compileModuleSync(copy.buffer), makeImports(args, host));
   return finish(host, instance);
 }
