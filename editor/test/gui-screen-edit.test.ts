@@ -5,7 +5,7 @@
 // column and spans; the list order is only the order the outline shows.
 
 import { describe, expect, it } from "vitest";
-import { add, addModal, forgetNodes, addPage, move, movePage, outline, placedWidgets, remove, removeModal, removePage, setProps, type Target } from "../src/gui/screen-edit.js";
+import { add, addInto, addModal, forgetNodes, addPage, move, movePage, outline, placedWidgets, remove, removeModal, removePage, setProps, type Target } from "../src/gui/screen-edit.js";
 import type { GridElement, ScreenSpec } from "../src/gui/screens.js";
 
 const w = (node: string, row = 0, col = 0): GridElement => ({ kind: "widget", node, row, col });
@@ -62,6 +62,21 @@ describe("screen-edit", () => {
   it("reports which widgets are placed, panels excluded", () => {
     const s = add(base(), home, { card: true, row: 0, col: 0 });
     expect([...placedWidgets(s)].sort()).toEqual(["a", "b", "c"]);
+  });
+
+  it("adds an element into the first free cell, not on top of the last one", () => {
+    let s = add(base(), { page: "two" }, w("a"));
+    expect(s.pages[1]!.elements[0]).toMatchObject({ node: "a", row: 0, col: 0 });
+    s = add(s, { page: "two" }, w("b"));
+    expect(s.pages[1]!.elements[1]).toMatchObject({ node: "b", row: 0, col: 1 });
+  });
+
+  it("adds into a panel: the leaf lands inside the card's span, card cells never block", () => {
+    let s = add(base(), { page: "two" }, { card: true, row: 0, col: 0, rowSpan: 2, colSpan: 6 });
+    s = addInto(s, { page: "two" }, 0, w("d"));
+    expect(s.pages[1]!.elements[1]).toMatchObject({ node: "d", row: 0, col: 0 });
+    s = addInto(s, { page: "two" }, 0, w("e"));
+    expect(s.pages[1]!.elements[2]).toMatchObject({ node: "e", row: 0, col: 1 });
   });
 
   it("adds, removes and reorders pages", () => {

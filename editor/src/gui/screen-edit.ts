@@ -35,8 +35,51 @@ function edit(screen: ScreenSpec, t: Target, fn: (elements: readonly GridElement
 }
 
 /** Appends an element to the page or modal. New elements go at row 0, column 0 unless the caller sets them. */
+/** Adds an element into the page/modal, placed at the first free single cell (row-major), so back-to-back adds
+ * don't stack on (0,0) (found authoring the first remote flow). */
 export function add(screen: ScreenSpec, t: Target, el: GridElement, _at?: number): ScreenSpec {
-  return edit(screen, t, (elements) => [...elements, el]);
+  return edit(screen, t, (elements) => [...elements, freeCellWithin(elements, el)]);
+}
+
+/** Adds an element into the panel at `cardIndex` (the element list's index of a card element), landed in the
+ * first free cell *inside the panel's span*. The panel itself never blocks a cell inside it. */
+export function addInto(screen: ScreenSpec, t: Target, cardIndex: number, el: GridElement): ScreenSpec {
+  return edit(screen, t, (elements) => {
+    if (cardIndex < 0 || cardIndex >= elements.length) return null;
+    const card = elements[cardIndex]!;
+    if (!card.card) return null;
+    const within = {
+      row: card.row,
+      col: card.col,
+      rowSpan: Math.max(1, Math.round(Number(card.rowSpan ?? 1))),
+      colSpan: Math.max(1, Math.round(Number(card.colSpan ?? 1))),
+    };
+    return [...elements, freeCellWithin(elements, el, within)];
+  });
+}
+
+/** The first single cell (0..63 x 0..47) that no existing *leaf* covers, with `el`'s row/col set to it. Card
+ * panels sit *under* leaves, so they never block a cell -- putting a widget inside a panel is the ordinary case. */
+export function freeCellWithin(elements: readonly GridElement[], el: GridElement, within?: { row: number; col: number; rowSpan: number; colSpan: number }): GridElement {
+  const taken = (r: number, c: number): boolean =>
+    elements.some((e) => {
+      if (e.card || (within && e === (el as unknown as GridElement))) return false;
+      const rs = Math.max(1, Math.round(Number(e.rowSpan ?? 1)));
+      const cs = Math.max(1, Math.round(Number(e.colSpan ?? 1)));
+      return r >= e.row && r < e.row + rs && c >= e.col && c < e.col + cs;
+    });
+  const spans = within ?? { row: 0, col: 0, rowSpan: 64, colSpan: 48 };
+  for (let r = spans.row; r < spans.row + spans.rowSpan; r++) {
+    for (let c = spans.col; c < spans.col + spans.colSpan; c++) {
+      if (!taken(r, c)) return { ...el, row: r, col: c };
+    }
+  }
+    return el; // the search space is full: leave the element where the author put it and let the compiler speak
+}
+
+/** A left-over convenience wrapper: the first free cell anywhere on the page, cards never blocking. */
+export function freeCellOf(elements: readonly GridElement[], el: GridElement): GridElement {
+  return freeCellWithin(elements, el);
 }
 
 export function remove(screen: ScreenSpec, t: Target, index: number): ScreenSpec {

@@ -21,7 +21,7 @@
           <button title="remove this page" @click="edit((s) => removePage(s, page.name))">✕</button>
         </span>
       </div>
-      <ElementRows :elements="page.elements" :target="{ page: page.name }" :names="nameOf" :unplaced="widgetsFor(page.elements)" @op="onOp" @add="onAdd" />
+      <ElementRows :elements="page.elements" :target="{ page: page.name }" :names="nameOf" :unplaced="widgetsFor(page.elements)" @op="onOp" @add="onAdd" @add-into="onAddInto" />
     </div>
 
     <div class="addrow">
@@ -36,7 +36,7 @@
           <strong>{{ nameOf(m.node) }}</strong>
           <span class="btns"><button title="remove this modal's layout" @click="edit((s) => removeModal(s, m.node))">✕</button></span>
         </div>
-        <ElementRows :elements="m.elements" :target="{ modal: m.node }" :names="nameOf" :unplaced="widgetsFor(m.elements)" @op="onOp" @add="onAdd" />
+        <ElementRows :elements="m.elements" :target="{ modal: m.node }" :names="nameOf" :unplaced="widgetsFor(m.elements)" @op="onOp" @add="onAdd" @add-into="onAddInto" />
       </div>
       <div v-if="unplacedModals.length" class="addrow">
         <select v-model="newModal" @change="addModalNow">
@@ -55,7 +55,7 @@ import { computed, defineComponent, h, ref, type PropType } from "vue";
 import { bumpPropertyVersion } from "./store";
 import { listGuiNodes, screens, updateScreen, type GuiNodeInfo } from "./screens-store";
 import { GUI_MODAL, type GridElement, type ScreenSpec } from "../../gui/screens";
-import { add, addModal, addPage, move, movePage, remove, removeModal, removePage, setProps, type OutlineRow, type Target } from "../../gui/screen-edit";
+import { add, addInto, addModal, addPage, move, movePage, remove, removeModal, removePage, setProps, type OutlineRow, type Target } from "../../gui/screen-edit";
 
 const props = defineProps<{ screenId: string }>();
 
@@ -115,6 +115,10 @@ function onAdd(a: { target: Target; element: GridElement }): void {
   edit((s) => add(s, a.target, a.element));
 }
 
+function onAddInto(a: { target: Target; index: number; element: GridElement }): void {
+  edit((s) => addInto(s, a.target, a.index, a.element));
+}
+
 const ElementRows = defineComponent({
   props: {
     elements: { type: Array as PropType<readonly GridElement[]>, required: true },
@@ -122,7 +126,7 @@ const ElementRows = defineComponent({
     names: { type: Function as PropType<(id: string) => string>, required: true },
     unplaced: { type: Array as PropType<GuiNodeInfo[]>, required: true },
   },
-  emits: ["op", "add"],
+  emits: ["op", "add", "addInto"],
   setup(p, { emit }) {
     const open = ref<Record<number, boolean>>({});
     return () => {
@@ -201,11 +205,27 @@ const ElementRows = defineComponent({
         }
         const btn = (txt: string, title: string, on: boolean, op: "up" | "down" | "remove") =>
           h("button", { title, disabled: !on, onClick: () => emit("op", { op, target: p.target, index: r.index }) }, txt);
+        const addHere = e.card
+          ? h("select", {
+              class: "addsel", title: "add inside this panel", value: "",
+              onChange: (ev: Event) => {
+                const sel = ev.target as HTMLSelectElement;
+                const v = sel.value;
+                sel.value = "";
+                if (!v) return;
+                emit("addInto", { target: p.target, index: r.index, element: v.startsWith("@") ? choices[v]!() : { kind: "widget", node: v, row: 0, col: 0 } });
+              },
+            }, [
+              h("option", { value: "" }, "+ into panel…"),
+              ...(p.unplaced.length ? [h("optgroup", { label: "widgets" }, p.unplaced.map((n) => h("option", { value: n.id }, n.name)))] : []),
+              h("optgroup", { label: "other" }, [h("option", { value: "@text" }, "text"), h("option", { value: "@dots" }, "page dots")]),
+            ])
+          : addInto();
         return h("div", { class: "rowwrap" }, [
           h("div", { class: "row" }, [
             h("span", { class: "lbl" }, r.label),
             h("span", { class: "btns" }, [
-              addInto(),
+              addHere,
               h("button", { title: "placement", class: open.value[r.index] ? "on" : "", onClick: () => (open.value = { ...open.value, [r.index]: !open.value[r.index] }) }, "⚙"),
               btn("↑", "earlier in the list", r.canUp, "up"),
               btn("↓", "later in the list", r.canDown, "down"),
