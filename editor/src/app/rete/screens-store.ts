@@ -34,10 +34,12 @@ export function forgetGuiNodes(ids: ReadonlySet<string>): void {
   bumpPropertyVersion();
 }
 
-/** A GUI-related node on the canvas, as the layout editor needs to list it. */
+/** A GUI-related node on the canvas, as the layout editor needs to list it. `kind` is what ScreenOutline's
+ * "add…" selects filter on: widget nodes go into pages', modal nodes into the modals group. */
 export interface GuiNodeInfo {
   readonly id: string;
   readonly type: string;
+  readonly kind: "widget" | "modal";
   readonly name: string;
 }
 

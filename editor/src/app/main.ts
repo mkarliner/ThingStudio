@@ -163,7 +163,7 @@ import { NODE_FACTORIES, CustomNode, type AnyThingstudioNode } from "./rete/node
 import { resolveOutputCount } from "../compiler/node-descriptor.js";
 import { DRAG_MIME, CUSTOM_DRAG_MIME, type NodeKind } from "./rete/palette.js";
 import { toGraphData, socketIndex } from "./rete/graph-adapter.js";
-import { screens as screensStore, setScreens, setGuiNodeLister } from "./rete/screens-store.js";
+import { screens as screensStore, setScreens, setGuiNodeLister, type GuiNodeInfo } from "./rete/screens-store.js";
 import { visibleConfigProperties } from "./rete/config-types.js";
 import { propertyVersion, configsVersion, configs as configsStore, replaceAllConfigs, clearConfigs, backendWsUrl, fireInjectNode, updateConfig, activeTarget } from "./rete/store.js";
 import { getCustomNodePackage, listCustomNodeDefinitions, missingNodeTypeMessage, replaceAllCustomNodePackages } from "./rete/custom-nodes-store.js";
@@ -1093,7 +1093,11 @@ setGuiNodeLister(() =>
     if (!t.startsWith("thingstudio/gui_")) return [];
     const pr = (n as unknown as { properties?: { name?: unknown; label?: unknown } }).properties;
     const name = typeof pr?.label === "string" && pr.label.trim() ? pr.label : pr?.name;
-    return [{ id: n.id, type: t, name: typeof name === "string" && name.trim() ? name.trim() : `${t.replace("thingstudio/", "")} ${n.id.slice(0, 6)}` }];
+    return [{
+      id: n.id, type: t,
+      name: typeof name === "string" && name.trim() ? name.trim() : `${t.replace("thingstudio/", "")} ${n.id.slice(0, 6)}`,
+      kind: t === "thingstudio/gui_modal" ? ("modal" as const) : ("widget" as const),
+    } as GuiNodeInfo];
   }),
 );
 
