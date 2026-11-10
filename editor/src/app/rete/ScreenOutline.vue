@@ -67,8 +67,9 @@ const newModal = ref("");
 function edit(fn: (s: ScreenSpec) => ScreenSpec): void {
   const next = fn(spec.value);
   if (next !== spec.value) {
-    updateScreen(props.screenId, next);
-    bumpPropertyVersion();
+    // updateScreen applies a spec->spec function to the store's current entry, so hand it the edit's result
+    // wrapped in a closure, not the object itself.
+    updateScreen(props.screenId, () => next);
   }
 }
 
