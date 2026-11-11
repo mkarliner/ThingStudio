@@ -8,7 +8,7 @@ body:
         Thanks for trying Thingstudio from a blank board. The point is to find where the docs and the tool let
         you down, so the rough bits are the useful bits. Rough times are fine.
 
-        Prefer to keep it private? Email mike@minus1.com instead.
+        Prefer to keep it private? Email info@thingstudio.net instead.
   - type: input
     id: board
     attributes:

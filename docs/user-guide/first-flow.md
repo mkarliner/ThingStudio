@@ -68,7 +68,7 @@ Two tutorials take the flow further:
 ## Tell us how it went
 
 Started from a blank board? [Tell us how it went](https://github.com/mkarliner/ThingStudio/discussions/new?category=onboarding-reports):
-where the guide or the tool let you down is the most useful part. To keep it private, email mike@minus1.com.
+where the guide or the tool let you down is the most useful part. To keep it private, email info@thingstudio.net.
 
 ## If it doesn't blink
 
