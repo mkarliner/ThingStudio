@@ -28,7 +28,7 @@
       "name": "session start: definition pieces then screen",
       "given": "token from a successful login",
       "steps": [
-        {"from": "page", "ws": "GET /ts/remote/ws?t=<token>", "expect": {"status": 101}},
+        {"from": "page", "ws": "GET /ts/remote/ws", "subprotocol": "ts-rd-v1-<token>", "expect": {"status": 101}},
         {"from": "page", "frame": "hi", "m": {"type": "hi", "v": 1}, "c": 1, "expect": {}},
         {"from": "board", "n_frames": "<n>", "each": {"type": "screen_def", "i": "<0..n-1>", "n": "<n>", "part": "<str slice>", "display": "phone"}},
         {"from": "board", "any_order_after_last_piece": true, "one_of": ["screen", "values"]}

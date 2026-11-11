@@ -44,6 +44,53 @@ board's display). The design itself is still provisional: `docs/working-notes/re
   **A second one would need:** a target folder + image for that board family, its frozen inventory including the
   spike's libraries, and a row in `remote-display-spike-results.md` measured with `freeIdfHeapBytes` /
   `largestIdfHeapBlockBytes` (never `gc.mem_free()` alone, which looked healthy throughout the C3's failure).
+- **2026-11-10 — Remote displays are MVP (Mike).** The spike proved the board-side half end-to-end on a
+  Freenove ESP32-S3 4.0" with runtime 15.1.0. The supported path is a custom firmware image with the runtime
+  and remote libraries frozen, because that gives known heap headroom. Stock installs are not blocked: a user
+  may deploy a remote display to any board that can run the web server and `ts_remote`, but the compiler
+  warns when the selected board/image is untested. Documented facts: an ESP32-C3 stock install is below the
+  floor (IDF heap collapse); an ESP32-S3 custom image is comfortable. Other boards are caveat emptor. The
+  production build must still: record a tested custom S3 image, replace the spike's `?t=` URL token with a
+  production-safe session token, and bring `docs/security-policy.md` §3.8 from "spike" to "production tier"
+  before release.
+
+- **2026-11-10 — Capability parity, not implementation parity, is the v1 target (Mike).** A remote screen is
+  measured by whether the same flow works, not by whether it looks identical to the physical panel. Built-in
+  widget faces are declarative data the page interpreter renders with HTML/CSS/SVG. A JS face is explicitly
+  post-MVP, marked, and runs confined to its own widget's values and declared events. Widgets with no faithful
+  remote rendering get a compile warning and a labelled placeholder, not a compile error.
+
+- **2026-11-10 — One canonical GUI definition serves hardware and remote surfaces (Mike).** The product's core
+  value is "one flow, any surface": the same screen tree runs on a physical panel or a phone. The canonical
+  definition is rows/column containers + leaf widgets; `gui_panel` is removed in favour of container styling
+  (group/card becomes a layout property of a row or column). The hardware renderer and the remote page renderer
+  are two plugins over the same canonical tree; a third party can add another renderer without changing the
+  authoring model or the board protocol. v1 authoring keeps the row/column flex model already used for remote
+  screens; drag-and-drop will place widgets into constraint containers and let users tune flex properties, not
+  require exact placement or a parallel layout mode.
+
+- **2026-11-10 — v1 remote widget set and page chrome (Mike).** The v1 widgets are: `label`, `readout`, `bar`,
+  `led`/`light`, `button` (momentary/toggle/navigate), `number`, `text`, `submit`, `slider`, `trend`, and
+  `histogram`. Trend and histogram are full-featured, not placeholders. Page dots are removed: navigation is
+  board-owned and there is no assumption of linear page order. Breadcrumbs, titles, and other page chrome are
+  deferred until a concrete requirement exists. Any widget kind the page does not recognise degrades to a
+  labelled placeholder with the raw value (P1).
+
+- **2026-11-10 — Production security tier for the phone page (Mike).** Before release, the spike's `?t=<hex>`
+  URL token is replaced by a token carried in the WebSocket handshake's `Sec-WebSocket-Protocol` header (e.g.
+  `ts-rd-v1-<token>`), because browser WebSocket API does not allow custom headers. Wrong/missing token fails
+  the upgrade with 401. The login route gets a simple rate limit (e.g. 10 attempts per 60 s globally, plus a
+  cap on concurrent login handlers). `docs/security-policy.md` §3.8 moves from "spike" to "production tier"
+  when these land. `TSAUTH1` reuse, HMAC+counter input frames, one viewer, and take-over are unchanged.
+
+- **2026-11-10 — Form submit contract (Mike).** A form submit carries all fields for one form name in one
+  signed message. The board validates every value against its declared type; if any fail, the whole form is
+  refused with `{"type":"form_err","form":<name>,"failed":{key:msg}}` and nothing is written. If all convert,
+  each key is written to `runtime.settings`, then `{"type":"form_ok","form":<name>,"keys":[...]}` is sent and
+  a single flow event carrying the written key/value pairs is emitted. A submit with no draft values is allowed:
+  it writes nothing, sends `form_ok` with an empty `keys` list, and emits a flow event with an empty values
+  object. The flow decides what an empty submit means.
+
 - **2026-11-07 — Spike scope: the concept call, not the deliverable (Mike).** "This is a spike. The goal is to
   evaluate the concept of the remote display, not to implement everything. Working on a board with PSRAM proves
   it; custom builds are for a full implementation." So the custom-builds-only decision above is the delivery

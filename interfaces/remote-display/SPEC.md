@@ -39,7 +39,7 @@ requests on the same origin as the page (no cookies, no secure context, no `cryp
 
 Both sides then derive, from the never-sent values:
 - `session_key = HMAC-SHA256(key, nonce + " remote display input v1")`
-- `token       = HMAC-SHA256(session_key, "open session v1")`  — presented as `?t=<hex>` on the WebSocket.
+- `token       = HMAC-SHA256(session_key, "open session v1")` — presented in the WebSocket handshake (§8).
 
 The newest successful login's token is the only one the socket accepts (`_token_ok`); an older viewer keeps
 its socket until a new viewer connects, then is told why (§6 take-over). An eavesdropper sees the nonce and
@@ -72,16 +72,15 @@ At session start the board sends the definition as consecutive `screen_def` mess
 ```
 
 `i` runs `0..n-1`, in order; concatenating the `part` strings in `i` order yields one JSON document:
-`{"v": <int, = 1>, "display": ..., "carousel": [page names], "minIntervalMs": <int>,
+`{"v": <int, = 1>, "display": ..., "minIntervalMs": <int>,
   "pages": [{"name", "parent"?, "tree": <layout tree>}...],
   "modals": [{"name", "priority", "timeoutMs", "tree"}...]}`.
 
 The layout tree is
 `{"kind": "row"|"column", "children": [...], "gap"?: int ≥ 0, "padding"?: int ≥ 0, "align"?: start|center|end|stretch,
   "justify"?: start|center|end|space-between, "grow"?: number ≥ 0, "flex"?: true, "alignSelf"?, "card"?: true}`
-with leaves `{"wid", "kind", "config", ...also-flex-props}`. Widget kinds the spike page renders are the
-built-ins (`label readout bar trend led button`, `pagedots`) plus the spike-only input kinds (`number text
-submit ctl`). An unknown kind renders on the page as a labelled placeholder carrying the raw value (P1) — the
+with leaves `{"wid", "kind", "config", ...also-flex-props}`. Widget kinds the v1 page renders are the
+built-ins (`label readout bar trend histogram led button number text submit slider`). An unknown kind renders on the page as a labelled placeholder carrying the raw value (P1) — the
 board accepts it at build time rather than refusing the flow.
 
 The page waits for all `n` parts, parses, and only then builds; `screen`/`values` messages that arrive before
@@ -111,8 +110,7 @@ renderer task).
 | `{"type":"hi","v":1}` | version negotiation; a `v` other than the board's is answered `err` ("unsupported version") and the session ends |
 | `{"type":"tap","wid","phase":"down"\|"up"}` | the same press/release path a touch panel tap takes (`GUI.button_press`): momentary fires on release, a toggle goes unknown/pending/confirmed, navigate moves the surface |
 | `{"type":"nav","cmd":"next"\|"prev"\|"back"\|"home"\|<page>}` | navigation, board-owned (`GUI.navigate`) |
-| `{"type":"page","n":<carousel index>}` | jump to the n-th top-level page |
-| `{"type":"form","form":<name>,"values":{key: value}}` | the settings form: validated (all convert or the whole form is refused with no write), then written to `runtime.settings` per key, then the field widgets are updated. A mid-write fault is answered `form_err` naming the key; nothing rolls back (§7) |
+| `{"type":"form","form":<name>,"values":{key: value}}` | the settings form: validated as a whole (all convert or the whole form is refused with no write), then written to `runtime.settings`, then `form_ok` is sent and a single flow event carries the written values. See §5.1 |
 | `{"type":"ctl","wid","value":<number in [lo,hi]>}` | continuous input; `runtime`-visible only through the flow's `await remote.control()` |
 | `{"type":"ping","at":<page ms>}` | answered `pong` with `echo: at` — the page's latency measure |
 
@@ -122,7 +120,18 @@ A field is a leaf `{"wid", "kind": "number"|"text", "config": {"label", "key", "
 value comes from `runtime.settings.get(key, default)` at build and from `values` messages afterwards; an
 *editing* field keeps the page's keystrokes local. One submit widget
 `{"kind": "submit", "config": {"form": <name>, "label"}}` collects every field with the same `form` value and
-sends them in one message — a settings form submits as one act, per the scoping note.
+sends them in one message — a settings form submits as one act.
+
+The board handles a `{"type":"form","form":<name>,"values":{key: value}}` message as follows:
+
+1. Convert every value against its field's declared type. If any conversion fails, reply
+   `{"type":"form_err","form":<name>,"failed":{key: <one-line reason>}}` and write nothing.
+2. If all values convert, write each key to `runtime.settings`.
+3. Reply `{"type":"form_ok","form":<name>,"keys":[...]}` listing the keys that were written.
+4. Emit one flow event carrying an object of the written key/value pairs.
+
+A submit with no draft values is allowed: it writes nothing, replies `{"type":"form_ok","form":<name>,"keys":[]}`,
+and emits a flow event with an empty values object. The flow decides what an empty submit means.
 
 ## 6. One viewer, take-over
 The board accepts one authenticated viewer per remote display; the second viewer's login owns the socket.
@@ -149,8 +158,10 @@ token. Console: one terse line per transition (`REMOTE_LINK down (no input for 4
 
 ## 8. The WebSocket binding (only this section is transport-specific)
 
-- Path: `GET <prefix>ws?t=<token>` on the same origin; upgrade per RFC 6455 §1.3 (`Sec-WebSocket-Accept`).
-  No upgrade header → `401`; token wrong or login expired → `401` before any upgrade.
+- Path: `GET <prefix>ws` on the same origin; upgrade per RFC 6455 §1.3 (`Sec-WebSocket-Accept`). The client
+  sends the token as a subprotocol: `Sec-WebSocket-Protocol: ts-rd-v1-<token>`.
+  No upgrade header → `401`; token wrong or login expired → `401` before any upgrade; missing or malformed
+  `Sec-WebSocket-Protocol` header → `401`.
 - Client frames are masked; server frames are not. Text for JSON; binary is refused cleanly (close 1003).
 - **Fragments (continuation) are refused with close 1003** — a partial message is never parsed. Reserved
   bits and oversized control frames: close 1002.
@@ -159,6 +170,13 @@ token. Console: one terse line per transition (`REMOTE_LINK down (no input for 4
   protocol layer as `("ping", payload)` (liveness refresh); peer close is echoed with its code, then the
   socket closes. A handler returning normally also closes the socket with one close frame.
 - Heartbeat: every PING_MS (1000), a `ping` frame with body `hb`; pongs and any other frame refresh liveness.
+
+### 8.1 Login route rate limit
+
+The `GET/POST <prefix>login` route is rate-limited before the `TSAUTH1` work is done. The exact constants are
+an implementation choice, but the policy is: a single client may not probe passwords faster than a human could
+type them, and the board must not run more concurrent login handlers than its heap allows. A rate-limited
+request answers `429`; an overloaded board answers `503`.
 
 ## 9. Conformance
 

@@ -100,7 +100,24 @@ spike's libraries frozen, heap headroom known at build time), not to a stock ins
 S3 image with runtime 15.1.0 is the next thing to build; the C3 column above is the documented "does not fit"
 case to compare against.
 
-## Recommendation (Mike's call at the end)
+## Recommendation
 
-MVP or post-MVP: <decide>
-What the production build needs: <decide>
+MVP or post-MVP: **MVP**. The board-side half is proven end-to-end on a Freenove ESP32-S3 4.0" with runtime
+15.1.0. The only hardware blocker is the documented floor: a stock install on a small ESP32 does not fit, so the
+feature ships as a custom firmware image with measured headroom.
+
+What the production build needs:
+
+1. Record a tested **ESP32-S3 custom image** with runtime 15.1.0+ and the remote libraries frozen.
+2. Measure and decide whether an **ESP32-C3 custom image** reaches enough headroom to be offered; keep the
+   stock-C3 column as the documented "does not fit" case either way.
+3. Move the login token from the `?t=<hex>` URL query to the WebSocket `Sec-WebSocket-Protocol` header and fail
+   upgrades with `401` on a bad token.
+4. Add a rate limit to the login route before the `TSAUTH1` work is done.
+5. Update `interfaces/remote-display/SPEC.md` for token delivery, form contract, and removed page dots.
+6. Rewrite `docs/security-policy.md` §3.8 from spike to production tier.
+7. Refresh `docs/user-guide/remote-displays.md` for the v1 widget set, the stock-install warning, and the
+   custom-image path.
+8. Add the production plan and ranked task list.
+9. Land the implementation changes with tests and bump the runtime/editor version numbers together if the wire
+   shape becomes incompatible with old clients.
