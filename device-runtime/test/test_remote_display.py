@@ -65,6 +65,9 @@ class FakeWS:
         self.closes.append(code)
         self.closed = True
 
+    async def close(self, code=1000):
+        await self.send_close(code)  # the real WebSocket.close is send_close + releasing the socket
+
     async def ping(self, payload=b""):
         pass  # recv() would deliver the peer's answer; a stalled viewer just never pongs
 
@@ -489,6 +492,24 @@ def test_ping_replies_with_echo():
 import os  # noqa: E402
 
 
+def test_dead_socket_is_closed_after_the_miss_window():
+    async def main():
+        remote, g, srv, des = _setup()
+        w = FakeWS()
+        session = {"ws": w, "out": ts_remote._BQueue(), "count": 0, "link": "up", "armed": False,
+                   "last_seen": ts_remote.ticks() - (ts_remote._MISSED_PONG_MS + 500), "last_ctl": None,
+                   "tasks": None}
+        remote._conn, remote._out = session, session["out"]
+        pinger = asyncio.create_task(remote._pings(session))
+        await asyncio.sleep_ms(100)
+        assert w.closes, w.closes  # the board closed its side, not waiting out TCP's own timeout
+        assert remote._conn is None
+        pinger.cancel()
+        await asyncio.sleep_ms(30)
+    import asyncio
+    asyncio.run(main())
+
+
 def test_session_sends_definition_and_takes_over():
     async def main():
         remote, g, srv, des = _setup()
@@ -525,6 +546,7 @@ minitest.run([test_login_requires_password_and_right_answer, test_login_rate_lim
               test_input_frames_signed_and_replayed_are_refused, test_dispatch_tap_and_nav,
               test_screen_message_through_the_surface, test_form_submit_writes_settings,
               test_ctl_and_deadman_link_events, test_ping_replies_with_echo,
+              test_dead_socket_is_closed_after_the_miss_window,
               test_session_sends_definition_and_takes_over])
 
 

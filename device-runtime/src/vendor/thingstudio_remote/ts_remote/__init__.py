@@ -497,6 +497,16 @@ class Remote:
             if self._conn is not session:
                 return
             self._evaluate(session, "sweep")
+            if ms_since(session["last_seen"]) >= _MISSED_PONG_MS:
+                # a socket nothing has arrived on for the miss window is dead (a phone leaving WiFi is often
+                # never seen as a close): the board closes its side now (SPEC 7), not when TCP's own
+                # retransmit timeout finally gives up; the page reconnects with its still-valid token.
+                try:
+                    await session["ws"].close()
+                except Exception:  # noqa: BLE001 -- already gone: the close is best-effort cleanup
+                    pass
+                self._end(session)
+                return
             try:
                 await session["ws"].ping(b"hb")
             except OSError:

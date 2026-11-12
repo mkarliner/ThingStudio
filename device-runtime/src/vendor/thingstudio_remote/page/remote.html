@@ -489,16 +489,6 @@ function leaf(node, reg) {
     slider.addEventListener("input", function () { dragVal = { wid: wid, value: parseFloat(slider.value) }; });
     setf = function () {};
   }
-  else if (kind === "pagedots") {
-    box = document.createElement("div"); box.className = "dots";
-    var carousel = (def && def.carousel) || [], ip;
-    for (ip = 0; ip < carousel.length; ip++) {
-      (function (idx) { var dot = document.createElement("i"); if (carousel[idx] === curPage) dot.className = "cur";
-        dot.addEventListener("click", function () { send({ type: "page", n: idx }); });
-        box.appendChild(dot); })(ip);
-    }
-    setf = function () {};
-  }
   else if (kind === "trend") {
     box = document.createElement("div"); box.className = "trend";
     setf = function (v) { box.innerHTML = "";

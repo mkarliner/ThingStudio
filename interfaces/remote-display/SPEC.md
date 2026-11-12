@@ -181,9 +181,10 @@ request answers `429`; an overloaded board answers `503`.
 ## 9. Conformance
 
 - Implementation: `ts_remote/__init__.py` (`_check`, `_dispatch`, `_evaluate`, `_token_ok`, `_answer_login`,
-  `_session`), `test_remote_display.py` (11 tests, unix port).
-- Transport: `test_ts_http_ws.py` (7 tests: handshake accept value computed independently, masked frames,
-  echo, ping/pong, close echo, fragmentation/cap/401 refusals, queue+static routes alongside).
+  `_submit_form`, `_session`), `test_remote_display.py` (unix port).
+- Transport: `test_ts_http_ws.py` (unix port, real TCP: handshake accept value computed independently,
+  masked frames, echo, ping/pong, close echo, fragmentation/cap/401 refusals, the subprotocol reaching the
+  pre-check, queue+static routes alongside).
 - Page crypto: `editor/test/remote-page-crypto.test.ts` (RFC 4231 vectors, iteration chain, session derivation).
 - Vectors: `vectors/exchanges.json` — the message exchanges above as data, for a later runner the way the
   wire protocol's `vectors/exchanges.json` is replayed today.

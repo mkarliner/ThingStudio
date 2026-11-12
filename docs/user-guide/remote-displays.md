@@ -21,7 +21,7 @@ pixels, so a board with no display hardware at all can still have a good UI.
    own viewport and scrolls when a page is taller than the screen. Nothing here is sized in pixels.
 4. The **widgets** the page shows: [readouts](nodes/gui.md#gui-readout), [bars](nodes/gui.md#gui-bar),
    [lights](nodes/gui.md#gui-light), [histograms](nodes/gui.md#histogram), [labels](nodes/gui.md#gui-label),
-   [trends](nodes/gui.md#trend), [buttons](nodes/gui.md#buttons) — whatever you'd put on a panel — plus the
+   [buttons](nodes/gui.md#buttons) — whatever you'd put on a panel — plus the
    phone-only widgets on the same page: a [number field](nodes/gui.md#number-field),
    a [text field](nodes/gui.md#text-field), a [submit button](nodes/gui.md#submit-button) and a
    [slider](nodes/gui.md#slider).

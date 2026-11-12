@@ -54,8 +54,30 @@
       "name": "settings form submits as one message and survives properties",
       "given": "form cfg with number field key threshold",
       "steps": [
-        {"from": "page", "frame": {"m": {"type": "form", "form": "cfg", "values": {"threshold": "31.5"}}}, "expect": {"reply": {"type": "form_ok", "form": "cfg"}, "settings": {"threshold": 31.5}}},
-        {"from": "page", "frame": {"m": {"type": "form", "form": "cfg", "values": {"threshold": "zap"}}}, "expect": {"err": true, "settings_unchanged": true}}
+        {"from": "page", "frame": {"m": {"type": "form", "form": "cfg", "values": {"threshold": "31.5"}}}, "expect": {"reply": {"type": "form_ok", "form": "cfg", "keys": ["threshold"]}, "settings": {"threshold": 31.5}}},
+        {"from": "page", "frame": {"m": {"type": "form", "form": "cfg", "values": {"threshold": "zap"}}}, "expect": {"reply": {"type": "form_err", "form": "cfg", "failed": {"threshold": "not a number"}}, "settings_unchanged": true}}
+      ]
+    },
+    {
+      "name": "empty submit: nothing written, one event with empty values",
+      "given": "form cfg, no field drafted",
+      "steps": [
+        {"from": "page", "frame": {"m": {"type": "form", "form": "cfg", "values": {}}}, "expect": {"reply": {"type": "form_ok", "form": "cfg", "keys": []}, "settings_unchanged": true, "flow_event": {"form": "cfg", "values": {}}}}
+      ]
+    },
+    {
+      "name": "login route rate limit (SPEC 8.1)",
+      "given": "board password set",
+      "steps": [
+        {"from": "page", "http": "GET /ts/remote/login", "repeat": 10, "expect": {"status": 200}},
+        {"from": "page", "http": "GET /ts/remote/login", "expect": {"status": 429}}
+      ]
+    },
+    {
+      "name": "socket without the subprotocol token is refused",
+      "given": "token from a successful login",
+      "steps": [
+        {"from": "page", "ws": "GET /ts/remote/ws", "expect": {"status": 401}}
       ]
     },
     {

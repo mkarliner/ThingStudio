@@ -18,6 +18,17 @@ all blockers pass.
   `editor/src/definitions/remote-display-measurements.ts` is the measured-target registry (S3 custom image
   comfortable, C3 stock below floor), `remoteScreenCodegen` warns per target, and the tests iterate the
   registry. The user guide's Hardware notes already describe the behavior.
+- 7 (the final SPEC review), except one question for Mike: the spec line-by-line against the code found and
+  fixed -- the page's dead pagedots case, the board not closing a dead socket at the miss window (SPEC 7,
+  now it does), stale test counts in SPEC 9, a form vector still expecting the old generic err, and the
+  user guide's broken "trends" anchor. Vectors added: empty submit, rate-limit 429, no-subprotocol 401.
+  Open (an interface call, so Mike's): SPEC 4 lists wire widget kinds "trend", "histogram" and "slider",
+  but the wire's actual kinds are "trend" (the one history widget -- its user-guide page is Histogram) and
+  "ctl" (the slider's kind; the message type is also ctl, which the spec's 5 already says). Amend SPEC 4 to
+  the implementation's list, or rename the wire kind and add a separate histogram kind?
+  Everything else checked clean: login and derivations, HMAC+counter frames, definition shape, screen/
+  values/pong/takeover/form_ok/form_err, state names, take-over, link policy and deadman, the binding's
+  401/1003/1009/1002 paths, and the vectors.
 
 ## Done this session (the spec session, 2026-11-11)
 
