@@ -87,7 +87,7 @@ def _setup(password=PASSWORD, deadman=None):
     g = gui.GUI()
     srv = ts_http_server.Server(18401, [], {})
     des = {
-        "v": 1, "display": "phone", "carousel": ["home", "set"], "minIntervalMs": 100,
+        "v": 1, "display": "phone", "minIntervalMs": 100,
         "pages": [
             {"name": "home", "tree": {
                 "kind": "column", "gap": 4, "children": [
@@ -100,7 +100,7 @@ def _setup(password=PASSWORD, deadman=None):
                     {"wid": "go", "kind": "button",
                      "config": {"mode": "navigate", "target": "set", "text": "go"}},
                 ]}},
-            {"name": "set", "parent": "home", "tree": {
+            {"name": "set", "tree": {
                 "kind": "column", "gap": 4, "children": [
                     {"wid": "th", "kind": "number", "config": {"label": "threshold", "key": "threshold",
                                                               "default": 20, "form": "cfg"}},
@@ -343,7 +343,7 @@ def test_input_frames_signed_and_replayed_are_refused():
     asyncio.run(main())
 
 
-def test_dispatch_tap_nav_and_page():
+def test_dispatch_tap_and_nav():
     async def main():
         remote, g, srv, des = _setup()
         _conn, _n, _nonce = await _login(remote)
@@ -357,12 +357,18 @@ def test_dispatch_tap_nav_and_page():
         payload = await g.event("boop")  # the flow's event queue today gets the same as a touch would
         assert payload is None  # a momentary button's payload is none; the tap went through
 
+        # navigation is board-owned (SPEC 5): named pages, next/prev over the declaration order, home
         remote._dispatch(session, {"type": "nav", "cmd": "set"})
         assert g.surfaces["phone"].page == "set", g.surfaces["phone"].page
-        remote._dispatch(session, {"type": "page", "n": 0})
+        remote._dispatch(session, {"type": "nav", "cmd": "home"})
         assert g.surfaces["phone"].page == "home"
-        reply, err = remote._dispatch(session, {"type": "page", "n": 7})
-        assert err is not None
+        remote._dispatch(session, {"type": "nav", "cmd": "next"})
+        assert g.surfaces["phone"].page == "set"  # top-level pages in declaration order: home, set
+        remote._dispatch(session, {"type": "nav", "cmd": "prev"})
+        assert g.surfaces["phone"].page == "home"
+        # the carousel-index message is gone: an unknown type is one unsigned err, the connection stays up
+        reply, err = remote._dispatch(session, {"type": "page", "n": 0})
+        assert err is not None and "unknown" in err, (reply, err)
         # a button on the page tree navigates the surface itself
         remote._dispatch(session, {"type": "tap", "wid": "go", "phase": "down"})
         remote._dispatch(session, {"type": "tap", "wid": "go", "phase": "up"})
@@ -516,7 +522,7 @@ minitest.run([test_login_requires_password_and_right_answer, test_login_rate_lim
               test_login_queue_overflow_answers_503, test_token_gate,
               test_start_mounts_every_route_on_the_real_server,
               test_definition_problems_are_named, test_definition_builds_surface_and_fields,
-              test_input_frames_signed_and_replayed_are_refused, test_dispatch_tap_nav_and_page,
+              test_input_frames_signed_and_replayed_are_refused, test_dispatch_tap_and_nav,
               test_screen_message_through_the_surface, test_form_submit_writes_settings,
               test_ctl_and_deadman_link_events, test_ping_replies_with_echo,
               test_session_sends_definition_and_takes_over])

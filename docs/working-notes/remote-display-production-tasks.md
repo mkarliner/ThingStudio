@@ -45,11 +45,13 @@ all blockers pass.
    - Update `device-runtime/test/test_remote_display.py` to cover empty submit and whole-form refusal.
    - **Parallel with:** token delivery move.
 
-4. **Remove page dots / carousel**
+4. **Remove page dots / carousel — done 2026-11-12**
    - Compiler/editor: drop `carousel` from the emitted definition; remove `pagedots` widget kind; page
-     navigation is board-owned.
-   - Board/page: remove any pagedot rendering or carousel indexing.
-   - Update `device-runtime/test/test_remote_display.py` and page tests.
+     navigation is board-owned. (A dots cell on a remote screen warns and drops; the panel keeps its own
+     pagedots -- a different renderer.)
+   - Board/page: remove any pagedot rendering or carousel indexing. (ts_remote derives its next/prev order
+     from top-level pages in declaration order; the `page` index message is gone -- nav carries
+     next/prev/back/home/page-name.)
    - **Parallel with:** token delivery move.
 
 5. **Runtime/editor version bump — done 2026-11-12, 16.0.0**

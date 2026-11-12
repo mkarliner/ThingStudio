@@ -66,9 +66,6 @@ body{display:flex;flex-direction:column;}
   font-size:18px;padding:10px;min-height:44px;width:100%;}
 .field input:focus{border-color:var(--accent);outline:none;}
 .slider{width:100%;height:44px;}
-.dots{display:flex;gap:10px;justify-content:center;align-items:center;padding:6px;}
-.dots i{width:9px;height:9px;border-radius:50%;background:var(--track);}
-.dots i.cur{background:var(--fg);}
 .trend{display:flex;align-items:flex-end;gap:1px;height:60px;align-self:stretch;background:var(--track);
   border-radius:4px;padding:2px;}
 .trend i{flex:1;background:var(--accent);border-radius:1px;}
@@ -344,7 +341,7 @@ function finishDefs(d) {
   else refresh();
 }
 var curPagePending = null;
-function firstPageName() { return (def.carousel && def.carousel[0]) || (def.pages && def.pages.length && def.pages[0].name); }
+function firstPageName() { return def.pages && def.pages.length ? def.pages[0].name : null; }
 function mergeValues(values) { for (var k in values) vals[k] = values[k]; }
 function refresh() { applyAll(pageRecs); if (curModal) applyAll(modalRecs); }
 function applyAll(recs) {
@@ -390,19 +387,6 @@ function buildPage(name) {
   for (i = 0; i < pages.length; i++) if (pages[i].name === name) { spec = pages[i]; break; }
   if (!spec) { toast("the board named a page this page has never had: " + name); return; }
   mountTree(spec.tree, v);
-  var carousel = def.carousel || [], j;
-  if (carousel.length > 1) {
-    var dots = document.createElement("div"); dots.className = "dots";
-    for (j = 0; j < carousel.length; j++) {
-      (function (idx) {
-        var dot = document.createElement("i");
-        if (carousel[idx] === name) dot.className = "cur";
-        dot.addEventListener("click", function () { send({ type: "page", n: idx }); });
-        dots.appendChild(dot);
-      })(j);
-    }
-    v.appendChild(dots);
-  }
   refresh();
 }
 function mountTree(node, parent, reg) {

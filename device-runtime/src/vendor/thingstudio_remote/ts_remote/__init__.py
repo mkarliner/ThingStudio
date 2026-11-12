@@ -82,7 +82,7 @@ _OUT_BUFFER_MAX = 96     # messages to a stalled viewer; the oldest is dropped, 
 RemoteSurface = thingstudio_gui.RemoteSurface
 STATE_NAMES = thingstudio_gui.STATE_NAMES
 
-REMOTE_WIDGET_KINDS = ("label", "readout", "bar", "trend", "led", "button", "pagedots",
+REMOTE_WIDGET_KINDS = ("label", "readout", "bar", "trend", "led", "button",
                        "number", "text", "submit", "ctl")
 
 
@@ -267,8 +267,10 @@ class Remote:
                 raise BadDefinition("widget %r is registered twice (definition or flow)" % (wid,))
             kind = self._widgets[wid]["kind"]
             self._gui.widget(wid, _noop_draw, 0, touchable=kind in ("button", "submit"))
-        self.surface = RemoteSurface(self.display, self.send, table,
-                                     self._des.get("carousel") or [pages[0]["name"]], modals,
+        # Page order is the board's own (the definition carries pages, not a carousel): top-level pages
+        # in declaration order are the surface's next/prev order, its opening page the first of them.
+        order = [spec["name"] for spec in pages if spec.get("parent") is None] or [pages[0]["name"]]
+        self.surface = RemoteSurface(self.display, self.send, table, order, modals,
                                      min_interval_ms=self._des.get("minIntervalMs", 100))
         self._gui.add_surface(self.surface)
         self._gui.follow_page(self.display)
@@ -622,13 +624,6 @@ class Remote:
                 self._gui.navigate(self.display, cmd)
             except (ValueError, KeyError) as e:
                 return None, "nav: %r" % (e,)
-            return None, None
-        if kind == "page":
-            n = msg.get("n")
-            carousel = self._des.get("carousel") or []
-            if not isinstance(n, int) or not 0 <= n < len(carousel):
-                return None, "page index %r" % (n,)
-            self._gui.navigate(self.display, carousel[n])
             return None, None
         if kind == "form":
             return self._submit_form(msg)

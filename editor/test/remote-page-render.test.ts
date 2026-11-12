@@ -65,7 +65,6 @@ function renderScreen(screen: unknown): Record<string, StubEl> {
   const def = {
     v: 1,
     display: "phone",
-    carousel: ["home", "settings"],
     pages: [
       { name: "home", tree: { kind: "column", children: [{ wid: "temp", kind: "readout", config: {} }] } },
       { name: "settings", tree: { kind: "column", children: [{ wid: "th", kind: "number", config: { key: "th" } }] } },

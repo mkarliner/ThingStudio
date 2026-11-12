@@ -310,7 +310,7 @@ export function compileScreens(
           return { wid: synthesizeId(), kind: "label", config: { text: e.text ?? "" } };
         }
         if (e.kind === "pagedots") {
-          warnings.push(`${where}: the page draws its page dots itself -- the phone shows one below the page, so a dots cell does nothing`);
+          warnings.push(`${where}: a remote display has no page dots (dropped) -- navigation is board-owned`);
           return null;
         }
         const node = e.node ? byId.get(e.node) : undefined;
@@ -406,8 +406,10 @@ export function compileScreens(
 
       const minInterval = Math.max(0, Math.round(num(screen.properties.minInterval, 200)));
       const displayName = typeof screen.properties.name === "string" && screen.properties.name ? screen.properties.name : screen.id;
+      // No "carousel" in the emitted definition (SPEC §4): page order is the board's own -- ts_remote
+      // derives its next/prev order from the pages' declaration order.
       const remoteDef = `{${pyStr("v")}: 1, ${pyStr("display")}: ${pyStr(displayName)}, ${pyStr("minIntervalMs")}: ${minInterval}, \
-${pyStr("carousel")}: [${carousel.map(pyStr).join(", ")}], ${pyStr("pages")}: [${pageDefs.join(", ")}], ${pyStr("modals")}: [${modalDefs.join(", ")}]}`;
+${pyStr("pages")}: [${pageDefs.join(", ")}], ${pyStr("modals")}: [${modalDefs.join(", ")}]}`;
       surfaces.push({
         screen: screenId,
         pagesPy: "{}", carouselPy: "[]", modalsPy: "{}",
