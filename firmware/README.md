@@ -102,7 +102,8 @@ python3 firmware/bench.py                        # every target; or name some: f
 python3 firmware/bench.py --catalogue v0.12.0    # ... and add the images to builds.json for that release, signed
 ```
 
-For each target it fetches CI's image for `HEAD`, asks for the board named in `targets/<target>/bench.json`, finds
+For each target it fetches CI's image for `HEAD`, or for the last commit that changed an image input (the workflow's
+push `paths`; the bench, its records and the catalogue are excluded), so a commit to `bench.py` needs no rebuild. It asks for the board named in `targets/<target>/bench.json`, finds
 its port, flashes it with `install.sh`, checks HELLO (runtime version, every frozen library at its hash), deploys
 `bench.json`'s flow three times over itself, and shows the note it would record with the memory figures. Answer `y`
 and it runs `record-tested.sh`. It ends with the `git` lines to commit the records. A failed check stops that target

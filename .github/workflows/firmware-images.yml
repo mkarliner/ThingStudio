@@ -10,6 +10,9 @@ name: Firmware images
 # release attaches is the one that ran on a board.
 #
 # Runs on a push to main that changes what goes into an image, and by hand ("Run workflow") on any branch.
+# The paths below are the image's inputs; the "!" lines are files under them that never reach an image (the bench,
+# its records, the catalogue). firmware/bench.py reads this same list to find the newest run whose images are
+# HEAD's, so a commit that only touches those files needs no new build.
 
 on:
   push:
@@ -19,6 +22,14 @@ on:
       - "firmware/**"
       - "tools/firmware_targets.py"
       - ".github/workflows/firmware-images.yml"
+      - "!firmware/bench.py"
+      - "!firmware/targets/*/bench.json"
+      - "!firmware/targets/*/tested.json"
+      - "!firmware/builds.json"
+      - "!firmware/builds.json.sig"
+      - "!firmware/record-tested.sh"
+      - "!firmware/publish.sh"
+      - "!firmware/**/*.md"
   workflow_dispatch: {}
 
 permissions:

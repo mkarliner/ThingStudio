@@ -5,7 +5,8 @@
 # The one hands-on step of a firmware release: test each target's CI-built image on a real board and record it.
 # Step 2 of docs/working-notes/firmware-pipeline-scoping.md (2026-11-10). For every target in firmware/targets/:
 #
-#   1. fetch the image the Firmware images workflow built from HEAD (gh run download)
+#   1. fetch the image the Firmware images workflow built from HEAD, or from the last commit that changed an image
+#      input (the workflow's push paths), so a bench-only commit needs no new build (gh run download)
 #   2. ask for the target's board (bench.json), find its serial port, flash it (install.sh)
 #   3. check HELLO: runtime version, and every frozen library present at its hash
 #   4. deploy the target's flow (bench.json) three times, each over the last, reading free memory after each
@@ -131,17 +132,50 @@ def mpy_cross_for(tag, given):
 # -- images -----------------------------------------------------------------------------------------------------
 
 
-def fetch_ci_images(ids, sha, into):
-    """The Firmware images run for this commit, one artifact per target."""
-    out = run(["gh", "run", "list", "--workflow", WORKFLOW, "--commit", sha, "--status", "success",
-               "--json", "databaseId", "--limit", "1"], capture_output=True, cwd=REPO)
+def image_inputs():
+    """The workflow's push `paths`, as git pathspecs: what goes into an image, minus its "!" exclusions.
+    Read from the workflow so the two can't drift (no YAML library: a plain list under `paths:`)."""
+    lines = (REPO / ".github" / "workflows" / WORKFLOW).read_text().splitlines()
+    start = next((i for i, line in enumerate(lines) if line.strip() == "paths:"), None)
+    if start is None:
+        raise BenchError("no push paths in .github/workflows/%s" % WORKFLOW)
+    specs = []
+    for line in lines[start + 1:]:
+        item = line.strip()
+        if not item.startswith("- "):
+            break
+        pattern = item[2:].strip().strip("\"'")
+        specs.append(":(exclude,glob)" + pattern[1:] if pattern.startswith("!") else ":(glob)" + pattern)
+    return specs
+
+
+def git_ok(*args):
+    return run(["git", "-C", str(REPO)] + list(args), capture_output=True).returncode == 0
+
+
+def image_run(head):
+    """The newest successful Firmware images run whose images are HEAD's: built from HEAD or an ancestor of it,
+    with no image input changed since. Returns (run id, the commit it built)."""
+    out = run(["gh", "run", "list", "--workflow", WORKFLOW, "--status", "success",
+               "--json", "databaseId,headSha", "--limit", "50"], capture_output=True, cwd=REPO)
     if out.returncode != 0:
         raise BenchError("gh run list failed: %s" % out.stderr.strip())
-    runs = json.loads(out.stdout or "[]")
-    if not runs:
-        raise BenchError("no successful %s run for %s -- push it and wait for the build (or check the Actions tab)"
-                         % (WORKFLOW, sha[:7]))
-    run_id = str(runs[0]["databaseId"])
+    inputs = image_inputs()
+    for r in json.loads(out.stdout or "[]"):
+        sha = r["headSha"]
+        if (sha == head or git_ok("merge-base", "--is-ancestor", sha, head)) \
+                and git_ok("diff", "--quiet", sha, head, "--", *inputs):
+            return str(r["databaseId"]), sha
+    last = run(["git", "-C", str(REPO), "log", "-1", "--format=%h", head, "--", *inputs], capture_output=True)
+    raise BenchError("no successful %s run has HEAD's image inputs (last changed in %s) -- push and wait for the "
+                     "build (or check the Actions tab)" % (WORKFLOW, last.stdout.strip() or head[:7]))
+
+
+def fetch_ci_images(ids, head, into):
+    """The Firmware images run whose images are HEAD's, one artifact per target."""
+    run_id, sha = image_run(head)
+    if sha != head:
+        say("bench: images from %s (no image input changed since; HEAD is %s)" % (sha[:7], head[:7]))
     for tid in ids:
         dest = into / tid
         dest.mkdir(parents=True, exist_ok=True)
