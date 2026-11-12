@@ -76,7 +76,9 @@ for (const dep of spec) {
   mkdirSync(dir, { recursive: true });
   for (const f of dep.files) {
     const mpy = compileToMpy(readFileSync(f.source, "utf8"));
+    // A package's board names carry its folder ("ts_ble/__init__.mpy"), so make each file's own dir.
     const path = join(dir, f.board);
+    mkdirSync(dirname(path), { recursive: true });
     writeFileSync(path, mpy);
     files[f.board] = mpy;
     written.push({ board: f.board, path, bytes: mpy.length });
