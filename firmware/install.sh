@@ -40,6 +40,16 @@ eval "$ENV"
 OUT="$HERE/out/$TARGET_ID"
 
 if [ -z "$IMG" ]; then
+    # Several images in $OUT is normal -- builds pile up while the last tested one stays flashable by
+    # name -- but which one to flash is a fact the user states, not one to guess from mtimes: the wrong
+    # image installs exactly like the right one and both answer 16.0.0 (Mike, 2026-11-12: the pre-fix
+    # build went onto the S3 this way). One image: use it. Several: refuse and name them.
+    N=$(ls "$OUT/$TARGET_BUILD_ID"-*.bin 2>/dev/null | wc -l)
+    if [ "$N" -gt 1 ]; then
+        die "several images in $OUT -- say which one to flash, e.g.:
+  PORT=$PORT $0 $TARGET $(basename "$(ls -t "$OUT/$TARGET_BUILD_ID"-*.bin | head -1)")
+in there: $(ls -t "$OUT/$TARGET_BUILD_ID"-*.bin | xargs -n1 basename | tr '\n' ' ')"
+    fi
     IMG="$(ls -t "$OUT/$TARGET_BUILD_ID"-*.bin 2>/dev/null | head -1 || true)"
     [ -n "$IMG" ] || die "no image given and none in $OUT -- run build.sh $TARGET_ID first"
 fi

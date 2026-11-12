@@ -101,3 +101,12 @@ chip. The classic-ESP32 image's own history (why freeze, chunked deploy, local b
   implementation); no image is recorded into the catalogue or offered in `builds.json` until that starts.
   **A third one would need:** another folder plus its facts; `check` and the editor's asset tests iterate
   `firmware/targets/`, which is what keeps a target a folder.
+
+- **2026-11-12 — Which image to flash is stated, never guessed from mtimes (Mike).** "If there is more than one
+  image in the board's image folder it can take the wrong one" — found when the pre-fix S3 build went onto the
+  board: `install.sh` silently took the newest `ls -t` pick, and the wrong image installs exactly like the right
+  one (both answer the same runtime version; the served page's wording was the tell). Fix: `install.sh` with no
+  image argument uses the folder's single image and **refuses when there are several**, naming them and the
+  copy-paste command for the newest. Builds still pile up in `out/` on purpose — the last tested image stays
+  flashable by name — and `publish.sh` needs no change: its own newest-pick is already verified against
+  `tested.json` before anything ships.
