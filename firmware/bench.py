@@ -85,8 +85,10 @@ def require_clean_tree():
     outputs = ("firmware/out/", "/tested.json", "firmware/builds.json")
     dirty = [line for line in out.stdout.splitlines() if not any(o in line for o in outputs)]
     if dirty:
-        raise BenchError("uncommitted changes under device-runtime/ or firmware/:\n  %s\n"
-                         "The images are built from a commit; commit and push first." % "\n  ".join(dirty))
+        # A warning, not a refusal: CI built the images from the commit, so local edits don't change what is
+        # flashed; they only mean the tree differs from what you are testing (2026-11-12, first bench run).
+        say("bench: note -- uncommitted changes under device-runtime/ or firmware/ (the images are HEAD's):\n  %s"
+            % "\n  ".join(dirty))
 
 
 def require_tools(need_gh):
@@ -99,7 +101,8 @@ def require_tools(need_gh):
     try:
         import serial  # noqa: F401
     except ImportError:
-        missing.append("pyserial (pip install pyserial)")
+        missing.append("pyserial for %s (%s -m pip install pyserial, or run with the repo's .venv first on PATH)"
+                       % (sys.executable, sys.executable))
     if missing:
         raise BenchError("missing: %s" % ", ".join(missing))
     if not COMPILE_CLI.is_file():
@@ -268,8 +271,9 @@ def deploy(port, flow, mpy_cross):
         if message.get("type") == "DEPLOY_ACK":
             acks.append(message)
     if out.returncode != 0 or not acks or acks[-1].get("ok") is False:
-        tail = (out.stderr or out.stdout).strip().splitlines()[-3:]
-        raise BenchError("deploy failed:\n  %s" % "\n  ".join(tail))
+        # The whole of device_cli's stderr: a compile error's cause is at the top of a Node trace, not the end.
+        detail = (out.stderr or "").strip() or out.stdout.strip()
+        raise BenchError("deploy failed:\n  %s" % "\n  ".join(detail.splitlines()[-40:]))
     return acks[-1]
 
 
