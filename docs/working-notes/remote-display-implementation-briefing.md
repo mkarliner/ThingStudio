@@ -1,7 +1,11 @@
 # Remote display — implementation briefing
 
-Status: handoff, 2026-11-11. The spec, security policy and user-guide updates for MVP are committed
-(`8da70d46`). This brief hands off the remaining implementation and build work.
+Status: **superseded, 2026-11-12** -- the software tasks below (1-4) are done and live-verified; the remaining
+hardware checkpoints and the structural WiFi-deploy problem are handed off by
+`remote-display-live-verification-briefing.md`.
+
+(Original handoff, 2026-11-11: the spec, security policy and user-guide updates for MVP are committed
+(`8da70d46`). This brief hands off the remaining implementation and build work.)
 
 ## What this session builds
 

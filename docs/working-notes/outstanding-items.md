@@ -226,6 +226,11 @@ ThingStudioMarketing repo, not here.
 
 ## Redeploy / runtime
 
+- **[P1]** **WiFi deploy chicken-and-egg -- a flow's WiFi config is what joins the network, so a WiFi deploy
+  of a flow that joins differently can strand the board off the net, no flow running to rejoin it, USB the
+  only way back (Mike, 2026-11-12: "a structural problem, not something that can be patched over" -- needs a
+  design answer; deploy-side guards are explicitly not it).**
+  ([detail](outstanding-items/wifi-deploy-chicken-and-egg.md))
 - **[P3]** **`machine.reset()` before each deploy, for a known-clean device state -- raised 2026-09-04, not
   scoped.** +3s deploy time, likely worth it. A full reset gets the clean-slate effect "a power cycle fixed
   it" confirmed. Not a one-liner: inserting a reset mid-handshake breaks the single-connection
