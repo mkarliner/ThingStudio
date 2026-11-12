@@ -87,7 +87,8 @@ credentials. Read the script first: it is short.
 
 A board without auto-reset wiring (the ESP32-C5-340X) needs BOOT held while you tap RESET before flashing, and
 stays in the bootloader afterwards: `install.sh` then stops after writing the image and prints the two manual
-steps (press RESET, copy `main.py` with `mpremote`, press RESET).
+steps (press RESET, copy `main.py` with `mpremote`, press RESET). On the ESP32-C5-340X, RESET doesn't always bring
+the runtime back: unplug and replug it instead. Its `bench.json` says so (`reset`), so the bench asks for that.
 
 ## At every runtime bump: rebuild every target
 
@@ -100,13 +101,20 @@ Then, with ThingStudio closed and the boards to hand:
 ```sh
 python3 firmware/bench.py                        # every target; or name some: firmware/bench.py esp32-c5
 python3 firmware/bench.py --catalogue v0.12.0    # ... and add the images to builds.json for that release, signed
+python3 firmware/bench.py --catalogue v0.12.0 --catalogue-only   # the catalogue alone, once every target is tested
 ```
+
+`--catalogue` takes each target's newest tested image at the runtime version from its `tested.json`, whichever run
+recorded it, so the targets can be benched one at a time. It refuses, before writing anything, if a target has none.
+Images it doesn't already have come from the CI run that built them (kept 90 days) and must hash to their
+`tested.json` entry. It copies each into `firmware/out/<target>/` for `publish.sh`, adds it to `builds.json` and signs.
 
 For each target it fetches CI's image for `HEAD`, or for the last commit that changed an image input (the workflow's
 push `paths`; the bench, its records and the catalogue are excluded), so a commit to `bench.py` needs no rebuild. It asks for the board named in `targets/<target>/bench.json`, finds
 its port, flashes it with `install.sh`, checks HELLO (runtime version, every frozen library at its hash), deploys
 `bench.json`'s flow three times over itself, and shows the note it would record with the memory figures. Answer `y`
-and it runs `record-tested.sh`. It ends with the `git` lines to commit the records. A failed check stops that target
+and it runs `record-tested.sh`. HELLO and the three deploys share one open of the port: a CH340 board
+(the C5-340X) answers one open per replug. It ends with the `git` lines to commit the records. A failed check stops that target
 and records nothing.
 
 Needs `gh` (logged in), `esptool`, `mpremote`, `pyserial`, `node` and `editor/dist-cli` (`cd editor && npm run

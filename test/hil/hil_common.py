@@ -67,7 +67,7 @@ class DutLink:
             return None
         return raw.decode("utf-8", "replace").rstrip("\r\n")
 
-    def wait_for_message(self, predicate, timeout_s, description):
+    def wait_for_message(self, predicate, timeout_s, description, on_console=None):
         deadline = time.time() + timeout_s
         debug_lines = []
         while time.time() < deadline:
@@ -76,6 +76,8 @@ class DutLink:
                 continue
             if not line.startswith(F64_PREFIX):
                 debug_lines.append(line)
+                if on_console is not None:
+                    on_console(line)
                 continue
             try:
                 frame = base64.b64decode(line[len(F64_PREFIX) :])
@@ -312,6 +314,51 @@ def board_inventory(dut, timeout_s=4.0, attempts=3):
         except (TimeoutError, RuntimeError):
             continue
     return None
+
+
+FLOW_PIECE = 5 * 1024  # the editor's piece size (SPEC "Chunked deploy", 12.0.0)
+PIECE_TRIES = 3        # SPEC 7.4: no answer or Garbled -> the same piece again, at most 2 more times
+
+
+def send_flow(dut, message, log=print, on_message=None, on_console=None):
+    """Sends a DEPLOY-shaped dict (deploy_message's, plus any flowName/deployId) the way the editor does: FLOW_PUT
+    pieces, each answered FLOW_ACK, then FLOW_COMMIT (SPEC "Chunked deploy", 7.4). The caller waits for the
+    commit's DEPLOY_ACK/DEPLOY_ERROR. A whole DEPLOY needs one contiguous block ~1.3x the bytecode, which a classic
+    ESP32's split heap can't find over a running GUI flow (MemoryError, 16 KB, firmware bench 2026-11-12).
+    `on_message` sees every other message that arrives while pieces are acked (a stray DEPLOY_ERROR is logged and
+    the transfer goes on, as 7.4 says)."""
+    data = message["bytecode"]
+    total = len(data)
+    for off in range(0, max(total, 1), FLOW_PIECE):
+        piece = {"type": "FLOW_PUT", "offset": off, "total": total, "data": data[off:off + FLOW_PIECE]}
+        for attempt in range(1, PIECE_TRIES + 1):
+            dut.send_message(piece)
+
+            def answer(m, off=off):
+                if m.get("type") == "FLOW_ACK" and (m.get("offset") == off or m.get("code") == "Garbled"):
+                    return True
+                if on_message is not None:
+                    on_message(m)
+                return False
+            try:
+                ack = dut.wait_for_message(answer, timeout_s=10, description="FLOW_ACK for byte %d" % off,
+                                           on_console=on_console)
+            except TimeoutError:
+                if attempt == PIECE_TRIES:
+                    raise
+                log("no FLOW_ACK for byte %d: sending it again (%d of %d)" % (off, attempt + 1, PIECE_TRIES))
+                continue
+            if ack.get("ok"):
+                break
+            if ack.get("code") == "Garbled" and attempt < PIECE_TRIES:
+                log("board could not read the piece at byte %d (%s): sending it again" % (off, ack.get("error")))
+                continue
+            raise RuntimeError("flow piece at byte %d refused: %s %s" % (off, ack.get("code"), ack.get("error")))
+    commit = {"type": "FLOW_COMMIT", "total": total}
+    for key in ("flowName", "deployId", "wifiProvision", "dependencies", "staticData"):
+        if key in message:
+            commit[key] = message[key]
+    dut.send_message(commit)
 
 
 def deploy_message(dut, tmpdir, source, bytecode, log=print, inventory=None):

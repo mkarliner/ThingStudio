@@ -65,6 +65,7 @@ BENCH_FIELDS = {
     "board": (str, "the board the image is tested on, as the release notes name it", True),
     "flow": (str, "a .flow.json under the repo that exercises the chip, deployed three times over itself", True),
     "flashing": (str, "what to do when flashing doesn't start (a board without auto-reset)", False),
+    "reset": (str, "how to reset the board when the bench asks, if not its RESET button (say, a power cycle)", False),
 }
 
 

@@ -1,4 +1,10 @@
 {
+  "d5b60ab9308f0d097ff2a968ec0017cc738b29ac3998b34bbbe6f012e549791e": {
+    "image": "thingstudio-esp32-c5-15.1.0-e8d4804.bin",
+    "board": "ESP32-C5-340X",
+    "date": "2026-11-12",
+    "tested": "bench.py: install clean; HELLO 15.1.0 with all 35 libraries frozen; ble-scan-debug-c5.flow.json deployed 3x, each over the last. Memory at boot: free 156 KB, IDF 136 KB free, largest 116 KB. After the last deploy: free 120 KB, IDF 105 KB free, largest 92 KB."
+  },
   "fa1d3111e9877bac7ea27d9bd600a782e1c577f5b4ab904309344b75595c3f4b": {
     "image": "thingstudio-esp32-c5-15.0.0-1dc99d7.bin",
     "board": "ESP32-C5-340X",

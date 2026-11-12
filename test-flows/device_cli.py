@@ -59,7 +59,7 @@ sys.path.insert(0, HIL_DIR)
 try:
     import serial
     from serial.tools import list_ports
-    from hil_common import DutLink, compile_flow, deploy_message
+    from hil_common import DutLink, compile_flow, deploy_message, send_flow
 except ImportError as e:  # pragma: no cover - environment problem, not a code path
     print("ERR: %s -- pyserial is needed (see test/hil/README.md)." % e, file=sys.stderr)
     sys.exit(2)
@@ -199,6 +199,21 @@ def hello(dut, timeout_s=8):
     dut.ser.reset_input_buffer()
     dut.send_message({"type": "HELLO_REQUEST"})
     return wait_for(dut, lambda m: m["type"] == "HELLO", timeout_s, "HELLO")
+
+
+def wait_hello(dut, timeout_s):
+    """HELLO from a board that may still be booting: a blank line, then HELLO_REQUEST, every 2 s until it
+    answers. The blank line absorbs a first line garbled by the boot log still draining
+    (learnings/hardware-bringup-hil-rig.md); the listener skips an empty line."""
+    end = time.time() + timeout_s
+    while time.time() < end:
+        dut.ser.write(b"\n")
+        dut.send_message({"type": "HELLO_REQUEST"})
+        try:
+            return wait_for(dut, lambda m: m["type"] == "HELLO", min(2.0, max(end - time.time(), 0.1)), "HELLO")
+        except CliError:
+            continue
+    raise CliError("timed out after %ss waiting for HELLO" % timeout_s)
 
 
 def infer_arch(chip_type):
@@ -450,7 +465,8 @@ def cmd_flow_deploy(args):
         # board already holds (a frozen image holds everything its flows need).
         inventory = None
         try:
-            info = hello(dut, 3)
+            info = wait_hello(dut, args.hello_wait) if args.hello_wait else hello(dut, 3)
+            emit("message", args.json, message=info)
             inventory = info.get("dependencies") or {}
             chip = info.get("chipType") or ""
             arch, confirmed = infer_arch(chip)
@@ -463,6 +479,9 @@ def cmd_flow_deploy(args):
                 emit("status", args.json,
                      text="note: unrecognised chip, using mpy-cross -march=%s (only matters for viper)" % arch)
         except CliError:
+            if args.hello_wait:
+                die("no HELLO from %s within %gs. Reset the board (some need unplugging), check the runtime "
+                    "is installed, and try again." % (port, args.hello_wait))
             arch = "xtensawin"
             emit("status", args.json,
                  text="no HELLO: continuing anyway; using -march=%s (reset the board for a HELLO, "
@@ -475,30 +494,52 @@ def cmd_flow_deploy(args):
         with tempfile.TemporaryDirectory() as tmpdir:
             try:
                 bytecode = compile_flow(mpy_cross, tmpdir, "flow", source, arch)
-                message = deploy_message(
-                    dut, tmpdir, source, bytecode,
-                    log=lambda text: emit("status", args.json, text=text),
-                    inventory=inventory,
-                )
             except subprocess.CalledProcessError as e:
                 detail = (e.stderr or b"").decode("utf-8", "replace").strip()
                 die("mpy-cross failed%s" % (":\n%s" % detail if detail else " (%s)" % e))
             except OSError as e:
                 die("cannot run mpy-cross %s: %s" % (mpy_cross, e))
-            if flow_name:
-                message["flowName"] = flow_name
-            emit("status", args.json, text="deploying %d bytes (%s)" % (
-                len(bytecode), "flow %r" % flow_name if flow_name else "unnamed"))
-            dut.send_message(message)
-            ack = wait_for(
-                dut, lambda m: m["type"] == "DEPLOY_ACK", 20, "DEPLOY_ACK",
-                on_console=lambda line: handle_line(line, dut, args.json),
-            )
-
-        if ack.get("ok") is False:
-            emit("message", args.json, message=ack)
-            die("DEPLOY failed: %s" % (ack.get("error") or ack.get("code") or "unknown"))
-        emit("message", args.json, message=ack)
+            # --repeat deploys over the running flow in this same open: a CH340 board allows one open per
+            # replug (learnings/hardware-bringup-hil-rig.md), so firmware/bench.py does its whole session here.
+            for n in range(1, args.repeat + 1):
+                # Separate from the compile: TimeoutError is an OSError, so a board that stops acking a DEP_PUT
+                # was once reported as "cannot run mpy-cross" (2026-11-12, esp32-c5 bench).
+                try:
+                    message = deploy_message(
+                        dut, tmpdir, source, bytecode,
+                        log=lambda text: emit("status", args.json, text=text),
+                        inventory=inventory,
+                    )
+                except TimeoutError as e:
+                    die("installing the flow's libraries on %s: %s" % (port, e))
+                if inventory is not None:
+                    inventory.update(message["dependencies"])  # what this deploy installed is now on the board
+                if flow_name:
+                    message["flowName"] = flow_name
+                emit("status", args.json, text="deploying %d bytes (%s)%s" % (
+                    len(bytecode), "flow %r" % flow_name if flow_name else "unnamed",
+                    ", %d of %d" % (n, args.repeat) if args.repeat > 1 else ""))
+                # Pieces and a commit, as the editor sends them (hil_common.send_flow); other replies are shown.
+                show = lambda m: emit("message", args.json, message=m)  # noqa: E731
+                try:
+                    send_flow(dut, message, log=lambda text: emit("status", args.json, text=text), on_message=show,
+                              on_console=lambda line: handle_line(line, dut, args.json))
+                except (TimeoutError, RuntimeError) as e:
+                    die("sending the flow to %s: %s" % (port, e))
+                ack = wait_for(  # SPEC 7.4: the commit's answer, up to 30 s
+                    dut, lambda m: m["type"] in ("DEPLOY_ACK", "DEPLOY_ERROR") or bool(show(m)),
+                    30, "DEPLOY_ACK",
+                    on_console=lambda line: handle_line(line, dut, args.json),
+                )
+                emit("message", args.json, message=ack)
+                if ack["type"] == "DEPLOY_ERROR" or ack.get("ok") is False:
+                    die("deploy %d of %d refused: %s %s" % (n, args.repeat, ack.get("code") or "",
+                                                            ack.get("message") or ack.get("error") or ""))
+                if n < args.repeat:
+                    # The flow runs for --timeout before the next deploy, as it did when each deploy was its own
+                    # run. Sent straight after the ack, the next deploy met a GUI flow still starting up and got
+                    # no DEPLOY_ACK (classic ESP32, 2026-11-12).
+                    drain(dut, args.timeout, args.json)
 
         pending = list(args.trigger)
         next_trigger_at = time.time() + 1.5
@@ -597,6 +638,11 @@ def main(argv=None):
     p.add_argument("--watch", action="store_true", help="keep watching after --timeout instead of exiting")
     p.add_argument("--mpy-cross", help="native mpy-cross binary (or THINGSTUDIO_MPY_CROSS, or on PATH)")
     p.add_argument("--arch", help="mpy-cross -march override (default: inferred from the board's HELLO)")
+    p.add_argument("--hello-wait", type=float, default=0, metavar="SECONDS",
+                   help="keep asking for HELLO this long (a board still booting) and stop if none comes "
+                        "(default: ask once, deploy anyway)")
+    p.add_argument("--repeat", type=int, default=1, metavar="N",
+                   help="deploy N times, each over the last, in one port open (default 1)")
     p.set_defaults(func=cmd_flow_deploy)
 
     args = parser.parse_args(argv)

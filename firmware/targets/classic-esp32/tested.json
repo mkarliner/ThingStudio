@@ -1,4 +1,10 @@
 {
+  "047bd3e7ee725fad5cb6a9db97100f3d71c4938021ea83c233e3094def3c1f74": {
+    "image": "thingstudio-classic-esp32-15.1.0-e8d4804.bin",
+    "board": "CYD (ESP32-2432S028)",
+    "date": "2026-11-12",
+    "tested": "bench.py: install clean; HELLO 15.1.0 with all 35 libraries frozen; gui-hero-cyd-theme.flow.json deployed 3x, each over the last. Memory at boot: free 140 KB, IDF 128 KB free, largest 108 KB. After the last deploy: free 111 KB, IDF 17 KB free, largest 14 KB."
+  },
   "19ba3e42e324947ba628c74275b61f298b50b18e20469e9ce792b11a83ca67dc": {
     "image": "thingstudio-classic-esp32-14.0.0-eab1175.bin",
     "board": "CYD (ESP32-2432S028)",

@@ -115,9 +115,10 @@ wait_port || die "port $PORT did not come back after reset -- unplug and replug 
 # here, so after flashing it is still in the ROM bootloader and mpremote finds no REPL. The image is written by
 # then; say so, and give the two manual steps, instead of mpremote's traceback.
 if ! mpremote connect "$PORT" fs cp "$OUT/main.py" :/main.py >/dev/null 2>&1; then
-    die "image written, but the board is still in its bootloader (no auto-reset). Press RESET (not BOOT), then:
+    die "image written, but the board is still in its bootloader (no auto-reset). Press RESET (not BOOT; if that
+doesn't do it, unplug and replug), then:
   mpremote connect $PORT fs cp $OUT/main.py :/main.py
-and press RESET again."
+and reset it again."
 fi
 
 echo "install: done -- reset the board if it is still sitting in the REPL; it boots into the listener"

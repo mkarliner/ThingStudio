@@ -265,6 +265,21 @@ committed -- if this VM stays in the loop, `install.sh` should grow the same sin
   BLE checked at the REPL on it the same day: `bluetooth.BLE().active(True)`, `config('mac')` -> `(0, <6 bytes>)`
   (public address), a 5 s `gap_scan` at 30 ms interval/window saw 12 devices (-31 to -50 dBm). The raw
   `bluetooth` module works on the C5's generic 1.29.0 build.
+- **ESP32-C5-340X: RESET isn't always enough, a power cycle is (2026-11-12).** On the firmware bench, after
+  flashing, Mike: "this board needs a power cycle to reset properly." `bench.json` now carries a `reset` step for
+  it (`tools/firmware_targets.py`, BENCH_FIELDS), the bench prompts with it, and `install.sh`/`boards.md` mention
+  unplug-and-replug. Even after a replug, though, the board answered a HELLO from one `device_cli` process and
+  nothing to the next (no HELLO, no DEP_ACK): the CH340 one-open-per-replug budget above, on macOS too. The bench
+  had opened the port once per HELLO attempt and once per deploy. Now `flow deploy --hello-wait 30 --repeat 3`
+  does HELLO and all three deploys in one open, and the bench makes that one call per board.
+- **The host tools deployed a whole `DEPLOY` long after the editor stopped (found 2026-11-12).** On the classic
+  ESP32 bench, the second `gui-hero-cyd-theme` deploy over the running flow failed: `MemoryError` allocating
+  16,098 bytes with 61 KB free -- the split heap the protocol's "Chunked deploy" section describes, the reason the
+  editor has sent 5 KB `FLOW_PUT` pieces since 12.0.0. `device_cli.py`, `deploy_flow.py` and both HIL drivers
+  still sent the one-message `DEPLOY`, so they were testing a path no user takes. Now `hil_common.send_flow` sends
+  pieces + `FLOW_COMMIT` per SPEC 7.4 (resend a piece on no answer or `Garbled`, at most twice), and every host
+  deploy goes through it. Lesson: a host tool that talks the protocol follows the editor's sequence, not a
+  simpler one the spec keeps only for compatibility.
 - **BLE phase 1 on the ESP32-C5-340X (2026-11-03): `ble scan` works on hardware.** Active scan, defaults, into
   debug: phones (random addresses), Apple (mfr 76), Google Fast Pair (`fe9f`), `fcf1` service data, -37 to -82 dBm.
   Every connectable advertisement was followed ~17 ms later by an empty scan response (adv_type 4) from the same

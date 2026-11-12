@@ -29,7 +29,7 @@ import time
 
 _THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(_THIS_DIR, "..", "test", "hil"))
-from hil_common import DutLink, compile_flow, deploy_message  # noqa: E402
+from hil_common import DutLink, compile_flow, deploy_message, send_flow  # noqa: E402
 
 
 def main():
@@ -73,7 +73,7 @@ def main():
             except TimeoutError:
                 print("No fresh HELLO seen in 8s -- continuing anyway (the DUT may already be running from a prior boot); DEPLOY still works without one, per main.ts's own soft-on-absence gate. Asking the board what it holds before sending any library.")
 
-            print("Sending DEPLOY (%d bytes bytecode)..." % len(bytecode))
+            print("Sending the flow (%d bytes bytecode)..." % len(bytecode))
             message = deploy_message(dut, tmpdir, source, bytecode, inventory=inventory)
             if args.flow_name:
                 message["flowName"] = args.flow_name
@@ -82,8 +82,8 @@ def main():
                     "WARN: no --flow-name given. The board will store this flow's runtime.settings under an empty "
                     "name, so values written by an editor deploy (which sends the flow name) will not be visible here."
                 )
-            dut.send_message(message)
-            dut.wait_for_message(lambda m: m["type"] == "DEPLOY_ACK", timeout_s=8, description="DEPLOY_ACK")
+            send_flow(dut, message)
+            dut.wait_for_message(lambda m: m["type"] == "DEPLOY_ACK", timeout_s=30, description="DEPLOY_ACK")
             print("DEPLOY_ACK received. Flow is running. Watching for NODE_ERROR / console output -- Ctrl-C to stop.")
 
             # Short read timeout so scheduled TRIGGERs go out promptly even when the console is quiet.

@@ -28,6 +28,7 @@
 # failed. The only retries are the ones you choose at a prompt (a board that needed BOOT held, say).
 
 import argparse
+import hashlib
 import json
 import os
 import shutil
@@ -230,6 +231,11 @@ def find_port(target, bench):
         raise BenchError("no such port: %r" % choice)
 
 
+def reset_step(bench):
+    """bench.json's "reset", for a board whose RESET button doesn't bring the runtime back (the ESP32-C5-340X)."""
+    return bench.get("reset") or "Press RESET on the board"
+
+
 def flash(target, bench, image, port):
     env = dict(os.environ, PORT=port)
     while True:
@@ -238,13 +244,13 @@ def flash(target, bench, image, port):
             return
         if bench.get("flashing"):
             say("bench: %s" % bench["flashing"])
-        choice = ask("[r]etry the install, [m]ain.py only (image is written; press RESET first), [s]kip %s? "
+        choice = ask("[r]etry the install, [m]ain.py only (image is written; reset it first), [s]kip %s? "
                      % target.id).strip().lower()
         if choice == "m":
             main_py = image.parent / "main.py"
             if run(["mpremote", "connect", port, "fs", "cp", str(main_py), ":/main.py"]).returncode != 0:
                 raise BenchError("could not write /main.py over %s" % port)
-            ask("Press RESET on the board, then Enter ")
+            ask("%s, then Enter " % reset_step(bench))
             return
         if choice != "r":
             raise BenchError("skipped after a failed install")
@@ -256,20 +262,6 @@ def cli(args, mpy_cross=None, timeout=60):
     if mpy_cross:
         env["THINGSTUDIO_MPY_CROSS"] = mpy_cross
     return run(cmd, capture_output=True, env=env, timeout=timeout)
-
-
-def hello(port):
-    """The board boots, waits out its Ctrl-C window, then answers. 30 s covers every board we hold."""
-    deadline = time.time() + 30
-    last = ""
-    while time.time() < deadline:
-        out = cli(["hello", "--port", port, "--json", "--timeout", "5"], timeout=30)
-        if out.returncode == 0 and out.stdout.strip():
-            return json.loads(out.stdout.strip().splitlines()[-1])
-        last = (out.stderr or out.stdout).strip().splitlines()[-1:] or [""]
-        last = last[0]
-        time.sleep(2)
-    raise BenchError("no HELLO within 30 s (%s)" % last)
 
 
 def memory(message):
@@ -292,23 +284,43 @@ def check_hello(info, version, frozen):
     return len(frozen)
 
 
-def deploy(port, flow, mpy_cross):
-    out = cli(["flow", "deploy", str(REPO / flow), "--port", port, "--json", "--timeout", "4"],
-              mpy_cross=mpy_cross, timeout=120)
-    acks = []
+class NoHello(BenchError):
+    pass
+
+
+def session(port, flow, mpy_cross):
+    """HELLO, then the flow deployed DEPLOYS times over itself, all in ONE open of the port: a CH340 board (the
+    ESP32-C5-340X) answers one open per replug and nothing on the next (learnings/hardware-bringup-hil-rig.md),
+    so a HELLO in one process and a deploy in another failed (2026-11-12). Returns (HELLO, [DEPLOY_ACK]).
+    30 s covers every board we hold booting and waiting out its Ctrl-C window."""
+    out = cli(["flow", "deploy", str(REPO / flow), "--port", port, "--json", "--timeout", "4",
+               "--hello-wait", "30", "--repeat", str(DEPLOYS)], mpy_cross=mpy_cross, timeout=60 + 60 * DEPLOYS)
+    info, acks, steps = None, [], []
     for line in out.stdout.splitlines():
         try:
             record = json.loads(line)
         except ValueError:
             continue
+        if record.get("kind") == "status" and record.get("text"):
+            steps.append(record["text"])
+        elif record.get("kind") == "console" and record.get("text"):
+            steps.append("[board] " + record["text"])
         message = record.get("message") or {}
+        if message and message.get("type") not in ("HELLO", "DEPLOY_ACK"):
+            steps.append("[board] %s" % json.dumps(message, sort_keys=True))
+        if message.get("type") == "HELLO" and info is None:
+            info = message
         if message.get("type") == "DEPLOY_ACK":
             acks.append(message)
-    if out.returncode != 0 or not acks or acks[-1].get("ok") is False:
-        # The whole of device_cli's stderr: a compile error's cause is at the top of a Node trace, not the end.
-        detail = (out.stderr or "").strip() or out.stdout.strip()
-        raise BenchError("deploy failed:\n  %s" % "\n  ".join(detail.splitlines()[-40:]))
-    return acks[-1]
+    if info is None:
+        raise NoHello(((out.stderr or "").strip().splitlines() or ["no HELLO"])[-1])
+    if out.returncode != 0 or len(acks) != DEPLOYS or acks[-1].get("ok") is False:
+        # device_cli's own steps first (which libraries did it send?), then the whole of its stderr: a compile
+        # error's cause is at the top of a Node trace, not the end.
+        detail = "\n".join(steps + [(out.stderr or "").strip() or out.stdout.strip()])
+        raise BenchError("deploy failed after %d of %d:\n  %s"
+                         % (len(acks), DEPLOYS, "\n  ".join(detail.splitlines()[-40:])))
+    return info, acks
 
 
 def bench_target(target, folder, args):
@@ -322,20 +334,21 @@ def bench_target(target, folder, args):
     say("bench: %s on %s" % (image.name, port))
     flash(target, bench, image, port)
 
+    say("bench: asking for HELLO (up to 30 s), then deploying %s %d times" % (bench["flow"], DEPLOYS))
     while True:
         try:
-            info = hello(port)
+            info, acks = session(port, bench["flow"], mpy_cross)
             break
-        except BenchError as e:
+        except NoHello as e:
             say("bench: %s" % e)
-            if ask("Press RESET on the board, then Enter to ask again (s to skip %s) " % target.id).strip() == "s":
+            if ask("%s, then Enter to ask again (s to skip %s) " % (reset_step(bench), target.id)).strip() == "s":
                 raise
+    # Checked after the deploys (they ran in the same open), but before anything is recorded.
     count = check_hello(info, version, frozen)
     say("bench: HELLO %s, %d libraries frozen; %s" % (version, count, memory(info)))
 
     figures = [memory(info)]
-    for n in range(1, DEPLOYS + 1):
-        ack = deploy(port, bench["flow"], mpy_cross)
+    for n, ack in enumerate(acks, 1):
         say("bench: deploy %d/%d ok; %s" % (n, DEPLOYS, memory(ack)))
         figures.append(memory(ack))
 
@@ -351,7 +364,80 @@ def bench_target(target, folder, args):
     return image
 
 
-def catalogue(images, release):
+def sha256_of(path):
+    digest = hashlib.sha256()
+    with open(path, "rb") as f:
+        for block in iter(lambda: f.read(1 << 20), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
+def tested_image(target, version):
+    """The target's newest tested.json entry at `version`, as (sha256, entry). Whichever run recorded it."""
+    at = [(h, e) for h, e in target.tested().items()
+          if (firmware_targets.parse_image_name(e.get("image", "")) or (None, None))[1] == version]
+    if not at:
+        raise BenchError("%s has no tested image at %s -- bench it first: python3 firmware/bench.py %s"
+                         % (target.id, version, target.id))
+    newest = max(e.get("date", "") for _, e in at)
+    latest = [(h, e) for h, e in at if e.get("date", "") == newest]
+    if len(latest) > 1:
+        raise BenchError("%s has %d images tested at %s on %s (%s): remove the one not to ship from %s"
+                         % (target.id, len(latest), version, newest, ", ".join(e["image"] for _, e in latest),
+                            target.tested_path.relative_to(REPO)))
+    return latest[0]
+
+
+def ci_image(target, image_name, into):
+    """Downloads `image_name` from the Firmware images run that built it (artifacts are kept 90 days)."""
+    sha7 = firmware_targets.parse_image_name(image_name)[2]
+    full = run(["git", "-C", str(REPO), "rev-parse", "--verify", "--quiet", sha7 + "^{commit}"], capture_output=True)
+    if full.returncode != 0:
+        raise BenchError("%s: commit %s is not in this checkout (git fetch?)" % (image_name, sha7))
+    sha = full.stdout.strip()
+    out = run(["gh", "run", "list", "--workflow", WORKFLOW, "--commit", sha, "--status", "success",
+               "--json", "databaseId", "--limit", "1"], capture_output=True, cwd=REPO)
+    runs = json.loads(out.stdout or "[]") if out.returncode == 0 else []
+    if not runs:
+        raise BenchError("%s: no successful %s run for %s (gh: %s) -- put the image in firmware/out/%s/ yourself"
+                         % (image_name, WORKFLOW, sha7, out.stderr.strip() or "none listed", target.id))
+    into.mkdir(parents=True, exist_ok=True)
+    name = "firmware-%s-%s" % (target.id, sha)
+    if run(["gh", "run", "download", str(runs[0]["databaseId"]), "--name", name, "--dir", str(into)],
+           cwd=REPO).returncode != 0:
+        raise BenchError("could not download %s (a run's artifacts are kept 90 days)" % name)
+    return into / image_name
+
+
+def catalogue_images(images_dir):
+    """Every target's tested image at the runtime version, copied into firmware/out/<target>/ (where publish.sh
+    takes the newest image from) with its .sha256 and main.py. Refuses before writing anything if one is missing."""
+    version = firmware_targets.runtime_version()
+    found = []
+    for target in firmware_targets.targets():
+        digest, entry = tested_image(target, version)
+        image = images_dir / target.id / entry["image"] if images_dir else None
+        if image is None or not image.is_file():
+            image = ci_image(target, entry["image"], Path(tempfile.mkdtemp(prefix="thingstudio-catalogue-")) / target.id)
+        if not image.is_file() or sha256_of(image) != digest:
+            raise BenchError("%s does not hash to its tested.json entry (%s...)" % (image, digest[:12]))
+        found.append((target, image, entry))
+    images = []
+    for target, image, entry in found:
+        out = REPO / "firmware" / "out" / target.id
+        out.mkdir(parents=True, exist_ok=True)
+        for src in (image, image.with_name(image.name + ".sha256"), image.parent / "main.py",
+                    image.parent / "_deps.json"):
+            if src.is_file() and src.resolve() != (out / src.name).resolve():
+                shutil.copy2(src, out / src.name)
+        (out / image.name).touch()  # the newest in out/, so publish.sh takes this one
+        say("bench: catalogue %s <- %s (tested %s on %s)" % (target.id, image.name, entry["date"], entry["board"]))
+        images.append(out / image.name)
+    return images
+
+
+def catalogue(release, images_dir):
+    images = catalogue_images(images_dir)
     repo = run(["gh", "repo", "view", "--json", "nameWithOwner", "-q", ".nameWithOwner"], capture_output=True,
                cwd=REPO).stdout.strip()
     if not repo:
@@ -373,7 +459,10 @@ def main(argv=None):
                         help="a folder with <target>/ subfolders of images you built yourself, instead of CI's")
     parser.add_argument("--mpy-cross", help="native mpy-cross (default: THINGSTUDIO_MPY_CROSS, else built once)")
     parser.add_argument("--catalogue", metavar="vX.Y.Z",
-                        help="afterwards, add the recorded images to builds.json for this release, and sign it")
+                        help="afterwards, add every target's tested image at the runtime version to builds.json "
+                             "for this release (whichever run recorded it), and sign it")
+    parser.add_argument("--catalogue-only", action="store_true",
+                        help="with --catalogue: no bench, just the catalogue from the images already tested")
     args = parser.parse_args(argv)
     args.mpy_cross = args.mpy_cross or os.environ.get("THINGSTUDIO_MPY_CROSS")
 
@@ -383,6 +472,17 @@ def main(argv=None):
         unknown = [t for t in ids if t not in all_targets]
         if unknown:
             raise BenchError("no target %s (known: %s)" % (", ".join(unknown), ", ".join(all_targets)))
+        if args.catalogue_only:
+            if not args.catalogue:
+                raise BenchError("--catalogue-only needs --catalogue vX.Y.Z")
+            if args.targets:
+                raise BenchError("--catalogue-only takes no targets: the catalogue covers every target")
+            if not shutil.which("gh"):
+                raise BenchError("missing: gh")
+            catalogue(args.catalogue, args.images_from)
+            say("\nCommit in your own Terminal:\n  rm -f .git/index.lock\n  git add firmware/builds.json "
+                "firmware/builds.json.sig\n  git commit -m \"firmware: catalogue %s\"\n  git push" % args.catalogue)
+            return 0
         require_tools(need_gh=args.images_from is None or bool(args.catalogue))
         if args.images_from is None:
             require_clean_tree()
@@ -411,15 +511,15 @@ def main(argv=None):
         say("recorded  %s" % image.name)
     for tid in failed:
         say("NOT done  %s" % tid)
-    if recorded and args.catalogue and not failed:
+    if args.catalogue and not failed:
         try:
-            catalogue(recorded, args.catalogue)
+            catalogue(args.catalogue, images_dir)
         except BenchError as e:
             say("bench: %s" % e)
             return 1
     elif args.catalogue and failed:
         say("bench: catalogue left alone -- every target needs a tested image first")
-    if recorded:
+    if recorded or (args.catalogue and not failed):
         files = "firmware/targets/*/tested.json" + (" firmware/builds.json firmware/builds.json.sig"
                                                      if args.catalogue and not failed else "")
         say("\nCommit in your own Terminal:\n  rm -f .git/index.lock\n  git add %s\n"
