@@ -100,8 +100,8 @@ Then, with ThingStudio closed and the boards to hand:
 
 ```sh
 python3 firmware/bench.py                        # every target; or name some: firmware/bench.py esp32-c5
-python3 firmware/bench.py --catalogue v0.12.0    # ... and add the images to builds.json for that release, signed
-python3 firmware/bench.py --catalogue v0.12.0 --catalogue-only   # the catalogue alone, once every target is tested
+python3 firmware/bench.py --catalogue vX.Y.Z    # ... and add the images to builds.json for that release, signed
+python3 firmware/bench.py --catalogue vX.Y.Z --catalogue-only   # the catalogue alone, once every target is tested
 ```
 
 `--catalogue` takes each target's newest tested image at the runtime version from its `tested.json`, whichever run

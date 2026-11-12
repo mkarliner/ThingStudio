@@ -17,7 +17,7 @@
 # Usage, from the repo root, with ThingStudio closed (it holds the serial port):
 #   python3 firmware/bench.py                         # every target
 #   python3 firmware/bench.py esp32-c5                # just one
-#   python3 firmware/bench.py --catalogue v0.12.0     # ... then the catalogue entries and signature
+#   python3 firmware/bench.py --catalogue vX.Y.Z     # ... then the catalogue entries and signature
 #   python3 firmware/bench.py --images-from firmware/out   # images you built yourself (build.sh), not CI's
 #
 # Needs: gh (logged in), esptool and mpremote (install.sh), pyserial, node, and editor/dist-cli built
