@@ -62,8 +62,8 @@ async def _ws_connect(port, path, token=None, upgrade=True, extra=b""):
     req = "GET " + path + " HTTP/1.1\r\nHost: h\r\n" if not upgrade else (
         "GET " + path + " HTTP/1.1\r\nHost: h\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n"
         "Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nSec-WebSocket-Version: 13\r\n")
-    if token is not None:
-        req += "?t=" + token
+    if token is not None:  # the subprotocol the remote display's login token rides (SPEC §8)
+        req += "Sec-WebSocket-Protocol: ts-rd-v1-" + token + "\r\n"
     writer.write((req + "\r\n").encode())
     writer.write(extra)
     await writer.drain()
@@ -225,6 +225,31 @@ def test_non_upgrade_request_fails():
     asyncio.run(main())
 
 
+def test_pre_check_sees_the_subprotocol_header():
+    """The ws route's auth token travels as the handshake's Sec-WebSocket-Protocol (a browser's
+    WebSocket API cannot set custom headers), so the pre-check must see it in the parsed headers,
+    not in the query (interfaces/remote-display/SPEC.md §8)."""
+    async def main():
+        srv = _make_server()
+        seen = []
+
+        def gate(query, headers):
+            seen.append((query, headers.get("sec-websocket-protocol", "")))
+            return headers.get("sec-websocket-protocol", "").startswith("ts-rd-v1-")
+
+        srv.mount({"id": "e", "method": "GET", "path": "/ws/proto"}, ws=_echo_handler([]), pre=gate)
+        await srv.ensure()
+        reader, writer, status, _h = await _ws_connect(srv.port, "/ws/proto", token="abc")
+        assert status == "HTTP/1.1 101 Switching Protocols", status
+        reader2, writer2, status2, _h2 = await _ws_connect(srv.port, "/ws/proto")
+        assert status2 == "HTTP/1.1 401 Unauthorized", status2  # no header -> refused before the upgrade
+        assert seen == [("", "ts-rd-v1-abc"), ("", "")], seen
+        writer.close()
+        writer2.close()
+        await srv.stop()
+    asyncio.run(main())
+
+
 def test_queue_and_static_routes_alongside():
     async def main():
         srv = _make_server()
@@ -338,7 +363,8 @@ def test_exact_one_owner_mount_is_refused():
 
 minitest.run([test_handshake_accept_and_echo, test_fragmentation_refused_cleanly,
               test_frame_cap_closes_with_1009, test_pre_check_gates_upgrade_with_401,
-              test_non_upgrade_request_fails, test_queue_and_static_routes_alongside,
+              test_pre_check_sees_the_subprotocol_header, test_non_upgrade_request_fails,
+              test_queue_and_static_routes_alongside,
               test_connection_is_closed_after_the_answer,
               test_the_next_flow_can_bind_the_port_the_cleanup_released,
               test_exact_one_owner_mount_is_refused])

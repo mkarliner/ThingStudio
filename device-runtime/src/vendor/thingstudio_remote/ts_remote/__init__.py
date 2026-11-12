@@ -17,8 +17,11 @@
 #     GET  /ts/remote/          the page (stored gzipped, served as its own bytes, never decompressed board-side)
 #     GET  /ts/remote/login     a TSAUTH1 challenge over plain HTTP, the wire protocol's own line
 #     POST /ts/remote/login     the page's answer, body "TSAUTH1 <hex>"; success returns {v, display, token}
-#     GET  /ts/remote/ws?t=...  the WebSocket, gated by that token; one viewer; a second takes over, told
-#                               why (a takeover notice, then close code 4000)
+#     GET  /ts/remote/ws        the WebSocket, the login token offered as the handshake's subprotocol
+#                               (Sec-WebSocket-Protocol: ts-rd-v1-<token>; a browser's WebSocket API
+#                               cannot set custom headers) -- wrong, missing or malformed refuses the
+#                               upgrade with 401; one viewer, a second takes over, told why (a
+#                               takeover notice, then close code 4000)
 #     (the flow mounts anything else it wants on the same port via ts_http_server.Server.mount -- the other
 #     route the spike brief asks to show alongside.)
 #
@@ -60,6 +63,7 @@ import ts_http_server
 import thingstudio_gui
 
 PREFIX = "/ts/remote/"
+WS_PROTOCOL = "ts-rd-v1"    # the login token rides the WebSocket handshake subprotocol: "ts-rd-v1-<token>"
 PROTOCOL_V = 1
 _DEF_PART_CHARS = 240    # one definition piece (a BLE-sized MTU is the eventual floor; SPEC principle P2)
 _PING_MS = 1000
@@ -339,12 +343,18 @@ class Remote:
             {"v": PROTOCOL_V, "display": self.display, "token": self._logged["token"]}).encode()
 
     def _token_ok(self, query, headers):
-        """The ws route's pre-check: the newest login's token, in the query ('t=...', with or without
-        the leading '?'). One socket per login."""
+        """The ws route's pre-check: the newest login's token, offered as the WebSocket handshake
+        subprotocol `Sec-WebSocket-Protocol: ts-rd-v1-<token>` -- a browser's WebSocket API cannot set
+        custom headers, and a query string would travel through logs and proxies. A client may offer
+        several subprotocols comma-separated; ours is accepted wherever it appears. Wrong, missing
+        or malformed token refuses the upgrade with 401 before any WebSocket state exists.
+        One socket per login."""
         if self._logged is None:
             return False
-        for part in query.lstrip("?").split("&"):
-            if part.startswith("t=") and _constant_eq(part[2:], self._logged["token"]):
+        want = WS_PROTOCOL + "-"
+        for offer in headers.get("sec-websocket-protocol", "").split(","):
+            offer = offer.strip()
+            if offer.startswith(want) and _constant_eq(offer[len(want):], self._logged["token"]):
                 return True
         return False
 

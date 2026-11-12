@@ -275,7 +275,9 @@ function send(obj) {
 function connect() {
   if (reconnect) { clearTimeout(reconnect); reconnect = null; }
   var proto = location.protocol === "https:" ? "wss:" : "ws:";
-  try { socket = new WebSocket(proto + "//" + location.host + "/ts/remote/ws?t=" + encodeURIComponent(token)); }
+  // the token rides the handshake's subprotocol: a browser's WebSocket API cannot set custom headers
+  // (interfaces/remote-display/SPEC.md §8)
+  try { socket = new WebSocket(proto + "//" + location.host + "/ts/remote/ws", "ts-rd-v1-" + token); }
   catch (e) { showLogin("cannot open a socket here"); return; }
   socket.onopen = function () {
     counter = 0; def = null; defAcc = ""; defN = 0; screenPend = null; valuesPend = [];

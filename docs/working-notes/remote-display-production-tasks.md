@@ -22,7 +22,7 @@ all blockers pass.
 
 ## Block release (must all be complete)
 
-1. **Token delivery move**
+1. **Token delivery move — done 2026-11-12**
    - Board: `ts_remote/__init__.py` reads the token from `Sec-WebSocket-Protocol: ts-rd-v1-<token>` instead of
      the URL query; wrong/missing/malformed token fails the upgrade with `401` before any WebSocket state is
      established.
@@ -49,10 +49,11 @@ all blockers pass.
    - Update `device-runtime/test/test_remote_display.py` and page tests.
    - **Parallel with:** token delivery move.
 
-5. **Runtime/editor version bump**
+5. **Runtime/editor version bump — done 2026-11-12, 16.0.0**
    - If the wire shape above is incompatible with old clients, bump `_RUNTIME_VERSION` and
      `EDITOR_TARGET_VERSION` together in the same commit that lands the implementation.
-   - The token move is an incompatible change; plan on a major bump.
+   - The token move is an incompatible change; done as major (16.0.0) with the token move. Items 2-4 land on
+     the same unreleased 16.0.0 while the branch is pre-release; if any lands after a release, bump again.
 
 6. **Custom S3 image recorded and tested**
    - Build `firmware/targets/esp32-s3` with runtime 15.1.0+ and remote libraries frozen.

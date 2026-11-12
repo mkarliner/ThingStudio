@@ -168,13 +168,22 @@ def test_login_requires_password_and_right_answer():
 
 def test_token_gate():
     async def main():
-        import os
         remote, g, srv, des = _setup()
+        proto = "sec-websocket-protocol"
+        offer = ts_remote.WS_PROTOCOL + "-"
+        # no login yet: fail closed whatever the header says
+        assert remote._token_ok("", {proto: offer + "f" * 64}) is False
         _c, _n, _nonce = await _login(remote)
         token = remote._logged["token"]
-        assert remote._token_ok("?t=" + token, {}) is True
-        assert remote._token_ok("?t=" + "0" * len(token), {}) is False
+        assert remote._token_ok("", {proto: offer + token}) is True
+        # a client may offer several subprotocols comma-separated; ours is accepted wherever it sits
+        assert remote._token_ok("", {proto: "chat-v2, " + offer + token + " ,x"}) is True
+        # wrong token, no header, no prefix, empty or trailing token: all refused with 401
+        assert remote._token_ok("", {proto: offer + "0" * len(token)}) is False
         assert remote._token_ok("", {}) is False
+        assert remote._token_ok("", {proto: token}) is False
+        assert remote._token_ok("", {proto: offer}) is False
+        assert remote._token_ok("", {proto: offer + token + "x"}) is False
     import asyncio
     asyncio.run(main())
 
