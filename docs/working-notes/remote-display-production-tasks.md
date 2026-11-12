@@ -112,6 +112,11 @@ all blockers pass.
 
 ## Verification commands
 
+`<micropython>` on this machine (built 2026-11-12 from the same tree as the existing `mpy-cross`, so
+bytecode versions match): `~/micropython-1.29.0/ports/unix/build-standard/micropython`. A build recipe for a
+new machine: `device-runtime/test/README.md`. Custom firmware: `MICROPY_DIR=~/micropython-1.29.0
+firmware/build.sh <target>` (esp-idf at `~/esp/esp-idf-5.5.2`).
+
 Before any commit that touches `device-runtime/src`:
 
 ```sh
