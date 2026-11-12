@@ -36,10 +36,12 @@ all blockers pass.
      past the pending cap is answered `503` on the spot.)
    - **Parallel with:** token delivery move.
 
-3. **Form contract**
+3. **Form contract — done 2026-11-12**
    - Board: all-or-nothing validation, all converted values written to `runtime.settings`, then `form_ok` with
      keys list, then one flow event with written values; `form_err` with `failed` map and no writes; empty
      submit allowed.
+     (The flow event payload is now `{form, values}` — every failing key is named in `failed`, not just the
+     first; the page toasts the empty-submit case distinctly; node doc updated.)
    - Update `device-runtime/test/test_remote_display.py` to cover empty submit and whole-form refusal.
    - **Parallel with:** token delivery move.
 

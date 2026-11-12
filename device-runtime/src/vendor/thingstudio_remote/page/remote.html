@@ -318,7 +318,9 @@ function frame(text) {
     console.info("[rd] ping round-trip %dms", ms);
   }
   else if (kind === "takeover") { banner(m.reason || "another viewer has logged in"); }
-  else if (kind === "form_ok") { toast("saved: " + (m.keys || []).join(", ")); }
+  else if (kind === "form_ok") {
+    toast(m.keys && m.keys.length ? "saved: " + m.keys.join(", ") : "submitted -- nothing to save");
+  }
   else if (kind === "form_err") { console.warn("[rd] form failed", m.failed);
     toast("save failed: " + Object.keys(m.failed || {}).join(", ")); }
   else if (kind === "err") { console.warn("[rd] board:", m.what); }

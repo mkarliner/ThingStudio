@@ -397,16 +397,33 @@ def test_form_submit_writes_settings():
         reply, err = remote._dispatch(session, {"type": "form", "form": "cfg",
                                                 "values": {"threshold": "31.5", "name": "kitchen"}})
         assert err is None, err
-        assert reply["type"] == "form_ok", reply
+        assert reply["type"] == "form_ok" and reply["keys"] == ["name", "threshold"], reply
         assert device_settings.get("threshold") == 31.5
         assert device_settings.get("name") == "kitchen"
         assert g.value("th") == 31.5
-        # a value that will not convert refuses the whole form before any write
+        # one flow event per save, carrying the written values (SPEC 5.1 step 4)
+        evt = await g.event("save")
+        assert evt == {"form": "cfg", "values": {"threshold": 31.5, "name": "kitchen"}}, evt
+        # a value that will not convert refuses the whole form before any write: form_err names the keys
         device_settings.set("threshold", 21)
         reply, err = remote._dispatch(session, {"type": "form", "form": "cfg",
-                                                "values": {"threshold": "zap"}})
-        assert err is not None
+                                                "values": {"threshold": "zap", "name": "ok"}})
+        assert err is None, err
+        assert reply["type"] == "form_err" and reply["failed"] == {"threshold": "not a number"}, reply
+        assert device_settings.get("threshold") == 21  # nothing written, name included
+        # every failing key is named, not just the first
+        remote._widgets["extra"] = {"kind": "number", "config": {"key": "extra", "form": "cfg"}}
+        reply, err = remote._dispatch(session, {"type": "form", "form": "cfg",
+                                                "values": {"threshold": "zap", "extra": "also-zap"}})
+        assert reply["type"] == "form_err" and sorted(reply["failed"]) == ["extra", "threshold"], reply
+        # an empty submit is allowed: writes nothing, form_ok with no keys, one event with empty values
+        reply, err = remote._dispatch(session, {"type": "form", "form": "cfg", "values": {}})
+        assert err is None, err
+        assert reply == {"type": "form_ok", "form": "cfg", "keys": []}, reply
         assert device_settings.get("threshold") == 21
+        evt = await g.event("save")
+        assert evt == {"form": "cfg", "values": {}}, evt
+        # a form name the definition does not carry is a plain err
         reply, err = remote._dispatch(session, {"type": "form", "form": "nope", "values": {}})
         assert err is not None
     import asyncio

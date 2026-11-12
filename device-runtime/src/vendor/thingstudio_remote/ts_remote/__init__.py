@@ -656,9 +656,12 @@ class Remote:
         return None, "message type %r unknown" % (kind,)
 
     def _submit_form(self, msg):
-        """A settings form writes as one act: values converted first, then every key, then the widgets
-        updated. A value that will not convert refuses the whole form before any write; a write fault is
-        reported with the keys it applied before failing (the flash failed, not intent)."""
+        """A settings form writes as one act (SPEC 5.1): every value converts first -- one that fails is
+        named with its key in a form_err and nothing is written; then every key is written, form_ok lists
+        the keys, and one flow event carries the written key/value pairs. A submit with no draft values is
+        allowed: nothing is written, form_ok carries an empty keys list, the flow event an empty values
+        object -- the flow decides what an empty submit means. A write fault is reported as form_err with
+        the settings fault (the flash failed, not intent)."""
         form = msg.get("form")
         fields = self._forms_by(form)
         if fields is None:
@@ -666,7 +669,7 @@ class Remote:
         values = msg.get("values")
         if not isinstance(values, dict):
             return None, "form values are an object"
-        converted = {}
+        converted, failed = {}, {}
         for wid in fields:
             sp = self._widgets[wid]
             if sp["kind"] == "submit":
@@ -674,20 +677,24 @@ class Remote:
             key, kind = sp["config"].get("key"), sp["kind"]
             raw = values.get(key, values.get(wid))
             if raw is None:
-                continue
+                continue  # a field the page did not draft: not a failure, just not written
             if kind == "number":
                 try:
                     value = float(raw)
                     if value == int(value):  # shifts 2.0 -> 2; MicroPython floats have no is_integer()
                         value = int(value)
                 except (ValueError, TypeError, OverflowError):
-                    return None, "%r is not a number" % (key,)
+                    failed[key] = "not a number"
+                    continue
                 converted[key] = value
             else:
                 try:
                     converted[key] = str(raw)[:128]
                 except Exception:
-                    return None, "%r is not text" % (key,)
+                    failed[key] = "not text"
+                    continue
+        if failed:
+            return {"type": "form_err", "form": form, "failed": failed}, None
         try:
             for key in converted:
                 device_settings.set(key, converted[key])
@@ -698,10 +705,10 @@ class Remote:
             if key in converted:
                 self._gui.set_value(wid, converted[key])
         # The flow's "saved" signal: the submit widget's own event queue gets one message per successful
-        # write. (With no edits submitted it is still one event, with no keys -- the reader distinguishes.)
+        # save, carrying the written values (an empty submit is still one event, with an empty values object).
         submit_wid = fields[0]
         try:
-            self._gui.emit(submit_wid, {"form": form, "keys": sorted(converted.keys())})
+            self._gui.emit(submit_wid, {"form": form, "values": dict(converted)})
         except Exception as e:  # noqa: BLE001 -- an unconsumed event queue drops, it never kills the form
             print("REMOTE_FORM_EVT %r" % (e,))
         return {"type": "form_ok", "form": form, "keys": sorted(converted.keys())}, None

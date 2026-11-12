@@ -274,9 +274,10 @@ to a settings key, surviving a restart.
 ## Submit button
 
 A remote display's Save button. One submit writes every [number](#number-field) and [text](#text-field) field with
-the same *form* name to the board's settings, and its output sends one message per save — with `{form, keys}` as
-`payload` (the keys actually written), and the form name as `topic`. A save is one act: if a value will not convert,
-the whole form is refused and nothing is written.
+the same *form* name to the board's settings, and its output sends one message per save — with `{form, values}` as
+`payload` (the values actually written), and the form name as `topic`. A save is one act: if a value will not convert,
+the whole form is refused and nothing is written. A submit with nothing edited is allowed: it writes nothing and
+sends `{form, values: {}}` — the flow decides what an empty submit means.
 
 - **label (what the button says)** — the text on the button. Default `Save`.
 - **form** — the name of this form; the fields it saves carry the same name.
