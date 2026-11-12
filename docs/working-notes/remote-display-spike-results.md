@@ -76,6 +76,8 @@ Measurements go in one row per figure, board named (a separate table below, not 
 | Freenove S3 | page fetch, gzip as served (device_cli, 2026-11-07) | 10,661 B gz, first byte 0.09-0.26 s, total 0.11-0.38 s (warmed); server answers `Content-Encoding: gzip` whatever the client asks (SPEC item 12) | `curl -w` on the LAN, 4 fetches |
 | Freenove S3 | page asset on flash (device_cli, 2026-11-07) | `/lib/ts_remote/page_data.mpy` = 10,736 B (source in repo 31,135 B) | `device_cli.py exec "os.stat(...)"` |
 | Freenove S3 | runtime is 15.1.0, build dc511ad, `remote-spike` running (device_cli, 2026-11-07) | supersedes the "runtime too old" note the first S3 session recorded | `device_cli.py hello --host` |
+| Freenove S3 (**custom image** `thingstudio-esp32-s3-16.0.0-96f689a.bin`, sha256 fd10c25e…, runtime 16.0.0) | IDF heap free / largest block, remote flow running over WiFi (2026-11-12) | **80,044 / 38,912 B** — comfortably above the floor (the C3's failure was 1,312 / 448); MicroPython heap 107,152 B free, flash 12.5 MB free | `device_cli.py hello --json` over the WiFi transport |
+| Freenove S3 (custom image, as above) | full client walkthrough without a browser (2026-11-12) | login 200 + token; ws upgrade **101 via `Sec-WebSocket-Protocol: ts-rd-v1-<token>`**; definition assembles (no `carousel`); values stream at ~1/s; heartbeat pings answered, pong round-trip works — but a viewer connecting to the running flow got **no `screen` message** until the 2026-11-12 fix (session start now marks the surface full); the fixed image needs a reflash | hand-written page client over the LAN (login derivation, masked frames, HMAC+counter) |
 
 ## Kill-or-rethink signals (from the briefing)
 
