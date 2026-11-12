@@ -30,9 +30,10 @@ all blockers pass.
    - Update `device-runtime/test/test_ts_http_ws.py` and `test_remote_display.py` vectors.
    - **Parallel with:** login rate limit, form contract, page-dot removal.
 
-2. **Login route rate limit**
+2. **Login route rate limit — done 2026-11-12**
    - Board: cap login attempts per client and concurrent login handlers; answer `429` / `503`.
-   - Add at least one unix-port test that probes the limit.
+     (10 requests per 60 s window, GET and POST both; the one `_login_loop` task is the handler cap; a put
+     past the pending cap is answered `503` on the spot.)
    - **Parallel with:** token delivery move.
 
 3. **Form contract**

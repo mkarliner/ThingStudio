@@ -38,6 +38,8 @@ The board's console prints one line when the server starts — the URL:
 - Opening it on the phone shows a login. The password is the **board's password** (the same one the editor's
   own WiFi transport uses — [where it's set](wifi-connection.md#set-the-password-and-name)). A board with no
   password refuses login: set one.
+- Too many attempts in a run are refused: the board pauses login for a minute. Wait, then try again. The
+  pause is deliberate, to slow down password guessing.
 - The page then shows the screen: live values tick, taps press [buttons](nodes/gui.md#buttons), form submits
   write settings.
 - One viewer at a time: the newest login wins, and the older phone is told why and sent back to the login

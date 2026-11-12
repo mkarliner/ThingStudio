@@ -195,7 +195,8 @@ def _ws_accept(key):
 
 
 _REASONS = {200: "OK", 204: "No Content", 400: "Bad Request", 401: "Unauthorized", 404: "Not Found",
-            408: "Request Timeout", 500: "Internal Server Error", 503: "Service Unavailable"}
+            408: "Request Timeout", 429: "Too Many Requests", 500: "Internal Server Error",
+            503: "Service Unavailable"}
 
 
 class Server:

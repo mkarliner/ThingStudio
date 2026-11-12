@@ -33,6 +33,10 @@
 # Input frames are "<json>\n<hexhmac(session_key, json)>" with a strictly increasing counter, so a replayed
 # or altered frame is refused (working item 10 -- input drives hardware).
 #
+# Login rate limit (SPEC 8.1, production tier): the login routes answer 429 past _LOGIN_MAX requests per
+# _LOGIN_WINDOW_MS (one login is two -- the challenge GET and the answer POST) and 503 while requests the
+# board cannot work on yet are still queued; the single _login_loop task is the concurrent-handler cap.
+#
 # Link (working item 11): the board pings the page every PING_MS and the page pongs; after about
 # _MISSED_PONG_MS without anything arriving, the link counts as lost (a phone leaving WiFi is often never seen
 # as a close). set_link_policy() decides what losing means:
@@ -70,6 +74,9 @@ _PING_MS = 1000
 _MISSED_PONG_MS = 3200   # about three missed pings before the link counts as lost
 _LOGIN_BODY_MAX = 280
 _LOGIN_TIMEOUT_S = 15
+_LOGIN_MAX = 10             # login-route requests per window, GET and POST both (SPEC 8.1)
+_LOGIN_WINDOW_MS = 60000
+_LOGIN_Q_MAX = 2            # requests held pending; a further one is answered 503, never queued
 _OUT_BUFFER_MAX = 96     # messages to a stalled viewer; the oldest is dropped, the heap never grows
 
 RemoteSurface = thingstudio_gui.RemoteSurface
@@ -141,6 +148,36 @@ class _BQueue:
         return self._items.pop(0)
 
 
+class _LoginQueue:
+    """The login routes' queue: one consumer (Remote._login_loop) and a tight pending cap. A put that
+    would overflow is answered 503 on the spot -- an overloaded board says so immediately; _BQueue's
+    drop-oldest would instead strand exactly the dropped request in its 15 s timeout (SPEC 8.1)."""
+
+    def __init__(self, cap=_LOGIN_Q_MAX):
+        self._items = []
+        self._cap = cap
+        self._evt = None
+
+    def put(self, item):
+        if len(self._items) >= self._cap:
+            conn = item["_http_conn"]
+            conn["status"], conn["body"] = 503, b"login busy -- try again"
+            conn["done"].set()
+            return
+        self._items.append(item)
+        if self._evt is not None:
+            self._evt.set()
+
+    async def get(self):
+        import asyncio
+        while not self._items:
+            if self._evt is None:
+                self._evt = asyncio.Event()
+            await self._evt.wait()
+            self._evt.clear()
+        return self._items.pop(0)
+
+
 class Remote:
     """One remote display on the shared server. `definition` is the flow's screens tree for the phone."""
 
@@ -161,7 +198,8 @@ class Remote:
         self._conn = None         # the live session dict, or None
         self._out = None          # that session's outgoing queue; send() targets it
         self._down_at = None      # ticks() of the last link-lost declaration (safe policy), or None
-        self._login_q = _BQueue(4)
+        self._attempts = []       # ticks() of recent login-route requests (the rate window)
+        self._login_q = _LoginQueue()
         self.controls = _BQueue(8)   # continuous input to the flow: {'payload', 'topic', 'wid'}
         self.link = _BQueue(8)       # "up"/"down" transitions to the flow (safe policy)
         self.surface = None
@@ -315,6 +353,14 @@ class Remote:
 
     def _answer_login(self, item):
         req, conn = item["req"], item["_http_conn"]
+        # the rate limit is before the TSAUTH1 work (SPEC 8.1): past the cap the route answers 429 whatever
+        # the request is -- no challenge is minted, no answer verified
+        now = ticks()
+        self._attempts = [t for t in self._attempts if ms_since(t) < _LOGIN_WINDOW_MS]
+        if len(self._attempts) >= _LOGIN_MAX:
+            conn["status"], conn["body"] = 429, b"too many attempts -- wait a minute"
+            return
+        self._attempts.append(now)
         if not board_settings.password_set():
             conn["status"], conn["body"] = 503, b"no board password is set -- set one in the editor first"
             return

@@ -166,6 +166,48 @@ def test_login_requires_password_and_right_answer():
     asyncio.run(main())
 
 
+def test_login_rate_limit_answers_429():
+    async def main():
+        remote, g, srv, des = _setup()
+        conn = {"status": None, "body": None}
+        for i in range(ts_remote._LOGIN_MAX):  # one normal login is two requests: the GET and the POST
+            remote._answer_login({"req": {"method": "GET"}, "_http_conn": conn})
+            assert conn["status"] == 200, (i, conn)
+        before = remote._challenge
+        remote._answer_login({"req": {"method": "GET"}, "_http_conn": conn})
+        assert conn["status"] == 429, conn  # past the cap: no challenge minted...
+        assert remote._challenge == before  # ...the pending one from before is untouched, nothing new
+        remote._answer_login({"req": {"method": "POST", "body": b"TSAUTH1 " + b"0" * 64}, "_http_conn": conn})
+        assert conn["status"] == 429, conn  # a POST answer is refused the same way, nothing verified
+        assert remote._logged is None
+        # an attempt falls out of the window and the route answers again (no 60 s sleep in the test:
+        # age one stored tick past the window and the prune does the rest)
+        remote._attempts[0] = ts_remote.ticks() - (ts_remote._LOGIN_WINDOW_MS + 1000)
+        remote._answer_login({"req": {"method": "GET"}, "_http_conn": conn})
+        assert conn["status"] == 200, conn
+        # a real login still fits inside the budget on a fresh remote: GET + POST = 2 of 10
+        remote, g, srv, des = _setup()
+        conn, _n, _nonce = await _login(remote)
+        assert conn["status"] == 200, conn
+    import asyncio
+    asyncio.run(main())
+
+
+def test_login_queue_overflow_answers_503():
+    async def main():
+        import asyncio
+        q = ts_remote._LoginQueue()
+        for _ in range(ts_remote._LOGIN_Q_MAX):  # filled, not consumed: the board is the bottleneck here
+            q.put({"_http_conn": None})
+        conn = {"status": None, "body": None, "done": asyncio.Event()}
+        q.put({"_http_conn": conn})
+        assert conn["status"] == 503, conn  # said so on the spot, not queued into its 15 s timeout
+        assert conn["done"].is_set()
+        assert len(q._items) == ts_remote._LOGIN_Q_MAX  # the pending work is unchanged
+    import asyncio
+    asyncio.run(main())
+
+
 def test_token_gate():
     async def main():
         remote, g, srv, des = _setup()
@@ -453,7 +495,8 @@ def test_session_sends_definition_and_takes_over():
     asyncio.run(main())
 
 
-minitest.run([test_login_requires_password_and_right_answer, test_token_gate,
+minitest.run([test_login_requires_password_and_right_answer, test_login_rate_limit_answers_429,
+              test_login_queue_overflow_answers_503, test_token_gate,
               test_start_mounts_every_route_on_the_real_server,
               test_definition_problems_are_named, test_definition_builds_surface_and_fields,
               test_input_frames_signed_and_replayed_are_refused, test_dispatch_tap_nav_and_page,
