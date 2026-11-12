@@ -429,6 +429,14 @@ class Remote:
         session = {"ws": ws, "out": _BQueue(), "count": 0, "link": "up", "armed": False,
                    "last_seen": ticks(), "last_ctl": None, "tasks": None}
         old, self._conn, self._out = self._conn, session, session["out"]
+        # A new viewer must receive one whole screen (SPEC 5: a screen names the page, on session start and
+        # reconnects) -- the surface has long since rendered its first, so mark it full again and the GUI's
+        # next render pushes every widget to this session's queue. Without this a viewer connecting to a
+        # running flow sees only dirty values trickling past and never learns what page it is on
+        # (found end-to-end on the S3, 2026-11-12; the unix-port suite never reconnects to a live surface).
+        surface = self._gui.surfaces.get(self.display)
+        if surface is not None:
+            surface.full = True
         if old is not None:
             runtime.spawn(self._evict(old), "remote_display")
         try:

@@ -510,6 +510,40 @@ def test_dead_socket_is_closed_after_the_miss_window():
     asyncio.run(main())
 
 
+def test_a_new_session_gets_a_whole_screen():
+    async def main():
+        remote, g, srv, des = _setup()
+        _conn, _n, _nonce = await _login(remote)
+        # the first session: the surface's initial full push carries a screen
+        w1 = FakeWS()
+        t1 = asyncio.create_task(remote._session(w1, ""))
+        await asyncio.sleep_ms(150)
+        g.set_value("temp", 20.5, now=0)
+        g.step(now=0)
+        await asyncio.sleep_ms(50)  # the writer task needs a turn to drain the queue into ws.sent
+        assert "screen" in [json.loads(m).get("type") for m in w1.sent], w1.sent
+        # a viewer connecting to the RUNNING surface must also get a whole screen (SPEC 5: session start
+        # and reconnects) -- before the fix it saw only the values of widgets that happened to change,
+        # and never learned what page it was on (found end-to-end on the S3, 2026-11-12)
+        w2 = FakeWS()
+        t2 = asyncio.create_task(remote._session(w2, ""))
+        await asyncio.sleep_ms(150)
+        g.set_value("temp", 21.5, now=200)
+        g.step(now=200)
+        await asyncio.sleep_ms(50)
+        kinds2 = [json.loads(m).get("type") for m in w2.sent]
+        assert "screen" in kinds2, (kinds2, w2.sent)
+        screens = [json.loads(m) for m in w2.sent if json.loads(m).get("type") == "screen"]
+        assert screens[0]["page"] == "home" and screens[0]["values"]["temp"][0] == 21.5, screens
+        w1.closed = True
+        w2.closed = True
+        for t in (t1, t2):
+            t.cancel()
+        await asyncio.sleep_ms(30)
+    import asyncio
+    asyncio.run(main())
+
+
 def test_session_sends_definition_and_takes_over():
     async def main():
         remote, g, srv, des = _setup()
@@ -546,7 +580,7 @@ minitest.run([test_login_requires_password_and_right_answer, test_login_rate_lim
               test_input_frames_signed_and_replayed_are_refused, test_dispatch_tap_and_nav,
               test_screen_message_through_the_surface, test_form_submit_writes_settings,
               test_ctl_and_deadman_link_events, test_ping_replies_with_echo,
-              test_dead_socket_is_closed_after_the_miss_window,
+              test_dead_socket_is_closed_after_the_miss_window, test_a_new_session_gets_a_whole_screen,
               test_session_sends_definition_and_takes_over])
 
 
