@@ -41,3 +41,14 @@ Status: detail file, started 2026-11-04. See `learnings.md` for the index.
   only the classic 14.x images its runtime refuses. Release URLs are known before the release exists, so
   `firmware/README.md` "Publishing" now runs `firmware_catalogue.py --image` before the tag; v0.12.1 carries the
   entries.
+- **2026-11-13 — A stale `/lib` copy silently shadows a custom image's frozen library.** The S3 on image
+  `8790056` served the pre-`7e143d8a` remote page and lacked the reconnect fix; the last session concluded the
+  flash had never taken. It had: a deploy from a checkout older than the image found the board's `ts_remote` hash
+  different from its own and pushed its older copy into `/lib`, which is ahead of `.frozen` on `sys.path`
+  (runtime 11.1.0, deliberate). Nothing said so: HELLO reports one hash per library (the `/lib` one), the page
+  looked like "old image", and the board password, set again at each USB bring-up, looked as if it had survived a
+  flash. How to tell: compare the HELLO hash with `deps_frozen.INVENTORY` on the board, or grep the `.bin` for the
+  hash (the inventory is frozen in as strings). Fix: delete `/lib/<name>` and rewrite `/lib/_deps.json` from
+  `deps_frozen.INVENTORY` (write with `with open(...)`: an unclosed MicroPython file is empty until closed), then
+  restart. Prevent: deploy only from a checkout at or after the image's commit, CLI bundle rebuilt. Open design
+  question for Mike: should a deploy refuse or warn when it would push an older library over a frozen one?

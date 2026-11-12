@@ -84,7 +84,7 @@ all blockers pass.
    - Build `firmware/targets/esp32-s3` with runtime 15.1.0+ and remote libraries frozen.
    - Record image SHA, `freeIdfHeapBytes` / `largestIdfHeapBlockBytes` in
      `docs/working-notes/remote-display-spike-results.md`.
-   - End-to-end deploy and phone login from a fresh flash.
+   - End-to-end deploy and a browser login from a fresh flash.
    - **Depends on:** token delivery move if the image must match the new wire shape.
 
 7. **Final review of `interfaces/remote-display/SPEC.md` against implementation**

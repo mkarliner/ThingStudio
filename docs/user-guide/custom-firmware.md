@@ -123,6 +123,10 @@ Connect in the editor as usual. Two things confirm the image is running:
 
 Then deploy the flow.
 
+If `[libraries]` sends a library instead, the editor's copy differs from the image's, usually because the editor
+is older or newer than the image. The sent copy goes to `/lib` and runs in place of the image's, using RAM the image
+had saved. Use the editor version the image was released with, or reinstall the image, which clears `/lib`.
+
 ## Memory and the board
 
 The image does not add RAM. Measured on the CYD (classic ESP32-D0WD, 4 MB, no PSRAM) with a GUI flow, in KB:

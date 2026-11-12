@@ -27,26 +27,30 @@ unix-port suite (it never reconnects to a live surface).
 ## The board, as it stands
 
 Freenove ESP32-S3 4.0" at **192.168.10.110**, board password `electr1c`, running flow 'untitled flow' (a remote
-screen, one page 'abc'). **It still runs the pre-fix image `96f689a`** — the flash never took in three attempts
-(the page's served wording is the fingerprint; a real flash erases the board, so a surviving password proves
-no flash happened). `firmware/out/esp32-s3/` holds three images; the right one is
+screen, one page 'abc'), on image **`thingstudio-esp32-s3-16.0.0-8790056.bin`** (has the reconnect fix).
 
-```
-thingstudio-esp32-s3-16.0.0-8790056.bin   sha256 81c84053…   (current head, has the fix)
-```
+**Corrected 2026-11-13: the flash did take.** The earlier reading ("still runs `96f689a`, the flash never took")
+was wrong. The image's frozen inventory carries `ts_remote` `65f73029937febdf`, a string found only in the
+`8790056` binary. The old page wording came from a stale `/lib/ts_remote` (hash `4c68cc571ac84688`, pre-`7e143d8a`
+source) that a deploy from an out-of-date checkout had pushed; `/lib` is ahead of `.frozen` on `sys.path`, so it
+shadowed the image's copy. The "surviving password" was the same password set again at each USB bring-up.
+The stale copy was removed and the index rewritten from `deps_frozen.INVENTORY` on 2026-11-13; after a restart
+HELLO reports `65f7…` and the page serves the new wording. Learning: `learnings/firmware-builds.md`.
 
 ## Remaining work, in order
 
-1. **Flash `8790056` for real** (USB; `install.sh` now refuses ambiguous picks, name the file anyway). Then
-   bring-up from bare: `SET_BOARD_SETTINGS` (password) + deploy a remote flow, both over USB. Then:
+1. **`8790056` is on the board and in use** (see above) — no reflash needed. Before any further deploy, `git pull`
+   and `(cd editor && npm run build:cli)` on the deploying machine, or the deploy pushes its older `ts_remote`
+   over the image's again (`[libraries]` should say `ts_remote` is already on the board). Then:
    - fingerprint the served page (first comment line says "The remote display's page -- a browser page on
-     any device"),
+     any device") — done 2026-11-13,
    - run the walkthrough (login -> 101 via subprotocol -> definition -> **`screen` on connect** -> values,
      heartbeat, pong),
-   - heap figures from `hello --json` (`freeIdfHeapBytes` / `largestIdfHeapBlockBytes`; last measured on the
-     old image: 80,044 / 38,912 with the flow running — recorded in `remote-display-spike-results.md`),
+   - heap figures from `hello --json` — done 2026-11-13 on `8790056` with the frozen `ts_remote` in use:
+     79,384 / 34,816 IDF, 123,376 MicroPython free (`remote-display-spike-results.md`),
    - `firmware/record-tested.sh <image> "<board>" "<what you ran and saw>"` -> commits `tested.json`,
-   - the phone checkpoint (a real browser, both hands: login, tap, form, slider) — Mike's.
+   - the real-browser checkpoint (a viewer on any device -- phone, tablet, laptop -- by hand: login, tap, form,
+     slider) — Mike's.
 2. **The chicken-and-egg design conversation** (the outstanding item above) — before more flows land on more
    boards. Direction options and Mike's "no patch-overs" rule are in the detail file.
 3. **C3 custom image measurement** (task 6, non-blocking): build, flash, measure, verdict either way.
@@ -70,12 +74,12 @@ thingstudio-esp32-s3-16.0.0-8790056.bin   sha256 81c84053…   (current head, ha
   -type f -delete` before trusting tests; `npm ci --ignore-scripts`, never bare `npm install`.
 - The boardless page-client harness used for live verification is scratch at `/tmp/rd_client.py` (login
   derivation, masked frames, HMAC+counter, definition assembly, pong). Worth cleaning up into `test-flows/`
-  when the fresh-flash checkpoint is run -- it drove every check a phone would short of the actual browser.
+  when the fresh-flash checkpoint is run -- it drove every check a viewer would short of a real browser.
 
 ## Done when
 
-- The `8790056` image is flashed (fingerprinted), the walkthrough shows `screen` on connect, heap figures
-  recorded, `record-tested.sh` committed, phone checkpoint passed -- task 5 closed, merge gate reviewable.
+- The `8790056` image is confirmed in use (done 2026-11-13), the walkthrough shows `screen` on connect, heap figures
+  recorded, `record-tested.sh` committed, real-browser checkpoint passed -- task 5 closed, merge gate reviewable.
 - The chicken-and-egg direction is decided (a `decisions/` entry exists, the design note written, or a
   scoping session scheduled).
 - This brief is replaced by a merge note.
