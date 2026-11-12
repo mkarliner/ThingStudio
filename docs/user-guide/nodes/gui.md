@@ -58,7 +58,8 @@ config and a WiFi network instead.
 - **display kind** — panel or remote. Default panel.
 - **name** — the screen's name, sent as `topic`. Default `screen`.
 - **web server** (remote only) — the [web server config](remote-displays.md) the board's HTTP server mounts on:
-  it sets the port. Default blank.
+  it sets the port. Switching the display kind to remote creates one (port 80) if the flow has none; the
+  field's + adds another if you want a second port.
 - **lost link means** (remote only) — what the board decides when the phone goes quiet: **stale** (the phone
   shows stale values, and nothing else happens) or **safe** (the flow is told through `link down`, and a drag
   that stopped turns the output safe; for remote control). Default stale.

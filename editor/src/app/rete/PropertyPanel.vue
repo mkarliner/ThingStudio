@@ -208,12 +208,15 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import { selectedNode, bumpPropertyVersion, propertyVersion, setFunctionNodeOutputCount } from "./store";
+import { selectedNode, bumpPropertyVersion, propertyVersion, setFunctionNodeOutputCount, createConfig, listConfigsOfType } from "./store";
+import { CONFIG_TYPES } from "./config-types";
 import { DEFAULT_KIND_STYLE, type KindStyle } from "./palette";
 import { paletteStyleFor } from "./node-descriptors";
 import { CustomNode } from "./nodes";
 import { evaluatePredicate, resolveConditionalText, type NodeDescriptor, type PropertyFieldDescriptor } from "../../compiler/node-descriptor";
 import { GUI_SCREEN } from "../../gui/screens";
+
+const WEB_SERVER_CONFIG_TYPE = "thingstudio/config/web-server";
 import { applyThemePreset } from "../../node-library/gui-theme-shared";
 import ConfigRefField from "./ConfigRefField.vue";
 import CredentialRefField from "./CredentialRefField.vue";
@@ -301,6 +304,20 @@ function onFieldChange(f: PropertyFieldDescriptor): void {
   // without it, switching preset after editing a colour would leave the old colours and nothing would change.
   if (f.name === "themePreset" && node.value?.type === GUI_SCREEN) {
     applyThemePreset(nodeProperties.value, "themePreset", String(nodeProperties.value.themePreset ?? ""));
+  }
+  // A remote screen needs a web server config; making one by hand is ceremony, not a choice (Mike, 2026-11-12):
+  // switching the display kind to remote points the field at the flow's one existing server, or creates the
+  // default (port 80). Several servers in the flow is a real multi-port setup, so the field stays unassigned
+  // for the user to pick.
+  if (f.name === "displayKind" && node.value?.type === GUI_SCREEN && nodeProperties.value.displayKind === "remote") {
+    if (!String(nodeProperties.value.webServerConfigId ?? "")) {
+      const servers = listConfigsOfType(WEB_SERVER_CONFIG_TYPE);
+      const id =
+        servers.length === 1 ? servers[0]!.id :
+        servers.length === 0 ? createConfig(WEB_SERVER_CONFIG_TYPE, { ...CONFIG_TYPES[WEB_SERVER_CONFIG_TYPE].defaults }) :
+        "";
+      if (id) setProp("webServerConfigId", id);
+    }
   }
   if (f.retype) (node.value as unknown as { retypeOutputs?: () => void } | null)?.retypeOutputs?.();
   touch();

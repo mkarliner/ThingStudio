@@ -14,8 +14,8 @@ pixels, so a board with no display hardware at all can still have a good UI.
 ## What you build
 
 1. A **WiFi network** — the usual [WiFi](wifi-connection.md) config; every node in a flow shares one.
-2. A **web server** config — the port the board listens on (80 is ordinary). Create it from the gui screen's
-   web server field (+ in the field's picker).
+2. A **web server** config — the port the board listens on (80 is ordinary). Switching the screen's display
+   kind to remote creates one for you; the field's + adds another if you want a second port.
 3. A **[gui screen](nodes/gui.md#gui-screen)** with **display kind: remote**, wired to the web server config in
    its properties. Lay out its pages with rows and columns; the phone stretches each row/column's share to its
    own viewport and scrolls when a page is taller than the screen. Nothing here is sized in pixels.

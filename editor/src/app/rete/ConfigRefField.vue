@@ -71,10 +71,18 @@
   below) for any config type with a `credential` field -- one name input,
   the credential type's own fields (`ssid`/`password`, etc.), and any
   other config-level fields (`security`) in a single panel, one Save,
-  creating the credential AND the config together. A config type with NO
-  credential field (none exist today, but the branch stays correct for
-  one) falls back to the original create-then-edit behavior -- the same
-  fallback the field-loop above already carries for non-credential kinds.
+  creating the credential AND the config together.
+
+  2026-11-12 (Mike, from his own test drive): the combined form is now for
+  every config type, not just credential-backed ones. The web server type
+  has no credential, and its old fallback (create immediately on "+", then
+  auto-save-edit with only a Cancel) left a new web server with no commit
+  step at all -- and a "Cancel" that didn't discard anything, the config
+  being already in the flow. A type with no credential gets the same form
+  minus the name/credential rows (nothing to name): its fields and one
+  Save that creates it; Cancel discards nothing because nothing was
+  created. The name row and the credential rows render only when the type
+  has a credential field.
 
   Top-level dropdown also lists saved-but-not-yet-used credentials
   (2026-09-14, Mike's own report: a brand-new flow's WiFi dropdown showed
@@ -194,6 +202,9 @@
              descriptor at all (Mike's "loud warning, not a quiet checkbox" ask for that one field). -->
         <p v-if="f.help" class="field-help">{{ f.help }}</p>
       </template>
+      <!-- Auto-save applies here (no credential on this type -- see header): the button says so rather than
+           leaving the user hunting for a commit step that isn't coming (Mike, 2026-11-12). -->
+      <p class="field-note">Changes save as you type.</p>
       <div class="config-edit-actions">
         <button type="button" @click="closeEdit">Cancel</button>
       </div>
@@ -202,7 +213,10 @@
     <div v-if="creatingNew" class="config-edit-panel">
       <div class="config-edit-header">new {{ descriptor.label }}</div>
       <p v-if="credentialDescriptor" class="field-note">Saved on this computer, not in the flow.</p>
-      <label class="field-row">
+      <!-- A name is the saved credential's name -- a config type with no credential (a web server's port)
+           has nothing to name, so its form is just its fields and one Save (Mike, 2026-11-12: the old
+           create-then-auto-save path left the new config with no commit step at all). -->
+      <label v-if="credentialDescriptor" class="field-row">
         <span class="field-label">name</span>
         <input v-model="newName" :placeholder="credentialDescriptor?.namePlaceholder ?? 'e.g. home'" />
       </label>
@@ -489,30 +503,31 @@ const createError = ref<string | null>(null);
 const creating = ref(false);
 
 function addNew(): void {
-  const credField = credentialField.value;
-  if (!credField) {
-    // No credential field on this config type -- nothing to combine into
-    // one form; fall back to the original create-then-edit behavior. A keyed singleton (I2C bus) starts
-    // on the lowest unused key, so "+" makes a new bus rather than reopening bus 0.
-    const keyField = descriptor.value.keyField;
-    const seed = keyField ? { [keyField]: nextFreeKey(props.configType, keyField) } : {};
-    const id = createConfig(props.configType, { ...descriptor.value.defaults, ...seed });
-    emit("update:modelValue", id);
-    openEdit(id);
-    return;
-  }
   createError.value = null;
   newName.value = "";
   for (const key of Object.keys(newCredentialDraft)) delete newCredentialDraft[key];
   Object.assign(newCredentialDraft, credentialDescriptor.value?.defaults ?? {});
   for (const key of Object.keys(newConfigDraft)) delete newConfigDraft[key];
   for (const f of otherFields.value) newConfigDraft[f.name] = descriptor.value.defaults[f.name];
+  // A keyed singleton (I2C bus) starts on the lowest unused key, so Save makes a new bus rather than
+  // reopening bus 0 -- seeded into the form so the key is visible and editable before it exists.
+  const keyField = descriptor.value.keyField;
+  if (keyField && !credentialField.value) newConfigDraft[keyField] = nextFreeKey(props.configType, keyField);
   creatingNew.value = true;
 }
 
 async function saveNew(): Promise<void> {
   const credField = credentialField.value;
-  if (!credField?.credentialType) return;
+  if (!credField) {
+    // A config type with no credential field (a web server's port): the form is its fields and one Save,
+    // which creates the config -- a real commit step, and Cancel discards nothing because nothing was
+    // created (the pre-2026-11-12 path created the config on "+" and Cancel left it in the flow anyway).
+    const id = createConfig(props.configType, { ...descriptor.value.defaults, ...newConfigDraft });
+    emit("update:modelValue", id);
+    creatingNew.value = false;
+    return;
+  }
+  if (!credField.credentialType) return;
   const name = newName.value.trim();
   if (!name) {
     createError.value = "name is required";
