@@ -7,7 +7,7 @@
       "given": "board password set (salt ita per test); page knows the password",
       "steps": [
         {"from": "page", "http": "GET /ts/remote/login", "expect": {"status": 200, "line_starts": "TSAUTH1 "}},
-        {"from": "page", "http": "POST /ts/remote/login", "body": "TSAUTH1 <hex HMAC-SHA256(sha256^iters(salt+password), nonce)>", "expect": {"status": 200, "json": {"v": 1, "display": "phone", "token": "<hex>"}}}
+        {"from": "page", "http": "POST /ts/remote/login", "body": "TSAUTH1 <hex HMAC-SHA256(sha256^iters(salt+password), nonce)>", "expect": {"status": 200, "json": {"v": 1, "display": "main", "token": "<hex>"}}}
       ]
     },
     {
@@ -30,7 +30,7 @@
       "steps": [
         {"from": "page", "ws": "GET /ts/remote/ws", "subprotocol": "ts-rd-v1-<token>", "expect": {"status": 101}},
         {"from": "page", "frame": "hi", "m": {"type": "hi", "v": 1}, "c": 1, "expect": {}},
-        {"from": "board", "n_frames": "<n>", "each": {"type": "screen_def", "i": "<0..n-1>", "n": "<n>", "part": "<str slice>", "display": "phone"}},
+        {"from": "board", "n_frames": "<n>", "each": {"type": "screen_def", "i": "<0..n-1>", "n": "<n>", "part": "<str slice>", "display": "main"}},
         {"from": "board", "any_order_after_last_piece": true, "one_of": ["screen", "values"]}
       ]
     },

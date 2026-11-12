@@ -350,8 +350,8 @@ export const guiScreenNode: NodeDefinition = {
   presetType: "gui_theme",
   description:
     "One per display. A panel screen: wire it to a display node; its size and frame format come from the display. " +
-    "A remote screen: the board serves the phone the page (screen-size agnostic); needs a WiFi network and a web " +
-    "server config in this flow.",
+    "A remote screen: the board serves the page to a browser on any device (screen-size agnostic); needs a WiFi " +
+    "network and a web server config in this flow.",
   ports: { outputs: [{ name: "frame", type: "bytes" }] },
   properties: [
     { name: "name", label: "name", kind: "text", default: "screen" },
@@ -362,12 +362,12 @@ export const guiScreenNode: NodeDefinition = {
       default: "panel",
       options: [
         { value: "panel", label: "a physical panel, wired to a display node" },
-        { value: "remote", label: "a phone (the board's own web server)" },
+        { value: "remote", label: "a web browser on any device (the board's own web server)" },
       ],
       help:
-        "A panel screen sends frames to the display it is wired to. A remote screen is screen-size agnostic: the phone " +
-        "lays it out on its own viewport and the board serves it over its web server (a WiFi network and a web server " +
-        "config must exist in this flow).",
+        "A panel screen sends frames to the display it is wired to. A remote screen is screen-size agnostic: the " +
+        "viewer's browser lays it out on its own viewport and the board serves it over its web server (a WiFi network " +
+        "and a web server config must exist in this flow).",
     },
     {
       name: "webServerConfigId",
@@ -411,12 +411,12 @@ export const guiScreenNode: NodeDefinition = {
       kind: "select",
       default: "stale",
       options: [
-        { value: "stale", label: "stale (the phone shows stale values)" },
+        { value: "stale", label: "stale (the page shows stale values)" },
         { value: "safe", label: "safe (the flow is told; for remote control)" },
       ],
       visibleWhen: { field: "displayKind", equals: "remote" },
       help:
-        "What the board decides when the phone goes quiet. \"safe\" drives link_change() in the flow and arms a " +
+        "What the board decides when the viewer goes quiet. \"safe\" drives link_change() in the flow and arms a " +
         "deadman on slider input, so a drag that stopped turns the output safe -- wire the flow's outputs (motors, " +
         "heaters) through something that goes off on link down.",
     },
@@ -799,7 +799,7 @@ export const guiButtonNode: NodeDefinition = {
   },
 };
 
-// --- the phone-input widgets (2026-11-06, the editor authoring story for remote displays) -----------------
+// --- the remote-input widgets (2026-11-06, the editor authoring story for remote displays) ----------------
 // All four live on a remote screen only (screens.ts refuses them on a panel table). On the board they are
 // ts_remote's kinds, so no draw routine is registered in the flow's gui_core block: a widget on a remote
 // screen is registered there with the same _noop stubs every remote widget gets.
@@ -852,7 +852,7 @@ export const guiNumberNode: NodeDefinition = {
 export const guiTextNode: NodeDefinition = {
   type: GUI_TEXT,
   kind: "sink",
-  // Same reasoning as the number field above (see gui.ts's phone-input widgets header).
+  // Same reasoning as the number field above (see gui.ts's remote-input widgets header).
   allowUnwired: true,
   paletteId: "gui_text",
   label: "text field",
@@ -944,7 +944,7 @@ export const guiSliderNode: NodeDefinition = {
   icon: "⬍",
   width: 110,
   description:
-    "Continuous remote input: a drag on the phone sends its value at ~20 Hz, latest wins. Its output is the " +
+    "Continuous remote input: a drag on the page sends its value at ~20 Hz, latest wins. Its output is the " +
     "usual msg, payload = the slider's value. For driving something with a failsafe, not for picking a setting.",
   ports: { outputs: [{ name: "msg", type: "any" }] },
   properties: [
@@ -1082,7 +1082,7 @@ function modalOnScreen(ctx: CodegenContext, node: GraphNode): void {
 
 export const GUI_NODES: NodeDefinition[] = [
   guiScreenNode, guiLabelNode, guiReadoutNode, guiBarNode, guiTrendNode, guiLedNode, guiButtonNode,
-  // The phone-input widgets (2026-11-06), remote-display only.
+  // The remote-input widgets (2026-11-06), remote-display only.
   guiNumberNode, guiTextNode, guiSubmitNode, guiSliderNode,
   guiNavigatorNode, guiModalNode,
 ];

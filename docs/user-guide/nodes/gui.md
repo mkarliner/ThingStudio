@@ -9,11 +9,11 @@ The GUI nodes show readings on a display as pages of numbers, text, bars, lights
 
 - **A panel screen** sends them to a [display spi](display-spi.md) node. Every widget node shows the `payload`
   of the messages wired to it.
-- **A remote screen** serves the pages to a phone from the board's own web server: the board holds no pixels,
-  the phone lays the page out to its own viewport, and input comes back as taps and form submits. Set the
-  screen's **display kind**, its **web server** config, and deploy — the phone opens
+- **A remote screen** serves the pages to a web browser from the board's own web server: the board holds no
+  pixels, the viewer's browser lays the page out to its own viewport, and input comes back as taps and form
+  submits. Set the screen's **display kind**, its **web server** config, and deploy — the viewer opens
   `http://<board>:<port>/ts/remote/` and logs in with the board's password. Everything about building one is
-  [Remote displays](remote-displays.md). The phone-input widgets on this page — [number field](#number-field),
+  [Remote displays](remote-displays.md). The remote-only widgets on this page — [number field](#number-field),
   [text field](#text-field), [submit](#submit-button) and [slider](#slider) — are remote-screen only: on a
   physical panel they are a compile error.
 
@@ -31,7 +31,7 @@ The nodes on this page:
 - [number field](#number-field) — an editable number, saved to a settings key.
 - [text field](#text-field) — an editable text, saved to a settings key.
 - [submit button](#submit-button) — writes the fields of its form and sends one message per save.
-- [slider](#slider) — continuous input from a drag on the phone.
+- [slider](#slider) — continuous input from a drag on the page.
 
 <!-- gui modal: left out until the editor can lay a modal out (its layout is written in the flow file).
 - **gui modal** — a full-screen message. Send any payload to open it, `None` to close it. If several are
@@ -47,25 +47,25 @@ stock MicroPython runs out of memory loading the display stack.
 ## gui screen
 
 Draws a display's pages of widgets: **panel** screens send them to a [display spi](display-spi.md) node;
-**remote** screens serve them to a phone (see [Remote displays](remote-displays.md)).
+**remote** screens serve them to a web browser (see [Remote displays](remote-displays.md)).
 
 ### Properties
 
 A panel screen takes its width, height and frame format from the display it is wired to, so set them once on the
-display. A remote screen has none of that: the phone does its own layout, and the screen carries a web server
-config and a WiFi network instead.
+display. A remote screen has none of that: the viewer's browser does its own layout, and the screen carries a web
+server config and a WiFi network instead.
 
 - **display kind** — panel or remote. Default panel.
 - **name** — the screen's name, sent as `topic`. Default `screen`.
 - **web server** (remote only) — the [web server config](remote-displays.md) the board's HTTP server mounts on:
   it sets the port. Switching the display kind to remote creates one (port 80) if the flow has none; the
   field's + adds another if you want a second port.
-- **lost link means** (remote only) — what the board decides when the phone goes quiet: **stale** (the phone
+- **lost link means** (remote only) — what the board decides when the viewer goes quiet: **stale** (the page
   shows stale values, and nothing else happens) or **safe** (the flow is told through `link down`, and a drag
   that stopped turns the output safe; for remote control). Default stale.
 - **deadman after (ms)** (remote, lost-link "safe" only) — how quickly "no fresh slider input" counts as gone.
   Default 400.
-- **fastest redraw (ms)** — the shortest time between two redraws, or the phone page's message rate. Default 200.
+- **fastest redraw (ms)** — the shortest time between two redraws, or the remote page's message rate. Default 200.
 - **next/prev wrap round** (panel only) — whether `next` on the last page goes to the first, and `prev` on the
   first to the last. Default on.
 - **grid columns** — the layout grid's columns, 2 to 48. Default 12. See [Laying out pages](#laying-out-pages).
@@ -74,7 +74,7 @@ config and a WiFi network instead.
 - **touch panel (blank: no touch)** (panel only) — the [touch panel](touch-panel.md) the screen reads, for
   buttons. Default blank. A remote screen needs none: its taps come over the network.
 - **theme** and the ten role colors (panel only) — the screen's colors. Default blank, the GUI's own colors.
-  See [Themes](#themes). A remote screen's colors are the [phone page's own](remote-displays.md).
+  See [Themes](#themes). A remote screen's colors are the [remote page's own](remote-displays.md).
 - **shared theme config (older flows)** — used only when the theme fields are empty, so a flow saved with a shared
   theme still draws.
 
@@ -84,7 +84,7 @@ config and a WiFi network instead.
 
 **Output** — a panel screen: the picture, in strips of about 5 KB, each with `y` set to its first row, so a whole
 frame never has to fit in memory. Wire it to a display spi node. A remote screen: the page name each time
-board-owned navigation changes anything, so the flow can follow where the phone is looking.
+board-owned navigation changes anything, so the flow can follow where the viewer is looking.
 
 ## Laying out pages
 
@@ -243,7 +243,7 @@ left of the card stays empty; the compiler says how many rows to keep. Raising *
 
 ## Number field
 
-An editable number on a remote display's page (a compile error on a physical panel): the phone shows it as a labeled
+An editable number on a remote display's page (a compile error on a physical panel): the page shows it as a labeled
 number field. It is read from and written to a settings key, so it survives a restart — [Remote
 displays](remote-displays.md) builds the whole picture.
 
@@ -252,7 +252,7 @@ What it shows:
 - Before the first write it shows the *default value*, and a `--` state marks "not written yet".
 - After a submit writes it, the field shows what was written.
 
-- **label** — the text above the field on the phone.
+- **label** — the text above the field on the page.
 - **settings key** — the key under `runtime.settings` this field reads from and writes to. Blank means the field
   shows its *input* (each message's `payload`, like a readout) and submits nothing.
 - **form** — which [submit button](#submit-button) writes this field: fields that share a form name submit together.
@@ -262,7 +262,7 @@ What it shows:
 
 ## Text field
 
-The same idea as the [number field](#number-field), for text: a labeled text box on the phone, read from and written
+The same idea as the [number field](#number-field), for text: a labeled text box on the page, read from and written
 to a settings key, surviving a restart.
 
 - **label** — the text above the field.
@@ -287,12 +287,12 @@ sends `{form, values: {}}` — the flow decides what an empty submit means.
 
 ## Slider
 
-A drag on the phone, for driving something: the slider's position goes to the board at about 20 messages a second,
+A drag on the page, for driving something: the slider's position goes to the board at about 20 messages a second,
 latest value wins, so the flow sees a moving value rather than a barrage. This is what needs **lost link means:
-safe** on the screen: a drag that stops, or a phone that vanished mid-drag, turns the *linked* output safe —
+safe** on the screen: a drag that stops, or a viewer that vanished mid-drag, turns the *linked* output safe —
 [Remote displays](remote-displays.md) explains how the flow handles it.
 
-- **name** — the slider's label on the phone.
+- **name** — the slider's label on the page.
 - **low value** / **high value** — the slider's range. Defaults 0 and 100.
 - **step (0 = continuous)** — how much one move of the slider advances. Default continuous.
 

@@ -6,12 +6,13 @@
 # and remote-display-spike-briefing.md). One Remote mounts its routes under /ts/remote/ on the shared
 # ts_http_server (the server is a general facility; `/` stays with the flow), serves the pre-gzipped page, and
 # runs the live session that shuttles a thingstudio_gui.RemoteSurface between the board's GUI model and the
-# phone. Everything it actually says on the wire is the interface spec draft (interfaces/remote-display/SPEC.md)
+# viewer's browser (any device -- a remote screen is not a phone screen; Mike, 2026-11-12). Everything it
+# actually says on the wire is the interface spec draft (interfaces/remote-display/SPEC.md)
 # -- this file implements that contract, it does not define it.
 #
 # Board-side shape:
-#   Remote(gui, server, definition, display="phone") -- validates `definition` (the flow's screens tree for the
-#     phone; BadDefinition names the first problem) and builds the RemoteSurface, plus the input widget set;
+#   Remote(gui, server, definition, display="remote") -- validates `definition` (the flow's screens tree for
+#     the remote display; BadDefinition names the first problem) and builds the RemoteSurface, plus the input widget set;
 #   remote.stage()          -- synchronous, at flow module scope: registers every widget with the GUI.
 #   await remote.start()    -- mounts the routes on the server and starts them:
 #     GET  /ts/remote/          the page (stored gzipped, served as its own bytes, never decompressed board-side)
@@ -38,12 +39,12 @@
 # board cannot work on yet are still queued; the single _login_loop task is the concurrent-handler cap.
 #
 # Link (working item 11): the board pings the page every PING_MS and the page pongs; after about
-# _MISSED_PONG_MS without anything arriving, the link counts as lost (a phone leaving WiFi is often never seen
-# as a close). set_link_policy() decides what losing means:
+# _MISSED_PONG_MS without anything arriving, the link counts as lost (a viewer that left WiFi is often never
+# seen as a close). set_link_policy() decides what losing means:
 #   "stale" (default) -- the page shows stale values and its own banner; the board sends nothing further;
 #   "safe"            -- the flow, once per drop and once per return (`link_change()`), and a deadman arms
 #                        while continuous input ("ctl") arrives: no fresh input for deadman_ms fires a second
-#                        drop without any network state changing -- the drag stopped or the phone vanished,
+#                        drop without any network state changing -- the drag stopped or the viewer vanished,
 #                        the output goes safe (the robot-leaves-WiFi checkpoint).
 # The page reconnects on its own; the newest successful login's token opens the next socket, so a dead viewer
 # never locks its owner out.
@@ -179,9 +180,9 @@ class _LoginQueue:
 
 
 class Remote:
-    """One remote display on the shared server. `definition` is the flow's screens tree for the phone."""
+    """One remote display on the shared server. `definition` is the flow's screens tree for the remote display."""
 
-    def __init__(self, gui, server, definition, display="phone"):
+    def __init__(self, gui, server, definition, display="remote"):
         if not isinstance(definition, dict):
             raise BadDefinition("definition must be an object, got %r" % (type(definition).__name__,))
         des_v = definition.get("v")
@@ -498,7 +499,7 @@ class Remote:
                 return
             self._evaluate(session, "sweep")
             if ms_since(session["last_seen"]) >= _MISSED_PONG_MS:
-                # a socket nothing has arrived on for the miss window is dead (a phone leaving WiFi is often
+                # a socket nothing has arrived on for the miss window is dead (a viewer that left WiFi is often
                 # never seen as a close): the board closes its side now (SPEC 7), not when TCP's own
                 # retransmit timeout finally gives up; the page reconnects with its still-valid token.
                 try:

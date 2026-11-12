@@ -43,7 +43,7 @@ function remoteGraph(): GraphData {
       node(
         "screen",
         "gui_screen",
-        { name: "phone", displayKind: "remote", webServerConfigId: "websrv", wifiConfigId: "wifi1" },
+        { name: "main", displayKind: "remote", webServerConfigId: "websrv", wifiConfigId: "wifi1" },
       ),
     ],
     links: [
@@ -90,7 +90,7 @@ describe("compiling a remote display flow", () => {
     expect(warnings).toEqual([
       "button \"Pump\" sends its state nowhere: wire its output to something.",
       "button \"Boop\" sends its value nowhere: wire its output to something.",
-      'GUI screen "phone" is a remote display: no board or processor is selected, so its memory needs are not checked.',
+      'GUI screen "main" is a remote display: no board or processor is selected, so its memory needs are not checked.',
     ]);
     expect(source).toContain("import ts_remote\nimport ts_http_server");
     // WiFi: the flow's config, its own statement, idempotent bring-up.
@@ -107,7 +107,7 @@ describe("compiling a remote display flow", () => {
   it("the compiled definition is the grid, converted to flex with the spans as weights", () => {
     const { source } = compile(remoteGraph(), buildRegistry());
     console.log("=== REMOTE SOURCE ===\n" + source.split("\n").filter((l) => l.includes("_refresh") || l.includes("remote") || l.includes("def")).join("\n"));
-    expect(source).toContain(`"display": "phone"`);
+    expect(source).toContain(`"display": "main"`);
     expect(source).toContain(`{"kind": "column", "gap": 8, "padding": 8, "children": [`);
     // the readouts' row: two children, one each half the page (colSpan 6 of 12 -> equal weight)
     expect(source).toContain(`{"wid": "temp", "kind": "readout", "config": {"caption": "", "units": "°C", "decimals": 1}, "grow": 6, "flex": True}`);
@@ -129,7 +129,7 @@ describe("compiling a remote display flow", () => {
   it("the screen's own source coroutine waits on the page-change stream", async () => {
     const { source } = compile(remoteGraph(), buildRegistry());
     expect(source).toContain("await _gui.page_changed(");
-    expect(source).toContain(`'payload': _page, 'topic': "phone"`);
+    expect(source).toContain(`'payload': _page, 'topic': "main"`);
   });
 
   it("a remote screen wired to no web server config is a loud compile error", async () => {

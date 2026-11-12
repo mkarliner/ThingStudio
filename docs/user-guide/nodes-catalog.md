@@ -292,7 +292,7 @@ Properties explained: [navigator](nodes/gui.md)
 
 ### number field
 
-An editable number on the phone's page, read from and written to a settings key.
+An editable number on the remote page, read from and written to a settings key.
 
 Type: `gui_number`. Kind: sink. Palette group: GUI.
 
@@ -333,7 +333,7 @@ Properties explained: [readout](nodes/gui.md)
 
 ### screen
 
-Draws a display's pages of widgets: on a panel (frames to a display spi node) or remote (the board serve the phone's page).
+Draws a display's pages of widgets: on a panel (frames to a display spi node) or remote (the board serves the page to a browser).
 
 Type: `gui_screen`. Kind: source. Palette group: GUI.
 
@@ -370,7 +370,7 @@ Properties explained: [screen](nodes/gui.md)
 
 ### slider
 
-A drag on the phone: continuous input at ~20 Hz, latest value wins.
+A drag on the page: continuous input at ~20 Hz, latest value wins.
 
 Type: `gui_slider`. Kind: source. Palette group: GUI.
 
@@ -404,7 +404,7 @@ Properties explained: [submit](nodes/gui.md)
 
 ### text field
 
-An editable text on the phone's page, read from and written to a settings key.
+An editable text on the remote page, read from and written to a settings key.
 
 Type: `gui_text`. Kind: sink. Palette group: GUI.
 

@@ -90,7 +90,7 @@ def _setup(password=PASSWORD, deadman=None):
     g = gui.GUI()
     srv = ts_http_server.Server(18401, [], {})
     des = {
-        "v": 1, "display": "phone", "minIntervalMs": 100,
+        "v": 1, "display": "main", "minIntervalMs": 100,
         "pages": [
             {"name": "home", "tree": {
                 "kind": "column", "gap": 4, "children": [
@@ -113,7 +113,7 @@ def _setup(password=PASSWORD, deadman=None):
         ],
         "modals": [],
     }
-    remote = ts_remote.Remote(g, srv, des)
+    remote = ts_remote.Remote(g, srv, des, display="main")
     remote.stage()
     if deadman is not None:
         remote.set_link_policy("safe", deadman)
@@ -164,7 +164,7 @@ def test_login_requires_password_and_right_answer():
         want = binascii.hexlify(board_settings.hmac_sha256(session_key, b"open session v1")).decode()
         assert logged["token"] == want, logged
         assert remote._logged["token"] == want
-        assert logged["display"] == "phone" and logged["v"] == 1
+        assert logged["display"] == "main" and logged["v"] == 1
     import asyncio
     asyncio.run(main())
 
@@ -292,8 +292,8 @@ def test_definition_builds_surface_and_fields():
         assert sorted(g.widgets.keys()) == ["bar", "boop", "go", "led", "nm", "pump", "save", "temp", "th"]
         assert g.widgets["boop"].touchable and not g.widgets["temp"].touchable
         assert g.value("th") == device_settings.get("threshold")
-        assert set(g.surfaces["phone"].pages.keys()) == {"home", "set"}
-        placed = [w for w, _r in g.surfaces["phone"].pages["set"]["widgets"]]
+        assert set(g.surfaces["main"].pages.keys()) == {"home", "set"}
+        placed = [w for w, _r in g.surfaces["main"].pages["set"]["widgets"]]
         assert "th" in placed
         # registered modes: the controlled toggle starts unknown, the unwired kind is the same
         assert g.widgets["pump"].mode == "toggle" and g.widgets["pump"].controlled
@@ -362,20 +362,20 @@ def test_dispatch_tap_and_nav():
 
         # navigation is board-owned (SPEC 5): named pages, next/prev over the declaration order, home
         remote._dispatch(session, {"type": "nav", "cmd": "set"})
-        assert g.surfaces["phone"].page == "set", g.surfaces["phone"].page
+        assert g.surfaces["main"].page == "set", g.surfaces["main"].page
         remote._dispatch(session, {"type": "nav", "cmd": "home"})
-        assert g.surfaces["phone"].page == "home"
+        assert g.surfaces["main"].page == "home"
         remote._dispatch(session, {"type": "nav", "cmd": "next"})
-        assert g.surfaces["phone"].page == "set"  # top-level pages in declaration order: home, set
+        assert g.surfaces["main"].page == "set"  # top-level pages in declaration order: home, set
         remote._dispatch(session, {"type": "nav", "cmd": "prev"})
-        assert g.surfaces["phone"].page == "home"
+        assert g.surfaces["main"].page == "home"
         # the carousel-index message is gone: an unknown type is one unsigned err, the connection stays up
         reply, err = remote._dispatch(session, {"type": "page", "n": 0})
         assert err is not None and "unknown" in err, (reply, err)
         # a button on the page tree navigates the surface itself
         remote._dispatch(session, {"type": "tap", "wid": "go", "phase": "down"})
         remote._dispatch(session, {"type": "tap", "wid": "go", "phase": "up"})
-        assert g.surfaces["phone"].page == "set"
+        assert g.surfaces["main"].page == "set"
     import asyncio
     asyncio.run(main())
 

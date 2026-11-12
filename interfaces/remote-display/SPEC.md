@@ -2,7 +2,7 @@
 
 Status: **draft (spike, 2026-11-06)**. Written from what the spike's implementation actually sends, not what
 a production version might: `device-runtime/src/vendor/thingstudio_remote/ts_remote/__init__.py` (board side)
-and `page/remote.html` (the phone page). Every claim here is exercised by
+and `page/remote.html` (the viewer's page). Every claim here is exercised by
 `device-runtime/test/test_remote_display.py` and `test_ts_http_ws.py` on the MicroPython unix port; the
 hardware checkpoints in `remote-display-spike-results.md` confirm the same messages over real radios.
 Produced under Mike's standing permission for the spec itself (`remote-display-scoping.md`, position 6).
@@ -17,9 +17,9 @@ placeholder with the raw value, and no ship-any-JS face exists in v1.
 | Thing | Meaning |
 |---|---|
 | board | The device whose flow renders through a `RemoteSurface`. |
-| page | The phone's document, served by the board (the flow's first and default viewer). |
+| page | The viewer's document (a browser page on any device), served by the board (the flow's first and default viewer). |
 | viewer | One authenticated page connection. **One at a time per display**: a new login's socket takes over. |
-| display | A `RemoteSurface` name ("phone"). One display per board in the spike; the shapes below carry a display field for a second one later. |
+| display | A `RemoteSurface` name ("main"). One display per board today; the shapes below carry a display field for a second one later. |
 | definition | The screens tree the page renders: versioned JSON, shipped in pieces (§4). |
 | `wid` | A widget id, unique across the definition (and, today, across the flow's GUI). |
 
@@ -143,14 +143,14 @@ the shared `ts_http_server` never sees a credential; the `_token_ok` pre-check r
 ## 7. Link status (working item 11)
 
 The board pings every 1000 ms and refreshes liveness on *any* inbound frame; **after ~3.2 s of nothing** the
-link counts as lost — a phone leaving WiFi is often never seen as a close. What "lost" means is the flow's
+link counts as lost — a viewer that left WiFi is often never seen as a close. What "lost" means is the flow's
 policy, set per display:
 
 - `stale` (default): nothing further happens on the board; the page shows stale values and its own banner
   (nothing arriving for 4 s page-side).
 - `safe`: the flow is told, once per drop and once per return (`await remote.link_change()` → `"down"` /
   `"up"`), and a **deadman** arms while `ctl` input flows: no fresh input for `deadman_ms` fires a second
-  drop with no network state change — a drag that stopped, or a phone that vanished mid-drag, goes safe.
+  drop with no network state change — a drag that stopped, or a viewer that vanished mid-drag, goes safe.
   Input arriving re-arms "up".
 
 The board closes its side of a dead socket after the miss window; the page reconnects with the still-valid
@@ -188,7 +188,7 @@ request answers `429`; an overloaded board answers `503`.
 - Page crypto: `editor/test/remote-page-crypto.test.ts` (RFC 4231 vectors, iteration chain, session derivation).
 - Vectors: `vectors/exchanges.json` — the message exchanges above as data, for a later runner the way the
   wire protocol's `vectors/exchanges.json` is replayed today.
-- What the spike has NOT proven (and the results note records): real-radio behaviour, both phone platforms,
+- What the spike has NOT proven (and the results note records): real-radio behaviour, more than one browser platform,
   and the memory/latency numbers per board.
 
 ## 10. Versioning

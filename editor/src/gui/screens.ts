@@ -71,7 +71,7 @@ export const WIDGET_TYPES = {
   "thingstudio/gui_trend": "trend",
   "thingstudio/gui_led": "led",
   "thingstudio/gui_button": "button",
-  // Phone-input kinds (remote-display-spike + the editor authoring story, 2026-11-06). They belong on a
+  // Remote-input kinds (remote-display-spike + the editor authoring story, 2026-11-06). They belong on a
   // remote screen only: the panel draw path refuses them by name.
   "thingstudio/gui_number": "number",
   "thingstudio/gui_text": "text",
@@ -223,7 +223,7 @@ export function compileScreens(
     for (const c of carousel) if (!pageNames.has(c)) errors.push(`screen ${sname}: carousel names unknown page "${c}"`);
 
     // -- remote screens (displayKind "remote"): the grid becomes a definition tree, not rects ------------------
-    // Screen-size agnostic (Mike, 2026-11-06): flexbox on the phone's real viewport, vertical scroll when a
+    // Screen-size agnostic (Mike, 2026-11-06): flexbox on the viewer's real viewport, vertical scroll when a
     // page is taller, no nominal-size check. The words the builder emits are interfaces/remote-display/SPEC.md
     // §4; their meaning lives in ts_remote on the board and the shipped page.
     if (String((screen.properties as Record<string, unknown>).displayKind ?? "panel") === "remote") {

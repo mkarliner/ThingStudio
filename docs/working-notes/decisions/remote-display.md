@@ -100,3 +100,11 @@ board's display). The design itself is still provisional: `docs/working-notes/re
   the implementation starts. Pico W waits with it — it was a question about whether "custom builds only" needs a
   second entry, not about the concept. Spike work remains: install the rebind fix on the S3 (needs a UART
   connection), phone checkpoints 4/5/7/8/9, and the SPEC read-through against hardware.
+
+- **2026-11-12 — Remote screens are not phone screens (Mike).** "Remote screens are not limited to phones.
+  Stop referring to them as that." The page is a browser page on any device — phone, tablet, laptop — and the
+  vocabulary is **the page**, **the viewer**, **the viewer's device**: docs, UI strings, the spec and test
+  fixtures say that, not "the phone". Same logic as P2 (the page is the first client, not the only one):
+  nothing in the product's language assumes which device is holding the other end. Historical notes stay as
+  written (an incident that happened on a phone says so), and BLE's own "phone" mentions are about phones as
+  Bluetooth peers, untouched.
