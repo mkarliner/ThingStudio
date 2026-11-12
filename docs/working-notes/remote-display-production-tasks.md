@@ -10,7 +10,16 @@ No merge to `main` or deploy from a non-Mike machine until every item in **Block
 Items marked **Can parallel** may land in their own commits before the gate, but the gate stays closed until
 all blockers pass.
 
-## Done this session
+## Done in the implementation sessions (2026-11-12)
+
+- Items 1-5 below (token move, rate limit, form contract, page-dot/carousel removal, 16.0.0 bump) -- marked
+  in place.
+- The compiler warning for untested boards/images (the implementation briefing's task 3, second bullet):
+  `editor/src/definitions/remote-display-measurements.ts` is the measured-target registry (S3 custom image
+  comfortable, C3 stock below floor), `remoteScreenCodegen` warns per target, and the tests iterate the
+  registry. The user guide's Hardware notes already describe the behavior.
+
+## Done this session (the spec session, 2026-11-11)
 
 - `interfaces/remote-display/SPEC.md` updated: token in `Sec-WebSocket-Protocol`, no page dots/carousel,
   precise `form_ok`/`form_err` contract including empty submit, login-rate-limit note.

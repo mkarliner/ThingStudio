@@ -45,6 +45,7 @@ import {
   WIDGET_TYPES, type CompiledScreens, type ScreenSize,
 } from "../gui/screens.js";
 import { resolveFlowWifiCredentials, wifiSetupStatement } from "./wifi-status.js";
+import { REMOTE_DISPLAY_MEASUREMENTS } from "../definitions/remote-display-measurements.js";
 
 export type GuiFrameFormat = "gs4" | "gs2" | "mono" | "rgb565";
 const FRAMEBUF_FORMAT: Record<GuiFrameFormat, string> = { gs4: "GS4_HMSB", gs2: "GS2_HMSB", mono: "MONO_HMSB", rgb565: "RGB565" };
@@ -288,6 +289,24 @@ function remoteScreenCodegen(node: GraphNode, ctx: CodegenContext): EventSourceC
   if (!surface) throw new CompileError(`GUI screen ${nodeLabel(node)} has no pages yet: lay it out in the GUI view`);
   const def = surface.remoteDef;
   if (def === undefined) throw new CompileError(`GUI screen ${nodeLabel(node)}: a remote screen's compiled definition is missing -- internal error, not a flow-authoring mistake`);
+
+  // A remote display's memory floor is a measured fact (definitions/remote-display-measurements.ts), and
+  // the compiler cannot see the board's image -- stock or custom is known only at deploy time, from the
+  // frozen inventory -- so the warning names the image a measurement covers and fires for anything else.
+  // A warning, never a block: unmeasured boards are caveat emptor by decision (decisions/remote-display.md
+  // 2026-11-10).
+  if (!ctx.target) {
+    ctx.warn?.(`GUI screen ${nodeLabel(node)} is a remote display: no board or processor is selected, so its memory needs are not checked.`);
+  } else {
+    const measured = REMOTE_DISPLAY_MEASUREMENTS.get(ctx.target.processor.id);
+    if (measured?.verdict === "comfortable") {
+      ctx.warn?.(`GUI screen ${nodeLabel(node)} is a remote display on ${ctx.target.label}: measured comfortable on ${measured.note} -- a stock install is unmeasured and may not have the memory.`);
+    } else if (measured?.verdict === "below-floor") {
+      ctx.warn?.(`GUI screen ${nodeLabel(node)} is a remote display on ${ctx.target.label}: measured below the feature's floor on ${measured.note}.`);
+    } else {
+      ctx.warn?.(`GUI screen ${nodeLabel(node)} is a remote display on ${ctx.target.label}: not measured for remote displays -- it may not have the memory.`);
+    }
+  }
 
   const policy = String(node.properties.linkPolicy ?? "stale");
   if (policy !== "stale" && policy !== "safe") {

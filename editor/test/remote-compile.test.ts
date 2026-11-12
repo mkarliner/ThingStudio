@@ -10,6 +10,11 @@
 
 import { describe, expect, it } from "vitest";
 import { compile } from "../src/compiler/compile.js";
+import type { Target } from "../src/definitions/target.js";
+import { BUILTIN_DEFINITION_FILES } from "../src/definitions/builtin.js";
+import { buildDefinitionSet } from "../src/definitions/definitions.js";
+import { resolveTarget } from "../src/definitions/target.js";
+import { REMOTE_DISPLAY_MEASUREMENTS } from "../src/definitions/remote-display-measurements.js";
 import type { GraphData, GraphNode } from "../src/compiler/graph.js";
 import { buildRegistry } from "../src/node-library/registry.js";
 
@@ -85,6 +90,7 @@ describe("compiling a remote display flow", () => {
     expect(warnings).toEqual([
       "button \"Pump\" sends its state nowhere: wire its output to something.",
       "button \"Boop\" sends its value nowhere: wire its output to something.",
+      'GUI screen "phone" is a remote display: no board or processor is selected, so its memory needs are not checked.',
     ]);
     expect(source).toContain("import ts_remote\nimport ts_http_server");
     // WiFi: the flow's config, its own statement, idempotent bring-up.
@@ -134,6 +140,43 @@ describe("compiling a remote display flow", () => {
 
   it("fields on a physical panel screen are refused by name", () => {
     expect(() => compile(g2WithPanelTable(), buildRegistry())).toThrow(/remote screen/);
+  });
+});
+
+describe("the untested-board warning (definitions/remote-display-measurements.ts)", () => {
+  const defs = buildDefinitionSet(BUILTIN_DEFINITION_FILES, []);
+  const targetFor = (choice: string): Target => {
+    const r = resolveTarget(defs, choice, null);
+    if (!r.target) throw new Error(`no target for ${choice}`);
+    return r.target;
+  };
+  const remoteWarning = (target: Target | null): string =>
+    compile(remoteGraph(), buildRegistry(), { target }).warnings.find((w) => w.includes("remote display")) ?? "";
+
+  it("names the measured image for a processor measured comfortable, and still warns about a stock install", () => {
+    const w = remoteWarning(targetFor("processor:esp32-s3"));
+    expect(w).toContain("measured comfortable on the ESP32-S3 custom image");
+    expect(w).toContain("a stock install is unmeasured");
+  });
+
+  it("names the measured below-floor case", () => {
+    expect(remoteWarning(targetFor("processor:esp32-c3"))).toContain(
+      "measured below the feature's floor on a stock install");
+  });
+
+  it("says unmeasured for any other target", () => {
+    expect(remoteWarning(targetFor("processor:rp2040"))).toContain("not measured for remote displays");
+  });
+
+  it("says the memory needs are unchecked when no target is known", () => {
+    expect(remoteWarning(null)).toContain("no board or processor is selected");
+  });
+
+  it("every registered measurement names a real processor", () => {
+    // the registry rule: a new entry that doesn't resolve fails here, not in a user's compile
+    for (const id of REMOTE_DISPLAY_MEASUREMENTS.keys()) {
+      expect(defs.processors.has(id), id).toBe(true);
+    }
   });
 });
 
