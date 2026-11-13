@@ -34,6 +34,7 @@ const SAMPLE_MESSAGES: Message[] = [
     hasWifi: false,
     networkAddress: null,
     dependencies: null,
+    frozenDependencies: null,
   },
   {
     // Same message type, second variant: a board that DOES have a runtime-build
@@ -58,6 +59,7 @@ const SAMPLE_MESSAGES: Message[] = [
     hasWifi: true,
     networkAddress: "192.168.1.42",
     dependencies: { mqtt_as: "0123456789abcdef" },
+    frozenDependencies: { mqtt_as: "fedcba9876543210" },
   },
   // SET_BOARD_SETTINGS/BOARD_SETTINGS_RESULT (2026-09-24, WiFi transport).
   { type: "SET_BOARD_SETTINGS", hostname: "ts-kitchen", password: "correct horse", clearPassword: false },

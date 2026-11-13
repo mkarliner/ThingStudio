@@ -410,6 +410,7 @@ function validateHello(obj: Record<string, unknown>): Omit<HelloMessage, "type">
     hasWifi: expectOptionalBool(obj, "hasWifi", "HELLO") ?? false,
     networkAddress: expectOptionalString(obj, "networkAddress", "HELLO"),
     dependencies: expectOptionalStringMap(obj, "dependencies", "HELLO"),
+    frozenDependencies: expectOptionalStringMap(obj, "frozenDependencies", "HELLO"),
   };
 }
 

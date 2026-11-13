@@ -39,6 +39,7 @@ SAMPLE_MESSAGES = [
         "hasWifi": False,
         "networkAddress": None,
         "dependencies": None,  # runtime older than 7.0.0
+        "frozenDependencies": None,  # stock firmware, or a runtime older than 16.1.0
     },
     {
         # Same message type, second variant: a board that DOES have a
@@ -63,6 +64,8 @@ SAMPLE_MESSAGES = [
         "networkAddress": "192.168.1.42",
         # Flow dependencies (2026-10-07, runtime 7.0.0): what the board holds in /lib.
         "dependencies": {"mqtt_as": "0123456789abcdef", "bme280": "fedcba9876543210"},
+        # A custom image's frozen inventory (runtime 16.1.0); mqtt_as differs, so a /lib copy runs instead.
+        "frozenDependencies": {"mqtt_as": "1111222233334444"},
     },
     {
         "type": "DEPLOY",

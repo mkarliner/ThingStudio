@@ -343,36 +343,6 @@ def test_lib_dir_beats_ahead_of_path_entries():
     sys.path.remove(shadow)
 
 
-minitest.run(
-    [
-        test_lib_dir_comes_from_env,
-        test_put_installs_files_and_index,
-        test_put_replaces_and_drops_old_files,
-        test_put_removes_stale_other_format_copy,
-        test_put_leaves_no_tmp_files,
-        test_bad_names_rejected_before_anything_is_written,
-        test_a_package_installs_into_its_folder_and_imports,
-        test_a_package_update_drops_stale_files_and_empty_folders,
-        test_pieces_then_commit,
-        test_out_of_order_piece_is_refused,
-        test_resent_piece_is_accepted,
-        test_offset_0_starts_a_library_over_after_a_refused_piece,
-        test_commit_ends_the_streams_whatever_the_outcome,
-        test_incomplete_commit_is_refused_and_cleaned_up,
-        test_missing_reports_each_problem,
-        test_remove_unused_keeps_required,
-        test_remove_unused_with_nothing_required_clears_all,
-        test_remove_unused_tolerates_file_already_gone,
-        test_corrupt_index_means_nothing_installed,
-        test_index_with_wrong_shapes_is_filtered,
-        test_forget_modules_drops_dependency_modules_only,
-        test_ensure_on_path_once,
-        test_lib_dir_beats_ahead_of_path_entries,
-        test_index_entry_with_no_files_reads_as_installed,
-        test_remove_unused_keeps_frozen_entries,
-    ]
-)
-
 
 class _Frozen:
     """Stands in for deps_frozen.py, which a custom image freezes into flash (2026-10-25)."""
@@ -402,6 +372,10 @@ def test_a_file_entry_wins_over_the_frozen_one():
     _fresh()
     deps._ensure_dir()
     deps._write_index({"mqtt_as": {"hash": "pushed", "files": ["mqtt_as.mpy"]}})
+    # The pushed file itself, or missing() rightly reports the copy incomplete. (This test sat after the run
+    # list and never ran until 2026-11-13; it failed on exactly this when it first did.)
+    with open(deps._path("mqtt_as.mpy"), "wb") as f:
+        f.write(b"")
     saved = deps.deps_frozen
     try:
         deps.deps_frozen = _Frozen
@@ -411,3 +385,62 @@ def test_a_file_entry_wins_over_the_frozen_one():
     finally:
         deps.deps_frozen = saved
         _fresh()
+
+
+def test_frozen_inventory_reports_the_image_copy_even_when_shadowed():
+    """HELLO's frozenDependencies (runtime 16.1.0): the image's own hashes, whatever /lib holds. The S3 ran a
+    stale /lib/ts_remote in place of its image's and inventory() alone could not show it (2026-11-13)."""
+    _fresh()
+    deps._ensure_dir()
+    deps._write_index({"mqtt_as": {"hash": "pushed", "files": ["mqtt_as.mpy"]}})
+    saved = deps.deps_frozen
+    try:
+        deps.deps_frozen = _Frozen
+        assert deps.frozen_inventory() == {"mqtt_as": "frozen", "st7796py": "frozen2"}
+        assert deps.inventory()["mqtt_as"] == "pushed"
+    finally:
+        deps.deps_frozen = saved
+        _fresh()
+
+
+def test_frozen_inventory_is_none_on_stock_firmware():
+    saved = deps.deps_frozen
+    try:
+        deps.deps_frozen = None
+        assert deps.frozen_inventory() is None
+    finally:
+        deps.deps_frozen = saved
+
+minitest.run(
+    [
+        test_lib_dir_comes_from_env,
+        test_put_installs_files_and_index,
+        test_put_replaces_and_drops_old_files,
+        test_put_removes_stale_other_format_copy,
+        test_put_leaves_no_tmp_files,
+        test_bad_names_rejected_before_anything_is_written,
+        test_a_package_installs_into_its_folder_and_imports,
+        test_a_package_update_drops_stale_files_and_empty_folders,
+        test_pieces_then_commit,
+        test_out_of_order_piece_is_refused,
+        test_resent_piece_is_accepted,
+        test_offset_0_starts_a_library_over_after_a_refused_piece,
+        test_commit_ends_the_streams_whatever_the_outcome,
+        test_incomplete_commit_is_refused_and_cleaned_up,
+        test_missing_reports_each_problem,
+        test_remove_unused_keeps_required,
+        test_remove_unused_with_nothing_required_clears_all,
+        test_remove_unused_tolerates_file_already_gone,
+        test_corrupt_index_means_nothing_installed,
+        test_index_with_wrong_shapes_is_filtered,
+        test_forget_modules_drops_dependency_modules_only,
+        test_ensure_on_path_once,
+        test_lib_dir_beats_ahead_of_path_entries,
+        test_index_entry_with_no_files_reads_as_installed,
+        test_remove_unused_keeps_frozen_entries,
+        test_the_frozen_inventory_is_used_when_no_file_names_it,
+        test_a_file_entry_wins_over_the_frozen_one,
+        test_frozen_inventory_reports_the_image_copy_even_when_shadowed,
+        test_frozen_inventory_is_none_on_stock_firmware,
+    ]
+)

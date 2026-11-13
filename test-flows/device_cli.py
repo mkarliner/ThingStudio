@@ -310,7 +310,21 @@ def cmd_hello(args):
             message.get("hasWifi"), message.get("networkAddress")))
         deps = message.get("dependencies") or {}
         emit("status", False, text="  libs     %s" % (", ".join(sorted(deps)) or "none"))
+        for line in shadowed_lines(message):
+            emit("status", False, text=line)
     return 0
+
+
+def shadowed_lines(hello_message):
+    """One WARN line when a custom image's frozen library has a different /lib copy running instead
+    (HELLO's frozenDependencies, runtime 16.1.0); the editor prints the same on connect."""
+    deps = hello_message.get("dependencies") or {}
+    frozen = hello_message.get("frozenDependencies") or {}
+    shadowed = sorted(n for n in frozen if n in deps and deps[n] != frozen[n])
+    if not shadowed:
+        return []
+    return ["WARN: %s: a copy in /lib runs instead of this image's. Deploy from a checkout at the image's "
+            "commit, or reinstall the image." % ", ".join(shadowed)]
 
 
 def cmd_watch(args):
@@ -499,9 +513,13 @@ def cmd_flow_deploy(args):
         # HELLO also carries the library inventory, which is what lets the deploy below skip what the
         # board already holds (a frozen image holds everything its flows need).
         inventory = None
+        frozen = None
         try:
             info = hello(dut, 3)
             inventory = info.get("dependencies") or {}
+            frozen = info.get("frozenDependencies")
+            for line in shadowed_lines(info):
+                emit("status", args.json, text=line)
             chip = info.get("chipType") or ""
             arch, confirmed = infer_arch(chip)
             emit("status", args.json, text="board: %s (runtime %s.%s.%s)" % (
@@ -528,7 +546,7 @@ def cmd_flow_deploy(args):
                 message = deploy_message(
                     dut, tmpdir, source, bytecode,
                     log=lambda text: emit("status", args.json, text=text),
-                    inventory=inventory,
+                    inventory=inventory, frozen=frozen,
                 )
             except subprocess.CalledProcessError as e:
                 detail = (e.stderr or b"").decode("utf-8", "replace").strip()

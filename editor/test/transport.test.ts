@@ -38,6 +38,7 @@ const HELLO: Message = {
   hasWifi: false,
   networkAddress: null,
   dependencies: null,
+  frozenDependencies: null,
 };
 
 function bytesToBase64(bytes: Uint8Array): string {

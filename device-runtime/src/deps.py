@@ -197,6 +197,14 @@ def inventory():
     return {name: entry["hash"] for name, entry in read_index().items()}
 
 
+def frozen_inventory():
+    """{name: hash} frozen into a custom image, for HELLO's frozenDependencies; None on stock firmware.
+    Compared with inventory(), it shows a /lib copy running in place of the image's own (2026-11-13)."""
+    if deps_frozen is None:
+        return None
+    return {name: entry["hash"] for name, entry in _entries(getattr(deps_frozen, "INVENTORY", {})).items()}
+
+
 def _write_index(index):
     tmp = _path(INDEX_NAME + ".tmp")
     with open(tmp, "w") as f:

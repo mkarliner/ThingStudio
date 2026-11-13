@@ -91,6 +91,25 @@ export async function dependencyHash(files: Readonly<Record<string, Uint8Array>>
   return [...digest].map((b) => b.toString(16).padStart(2, "0")).join("").slice(0, 16);
 }
 
+/** Libraries a custom image has frozen whose /lib copy runs instead: the name is in both HELLO maps with
+ * different hashes (`dependencies` lists the copy that wins). Sorted; empty on stock firmware. */
+export function shadowedFrozenLibraries(
+  inventory: Readonly<Record<string, string>> | null,
+  frozen: Readonly<Record<string, string>> | null,
+): string[] {
+  if (inventory === null || frozen === null) return [];
+  return Object.keys(frozen)
+    .filter((name) => inventory[name] !== undefined && inventory[name] !== frozen[name])
+    .sort();
+}
+
+/** Of the libraries about to be sent, the ones the image already has frozen: each will run from /lib in
+ * place of the image's copy. Sorted; empty on stock firmware. */
+export function sendsOverFrozen(toSend: readonly string[], frozen: Readonly<Record<string, string>> | null): string[] {
+  if (frozen === null) return [];
+  return toSend.filter((name) => frozen[name] !== undefined).sort();
+}
+
 /** Which of `needed` ({name: hash}) to send, given what the board reported holding. With no
  * inventory (no HELLO, or a board too old to report one) everything is sent. */
 export function librariesToSend(needed: Readonly<Record<string, string>>, inventory: Readonly<Record<string, string>> | null): string[] {

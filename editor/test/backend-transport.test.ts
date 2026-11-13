@@ -33,6 +33,7 @@ const HELLO: Message = {
   hasWifi: false,
   networkAddress: null,
   dependencies: null,
+  frozenDependencies: null,
 };
 
 type Listener = (ev: { data?: unknown }) => void;

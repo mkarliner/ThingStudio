@@ -239,7 +239,7 @@ def compile_dependencies(deps, outdir, log=print):
     return {d["name"]: {"hash": d["hash"], "files": d["files"]} for d in json.loads(result.stdout)["deps"]}
 
 
-def install_dependencies(dut, tmpdir, source, log=print, inventory=None):
+def install_dependencies(dut, tmpdir, source, log=print, inventory=None, frozen=None):
     """Compiles the libraries `source` imports and DEP_PUTs the ones the board hasn't got. Returns
     {name: hash} for every library the flow needs, for DEPLOY's own `dependencies`.
 
@@ -248,7 +248,8 @@ def install_dependencies(dut, tmpdir, source, log=print, inventory=None):
     and pushing a copy into /lib shadows the frozen one -- the flow then loads its libraries from RAM and
     the image's heap saving is gone. Only a board that does not answer HELLO_REQUEST gets everything,
     which is what a board too old to report an inventory needs. `log` lets a caller route the
-    per-library line into its own output (the device CLI's --json)."""
+    per-library line into its own output (the device CLI's --json). `frozen` is HELLO's
+    `frozenDependencies` (runtime 16.1.0): sending one of those libraries warns, as the editor does."""
     deps = needed_dependencies(source)
     if deps and inventory is None:
         inventory = board_inventory(dut)
@@ -260,6 +261,10 @@ def install_dependencies(dut, tmpdir, source, log=print, inventory=None):
     already = [name for name in required if name not in to_send]
     if already:
         log("already on the board: %s" % ", ".join(sorted(already)))
+    over_frozen = sorted(name for name in to_send if frozen and name in frozen)
+    if over_frozen:
+        log("WARN: %s: this copy differs from the image's and will run instead, from /lib. Deploy from a "
+            "checkout at the image's commit to keep the image's." % ", ".join(over_frozen))
     for name in to_send:
         files = {}
         for entry in compiled[name]["files"]:
@@ -307,7 +312,8 @@ def board_inventory(dut, timeout_s=4.0, attempts=3):
     return None
 
 
-def deploy_message(dut, tmpdir, source, bytecode, log=print, inventory=None):
+def deploy_message(dut, tmpdir, source, bytecode, log=print, inventory=None, frozen=None):
     """A DEPLOY for `source`'s bytecode, after installing the libraries it imports."""
     return {"type": "DEPLOY", "bytecode": bytecode, "staticData": b"",
-            "dependencies": install_dependencies(dut, tmpdir, source, log=log, inventory=inventory)}
+            "dependencies": install_dependencies(dut, tmpdir, source, log=log, inventory=inventory,
+                                                 frozen=frozen)}

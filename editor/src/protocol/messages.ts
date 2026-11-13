@@ -179,6 +179,10 @@ export interface HelloMessage {
   /** Added 2026-10-07 (flow dependencies): {name: hash} of the libraries installed for flows in the
    * board's /lib. null from runtimes older than 7.0.0. */
   readonly dependencies: Readonly<Record<string, string>> | null;
+  /** Added 2026-11-13 (runtime 16.1.0): {name: hash} frozen into a custom image's firmware. A name whose
+   * hash differs from `dependencies` has a /lib copy running in place of the image's. null from stock
+   * firmware and older runtimes. */
+  readonly frozenDependencies: Readonly<Record<string, string>> | null;
 }
 
 /**

@@ -39,7 +39,7 @@ const hello = (deployId: string | null): Message => ({
   type: "HELLO", chipType: "esp32", runtimeVersion: { major: 13, minor: 1, patch: 0 }, runtimeBuild: null,
   currentFlowName: deployId ? "f" : null, currentFlowDeployId: deployId, freeFlashBytes: 1, freeRamBytes: 1,
   freeIdfHeapBytes: null, largestIdfHeapBlockBytes: null, safeMode: false, hostname: null, authRequired: false,
-  authScheme: null, hasWifi: false, networkAddress: null, dependencies: null,
+  authScheme: null, hasWifi: false, networkAddress: null, dependencies: null, frozenDependencies: null,
 });
 const COMMIT = { flowName: "f", deployId: "d1", wifiProvision: null, dependencies: null, staticData: null };
 const BYTES = new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);

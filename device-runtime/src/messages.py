@@ -442,6 +442,10 @@ def _validate_hello(obj, name):
         # Added 2026-10-07 (flow dependencies): {name: hash} of the libraries installed for flows
         # (deps.py). Absent from runtimes older than 7.0.0, which hold every library in the root.
         "dependencies": _expect_optional_string_map(obj, "dependencies", name),
+        # Added 2026-11-13 (runtime 16.1.0): {name: hash} frozen into a custom image (deps_frozen). A name whose
+        # hash differs from "dependencies" has a /lib copy running in place of the image's. Absent on stock
+        # firmware and older runtimes.
+        "frozenDependencies": _expect_optional_string_map(obj, "frozenDependencies", name),
     }
 
 

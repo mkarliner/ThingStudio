@@ -8,6 +8,8 @@ import {
   librariesToSend,
   libraryMessages,
   resolveDependencies,
+  sendsOverFrozen,
+  shadowedFrozenLibraries,
   topModuleOfBoardFile,
   type DependencyInfo,
 } from "../src/compiler/flow-dependencies.js";
@@ -109,6 +111,30 @@ describe("librariesToSend", () => {
   });
   it("sends everything when the board's inventory is unknown", () => {
     expect(librariesToSend({ b: "2", a: "1" }, null)).toEqual(["a", "b"]);
+  });
+});
+
+// A custom image's frozen libraries vs /lib copies (2026-11-13, HELLO's frozenDependencies): the S3 ran a
+// stale /lib/ts_remote in place of its image's, and nothing said so.
+describe("shadowedFrozenLibraries", () => {
+  it("names a frozen library whose /lib copy differs", () => {
+    expect(shadowedFrozenLibraries({ ts_remote: "old", ts_wifi: "w" }, { ts_wifi: "w", ts_remote: "new" })).toEqual(["ts_remote"]);
+  });
+  it("is empty when every frozen library is the one in use", () => {
+    expect(shadowedFrozenLibraries({ a: "1", b: "2" }, { a: "1" })).toEqual([]);
+  });
+  it("is empty on stock firmware or with no inventory", () => {
+    expect(shadowedFrozenLibraries({ a: "1" }, null)).toEqual([]);
+    expect(shadowedFrozenLibraries(null, { a: "1" })).toEqual([]);
+  });
+});
+
+describe("sendsOverFrozen", () => {
+  it("names the libraries about to be sent that the image already has", () => {
+    expect(sendsOverFrozen(["ts_remote", "extra"], { ts_wifi: "w", ts_remote: "r" })).toEqual(["ts_remote"]);
+  });
+  it("is empty on stock firmware", () => {
+    expect(sendsOverFrozen(["a"], null)).toEqual([]);
   });
 });
 

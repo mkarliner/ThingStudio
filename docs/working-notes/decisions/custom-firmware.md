@@ -110,3 +110,14 @@ chip. The classic-ESP32 image's own history (why freeze, chunked deploy, local b
   copy-paste command for the newest. Builds still pile up in `out/` on purpose — the last tested image stays
   flashable by name — and `publish.sh` needs no change: its own newest-pick is already verified against
   `tested.json` before anything ships.
+  *Correction, 2026-11-13:* the incident behind this entry was misread. The S3 did get the right image
+  (`8790056`); the old page came from a stale `/lib/ts_remote` shadowing the frozen copy (next entry,
+  `learnings/firmware-builds.md`). The rule itself stands: which image to flash is still the user's to state.
+
+- **2026-11-13 — A deploy that puts a library over the image's own copy warns (Mike).** "You should get a
+  warning." A library in `/lib` runs in place of the frozen one (runtime 11.1.0, deliberate), so a deploy from
+  an editor older or newer than the image silently replaces image code and spends the RAM the image saved; on
+  the S3 it served a pre-fix remote page and cost ~24 KB of MicroPython heap with nothing in the console. Warn,
+  not refuse: overriding a frozen library is a legitimate use (testing a fix without a rebuild). Status: rule
+  decided; building it needs the board to say which libraries are frozen -- HELLO's `dependencies` gives one
+  hash per name, the winning one -- which is a protocol change awaiting Mike's go-ahead.

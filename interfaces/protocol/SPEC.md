@@ -118,6 +118,13 @@ renumbered.
 | `hasWifi` | bool | optional, default false |
 | `networkAddress` | string | optional |
 | `dependencies` | map string→string | optional |
+| `frozenDependencies` | map string→string | optional |
+
+`dependencies` is the library inventory, name → hash, as the board will import it: a library pushed to `/lib`
+wins over one frozen into the firmware, so its hash is the one listed. `frozenDependencies` (2026-11-13, runtime
+16.1.0) is the firmware's own frozen inventory, name → hash, sent only by a custom image. A name whose two hashes
+differ has a `/lib` copy running in place of the frozen one. The editor warns about that on connect, and before a
+deploy sends a library the image already has. Stock firmware and older runtimes leave the field out.
 
 ### DEPLOY — → device
 | Field | Type | |

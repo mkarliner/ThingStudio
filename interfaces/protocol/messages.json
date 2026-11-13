@@ -11,7 +11,7 @@
   },
   "nodeStatusStates": ["connected", "disconnected", "connecting", "error"],
   "messages": [
-    { "id": 1,  "name": "HELLO",                 "direction": "device->editor", "summary": "chip, runtime version/build, flow identity, free flash/RAM, safe mode, hostname, authRequired/authScheme, hasWifi, networkAddress, dependencies" },
+    { "id": 1,  "name": "HELLO",                 "direction": "device->editor", "summary": "chip, runtime version/build, flow identity, free flash/RAM, safe mode, hostname, authRequired/authScheme, hasWifi, networkAddress, dependencies, frozenDependencies" },
     { "id": 2,  "name": "DEPLOY",                "direction": "editor->device", "summary": "full flow: bytecode, staticData, flowName, deployId, wifiProvision, dependencies" },
     { "id": 3,  "name": "DEPLOY_ACK",            "direction": "device->editor", "summary": "deploy succeeded, with free-space figures after the new flow started" },
     { "id": 4,  "name": "DEPLOY_ERROR",          "direction": "device->editor", "summary": "deploy failed: a short code and a message" },
