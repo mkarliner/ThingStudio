@@ -1,6 +1,6 @@
 # HELLO frozenDependencies — briefing
 
-Status: handoff, 2026-11-13. Work in progress, **uncommitted** in the working tree on `remote-display-spike`.
+Status: handoff, 2026-11-13. On `remote-display-spike`: WIP commit `454ef216`, plus uncommitted follow-ups (see Remaining).
 Mike approved the protocol change in-session ("Yes, add it", 2026-11-13).
 
 ## Why
@@ -48,16 +48,17 @@ puts a library over the image's own copy **warns, not refuses**.
 
 ## Remaining, in order
 
-1. **Two listener integration tests fail with MemoryError** at `listener.py` line 126, while it is still
-   loading: `test_deploy_too_big_for_memory_is_answered_not_timed_out` and
-   `test_receive_oom_leaves_the_running_flow_alone`. Both run under a deliberately small heap. Not yet known
-   whether `HEAD` fails the same way. Check by running the test against
-   `git archive HEAD device-runtime | tar -x -C <scratch>`. If only this change fails, the extra code in
-   `deps.py`/`messages.py` tipped it over; look at the heap the test sets before trimming anything.
-2. **User guide**: `docs/user-guide/custom-firmware.md`, under "Connect and deploy", should name the new console
-   warning. Then run `python3 tools/docs_lint.py`.
-3. `python3 tools/protocol_coverage.py` (COVERAGE.md is generated, and `make test` fails if it is stale).
-4. **Commit**: Mike runs it, starting with `rm -f .git/index.lock`. Include this brief.
+Items 1-3 done 2026-11-13 (later in the session):
+- **The listener MemoryError was a fragile test, not a too-big runtime.** Measured on a Linux MicroPython 1.29.0
+  unix port: the listener fails to boot inside a narrow band of heap sizes, through fragmentation, and boots either
+  side of it. Before this change the band was 170-172k; after it, 195-201k, which covers the tests' 200k. Minimum
+  boot heap went from 156k to 160k. The two tests now boot through `_start_small_heap_listener()`, which tries
+  200/188/212/176k and retries only a boot MemoryError; the 60 KB check is unchanged. All 26 listener integration
+  tests pass.
+- `custom-firmware.md` "Connect and deploy" names both console warnings; `docs_lint.py` clean.
+- `protocol_coverage.py`: COVERAGE.md was already current.
+
+4. **Commit**: Mike runs it. The work is in WIP commit `454ef216`; these follow-ups are uncommitted on top.
 5. **Rebuild the S3 image** at 16.1.0 (`firmware/build.sh esp32-s3`). The field comes from the frozen listener,
    so the S3 reports it only after a rebuild and reflash. Then confirm: deploy from an older checkout and see
    the warning.

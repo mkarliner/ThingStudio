@@ -127,6 +127,15 @@ If `[libraries]` sends a library instead, the editor's copy differs from the ima
 is older or newer than the image. The sent copy goes to `/lib` and runs in place of the image's, using RAM the image
 had saved. Use the editor version the image was released with, or reinstall the image, which clears `/lib`.
 
+The console warns when this happens:
+
+- `[deploy warning] …: this editor's copy differs from the image's and will run instead` appears before the deploy
+  sends it. The deploy still goes ahead: overriding an image's library is how you test a fix without a rebuild.
+- `[libraries] …: a copy in /lib runs instead of this image's` appears on connect when an earlier deploy left one
+  there.
+
+The warnings need an image with runtime 16.1.0 or later.
+
 ## Memory and the board
 
 The image does not add RAM. Measured on the CYD (classic ESP32-D0WD, 4 MB, no PSRAM) with a GUI flow, in KB:

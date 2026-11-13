@@ -222,15 +222,41 @@ def test_deploy_success_and_flow_runs():
             listener.close()
 
 
+# The two tests below need a heap small enough that a 60 KB message cannot fit, but big enough to boot the
+# listener. "Big enough" is not monotonic: a few heap sizes fail to boot through fragmentation, though sizes
+# either side boot (2026-11-13, MicroPython 1.29.0 unix port: 170-172k failed before runtime 16.1.0,
+# 195-201k after it, everything else from ~160k up booted). Any edit to the listener can move that band, so
+# try a few nearby sizes instead of relying on one. Only the boot retries; the 60 KB check stays as strict.
+_SMALL_HEAPS_K = (200, 188, 212, 176)
+
+
+def _start_small_heap_listener(tmpdir):
+    failures = []
+    for kb in _SMALL_HEAPS_K:
+        listener = ListenerProcess(tmpdir, mp_args=("-X", "heapsize=%dk" % kb))
+        try:
+            line = listener.wait_for(
+                lambda l: l == "LISTENER_READY" or l.startswith("MemoryError"),
+                description="LISTENER_READY at heapsize=%dk" % kb,
+            )
+        except AssertionError:
+            listener.close()
+            raise
+        if line == "LISTENER_READY":
+            return listener
+        listener.close()
+        failures.append("%dk" % kb)
+    raise AssertionError("listener did not boot at any small heap: %s" % ", ".join(failures))
+
+
 def test_deploy_too_big_for_memory_is_answered_not_timed_out():
     # 9.2.0 (2026-10-08, CYD): a DEPLOY the board has no room to receive got no answer at all, so the editor
     # waited out its 30 s timeout. Now it gets DEPLOY_ERROR MemoryError, and the listener keeps going.
     with tempfile.TemporaryDirectory() as tmpdir:
         small = _compile_flow(tmpdir, "flow_small", "print('SMALL_FLOW_RAN')\n")
-        # 200k: enough to boot the listener, not enough to take a 60 KB message on top (160k also works).
-        listener = ListenerProcess(tmpdir, mp_args=("-X", "heapsize=200k"))
+        # ~200k: enough to boot the listener, not enough to take a 60 KB message on top.
+        listener = _start_small_heap_listener(tmpdir)
         try:
-            listener.wait_for(lambda l: l == "LISTENER_READY", description="LISTENER_READY")
             listener.send_message({"type": "DEPLOY", "bytecode": small, "staticData": b"x" * 60000})
             line = listener.wait_for(
                 lambda l: l.startswith(F64_PREFIX) and _decode_f64_line(l)["type"] == "DEPLOY_ERROR",
@@ -336,9 +362,8 @@ def test_receive_oom_leaves_the_running_flow_alone():
     # changes nothing -- what to do next is the editor's advice and the user's decision.
     with tempfile.TemporaryDirectory() as tmpdir:
         small = _compile_flow(tmpdir, "flow_small", "print('SMALL_FLOW_RAN')\n")
-        listener = ListenerProcess(tmpdir, mp_args=("-X", "heapsize=200k"))
+        listener = _start_small_heap_listener(tmpdir)
         try:
-            listener.wait_for(lambda l: l == "LISTENER_READY", description="LISTENER_READY")
             listener.send_message({"type": "DEPLOY", "bytecode": small, "staticData": b""})
             listener.wait_for(lambda l: l == "SMALL_FLOW_RAN", description="the first flow running")
 
