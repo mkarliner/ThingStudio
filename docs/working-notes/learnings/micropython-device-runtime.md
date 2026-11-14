@@ -623,3 +623,14 @@ earlier): `12/13 passed`; nine straight runs after, all `13/13`. Each exchange p
 can be missed once and never again. Don't trust a single run as a regression signal against a busy box; rerun
 before imagining a code bug. Same method trap as the build-vs-suite contention in `editor-build-tooling.md`.
 
+## Board UDP loopback self-clocks to ~18 pkt/s, 2026-11-14
+
+First run of `test-flows/udp-loopback-bench.flow.json` (`udp_send` -> `127.0.0.1` -> `udp_receive`, a board at
+Mike's bench, 2026-11-14): offered 11 ms (~90/s), achieved ~18 pkt/s with `tx`=`rx` within 1-2 in flight, `late=0`, RTT avg
+~56 ms (min 51). Cycle time equalled RTT, and the 1 s report timer kept its ~1000 ms cadence, so the loop was
+not starved overall — the send chain itself waited on the stack. The only sleep in `udp_send`'s path is its
+10 ms EAGAIN retry, so the stack's loopback queue back-pressures `sendto` until `udp_receive`'s ~10 ms poll
+drains a datagram: one serialized round trip at a time. The documented ~100/s receive ceiling never bound.
+Reading: 18 pkt/s is the two-node flow path's rate, not the board's UDP speed; raw stack throughput would
+need its own socket off the trigger loop (a custom node).
+

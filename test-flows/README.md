@@ -357,8 +357,16 @@ loss, not the node's. Faster sends only grow `lost` at a flat ~100/s `rx`.
 `127.0.0.1` back; if `rx/s` is 0, point the send host at the board's own
 LAN IP (the `wifi_status` debug line shows it). Needs the `home` WiFi
 credential (or rename the config's `credentialName`). Checked with
-`thingstudio-compile --board board:lolin-s2-mini --layout`: OK, 0 warnings;
-not yet deployed as a benchmark on a board.
+`thingstudio-compile --board board:lolin-s2-mini --layout`: OK, 0 warnings.
+
+**First board run, 2026-11-14:** ~18 pkt/s, `tx`=`rx` within 1-2 in
+flight, `late=0`, `rtt` avg ~56 ms (min 51, max ~73). Cycle time matched
+RTT: the send waited on the stack -- `udp_send`'s 10 ms EAGAIN retry is
+the only sleep in its path -- until `udp_receive`'s poll drained the
+loopback queue, so the rate was set by the serialized round trip, not
+by the 11 ms timer and never near the ~100/s node ceiling. The report
+timer's own cadence stayed at ~1000 ms between lines, ruling out global
+event-loop starvation as the cause.
 
 ## `wifi-provision-test.flow.json`
 
