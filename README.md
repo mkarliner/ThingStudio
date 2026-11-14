@@ -74,6 +74,7 @@ device-runtime/  MicroPython code for the board: listener, protocol, runtime
 docs/            user guide, design doc, working notes
 test-flows/      example flows and scripts for testing on real hardware
 test/hil/        hardware-in-the-loop rig (run by hand, not in CI)
+bench/           device performance bench (MicroPython baseline, viper/native)
 pocs/            the original proof-of-concept spikes, kept for reference
 tools/           build, screenshot and license-scan scripts
 ```

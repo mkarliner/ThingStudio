@@ -6,6 +6,9 @@ files to re-enter current work. The per-session handoff rules that produce these
 
 ## Live — active handoffs and open threads
 
+- `device-performance-bench-brief.md` — 2026-11-14 — device-performance bench kit and Pico LA written;
+  next session runs the kit on the VM with USB passthrough (S3, Pico W, C3), then the ThingStudio flow
+  suite and the internal results note.
 - `online-editor-demo-build-briefing.md` — 2026-11-08 — build the code-only editor demo for demo.thingstudio.net
   (demo build mode, examples, compile and Python preview, file open/save, request check, release zip, home-lab
   deploy script and server config); plan in `online-editor-demo-scoping.md`.
