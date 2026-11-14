@@ -2059,6 +2059,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Behavior
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -3511,6 +3522,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Behavior
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -3546,6 +3568,11 @@
   <a href="../function/">function</a> node.</li>
 <li><code>host</code> and <code>port</code> — the sender's address.</li>
 </ul>
+<h2 id="behavior">Behavior</h2>
+<p>The node takes at most one datagram each time its loop runs, and the loop runs about every 10 ms: the output stops at
+roughly 100 messages a second. Datagrams that arrive meanwhile wait in the socket for the next turn.
+<strong>Poll interval (ms)</strong> is how long a wait sleeps before checking again when nothing has arrived; lowering it does not
+raise that ceiling. A sender that outruns the node fills the socket and loses datagrams.</p>
 
 
 
