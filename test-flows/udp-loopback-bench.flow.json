@@ -1,0 +1,114 @@
+{
+  "formatVersion": 1,
+  "flowName": "udp loopback bench",
+  "notes": "Benchmarks UDP loopback on the board: udp_send to 127.0.0.1, udp_receive on the same port, one line per second printed by the report debug: tx/s rx/s totals lost and RTT avg/min/max in ms.\n\nRead: the send timer is 11 ms (~90 pkt/s) because udp_receive's source loop yields every 10 ms, so ~100 pkt/s is the receive ceiling. Below that rate, lost = sent - received and rtt are the stack's own numbers. Push the send timer faster and rx/s flattens near 100: what grows is the lost count, which is the node limit, not the board's. Change the payload size by editing the 'x' padding in the send function (~50 bytes now); change the offered rate by editing the send timer's intervalMs (floor ~11 to stay under the ceiling).\n\nLoopback caveat (test-flows/network-packages-pass.md): some WiFi stacks do not loop 127.0.0.1 back. If rx/s is 0 while tx/s is right, set host to the board's own LAN IP (from the wifi_status debug line with full message on) or to the host PC's IP and listen there: nc -u -l 9918. WiFi credentials: the flow's one config uses credentialName 'home' - create it in the editor first. Checked with thingstudio-compile --board board:lolin-s2-mini; never deployed as a benchmark on a board.",
+  "nodes": [
+    {
+      "id": "link",
+      "type": "thingstudio/wifi_status",
+      "properties": {
+        "pollMs": 2000,
+        "wifiConfigId": "cfg-wifi"
+      }
+    },
+    {
+      "id": "link-out",
+      "type": "thingstudio/debug",
+      "properties": {
+        "fullMessage": true
+      }
+    },
+    {
+      "id": "tick-send",
+      "type": "thingstudio/timer",
+      "properties": {
+        "intervalMs": 11
+      }
+    },
+    {
+      "id": "gen",
+      "type": "thingstudio/function",
+      "properties": {
+        "code": "import time\nseq = context.get('seq', 0) + 1\ncontext.set('seq', seq)\nflow.set('tx', flow.get('tx', 0) + 1)\nmsg['payload'] = '%d:%d:%s' % (seq, time.ticks_ms(), 'x' * 32)\nmsg['topic'] = 'bench'\nreturn msg",
+        "outputCount": 1
+      }
+    },
+    {
+      "id": "tx",
+      "type": "thingstudio/udp_send",
+      "properties": {
+        "host": "127.0.0.1",
+        "port": 9918,
+        "timeoutMs": 2000,
+        "wifiConfigId": "cfg-wifi"
+      }
+    },
+    {
+      "id": "rx",
+      "type": "thingstudio/udp_receive",
+      "properties": {
+        "port": 9918,
+        "pollMs": 20,
+        "wifiConfigId": "cfg-wifi"
+      }
+    },
+    {
+      "id": "tally",
+      "type": "thingstudio/function",
+      "properties": {
+        "code": "import time\np = msg['payload']\nif isinstance(p, (bytes, bytearray)):\n    p = p.decode()\nparts = p.split(':')\nseq = int(parts[0])\nrtt = time.ticks_diff(time.ticks_ms(), int(parts[1]))\nflow.set('rx', flow.get('rx', 0) + 1)\nflow.set('rtt_sum', flow.get('rtt_sum', 0) + rtt)\nmn = flow.get('rtt_min')\nif mn is None or rtt < mn:\n    flow.set('rtt_min', rtt)\nmx = flow.get('rtt_max')\nif mx is None or rtt > mx:\n    flow.set('rtt_max', rtt)\nlast = flow.get('last_seq', 0)\nif seq <= last:\n    flow.set('late', flow.get('late', 0) + 1)\nflow.set('last_seq', max(seq, last))\nreturn None",
+        "outputCount": 1
+      }
+    },
+    {
+      "id": "tick-report",
+      "type": "thingstudio/timer",
+      "properties": {
+        "intervalMs": 1000
+      }
+    },
+    {
+      "id": "report",
+      "type": "thingstudio/function",
+      "properties": {
+        "code": "tx = flow.get('tx', 0)\nrx = flow.get('rx', 0)\ndtx = tx - flow.get('tx_prev', 0)\ndrx = rx - flow.get('rx_prev', 0)\nflow.set('tx_prev', tx)\nflow.set('rx_prev', rx)\ns = flow.get('rtt_sum', 0)\nmn = flow.get('rtt_min')\nmx = flow.get('rtt_max')\nflow.set('rtt_sum', 0)\nflow.set('rtt_min', None)\nflow.set('rtt_max', None)\nif drx > 0:\n    lat = 'rtt avg=%dms min=%dms max=%dms' % (s / drx, mn, mx)\nelse:\n    lat = 'rtt n/a (nothing received)'\nlost = tx - rx\nif lost < 0:\n    lost = 0\nmsg['payload'] = 'udp loopback tx=%d/s rx=%d/s total tx=%d rx=%d lost=%d late=%d %s' % (dtx, drx, tx, rx, lost, flow.get('late', 0), lat)\nmsg['topic'] = 'bench'\nreturn msg",
+        "outputCount": 1
+      }
+    },
+    {
+      "id": "out",
+      "type": "thingstudio/debug",
+      "properties": {}
+    }
+  ],
+  "edges": [
+    ["link", 0, "link-out", 0],
+    ["tick-send", 0, "gen", 0],
+    ["gen", 0, "tx", 0],
+    ["rx", 0, "tally", 0],
+    ["tick-report", 0, "report", 0],
+    ["report", 0, "out", 0]
+  ],
+  "layout": {
+    "link": { "pos": [80, 80] },
+    "link-out": { "pos": [300, 80] },
+    "tick-send": { "pos": [80, 180] },
+    "gen": { "pos": [300, 180] },
+    "tx": { "pos": [520, 180] },
+    "rx": { "pos": [80, 280] },
+    "tally": { "pos": [300, 280] },
+    "tick-report": { "pos": [80, 380] },
+    "report": { "pos": [300, 380] },
+    "out": { "pos": [520, 380] }
+  },
+  "configs": [
+    {
+      "id": "cfg-wifi",
+      "type": "thingstudio/config/wifi",
+      "properties": {
+        "credentialName": "home",
+        "security": "password"
+      }
+    }
+  ]
+}

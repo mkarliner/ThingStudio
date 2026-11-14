@@ -339,6 +339,27 @@ per heartbeat confirms the send direction independent of whether the board
 ever manages to receive its own echo back, which is worth checking
 separately if only one direction seems to be working.
 
+## `udp-loopback-bench.flow.json`
+
+Measures UDP on one board against itself -- `udp_send` to `127.0.0.1:9918`,
+`udp_receive` on the same port, no host-side peer (unlike the echo tester
+above). Send chain (`timer` 11 ms -> `function` stamps `seq:ticks_ms:pad` ->
+`udp_send`), receive chain (`udp_receive` -> `function` computes RTT and
+counts), and a 1 s `timer` -> `function` -> `debug` line:
+`tx=N/s rx=N/s total tx=.. rx=.. lost=.. late=.. rtt avg/min/max`.
+
+The 11 ms send interval is deliberate: `udp_receive`'s source loop yields
+every 10 ms (see `udp-receive.ts`'s header), so ~100 pkt/s is the receive
+ceiling and the bench runs just under it -- there, `lost` is the stack's
+loss, not the node's. Faster sends only grow `lost` at a flat ~100/s `rx`.
+
+`network-packages-pass.md`'s caveat applies: some stacks don't loop
+`127.0.0.1` back; if `rx/s` is 0, point the send host at the board's own
+LAN IP (the `wifi_status` debug line shows it). Needs the `home` WiFi
+credential (or rename the config's `credentialName`). Checked with
+`thingstudio-compile --board board:lolin-s2-mini --layout`: OK, 0 warnings;
+not yet deployed as a benchmark on a board.
+
 ## `wifi-provision-test.flow.json`
 
 Minimal hands-on test for the boot-time WiFi self-provisioning feature
