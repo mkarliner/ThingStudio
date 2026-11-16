@@ -3710,7 +3710,7 @@
 <h1 id="getting-started">Getting started</h1>
 <p>Want a look first? <a href="https://demo.thingstudio.net/">Try the editor in your browser</a> before you install anything.
 The demo doesn't connect to a board, but you can build a flow and read the MicroPython it makes.</p>
-<p>From a new board to a blinking LED, in six steps:</p>
+<p>From a new board to a blinking LED in six steps, then one more:</p>
 <ol>
 <li><strong><a href="#step-1-install-thingstudio">Install ThingStudio</a></strong> on your computer.</li>
 <li><strong><a href="../editor-tour/">Tour the editor</a></strong>: what each part of the screen does.</li>
@@ -3721,6 +3721,8 @@ The demo doesn't connect to a board, but you can build a flow and read the Micro
 <li><strong><a href="../first-flow/">Blink an LED</a></strong>: build your first flow and deploy it. Or open <code>tutorials/blink.flow.json</code>
    (the <a href="../tutorial-flows/#where-the-folder-is">tutorials folder</a>) with <strong>File → Open…</strong>, point the pin at your
    board's own LED, and deploy.</li>
+<li><strong><a href="../first-flow/#tell-us-how-it-went">Tell us how it went</a></strong>, even if you didn't get to the end. One line will
+   do.</li>
 </ol>
 <p>When something doesn't work, <a href="../debugging/">Debugging</a> and the <a href="../faq/">FAQ</a> go by what you see on screen.</p>
 <p>You need a board with one of the processors in <a href="../supported-hardware/">Supported hardware</a>, and a USB cable that
@@ -3820,6 +3822,7 @@ window that was already open doesn't see it. Open a new window, or run this in t
 <div class="highlight"><pre><span></span><code><span class="nv">$env:Path</span> <span class="p">=</span> <span class="no">[Environment]</span><span class="p">::</span><span class="n">GetEnvironmentVariable</span><span class="p">(</span><span class="s1">'Path'</span><span class="p">,</span><span class="s1">'User'</span><span class="p">)</span> <span class="p">+</span> <span class="s1">';'</span> <span class="p">+</span> <span class="no">[Environment]</span><span class="p">::</span><span class="n">GetEnvironmentVariable</span><span class="p">(</span><span class="s1">'Path'</span><span class="p">,</span><span class="s1">'Machine'</span><span class="p">)</span>
 </code></pre></div>
 <p>If the command still isn't found, start ThingStudio by its full path, from the list above.</p>
+<p>Stuck here? Say so in the <a href="https://github.com/mkarliner/ThingStudio/discussions/20">"First impressions" thread</a>. One line will do.</p>
 <h3 id="remove-thingstudio">Remove ThingStudio</h3>
 <p><a href="../installation-details/#remove">Installation details</a> has the commands for the installer script. To remove a package,
 delete its folder. Removing never touches your flows or your settings in <code>.thingstudio</code>.</p>
