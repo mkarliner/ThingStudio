@@ -3,7 +3,7 @@
 Want a look first? [Try the editor in your browser](https://demo.thingstudio.net/) before you install anything.
 The demo doesn't connect to a board, but you can build a flow and read the MicroPython it makes.
 
-From a new board to a blinking LED, in six steps:
+From a new board to a blinking LED in six steps, then one more:
 
 1. **[Install ThingStudio](#step-1-install-thingstudio)** on your computer.
 2. **[Tour the editor](editor-tour.md)**: what each part of the screen does.
@@ -14,6 +14,8 @@ From a new board to a blinking LED, in six steps:
 6. **[Blink an LED](first-flow.md)**: build your first flow and deploy it. Or open `tutorials/blink.flow.json`
    (the [tutorials folder](tutorial-flows.md#where-the-folder-is)) with **File → Open…**, point the pin at your
    board's own LED, and deploy.
+7. **[Tell us how it went](first-flow.md#tell-us-how-it-went)**, even if you didn't get to the end. One line will
+   do.
 
 When something doesn't work, [Debugging](debugging.md) and the [FAQ](faq.md) go by what you see on screen.
 
@@ -124,6 +126,8 @@ $env:Path = [Environment]::GetEnvironmentVariable('Path','User') + ';' + [Enviro
 ```
 
 If the command still isn't found, start ThingStudio by its full path, from the list above.
+
+Stuck here? Say so in the ["First impressions" thread](https://github.com/mkarliner/ThingStudio/discussions/20). One line will do.
 
 ### Remove ThingStudio
 

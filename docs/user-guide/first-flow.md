@@ -67,8 +67,12 @@ Two tutorials take the flow further:
 
 ## Tell us how it went
 
-Started from a blank board? [Tell us how it went](https://github.com/mkarliner/ThingStudio/discussions/new?category=onboarding-reports):
-where the guide or the tool let you down is the most useful part. To keep it private, email mike@minus1.com.
+One line in the ["First impressions" thread](https://github.com/mkarliner/ThingStudio/discussions/20) is enough: your board, and roughly how long it took. If anything
+tripped you up on the way, say where.
+
+With ten minutes to spare, an
+[onboarding report](https://github.com/mkarliner/ThingStudio/discussions/new?category=onboarding-reports) helps
+most: how long each step took, and every place you stopped or guessed. To keep it private, email info@thingstudio.net.
 
 ## If it doesn't blink
 
@@ -86,4 +90,5 @@ Each symptom below has its own fix:
 - **Deploy works but the LED stays dark:** check the pin number against **Pins…**. Some boards' LEDs light when
   the pin is off; the LED still blinks, the other way round.
 
-For anything else, see [Debugging & troubleshooting](debugging.md).
+For anything else, see [Debugging & troubleshooting](debugging.md). Still stuck? Say so in the
+["First impressions" thread](https://github.com/mkarliner/ThingStudio/discussions/20).

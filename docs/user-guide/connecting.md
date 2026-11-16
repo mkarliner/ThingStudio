@@ -33,6 +33,8 @@ Once the runtime is installed, the console shows which flow the board is running
 Once a board with WiFi is set up, you can also connect to it over WiFi. See
 [Connecting over WiFi](wifi-connection.md).
 
+Stuck here? Say so in the ["First impressions" thread](https://github.com/mkarliner/ThingStudio/discussions/20). One line will do.
+
 ## Next
 
 Step 5: [install the runtime](installing-runtime.md).

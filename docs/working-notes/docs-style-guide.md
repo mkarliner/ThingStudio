@@ -57,6 +57,8 @@ Flagged so far, each with neutral text in place until Mike writes his own:
   titles of Web Blink and Blink from anywhere. They set the mood for each project.
 - 2026-11-02 `background/` and `coming-from/`: the opening of each page. It explains why the project exists and
   speaks to newcomers from other tools.
+- 2026-11-16 `getting-started.md`: step 7 in the opening list, "Tell us how it went, even if you didn't get to the
+  end". The first invitation to report back, seen before anyone starts.
 
 Written by Mike, so settled text:
 

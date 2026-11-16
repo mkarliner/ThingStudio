@@ -140,6 +140,8 @@ on [micropython.org/download](https://micropython.org/download/) and the
 [Supported hardware](supported-hardware.md) lists the chips ThingStudio is tested on. Another chip needs a
 processor definition: see [Other boards](supported-hardware.md#other-boards).
 
+Stuck here? Say so in the ["First impressions" thread](https://github.com/mkarliner/ThingStudio/discussions/20). One line will do.
+
 ## Next
 
 Step 4: [connect your board](connecting.md) to ThingStudio.
