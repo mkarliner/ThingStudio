@@ -99,6 +99,14 @@ ThingStudioMarketing repo, not here.
   used and what it counts.
 - **[LAUNCH-NICE]** **Speaker/tone node.** The other two in this group shipped: `neopixel` (WS2812) and the
   `adc` node were built and hardware-tested 2026-10-12.
+- **[BACKLOG]** **A state machine node, or an equivalent (Mike, 2026-11-17).** Raised by Massimo Banzi (Arduino
+  co-founder) on the Show HN (news.ycombinator.com/item?id=50452230): state machine design is central to how he
+  teaches, and visual tools rarely support it. Mike's view: in Arduino, a state machine is the main way out of a
+  growing `loop()`, which flows already avoid by responding to events; but named states with transitions (modes,
+  sequences, debounced protocols) are still awkward to wire from `change`/`function` nodes today. Node-RED has
+  contributed state-machine nodes to compare against. Open: one node holding states and transitions as
+  properties, or a pattern plus docs; how state shows in the editor and on the console. From marketing, not designed
+  here.
 
 ## Boards / definitions
 
