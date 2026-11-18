@@ -365,8 +365,8 @@ btnRuntime.addEventListener("click", async () => {
     // One plain line either way (Mike, 2026-11-18: "Runtime ready" read as ambiguous). How it was done goes second.
     say(
       result.frozen
-        ? "Runtime installed. The board is restarting. (This image already carried the runtime, so only its boot file was written.)"
-        : "Runtime installed. The board is restarting.",
+        ? `Runtime installed on ${result.machine}. The board is restarting. (This image already carried the runtime, so only its boot file was written.)`
+        : `Runtime installed on ${result.machine}. The board is restarting.`,
       "ok",
     );
     showNextLink("Next: ", "open the editor", "/", " and click Connect.");

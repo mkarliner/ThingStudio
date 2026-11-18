@@ -8,7 +8,7 @@
 
 import { runtimeSources } from "virtual:runtime-sources";
 import { explainInstallFailure, type Advice } from "../app/board-diagnosis.js";
-import { CATCH_STEP, ENTER_STEP, RawReplError, catchPrompt, classifyReply, installRuntime, isFrozenImage, type ClosableLink } from "../raw-repl/raw-repl.js";
+import { CATCH_STEP, ENTER_STEP, RawReplError, boardMachine, catchPrompt, classifyReply, installRuntime, isFrozenImage, type ClosableLink } from "../raw-repl/raw-repl.js";
 import { frozenInstall, fullInstall } from "../raw-repl/runtime-files.js";
 import { openSerialLink, type SerialPortLike } from "../raw-repl/web-serial-link.js";
 import { frameLine } from "../protocol/transport.js";
@@ -92,6 +92,8 @@ export interface InstallResult {
   advice?: Advice;
   /** For a success: which install it was. */
   frozen?: boolean;
+  /** The board, as MicroPython names it ("Raspberry Pi Pico W with RP2040"), so a wrong port shows. */
+  machine?: string;
 }
 
 /** The whole Install runtime. `onProgress` gets 0-100 across the files pushed. Never throws. */
@@ -105,6 +107,10 @@ export async function installRuntimeOn(
     link = await catchPrompt(opener(port), Date.now() + CATCH_TIMEOUT_MS, onStatus, ASK_LISTENER_TO_STOP);
     onStatus("Board stopped. Checking what it runs…");
     const frozen = await isFrozenImage(link);
+    // Said before anything is written: with two boards plugged in, the port picker's entries look alike
+    // (2026-11-18, Mike's Pico and Pico W).
+    const machine = await boardMachine(link);
+    onStatus(`Installing on: ${machine}…`);
     const plan = frozen ? frozenInstall(runtimeSources) : fullInstall(runtimeSources, await precompile(onStatus), __RUNTIME_BUILD_SHA__);
     const total = plan.files.reduce((sum, f) => sum + f.data.length, 0) || 1;
     let done = 0;
@@ -118,7 +124,7 @@ export async function installRuntimeOn(
       },
     });
     onProgress(100);
-    return { ok: true, frozen };
+    return { ok: true, frozen, machine };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     const diagnosis = err instanceof RawReplError && (err.step === ENTER_STEP || err.step === CATCH_STEP) ? classifyReply(err.seen) : null;

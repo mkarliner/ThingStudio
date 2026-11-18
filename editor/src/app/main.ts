@@ -3063,7 +3063,7 @@ async function installRuntimeInBrowser(): Promise<void> {
     logAdvice("[install runtime failed]", result.advice ?? { text: "unknown failure" }, "err");
     return;
   }
-  logLine('[install runtime OK] board restarting. Click "Connect" and pick its port.', "ok");
+  logLine(`[install runtime OK] on ${result.machine ?? "the board"}. It's restarting: click "Connect" and pick its port.`, "ok");
 }
 
 if (CAN_REACH_BOARD) {
