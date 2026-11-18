@@ -10,7 +10,7 @@ name: Release
 # "Run workflow" (workflow_dispatch) -> the same build and smoke tests, archives left as run artifacts, no
 # release. Use it to test a change to the packaging without cutting a version.
 #
-# The online editor demo (demo.thingstudio.net, docs/working-notes/online-editor-demo-scoping.md) is built from
+# ThingStudio Web (web.thingstudio.net, docs/working-notes/online-editor-webserial-briefing.md) is built from
 # the same commit, checked in a browser (tools/demo_request_check.py: every example compiles, no request leaves
 # the page), and zipped as thingstudio-demo-<version>.zip. A tag adds the zip, its line in SHA256SUMS and the
 # check's reports to the draft release; tools/deploy_demo.sh installs it from there.
