@@ -272,7 +272,11 @@ closed. Left for marketing: the landing page
   Connect on the install page found no bootloader. Likely cause, unconfirmed: the reset into download mode brings up
   a new USB device, a port the page hasn't been given. The page now spots this case by the port's USB ids (Espressif
   vendor id, not the USB-Serial/JTAG product id) and says to enter download mode by hand and pick the new port.
-  To confirm with Mike: does BOOT-while-plugging-in then Connect work?
+  Confirmed (chrome://device-log, Mike, 2026-11-18): normal mode is the firmware's own USB (0x4001); download mode
+  appears as the USB-Serial/JTAG (0x1001, another serial number) for about a second and then the chip restarts into
+  its firmware, so no port can be picked in time. **Decided (Mike): leave such boards to the installed editor** for
+  the write; `in-your-browser.md` says so. Not built, if more such boards turn up: grant the JTAG device once (picker
+  open before switching), then follow it on Web Serial's connect event and open it within the window.
 - **Still to try:** a plain S3 on native USB (write, Install runtime, Deploy), an S2 Mini (BOOT+RESET, the port changing),
   Remove flow from the online editor, redeploy and node status on a Pico W, and an nRF52 drag.
 

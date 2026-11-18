@@ -73,3 +73,7 @@ runtime is older than the editor's. Click **Install runtime** to update it.
 - **A board on the chip's own USB, running other firmware** (a conference badge, say): the page can't switch it to
   download mode. Unplug it, hold BOOT while you plug it back in, then Connect and pick its port again. It has a new
   name in download mode.
+- **A board that reaches download mode only through its own firmware**, such as the EMF 2022 Tidal badge, stays in
+  it for about a second: too short to pick its port. Write its image with the
+  [installed ThingStudio](getting-started.md#step-1-install-thingstudio). After that, Install runtime and the editor
+  work here as usual.
