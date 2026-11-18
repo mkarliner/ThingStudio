@@ -1754,13 +1754,15 @@ function populateBoardSelect(): void {
   };
   add(select, "auto", "Board: Auto");
   const byName = <T extends { name: string }>(a: T, b: T): number => a.name.localeCompare(b.name);
-  const boards = document.createElement("optgroup");
-  boards.label = "Boards";
-  for (const b of [...definitions.boards.values()].sort(byName)) add(boards, `board:${b.id}`, b.name);
+  // Processors first (Mike, 2026-11-18): the processor decides what a flow can do; a board adds its pin names,
+  // the pin cheat sheet, on top.
   const processors = document.createElement("optgroup");
-  processors.label = "Processor only";
+  processors.label = "Processors";
   for (const p of [...definitions.processors.values()].sort(byName)) add(processors, `processor:${p.id}`, `${p.name} (any board)`);
-  select.append(boards, processors);
+  const boards = document.createElement("optgroup");
+  boards.label = "Boards (adds pin names)";
+  for (const b of [...definitions.boards.values()].sort(byName)) add(boards, `board:${b.id}`, b.name);
+  select.append(processors, boards);
   if (definitions.problems.length > 0) {
     const bad = document.createElement("optgroup");
     bad.label = "Invalid files (see console)";

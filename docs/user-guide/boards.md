@@ -10,6 +10,9 @@ Each board has a definition file, and so does each processor. ThingStudio comes 
 
 Pick the board a flow is for from the **Board** menu in the toolbar. The default, **Auto**, uses the connected board. Auto recognises a board by the name MicroPython reports for it, and the menu shows what it found, for example **Auto: LOLIN S2 Mini**.
 
+The menu lists processors first, then boards. The processor decides which pins exist and what a flow can do. A board
+adds its own pin names on top, such as **LED_RED**, and its pin cheat sheet.
+
 Some boards report only their processor. The CYD, for example, reports itself as a generic ESP32. Pick those boards from the menu by hand. You can also pick a processor without a board, for example **ESP32 (any board)**.
 
 The board menu picks pins, not memory. A classic ESP32 board with no PSRAM can run a GUI flow by flashing the
