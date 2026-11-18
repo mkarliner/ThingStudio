@@ -263,7 +263,10 @@ closed. Left for marketing: the landing page
 - **Pico (RP2040):** the same, clean, after two fixes: with both Picos plugged in, the second install went to the
   Pico W's port, whose running runtime ignored Ctrl-C and was called "other firmware". The page now asks a running
   runtime to stop (STOP_TO_PROMPT after each Ctrl-C), recognises its output, and names the board it's installing on.
-- **Still to try:** an S3 on native USB (write, Install runtime, Deploy), an S2 Mini (BOOT+RESET, the port changing),
+- **Freenove ESP32-S3 4.0" (native USB):** works, after a couple of power cycles; the installed editor has the same
+  quirk, so it's the board, not this path. Now in `debugging.md`. Mike is getting a plain S3 board to check the
+  native-USB path without the quirk.
+- **Still to try:** a plain S3 on native USB (write, Install runtime, Deploy), an S2 Mini (BOOT+RESET, the port changing),
   Remove flow from the online editor, redeploy and node status on a Pico W, and an nRF52 drag.
 
 **Status, task 6 (2026-11-18):** done. Online, credentials and presets live in the tab's sessionStorage under one key

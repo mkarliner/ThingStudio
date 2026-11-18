@@ -104,6 +104,7 @@ what the board sent instead, and what to do:
 | Board is in its bootloader | An ESP32 in download mode. Press reset, not BOOT. If it repeats, install MicroPython. |
 | Board runs CircuitPython, or replied but not as MicroPython | [Install MicroPython](installing-micropython.md). |
 | Runtime still starting | Wait, then **Tools → Check status**. |
+| Runtime already on the board and didn't stop | Press reset while **Install runtime** waits. |
 | Install stalled | Replug the board, click **⟳**, and try again. If it repeats, restart ThingStudio. |
 
 If the port itself won't open, the console says why:
@@ -115,6 +116,9 @@ If the port itself won't open, the console says why:
 | board gone from that port | Check the cable, click **⟳**, and connect again. |
 
 The raw error stays in the message, in brackets. Include it if you report a problem.
+
+Some boards need a power cycle after an image is written or the runtime is installed, before they answer. The
+Freenove ESP32-S3 4.0" display board can take two: unplug it, plug it back in, and connect again.
 
 ## Install firmware… fails or lists nothing
 
