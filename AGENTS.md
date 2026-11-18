@@ -212,6 +212,12 @@ Prompt Mike at suitable points to commit — don't assume auto-commit and don't 
 Suitable points: after a coherent unit of work lands, before starting something new or risky, and at the end of a
 work session regardless of how small the change was.
 
+**Major features are built on a branch, not on `main`** (Mike, 2026-11-18). `main` stays releasable so a fix for a
+user's problem can go out at any time. A feature branch is named for the feature (for example
+`online-editor-webserial`) and merged when it's done and checked. Small fixes and docs changes can still go straight to
+`main`. Mike's Mac checkout stays on `main`: a cloud session builds the branch in its own clone and pushes it, and Mike
+tests it in a separate `git worktree`. Detail: `decisions/repo-tooling.md`.
+
 ## Third-party code: pinned, scriptless, gated
 
 Anything fetched from outside the repo — npm packages, Python packages, GitHub Actions, the firmware toolchain,
