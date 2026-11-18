@@ -38,6 +38,23 @@ Properties explained: [change](nodes/change.md)
 | `valueType` | literal type | string | `"string"` | one of `string`, `number`, `bool` |
 | `value` | value / source property | string | `""` |  |
 
+### comment
+
+Shows a note on the canvas; does nothing on the board.
+
+Type: `comment`. Kind: canvas only. Palette group: general.
+
+Properties explained: [comment](nodes/comment.md)
+
+- Inputs: none
+- Outputs: none
+
+| Property | Editor label | Type | Default | Allowed values and notes |
+| --- | --- | --- | --- | --- |
+| `text` | text | string | `""` |  |
+| `width` | width (characters) | number | `32` |  |
+| `lines` | max lines | number | `8` |  |
+
 ### debug
 
 Prints a message's payload to the console.

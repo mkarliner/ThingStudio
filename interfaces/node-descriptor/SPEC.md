@@ -63,6 +63,8 @@ carry these keys.
 | `requires` | `{capabilities: string[]}` | no | Hardware the node needs (e.g. `["pio"]`, `["espnow"]`), checked centrally at compile time (§4). |
 | `resources` | `ResourceSpec[]` | no | Shared hardware a **core package** declares so the generic codegen validates and claims it (an I2C bus, an SPI bus, a claimed pin). Core-only: not part of the custom `.node.json` schema (§4). |
 | `allowUnwired` | boolean | no | The node is valid with nothing wired to it. |
+| `canvasOnly` | boolean | no | The node lives on the canvas only: no ports and no code. The compiler leaves it out entirely, so it costs nothing on the board (`thingstudio/comment`). `kind` is still required and is ignored. A link to one is refused. **Core-only** for now. Added 2026-11-18 (Mike). |
+| `canvasText` | `{property, widthProperty?, maxLinesProperty?}` | no | Show a property's text on the canvas node, wrapped, under its label. The box is `widthProperty` characters wide and grows to at most `maxLinesProperty` lines (both name number properties of the node, so each instance is sized; defaults 32 and 8); longer text is cut off with a fade. **Core-only** for now. Added 2026-11-18 (Mike). |
 | `ports` | `{inputs, outputs}` | no | Arrays of `{name, type}`. |
 | `properties` | array | no | Property-panel fields (below). |
 | `presetType` | string | no | Preset type (admin API `/api/presets/{type}`) for a save/load-preset control at the top of the panel. |

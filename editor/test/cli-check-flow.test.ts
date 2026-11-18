@@ -154,7 +154,7 @@ describe("the command", () => {
   it("exits 0 and says OK for a good flow", () => {
     const r = run([join(examplesDir, "blink.flow.json")]);
     expect(r.status).toBe(0);
-    expect(r.stdout).toMatch(/^OK .*blink\.flow\.json: 3 nodes, 2 wires/);
+    expect(r.stdout).toMatch(/^OK .*blink\.flow\.json: 4 nodes, 2 wires/);
   });
 
   it("exits 1 and lists the errors for a bad flow", () => {

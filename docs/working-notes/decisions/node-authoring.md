@@ -987,3 +987,11 @@ only on change. Board-to-board messaging over I2C was split off as a separate PO
   (a C5 or C3 flow was syntax-checked as Xtensa). Found alongside: the editor's flow loader never re-typed a
   property-typed output (inject's `payloadType`), so an inject saved as `number` reloaded as `bool` and lost its
   wire into a number input; `main.ts` now calls `retypeOutputs()` after applying saved properties.
+- **2026-11-18 — Canvas-only nodes and canvas text; the comment node** (Mike: "a text node that does nothing except
+  display some text, which would be good for tutorials"; sizes "in characters if possible"). Two optional
+  `NodeDescriptor` fields, interface change agreed in the session: `canvasOnly` (no ports, no code, left out by the
+  compiler; a wired one is refused) and `canvasText` (`{property, widthProperty?, maxLinesProperty?}`: a property's
+  text on the canvas node, width in characters, height up to a number of lines). First user: `thingstudio/comment`
+  (`editor/src/node-library/comment.ts`). Both core-only for now; a custom package using them would need: the two
+  keys in `custom-node.schema.json` and the loader not requiring a `.node.py` for a `canvasOnly` node.
+  `interfaces/node-descriptor/SPEC.md` §2.

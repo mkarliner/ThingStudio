@@ -283,6 +283,17 @@ export interface PinResourceSpec {
   optional?: boolean;
 }
 
+/** Where a node's canvas text comes from (`NodeDescriptor.canvasText`): property names, all data. Sizes are in
+ * characters and lines (Mike, 2026-11-18), so a note keeps its shape whatever the zoom or font. */
+export interface CanvasText {
+  /** The property holding the text. */
+  readonly property: string;
+  /** A number property holding the box width, in characters. */
+  readonly widthProperty?: string;
+  /** A number property holding the box's maximum height, in lines; longer text is cut off with a fade. */
+  readonly maxLinesProperty?: string;
+}
+
 /** The canonical node descriptor: plain data only, plus (on a built-in's NodeDefinition) the codegen
  * hooks that a custom `.node.json` deliberately cannot carry. */
 export interface NodeDescriptor {
@@ -339,6 +350,14 @@ export interface NodeDescriptor {
   /** The node is valid with nothing wired to it, so "disconnected from any source" doesn't apply (a gui_button:
    * it is useful as a pure input, with nothing to display). */
   allowUnwired?: boolean;
+  /** The node lives on the canvas only: no ports, no code, and the compiler leaves it out entirely, so it costs
+   * nothing on the board (the comment node). `kind` is still required and is ignored. Core-only for now.
+   * Added 2026-11-18 (Mike). */
+  canvasOnly?: boolean;
+  /** Show a property's text on the canvas node, wrapped, under its label. The box takes its width (characters)
+   * and maximum height (lines) from two of the node's own number properties when named, so each instance can be
+   * sized. Core-only for now. Added 2026-11-18 (Mike). */
+  canvasText?: CanvasText;
   /** Inputs/outputs with a payload type each. Editor-side only: read by the class factory to build real
    * sockets, and by the catalog. compile.ts's own graph walk does not read this. */
   ports?: {

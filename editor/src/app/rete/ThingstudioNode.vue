@@ -50,8 +50,9 @@
 -->
 <template>
   <div
+    ref="root"
     class="ts-node"
-    :class="[`kind-${data.kind}`, { selected: data.selected, highlighted: data.highlighted, 'ts-pane-hidden': paneHidden }]"
+    :class="[`kind-${data.kind}`, { selected: data.selected, highlighted: data.highlighted, 'ts-pane-hidden': paneHidden, 'ts-text-node': canvasText !== null }]"
     :style="nodeStyles"
   >
     <div
@@ -61,6 +62,12 @@
       @pointerdown="onIconPointerDown"
     >{{ icon }}</div>
     <div class="ts-label" data-testid="title">{{ title }}</div>
+    <div
+      v-if="canvasText"
+      class="ts-canvas-text"
+      :class="{ 'ts-canvas-text-empty': !canvasText.text }"
+      :style="{ maxHeight: `${canvasText.maxLines * TEXT_LINE_HEIGHT}em` }"
+    >{{ canvasText.text || "(empty: type in the text field)" }}</div>
 
     <Ref
       v-for="(entry, i) in inputs"
@@ -89,7 +96,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, onMounted, onUpdated, ref } from "vue";
 import { Ref } from "rete-vue-plugin";
 import { InjectNode, type AnyThingstudioNode } from "./nodes";
 import type { KindStyle } from "./palette";
@@ -184,12 +191,44 @@ function onIconPointerDown(event: PointerEvent): void {
 const HIGHLIGHT_COLOR = "#e05555";
 const HIGHLIGHT_BGCOLOR = "#5a1f1f";
 
+// Canvas text (descriptor.canvasText, the comment node, 2026-11-18): the box is `width` characters wide and grows
+// with the text up to `lines` lines, both from the node's own properties (CSS `ch` and line-height units).
+const TEXT_LINE_HEIGHT = 1.4;
+const canvasText = computed<{ text: string; widthCh: number; maxLines: number } | null>(() => {
+  void propertyVersion.value; // properties change off-Vue
+  void props.seed;
+  const d = (props.data as unknown as { descriptor?: NodeDescriptor }).descriptor;
+  const spec = d?.canvasText;
+  if (!spec) return null;
+  const p = (props.data as unknown as { properties?: Record<string, unknown> }).properties ?? {};
+  const num = (name: string | undefined, fallback: number): number => {
+    const v = name ? Number(p[name]) : NaN;
+    return Number.isFinite(v) && v > 0 ? Math.round(v) : fallback;
+  };
+  const raw = p[spec.property];
+  return { text: typeof raw === "string" ? raw : "", widthCh: num(spec.widthProperty, 32), maxLines: num(spec.maxLinesProperty, 8) };
+});
+
+// Rete lays out, selects and fits by the node's width/height fields, so a text node reports its real rendered
+// size back after each render.
+const root = ref<HTMLElement | null>(null);
+function reportSize(): void {
+  if (!canvasText.value || !root.value) return;
+  props.data.width = root.value.offsetWidth;
+  props.data.height = root.value.offsetHeight;
+  const box = root.value.querySelector<HTMLElement>(".ts-canvas-text");
+  box?.classList.toggle("ts-canvas-text-cut", box.scrollHeight > box.clientHeight + 1);
+}
+onMounted(reportSize);
+onUpdated(reportSize);
+
 const nodeStyles = computed(() => ({
   // Real layout budget, not a hint -- rete-vue-plugin's Node.vue sets these
   // as inline CSS off the same fields (poc-rete README's node-size gotcha),
   // and this component preserves that contract for nodes.ts's NODE_HEIGHT.
-  width: Number.isFinite(props.data.width) ? `${props.data.width}px` : "",
-  height: Number.isFinite(props.data.height) ? `${props.data.height}px` : "",
+  // Text width in characters, plus the box's padding (10px a side).
+  width: canvasText.value ? `calc(${canvasText.value.widthCh}ch + 20px)` : Number.isFinite(props.data.width) ? `${props.data.width}px` : "",
+  height: canvasText.value ? "auto" : Number.isFinite(props.data.height) ? `${props.data.height}px` : "",
   // Selected state computed here rather than left to the scoped `.selected`
   // class alone -- an inline style always wins over a stylesheet rule for
   // the same CSS property regardless of class specificity. Highlighted
@@ -364,6 +403,41 @@ function portStyle(index: number, count: number): { top: string } {
 }
 .ts-icon-fire:hover {
   filter: brightness(1.4);
+}
+/* A node with canvas text (the comment node): the icon and label on a row of the usual height, the text below. */
+.ts-node.ts-text-node {
+  /* The width is in `ch` of this size, the same as the text's, so "32 characters" means 32 of the text's own. */
+  font-size: 12px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  cursor: move;
+}
+.ts-text-node .ts-icon {
+  align-self: auto;
+  height: 34px;
+}
+.ts-text-node .ts-label {
+  line-height: 34px;
+}
+.ts-canvas-text {
+  flex: 1 0 100%;
+  box-sizing: border-box;
+  padding: 0 10px 8px;
+  color: #d8dee9;
+  font-size: 12px;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  overflow: hidden;
+}
+/* Only when the text is cut off at the maximum height: fade the last line, so it reads as "more below". */
+.ts-canvas-text.ts-canvas-text-cut {
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 14px), transparent);
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 14px), transparent);
+}
+.ts-canvas-text-empty {
+  color: #7c8698;
+  font-style: italic;
 }
 .ts-label {
   flex: 1 1 auto;

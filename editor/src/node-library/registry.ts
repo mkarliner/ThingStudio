@@ -44,6 +44,7 @@ import { descriptor as bleReadCoreDescriptor, python as bleReadCorePython, compi
 import { descriptor as bleWriteCoreDescriptor, python as bleWriteCorePython, compileHook as bleWriteCompileHook } from "./core-packages/ble-write.js";
 import { descriptor as bleNotifyCoreDescriptor, python as bleNotifyCorePython, compileHook as bleNotifyCompileHook } from "./core-packages/ble-notify.js";
 import { GUI_NODES } from "./gui.js";
+import { commentNode } from "./comment.js";
 
 /**
  * The full v1 node type registry. The POC-D set (inject, function,
@@ -95,6 +96,7 @@ export function buildRegistry(): Map<string, NodeDefinition> {
     buildCoreNodeDefinition(injectCoreDescriptor, injectCorePython),
     buildCoreNodeDefinition(startupCoreDescriptor, startupCorePython),
     functionNode,
+    commentNode,
     buildCoreNodeDefinition(gpioOutCoreDescriptor, gpioOutCorePython),
     buildCoreNodeDefinition(debugCoreDescriptor, debugCorePython),
     buildCoreNodeDefinition(interruptCoreDescriptor, interruptCorePython),

@@ -189,6 +189,7 @@ export const PROPERTY_NOTES: Record<string, string> = {
 // One line for each node saying what it does, the first thing the catalog says about it. Hand-written, keyed by the
 // node's kind (the key in NODE_FACTORIES); a test fails when a node has none or a key names no node.
 export const NODE_PURPOSES: Record<string, string> = {
+  comment: "Shows a note on the canvas; does nothing on the board.",
   change: "Sets or deletes one value on each message, then passes the message on.",
   debug: "Prints a message's payload to the console.",
   delay: "Holds each message for a set time, then passes it on unchanged.",
@@ -280,7 +281,7 @@ export function buildCatalog(): Catalog {
       });
     nodes.push({
       type: node.nodeType,
-      kind: def?.kind ?? "?",
+      kind: def?.canvasOnly ? "canvas only" : def?.kind ?? "?",
       label: style?.label ?? kind,
       purpose: NODE_PURPOSES[kind] ?? "",
       page: nodePage(kind),

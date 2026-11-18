@@ -38,6 +38,7 @@ See [flows, nodes and messages](../background/flows-and-nodes.md) for how they f
 | show the time of day | [ntp](ntp.md) |
 | wait before passing a message on | [delay](delay.md) |
 | see what's in a message | [debug](debug.md) |
+| explain a flow on the canvas | [comment](comment.md) |
 | send or receive MQTT messages | [mqtt publish](mqtt-publish.md), [mqtt subscribe](mqtt-subscribe.md) |
 | call a web API | [http request](http-request.md) |
 | serve a web page or API from the board | [http in](http-in.md) and [http response](http-response.md) |
@@ -65,6 +66,7 @@ Nodes that don't need a network or hardware:
 | [change](change.md) | transform | Sets or deletes one message property or flow variable. |
 | [journal](journal.md) | transform | Keeps the recent history of a number as average, min and max rows, for a histogram. |
 | [debug](debug.md) | sink | Prints a message to the editor's console. |
+| [comment](comment.md) | canvas only | Shows a note on the canvas; does nothing on the board. |
 
 ## Network
 

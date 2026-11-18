@@ -19,6 +19,15 @@
       "id": "b1ink0gpio000003",
       "type": "thingstudio/gpio_out",
       "properties": { "pin": 15 }
+    },
+    {
+      "id": "b1ink0note000004",
+      "type": "thingstudio/comment",
+      "properties": {
+        "text": "Set pin on gpio out to your board's LED. After Connect, the console names its LED pins.",
+        "width": 30,
+        "lines": 4
+      }
     }
   ],
   "edges": [
@@ -28,7 +37,8 @@
   "layout": {
     "b1ink0timer00001": { "pos": [80, 200] },
     "b1ink0onoff00002": { "pos": [320, 200] },
-    "b1ink0gpio000003": { "pos": [560, 200] }
+    "b1ink0gpio000003": { "pos": [560, 200] },
+    "b1ink0note000004": { "pos": [520, 260] }
   },
   "configs": []
 }

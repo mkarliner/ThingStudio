@@ -105,6 +105,7 @@ nav:
           - filter: nodes/filter.md
           - journal: nodes/journal.md
           - debug: nodes/debug.md
+          - comment: nodes/comment.md
       - Network:
           - wifi status: nodes/wifi-status.md
           - wifi gate: nodes/wifi-gate.md

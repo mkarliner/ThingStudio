@@ -139,6 +139,7 @@
 // reading its source -- nothing bespoke needed here), so a second wire
 // now adds alongside the first instead of replacing it.
 
+import { commentNode } from "../../node-library/comment.js";
 import { ClassicPreset } from "rete";
 import { socketForPayloadType } from "./sockets";
 import type { NodeKind } from "./palette";
@@ -432,6 +433,7 @@ function buildDescriptorNodeClass(descriptor: NodeDescriptor) {
 // First family migrated onto the canonical descriptor (its data now lives in node-library/debug.ts).
 // The class name is kept because tests and AnyThingstudioNode reference it.
 export class DebugNode extends buildDescriptorNodeClass(debugCoreDescriptor) {}
+export class CommentNode extends buildDescriptorNodeClass(commentNode) {}
 
 export class DelayNode extends buildDescriptorNodeClass(delayCoreDescriptor) {}
 
@@ -581,6 +583,7 @@ export const NODE_FACTORIES: Record<NodeKind, () => AnyThingstudioNode> = {
   startup: () => new StartupNode(),
   function: () => new FunctionNode(),
   debug: () => new DebugNode(),
+  comment: () => new CommentNode(),
   gpio_out: () => new GpioOutNode(),
   pwm_out: () => new PwmOutNode(),
   timer: () => new TimerNode(),

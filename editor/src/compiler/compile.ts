@@ -102,6 +102,18 @@ export function compile(graphData: GraphData, registry: Map<string, NodeDefiniti
     if (!registry.has(n.type)) throw new CompileError(`unknown node type "${n.type}" (node ${n.id})`);
   }
 
+  // Canvas-only nodes (a comment) are left out entirely: nothing below sees them, and the board gets nothing.
+  // They have no ports, so a link to one is a damaged flow file, said as such.
+  const canvasOnly = new Set(graphData.nodes.filter((n) => registry.get(n.type)!.canvasOnly).map((n) => n.id));
+  if (canvasOnly.size > 0) {
+    for (const link of graphData.links) {
+      const id = canvasOnly.has(link[1]) ? link[1] : canvasOnly.has(link[3]) ? link[3] : null;
+      if (id) throw new CompileError(`node ${id} (${nodesById.get(id)!.type}) is canvas-only and takes no wires, but the flow file wires it`);
+    }
+    graphData = { ...graphData, nodes: graphData.nodes.filter((n) => !canvasOnly.has(n.id)) };
+    for (const id of canvasOnly) nodesById.delete(id);
+  }
+
   // Config nodes: kept in a separate map, deliberately never folded into
   // nodesById above -- see this file's header comment. A duplicate config
   // ID is still rejected up front, same reasoning as the duplicate node-id

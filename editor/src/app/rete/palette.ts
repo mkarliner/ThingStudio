@@ -81,6 +81,7 @@
 // distinct glyphs for the two bus families, echoing the visual difference
 // between a filled color panel and a dot-matrix mono one.
 export type NodeKind =
+  | "comment"
   | "inject"
   | "startup"
   | "function"
