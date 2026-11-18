@@ -131,3 +131,12 @@ A broken download link fails silently: the user sees a 404, gives up, and no one
 - The editor's download error says what to do and, for a 404, asks to be told.
 
 A second catalogue source (the repositories item above) would need: the same check run against its URL.
+
+## The online build bundles its catalogue (2026-11-18)
+
+The online build ships the catalogue it was built with and serves every image from its own origin, named by sha256
+(`vite.config.ts`'s `firmwareMirror()`, filled by `tools/fetch_firmware_mirror.py`). The signature exists so the docs
+site can't choose what's written to a board; when the catalogue arrives in the same files as the code, whoever
+controls the origin already controls the code, so a fetched, signed catalogue adds nothing there. Also forced by
+the browser: GitHub release assets carry no CORS headers, and the page's CSP allows its own origin only. The page
+checks each image's sha256 before writing it. A second online source would need: its images mirrored the same way.

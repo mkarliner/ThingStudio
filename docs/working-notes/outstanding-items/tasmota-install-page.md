@@ -5,3 +5,9 @@
 
 
 Needs `device-runtime` packaged as a single flashable image first (a frozen MicroPython build with the listener/runtime baked in) — that packaging question isn't scoped anywhere either. `deployment-and-distribution-notes.md`.
+
+## 2026-11-18
+
+Being delivered as the online build's install page (`editor/install.html`), on the branch
+`online-editor-webserial`: flash in the browser, then Install runtime. Close this item when the branch is merged and
+live. Plan: `online-editor-webserial-briefing.md`, section D.

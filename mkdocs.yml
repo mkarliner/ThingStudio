@@ -68,6 +68,7 @@ nav:
       - MicroPython: coming-from/micropython.md
       - Arduino and C: coming-from/arduino.md
   - Getting started:
+      - Use it in your browser: in-your-browser.md
       - 1. Install ThingStudio: getting-started.md
       - 2. Tour the editor: editor-tour.md
       - 3. Install MicroPython: installing-micropython.md

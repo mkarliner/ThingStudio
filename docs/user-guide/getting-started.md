@@ -1,7 +1,8 @@
 # Getting started
 
-Want a look first? [Try the editor in your browser](https://demo.thingstudio.net/) before you install anything.
-The demo doesn't connect to a board, but you can build a flow and read the MicroPython it makes.
+There are two ways to use ThingStudio: installed on your computer, or as a web page. The steps below install it.
+To start in Chrome or Edge with nothing to install, see [Use it in your browser](in-your-browser.md). The installed
+version adds a WiFi link to the board, custom nodes and the command line.
 
 From a new board to a blinking LED in six steps, then one more:
 

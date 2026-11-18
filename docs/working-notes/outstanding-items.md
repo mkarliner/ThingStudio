@@ -70,15 +70,15 @@ ThingStudioMarketing repo, not here.
   `test-flows/ai-authoring/`, a round 3 with tasks that have no example, then the copy-into-your-assistant
   block and a skill; the first-run workspace `AGENTS.md` waits for a workspace folder. Scoping:
   `ai-authoring-doc-scoping.md`; rounds: `ai-authoring-test-rounds.md`.
-- **[LAUNCH-NICE]** **Online editor demo on thingstudio.net -- built 2026-11-08, not live yet.** The editor
-  as a static page with nothing behind it: no board, deploy or install; goes as far as generated code. Code,
-  request check, release zip, deploy script and Caddy config are in (`npm run build:demo`). Left: the server,
-  DNS and TLS (Mike), `caddy validate`, a `workflow_dispatch` run, the first deploy and the browser matrix,
-  final banner copy from the marketing repo. Plan: `online-editor-demo-scoping.md`;
-  `outstanding-items/online-editor-demo.md`.
-- **[BACKLOG]** **Full editor both online and fully offline (proposed 2026-11-08; timing open).** The same
-  editor hosted and installed, each doing everything. Runtime install, flashing, the credential store and custom
-  node packages are backend-only today. `outstanding-items/online-and-offline-editor.md`.
+- **[LAUNCH-NICE]** **Online editor demo on thingstudio.net -- live since 2026-11-08.** Being replaced by the full
+  online editor (next item). `outstanding-items/online-editor-demo.md`.
+- **[LAUNCH]** **The online editor: boards over Web Serial, and an install page (Mike, 2026-11-18).** Replaces the
+  demo at demo.thingstudio.net. Built on the branch `online-editor-webserial`: the install page (flash, then Install
+  runtime), Connect/Deploy and the board jobs over Web Serial, credentials kept for the tab, the comment node, the
+  LED-pins console line, the "Use it in your browser" page. Left: hardware checks beyond the CYD (an S3 on native
+  USB, a Pico W, stock-MicroPython installs, Remove flow), greying out user board definitions, a request-check run
+  without Web Serial, then the Caddyfile and release-workflow changes live, merge and release. Plan and status:
+  `online-editor-webserial-briefing.md`; item: `outstanding-items/online-and-offline-editor.md`.
 - **[LAUNCH-NICE]** **Docs site: no third-party requests (Mike, 2026-11-08: "squeaky clean").** Fonts are
   already off (`font: false`). Left: Material calls `api.github.com` on page load to show the repo's stars and
   latest release, because `repo_url` is set. Fix by overriding the `source` partial (keep the plain link, drop
@@ -528,8 +528,6 @@ Done and verified (or settled as a decision) items are kept in
 
 ## Flagged as ambiguous — needs a human decision, not guessed here
 
-- **`architecture-review-briefing.md`'s "browser-only, no install" claim (§4).** See
-  [detail](outstanding-items/ambiguous-browser-only-claim.md).
 - **`cross-platform-requirement.md`'s "confirm per-OS behaviour once the backend is built" (2026-08-16).**
   macOS is documented and packaging builds per-platform with smoke tests, but real editor+board runs on
   Windows/Linux are hardware-side knowledge; only Mike can close it.

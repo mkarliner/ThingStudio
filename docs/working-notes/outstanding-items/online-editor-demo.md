@@ -25,3 +25,8 @@ features can be hidden rather than reworked.
 - Where it lives: a path on thingstudio.net (GitHub Pages) or a subdomain.
 - The page makes no requests beyond its own assets and GoatCounter, so the landing page can say so.
 - The page is labelled as a demo, so nobody mistakes it for the full online version.
+
+## 2026-11-18
+
+Live since 2026-11-08. Being replaced at the same address by the full online editor
+(`online-editor-webserial-briefing.md`); in browsers without Web Serial it still behaves as this demo does.

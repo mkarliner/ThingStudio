@@ -51,3 +51,9 @@ The no-board slice is now the separate demo item.
 - Does the hosted page make any request beyond its own assets and GoatCounter? Needed before the landing page
   says what is and isn't sent anywhere.
 - `ambiguous-browser-only-claim.md` may be closed by whatever is decided here.
+
+## Status, 2026-11-18
+
+Slices 1 to 3 are being built on the branch `online-editor-webserial`, with Mike's decisions: the online editor
+replaces the demo; a stated subset, shown greyed out; credentials for the session only; flashing in the browser; a
+separate install page. Plan and status: `online-editor-webserial-briefing.md`.

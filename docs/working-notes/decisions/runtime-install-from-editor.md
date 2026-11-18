@@ -141,3 +141,11 @@ Status: detail file for `decisions.md`'s "Runtime install from the editor" index
   `mpy-cross` in the backend: no new dependency, and one compiler version for flows and runtime alike. Why: see
   `learnings/micropython-device-runtime.md`'s 2026-09-25 entry. No runtime version bump (no board-side change).
   `test-flows/deploy_runtime.py` still pushes source; a stale `.mpy` is harmless because `.py` wins.
+
+- **2026-11-18 — Web Serial is back, for the online editor (Mike).** Supersedes "web serial is deprecated"
+  (2026-09-22) for the online build only; the installed editor keeps installing through the backend. The online
+  editor and the install page install the runtime from the browser with a TypeScript port of `raw_repl.py` and
+  `board_recovery.py` (`editor/src/raw-repl/`): the same steps, step names, timeouts and fixes, with
+  `test_raw_repl.py`'s cases ported. The runtime's files come from `runtime_manifest.py` at build time. First run on
+  a CYD (Mike, 2026-11-18) found two faults, both fixed: a port the flasher left open was reported as "no reply",
+  and a port close that never returned hid the result. Plan: `online-editor-webserial-briefing.md`.
