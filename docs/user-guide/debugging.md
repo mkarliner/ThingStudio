@@ -118,7 +118,8 @@ If the port itself won't open, the console says why:
 The raw error stays in the message, in brackets. Include it if you report a problem.
 
 Some boards need a power cycle after an image is written or the runtime is installed, before they answer. The
-Freenove ESP32-S3 4.0" display board can take two: unplug it, plug it back in, and connect again.
+Freenove ESP32-S3 4.0" display board and the ESP32-C5 board can each take two: unplug the board, plug it back in, and
+connect again.
 
 ## Install firmware… fails or lists nothing
 

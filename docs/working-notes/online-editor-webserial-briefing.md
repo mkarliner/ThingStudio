@@ -278,6 +278,8 @@ closed. Left for marketing: the landing page
   the write; `in-your-browser.md` says so. Not built, if more such boards turn up: grant the JTAG device once (picker
   open before switching), then follow it on Web Serial's connect event and open it within the window.
 - **Pico W in the online editor:** deploy and redeploy: OK (Mike, 2026-11-18).
+- **ESP32-C5:** write (ThingStudio's C5 image at 0x2000), Install runtime and Deploy: OK after a couple of power
+  cycles, like the Freenove S3. Now in `debugging.md`.
 - **Plain S3:** none to hand (Mike). The Freenove S3 and the C3 cover the chip's own USB; dropped for now.
 - **Still to try:** Remove flow from the online editor, an S2 Mini (BOOT+RESET, the port changing), an nRF52 drag.
 
