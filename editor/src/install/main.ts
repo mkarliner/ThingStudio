@@ -185,7 +185,14 @@ btnConnect.addEventListener("click", async () => {
     }
     say("Talking to the chip's bootloader…");
     const transport = new Transport(port, false);
-    const loader = new ESPLoader({ transport, baudrate: FLASH_BAUD, romBaudrate: ROM_BAUD, terminal });
+    // install.html?debug: esptool-js logs every reset step and sync attempt to the console, for a board that won't
+    // connect (2026-11-18, the Tidal badge).
+    const debug = new URLSearchParams(location.search).has("debug");
+    const loader = new ESPLoader({ transport, baudrate: FLASH_BAUD, romBaudrate: ROM_BAUD, terminal, debugLogging: debug, enableTracing: debug });
+    if (debug) {
+      const ids = (port as { getInfo?(): { usbVendorId?: number; usbProductId?: number } }).getInfo?.() ?? {};
+      console.info(`[install] port usbVendorId=0x${(ids.usbVendorId ?? 0).toString(16)} usbProductId=0x${(ids.usbProductId ?? 0).toString(16)}`);
+    }
     let description: string;
     try {
       description = await loader.main();
