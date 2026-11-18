@@ -253,6 +253,19 @@ dated decision entries (runtime install, flashing, catalogue), outstanding items
 closed. Left for marketing: the landing page
 (`ThingStudioMarketing/briefings/local-and-browser-positioning-briefing.md`). Tasks 3 and 5 (hardware) are open.
 
+**Hardware, 2026-11-18 (Mike):**
+
+- **CYD (classic ESP32):** install page write (ThingStudio image, ~30 s at 460800) then Install runtime (boot file
+  only), then the online editor: Connect, Deploy Blink on GPIO 4. Whole sequence about 2 minutes. Found and fixed: a
+  port esptool-js left open after the write was reported as "no reply"; a port close that never returned hid the
+  result.
+- **Pico W:** UF2 download and drag, then Install runtime: clean.
+- **Pico (RP2040):** the same, clean, after two fixes: with both Picos plugged in, the second install went to the
+  Pico W's port, whose running runtime ignored Ctrl-C and was called "other firmware". The page now asks a running
+  runtime to stop (STOP_TO_PROMPT after each Ctrl-C), recognises its output, and names the board it's installing on.
+- **Still to try:** an S3 on native USB (write, Install runtime, Deploy), an S2 Mini (BOOT+RESET, the port changing),
+  Remove flow from the online editor, redeploy and node status on a Pico W, and an nRF52 drag.
+
 **Status, task 6 (2026-11-18):** done. Online, credentials and presets live in the tab's sessionStorage under one key
 (`thingstudio.savedValues`, `saved-values.ts`), page memory where that throws; they survive a reload and go when the
 tab closes. File → Forget WiFi and broker details clears them. An example's made-up values are written only where
