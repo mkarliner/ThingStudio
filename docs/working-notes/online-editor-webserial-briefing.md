@@ -266,10 +266,9 @@ closed. Left for marketing: the landing page
 - **Freenove ESP32-S3 4.0" (native USB):** works, after a couple of power cycles; the installed editor has the same
   quirk, so it's the board, not this path. Now in `debugging.md`. Mike is getting a plain S3 board to check the
   native-USB path without the quirk.
-- **Still to try:** an ESP32-C3 (Mike, 2026-11-18): both its builds, ThingStudio's image (Install runtime writes the
-  boot file only) and stock MicroPython (the full precompiled push: the C3 is where compiling on the board ran WiFi
-  out of memory, 2026-09-25), then a WiFi flow, since that's what the memory note is about. A plain S3 on native USB
-  (write, Install runtime, Deploy), an S2 Mini (BOOT+RESET, the port changing),
+- **ESP32-C3:** write, Install runtime and Deploy from the online editor: OK. Web Blink (WiFi + http in) deployed
+  and worked, so the WiFi memory problem of 2026-09-25 doesn't come back on the browser path.
+- **Still to try:** a plain S3 on native USB (write, Install runtime, Deploy), an S2 Mini (BOOT+RESET, the port changing),
   Remove flow from the online editor, redeploy and node status on a Pico W, and an nRF52 drag.
 
 **Status, task 6 (2026-11-18):** done. Online, credentials and presets live in the tab's sessionStorage under one key
