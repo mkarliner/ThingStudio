@@ -4152,6 +4152,14 @@ what the board sent instead, and what to do:</p>
 <td>The list on the site didn't carry a valid ThingStudio signature, or is older than one this computer already has. The dialog uses the saved or installed list instead, so flashing still works. Report it (<a href="../faq/#where-do-i-ask-a-question-or-report-a-problem">Help → Report a problem</a>) with the reason in the line.</td>
 </tr>
 <tr>
+<td>this firmware is missing from its download site (HTTP 404)</td>
+<td>A link in ThingStudio's firmware list is broken, which is our mistake. Pick another version, or download the image yourself and pick it under <strong>Or use your own image file</strong>. Please report it (<a href="../faq/#where-do-i-ask-a-question-or-report-a-problem">Help → Report a problem</a>).</td>
+</tr>
+<tr>
+<td>could not download the firmware</td>
+<td>The computer couldn't reach the download site. Check the internet connection, then retry. A proxy or firewall may block GitHub or micropython.org.</td>
+</tr>
+<tr>
 <td>… is not a .uf2, or is a .uf2 sent to a serial port</td>
 <td>A mounted drive takes the <code>.uf2</code> build, a serial port the <code>.bin</code>. Pick the matching file.</td>
 </tr>
