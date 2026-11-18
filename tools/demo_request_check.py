@@ -259,6 +259,20 @@ def main() -> int:
             )
             narrow.close()
 
+            # A browser without Web Serial (Firefox, Safari): the same page is the demo, board controls hidden.
+            noserial = ctx.new_page()
+            watch(noserial)
+            noserial.add_init_script("delete Navigator.prototype.serial;")
+            noserial.goto(base_url)
+            noserial.wait_for_function("() => document.getElementById('console')?.textContent.includes('[flow loaded')", timeout=READY_TIMEOUT_MS)
+            shown = [s for s in ("#btnConnect", "#btnDeploy", "#cmdInput") if noserial.locator(s).is_visible()]
+            check.report(
+                "no Web Serial: board controls hidden, demo banner shown",
+                not shown and noserial.locator("#btnCompile").is_visible() and not noserial.get_by_role("button", name="Tools ▾").is_visible(),
+                f"still visible: {', '.join(shown)}" if shown else "",
+            )
+            noserial.close()
+
             # The install page (install.html): loads under the same headers, lists its builds, asks nothing of
             # any other site. Writing to a board needs one plugged in, so that part is checked by hand.
             install = ctx.new_page()

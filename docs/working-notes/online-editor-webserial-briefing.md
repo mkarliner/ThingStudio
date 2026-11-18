@@ -244,8 +244,13 @@ bundler drops it). Online with a board: Connect (direct), Deploy (the library li
 (`WebSerialTransport.rawWrite`), Install runtime and Remove flow (the raw-REPL client), Install firmware (opens the
 install page). Greyed out: custom nodes in the palette. Hidden: the port list, Save to a file handle. The banner and
 first console line say whether this browser can reach a board. `tools/demo_request_check.py` checks both cases.
-Still to do in task 1: grey out user board definitions (Pins… says "built-in" already) and check the rest of section
-A's list in the UI. Tasks 3, 5 (hardware) and 7 (words) are open.
+User board definitions have no control to grey out: they're read from `.thingstudio` at start-up, so online they
+simply aren't there, Pins… says "built-in", and the docs page says so. The request check now also runs the page
+without Web Serial (Firefox/Safari): board controls hidden, demo behaviour. Task 1 is done.
+
+**Status, task 7 (2026-11-18):** `docs/user-guide/in-your-browser.md` (linked from Getting started and the nav),
+dated decision entries (runtime install, flashing, catalogue), outstanding items updated, the "browser-only" ambiguity
+closed. Left for marketing: the landing page (`ThingStudioMarketing/briefings/local-and-browser-positioning-briefing.md`). Tasks 3, 5 (hardware) and 7 (words) are open.
 
 **Status, task 6 (2026-11-18):** done. Online, credentials and presets live in the tab's sessionStorage under one key
 (`thingstudio.savedValues`, `saved-values.ts`), page memory where that throws; they survive a reload and go when the
