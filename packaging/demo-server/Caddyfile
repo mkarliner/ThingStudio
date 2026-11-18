@@ -28,7 +28,7 @@
 	@demo host demo.thingstudio.net
 	redir @demo https://web.thingstudio.net{uri} 301
 
-	# Static files, no directory listing (no `browse`), nothing else. /install is the install page, install.html.
+	# Static files, no directory listing (no `browse`), nothing else. /setup is the Set up a board page, setup.html.
 	try_files {path} {path}.html
 	file_server
 

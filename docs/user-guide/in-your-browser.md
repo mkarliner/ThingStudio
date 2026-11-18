@@ -12,7 +12,7 @@ carries data, not only power.
 
 ## Set up a board
 
-The [Set up a board](https://web.thingstudio.net/install) page puts MicroPython and the ThingStudio runtime on a
+The [Set up a board](https://web.thingstudio.net/setup) page puts MicroPython and the ThingStudio runtime on a
 board.
 Writing a new image erases everything on the board.
 

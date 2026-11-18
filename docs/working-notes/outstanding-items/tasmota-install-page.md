@@ -8,6 +8,6 @@ Needs `device-runtime` packaged as a single flashable image first (a frozen Micr
 
 ## 2026-11-18
 
-Being delivered as the online build's install page (`editor/install.html`), on the branch
+Being delivered as the online build's install page (`editor/setup.html`, served at web.thingstudio.net/setup), on the branch
 `online-editor-webserial`: flash in the browser, then Install runtime. Close this item when the branch is merged and
 live. Plan: `online-editor-webserial-briefing.md`, section D.

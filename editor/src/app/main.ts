@@ -2814,8 +2814,8 @@ async function refreshFirmwareTargets(): Promise<void> {
 }
 
 if (__DEMO__ && CAN_REACH_BOARD) {
-  // Online, flashing is the install page's job (install.html): one flasher, used from the page and from here.
-  el("btnInstallFirmware").addEventListener("click", () => window.open("/install.html", "_blank", "noopener"));
+  // Online, flashing is the job of Set up a board (setup.html, served as /setup): one flasher, used from the page and from here.
+  el("btnInstallFirmware").addEventListener("click", () => window.open("/setup", "_blank", "noopener"));
 }
 
 if (!__DEMO__) {

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // editor/src/install/main.ts
 //
-// The install page (install.html, online build only): puts MicroPython, or ThingStudio's own image, on a board from
+// Set up a board (setup.html, served at /setup; online build only): puts MicroPython, or ThingStudio's own image, on a board from
 // the browser. ESP32 chips are written over Web Serial with esptool-js; UF2 boards (Pico, nRF52) get their file to
 // drag onto the drive their bootloader shows. Plan: docs/working-notes/online-editor-webserial-briefing.md,
 // sections C and D. Then Install runtime (runtime.ts) puts the ThingStudio runtime on any board running MicroPython.
@@ -38,7 +38,7 @@ const builds = installBuilds(catalogue, families, new Set(mirrored));
 
 const el = <T extends HTMLElement = HTMLElement>(id: string): T => {
   const node = document.getElementById(id);
-  if (!node) throw new Error(`install.html has no #${id}`);
+  if (!node) throw new Error(`setup.html has no #${id}`);
   return node as T;
 };
 
@@ -186,7 +186,7 @@ btnConnect.addEventListener("click", async () => {
     }
     say("Talking to the chip's bootloader…");
     const transport = new Transport(port, false);
-    // install.html?debug: esptool-js logs every reset step and sync attempt to the console, for a board that won't
+    // /setup?debug: esptool-js logs every reset step and sync attempt to the console, for a board that won't
     // connect (2026-11-18, the Tidal badge).
     const debug = new URLSearchParams(location.search).has("debug");
     const loader = new ESPLoader({ transport, baudrate: FLASH_BAUD, romBaudrate: ROM_BAUD, terminal, debugLogging: debug, enableTracing: debug });

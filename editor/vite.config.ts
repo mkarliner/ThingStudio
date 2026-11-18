@@ -213,12 +213,12 @@ export default defineConfig(({ mode }) => ({
   // aimed at sites loaded over the internet; the editor is served by the local backend, so splitting it would add
   // complexity for no load-time gain (2026-10-12). Raise the limit rather than ignore a standing warning, so a
   // real jump (a large dependency pulled in by mistake) still shows up.
-  // The online build has a second page, install.html (set up a board: flash it, then the runtime). The installed
+  // The online build has a second page, setup.html (set up a board: flash it, then the runtime). The installed
   // editor doesn't: its backend flashes, and has its own dialog.
   build: {
     chunkSizeWarningLimit: 800,
     outDir: mode === "demo" ? "dist-demo" : "dist",
-    rollupOptions: mode === "demo" ? { input: { index: `${REPO_ROOT}/editor/index.html`, install: `${REPO_ROOT}/editor/install.html` } } : {},
+    rollupOptions: mode === "demo" ? { input: { index: `${REPO_ROOT}/editor/index.html`, setup: `${REPO_ROOT}/editor/setup.html` } } : {},
   },
   test: {
     include: ["test/**/*.test.ts"],

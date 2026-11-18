@@ -273,14 +273,14 @@ def main() -> int:
             )
             noserial.close()
 
-            # The install page (install.html): loads under the same headers, lists its builds, asks nothing of
+            # Set up a board (setup.html, served at /setup): loads under the same headers, lists its builds, asks nothing of
             # any other site. Writing to a board needs one plugged in, so that part is checked by hand.
             install = ctx.new_page()
             watch(install)
-            install.goto(base_url + "install.html")
+            install.goto(base_url + "setup.html")
             install.wait_for_function("() => (document.getElementById('uf2Build')?.options.length ?? 0) > 0", timeout=READY_TIMEOUT_MS)
             count = install.evaluate("document.getElementById('uf2Build').options.length")
-            check.report("install page opens and lists the UF2 builds", count > 0, f"{count} builds")
+            check.report("setup page opens and lists the UF2 builds", count > 0, f"{count} builds")
             install.close()
             browser.close()
     finally:

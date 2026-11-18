@@ -84,7 +84,7 @@ describe("editor module boundaries", () => {
     expect(bad, `relative imports must resolve inside editor/src: ${bad.join(", ")}`).toEqual([]);
   });
 
-  // The install page (install.html, online build) is a page of its own: it reads the board definitions and nothing
+  // The install page (setup.html, online build) is a page of its own: it reads the board definitions and nothing
   // else of the editor's, so it can't come to depend on the canvas or the compiler (2026-11-18).
   // It also uses the raw-REPL client (raw-repl/, self-contained like protocol/) and the editor's own advice for a
   // board that won't install (app/board-diagnosis.ts, which imports nothing), so both pages give the same advice.

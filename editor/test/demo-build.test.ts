@@ -44,10 +44,10 @@ async function buildMode(name: "normal" | "demo"): Promise<Bundle> {
     build: { outDir, emptyOutDir: true, copyPublicDir: false },
   });
   const assets = join(outDir, "assets");
-  // The online build's install page (install.html) talks to boards on purpose; this test is about the editor's own
-  // page, so the install page's entry chunk is left out (the flasher's per-chip chunks carry none of the markers).
+  // The online build's setup page (setup.html) talks to boards on purpose; this test is about the editor's own
+  // page, so the setup page's entry chunk is left out (the flasher's per-chip chunks carry none of the markers).
   const js = readdirSync(assets)
-    .filter((f) => f.endsWith(".js") && !f.startsWith("install-"))
+    .filter((f) => f.endsWith(".js") && !f.startsWith("setup-"))
     .map((f) => readFileSync(join(assets, f), "utf8"))
     .join("\n");
   return { js, html: readFileSync(join(outDir, "index.html"), "utf8") };

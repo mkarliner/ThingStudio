@@ -37,9 +37,13 @@ API (`detect`, `flash` job, job status). `esptool` becomes a hash-pinned backend
 ## 2026-11-18 — The browser flashes too (Mike)
 
 Reverses "the backend flashes, not the browser" and "no new npm dependency" for the online build. The install page
-(`editor/install.html`) writes ESP32 images with **esptool-js 0.7.1** (Apache-2.0, Espressif; pinned, installed with
-scripts off, in `docs/third-party-licenses.md`) and gives UF2 boards their file to drag. Same catalogue, same rules:
+(`editor/setup.html`, served at web.thingstudio.net/setup) writes ESP32 images with **esptool-js 0.7.1**
+(Apache-2.0, Espressif; pinned, installed with scripts off, in `docs/third-party-licenses.md`) and gives UF2 boards their file to drag. Same catalogue, same rules:
 the chip family owns the address, erase before writing, one path, every failure named. The chip is read from the
 bootloader, which is the catalogue decision's "ask the tool what it already knows". The installed editor keeps its
 backend flasher; whether its Tools → Install firmware should open the install page instead is Mike's call (he found
 the install page better, 2026-11-18). Plan: `online-editor-webserial-briefing.md`, sections C and D.
+
+2026-11-18, Mike: the page is "Set up a board", at **web.thingstudio.net/setup**, on the editor's own origin
+(one CSP, one Permissions-Policy, no CORS for the firmware mirror). The file is `editor/setup.html`; its code
+stays in `editor/src/install/`.
