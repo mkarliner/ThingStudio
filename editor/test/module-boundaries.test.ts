@@ -88,11 +88,11 @@ describe("editor module boundaries", () => {
   // else of the editor's, so it can't come to depend on the canvas or the compiler (2026-11-18).
   // It also uses the raw-REPL client (raw-repl/, self-contained like protocol/) and the editor's own advice for a
   // board that won't install (app/board-diagnosis.ts, which imports nothing), so both pages give the same advice.
-  it("install/ imports only definitions/, raw-repl/ and app/board-diagnosis.ts", () => {
+  it("install/ imports only definitions/, raw-repl/, protocol/ and app/board-diagnosis.ts", () => {
     const bad = violations(
       (e) =>
         e.fromTop === "install" &&
-        !["install", "definitions", "raw-repl"].includes(e.toTop) &&
+        !["install", "definitions", "raw-repl", "protocol"].includes(e.toTop) &&
         e.spec !== "../app/board-diagnosis.js",
     );
     expect(bad, `install/ must stay a small page of its own: ${bad.join(", ")}`).toEqual([]);

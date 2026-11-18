@@ -107,6 +107,7 @@ REPLY_SILENT = "silent"
 REPLY_MICROPYTHON = "micropython"
 REPLY_CIRCUITPYTHON = "circuitpython"
 REPLY_ESP_ROM = "esp_rom"
+REPLY_RUNTIME = "runtime"
 REPLY_OTHER = "other"
 
 _ESP_ROM_MARKERS = (b"waiting for download", b"ESP-ROM:", b"rst:0x", b"ets Jun", b"ets Jul")
@@ -129,6 +130,10 @@ def classify_reply(seen: bytes) -> str:
         return REPLY_CIRCUITPYTHON
     if any(m in seen for m in _ESP_ROM_MARKERS):
         return REPLY_ESP_ROM
+    # Thingstudio's own listener (its frames, its LISTENER_ lines): already installed, and ignoring Ctrl-C.
+    # 2026-11-18, a Pico running the runtime was called "other firmware" (the editor's raw-repl.ts, same rule).
+    if b"F64:" in seen or b"LISTENER_" in seen:
+        return REPLY_RUNTIME
     if any(m in seen for m in _MICROPYTHON_MARKERS):
         return REPLY_MICROPYTHON
     return REPLY_OTHER

@@ -172,9 +172,7 @@ export class WebSerialTransport implements DeviceTransport {
   /** Encode one message, base64/line-wrap it, and write it to the device. */
   async send(message: Message): Promise<void> {
     if (!this.#writer) throw new Error("WebSerialTransport is not connected (no writable stream)");
-    const frame = encodeMessage(message);
-    const line = F64_PREFIX + bytesToBase64(frame) + "\n";
-    await this.#writer.write(new TextEncoder().encode(line));
+    await this.#writer.write(frameLine(message));
   }
 
   async #readLoop(): Promise<void> {
@@ -245,6 +243,12 @@ export class WebSerialTransport implements DeviceTransport {
       this.#events.onProtocolError?.(result.error as never);
     }
   }
+}
+
+/** One message as the serial line carries it: "F64:" + base64 of the frame + "\n" (SPEC §5). Also used by the install
+ * page to ask a running listener to stop (STOP_TO_PROMPT) on a link that isn't this transport. */
+export function frameLine(message: Message): Uint8Array {
+  return new TextEncoder().encode(F64_PREFIX + bytesToBase64(encodeMessage(message)) + "\n");
 }
 
 function bytesToBase64(bytes: Uint8Array): string {

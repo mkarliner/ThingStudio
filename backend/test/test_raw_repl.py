@@ -186,6 +186,8 @@ def test_enter_raw_repl_timeout_keeps_everything_seen_for_diagnosis() -> None:
         (b"\r\nAdafruit CircuitPython 9.1.4 on 2024-09-17; ...\r\n>>> ", "circuitpython"),
         (b"ESP-ROM:esp32s2-rc4-20191025\r\nwaiting for download\r\n", "esp_rom"),
         (b"ets Jun  8 2016 00:22:57\r\n\r\nrst:0x1 (POWERON_RESET)", "esp_rom"),
+        (b"F64:AAEC\n", "runtime"),
+        (b"LISTENER_READY\r\n", "runtime"),
         (b"Hello from Arduino loop 42\r\n", "other"),
     ],
 )

@@ -11,6 +11,18 @@ import { explainInstallFailure, type Advice } from "../app/board-diagnosis.js";
 import { CATCH_STEP, ENTER_STEP, RawReplError, catchPrompt, classifyReply, installRuntime, isFrozenImage, type ClosableLink } from "../raw-repl/raw-repl.js";
 import { frozenInstall, fullInstall } from "../raw-repl/runtime-files.js";
 import { openSerialLink, type SerialPortLike } from "../raw-repl/web-serial-link.js";
+import { frameLine } from "../protocol/transport.js";
+
+/** A running listener ignores Ctrl-C, and a Pico doesn't reset when the port opens, so a board that already has the
+ * runtime would wait for a reset (2026-11-18, Mike's Pico). Ask it to stop with its own STOP_TO_PROMPT, as the
+ * editor does before an install: a newline first, so the Ctrl-C byte before it can't spoil the frame. */
+const ASK_LISTENER_TO_STOP = (() => {
+  const frame = frameLine({ type: "STOP_TO_PROMPT" });
+  const out = new Uint8Array(frame.length + 1);
+  out[0] = 0x0a;
+  out.set(frame, 1);
+  return out;
+})();
 
 /** How long Install runtime waits for the board to stop at a prompt (ws_relay.py's _INSTALL_CATCH_TIMEOUT_SECONDS). */
 const CATCH_TIMEOUT_MS = 60_000;
@@ -90,7 +102,7 @@ export async function installRuntimeOn(
 ): Promise<InstallResult> {
   let link: ClosableLink | null = null;
   try {
-    link = await catchPrompt(opener(port), Date.now() + CATCH_TIMEOUT_MS, onStatus);
+    link = await catchPrompt(opener(port), Date.now() + CATCH_TIMEOUT_MS, onStatus, ASK_LISTENER_TO_STOP);
     onStatus("Board stopped. Checking what it runs…");
     const frozen = await isFrozenImage(link);
     const plan = frozen ? frozenInstall(runtimeSources) : fullInstall(runtimeSources, await precompile(onStatus), __RUNTIME_BUILD_SHA__);

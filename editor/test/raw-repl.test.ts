@@ -245,3 +245,17 @@ describe("catching a prompt on a port that won't open", () => {
     expect(err.message).toContain("already open");
   });
 });
+
+describe("a board already running the runtime", () => {
+  it("is recognised by its frames or LISTENER_ lines, not called other firmware", () => {
+    expect(classifyReply(b("F64:AAEC\n"))).toBe("runtime");
+    expect(classifyReply(b("LISTENER_READY\r\n"))).toBe("runtime");
+  });
+
+  it("is asked to stop with what the caller adds after each Ctrl-C", async () => {
+    const port = new FakePort(["", "\r\n>>> "]);
+    const extra = b("\nF64:stop\n");
+    await catchPrompt(async () => port, Date.now() + 2000, () => undefined, extra);
+    expect(port.text()).toEqual(["\x03", "\nF64:stop\n", "\x03", "\nF64:stop\n"]);
+  });
+});

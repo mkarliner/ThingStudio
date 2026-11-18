@@ -75,7 +75,7 @@ export class RawReplError extends Error {
   }
 }
 
-export type Reply = "silent" | "micropython" | "circuitpython" | "esp_rom" | "other";
+export type Reply = "silent" | "micropython" | "circuitpython" | "esp_rom" | "runtime" | "other";
 
 const ESP_ROM_MARKERS = ["waiting for download", "ESP-ROM:", "rst:0x", "ets Jun", "ets Jul"];
 const MICROPYTHON_MARKERS = [">>>", "MicroPython", "raw REPL", "Traceback", "KeyboardInterrupt", "SyntaxError"];
@@ -87,6 +87,9 @@ export function classifyReply(seen: Uint8Array): Reply {
   if (!text.trim()) return "silent";
   if (text.includes("CircuitPython")) return "circuitpython";
   if (ESP_ROM_MARKERS.some((m) => text.includes(m))) return "esp_rom";
+  // ThingStudio's own listener: its frames and LISTENER_ lines (2026-11-18, a Pico already running the runtime
+  // was reported as "other firmware").
+  if (text.includes("F64:") || text.includes("LISTENER_")) return "runtime";
   if (MICROPYTHON_MARKERS.some((m) => text.includes(m))) return "micropython";
   return "other";
 }
@@ -263,6 +266,9 @@ export async function catchPrompt(
   open: () => Promise<ClosableLink>,
   deadline: number,
   onStatus: (text: string) => void,
+  /** Sent after each Ctrl-C: a way to ask what Ctrl-C can't stop (the install page sends the listener's own
+   * STOP_TO_PROMPT frame, on a fresh line). */
+  alsoSend?: Uint8Array,
 ): Promise<ClosableLink> {
   let link: ClosableLink | null = null;
   let seen: Uint8Array = new Uint8Array();
@@ -285,6 +291,7 @@ export async function catchPrompt(
       let chunk: Uint8Array;
       try {
         await link.write(new Uint8Array([CTRL_C]));
+        if (alsoSend) await link.write(alsoSend);
         chunk = await link.read(500);
       } catch {
         await link.close().catch(() => undefined);

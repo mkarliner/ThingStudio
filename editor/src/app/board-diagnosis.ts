@@ -86,6 +86,10 @@ const INSTALL_FAILURE_ADVICE: Record<string, Advice> = {
     text: "Board replied, but not as MicroPython (other firmware?). Install MicroPython first.",
     doc: DOC_INSTALL_MICROPYTHON,
   },
+  runtime: {
+    text: "ThingStudio's runtime is already on the board and didn't stop. Press reset while Install runtime waits.",
+    doc: DOC_BOARD_STUCK,
+  },
   // Editor-side, not from raw_repl.py: BackendTransport.installRuntime()'s idle timeout.
   stalled: {
     text:
