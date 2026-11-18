@@ -46,6 +46,8 @@ const EOT = new Uint8Array([CTRL_D]);
 export const ENTER_STEP = "entering raw REPL";
 /** catchPrompt()'s step. */
 export const CATCH_STEP = "waiting for the board to stop at a prompt";
+/** catchPrompt() never got the port open: nothing was heard because nothing was listening. */
+export const OPEN_STEP = "opening the port";
 
 /** 256 raw bytes per base64 chunk: the board holds one chunk's source at a time (ampy/rshell do the same). */
 const FILE_CHUNK_SIZE = 256;
@@ -265,12 +267,17 @@ export async function catchPrompt(
   let link: ClosableLink | null = null;
   let seen: Uint8Array = new Uint8Array();
   let toldToReset = false;
+  let everOpened = false;
+  let openError = "";
   try {
     while (Date.now() < deadline) {
       if (!link) {
         try {
           link = await open();
-        } catch {
+          everOpened = true;
+        } catch (err) {
+          // Not there yet (a board re-enumerating after a reset) -- or never openable, which the end says.
+          openError = errorText(err);
           await sleep(REOPEN_PAUSE_MS);
           continue;
         }
@@ -296,6 +303,10 @@ export async function catchPrompt(
         onStatus("Waiting for the board. If nothing happens, press its reset button, or unplug it and plug it back in.");
         toldToReset = true;
       }
+    }
+    if (!everOpened) {
+      // 2026-11-18 (Mike, CYD, straight after a write): reported as "no reply" when nothing was ever listening.
+      throw new RawReplError(OPEN_STEP, `couldn't open the port (${openError || "no reason given"}). Close anything else using it -- ThingStudio, Thonny, a serial monitor -- then try again`);
     }
     throw new RawReplError(CATCH_STEP, "the board never stopped at a prompt: press its reset button (or unplug and replug it) while this is waiting", seen);
   } finally {

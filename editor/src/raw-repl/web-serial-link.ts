@@ -30,7 +30,15 @@ async function bounded(p: Promise<unknown>): Promise<void> {
 }
 
 export async function openSerialLink(port: SerialPortLike, baudRate = RAW_REPL_BAUD): Promise<ClosableLink> {
-  await port.open({ baudRate });
+  try {
+    await port.open({ baudRate });
+  } catch (err) {
+    // "Already open": this page's own earlier user of the port (the flasher, 2026-11-18) didn't let go. Ours to
+    // tidy, once; anything else is a real failure for the caller to report.
+    if (!(err instanceof Error && err.name === "InvalidStateError")) throw err;
+    await bounded(port.close());
+    await port.open({ baudRate });
+  }
   if (!port.readable || !port.writable) {
     await port.close().catch(() => undefined);
     throw new Error("the port opened but has no data streams");

@@ -151,7 +151,11 @@ espConfirm.addEventListener("change", updateWriteButton);
 async function closeSession(): Promise<void> {
   const s = session;
   session = null;
-  if (s) await s.transport.disconnect().catch(() => undefined);
+  if (!s) return;
+  await s.transport.disconnect().catch(() => undefined);
+  // esptool-js's disconnect can leave the port open after a hard reset; Install runtime then couldn't open it
+  // (Mike, CYD, 2026-11-18). Closing an already-closed port just fails, which is fine here.
+  await s.transport.device.close().catch(() => undefined);
 }
 
 btnConnect.addEventListener("click", async () => {

@@ -68,3 +68,32 @@ describe("Web Serial link", () => {
     expect(Date.now() - started).toBeLessThan(CLOSE_STEP_MS * 5 + 500);
   }, 10_000);
 });
+
+describe("Web Serial link on a port left open", () => {
+  it("closes a port this page left open, once, and opens it again", async () => {
+    const port = fakePort();
+    let opens = 0;
+    let closes = 0;
+    port.open = async () => {
+      opens++;
+      if (opens === 1) throw Object.assign(new Error("The port is already open."), { name: "InvalidStateError" });
+    };
+    const closeOriginal = port.close.bind(port);
+    port.close = () => {
+      closes++;
+      return closeOriginal();
+    };
+    const link = await openSerialLink(port);
+    expect(opens).toBe(2);
+    expect(closes).toBe(1);
+    await link.close();
+  });
+
+  it("passes any other open failure straight on", async () => {
+    const port = fakePort();
+    port.open = async () => {
+      throw Object.assign(new Error("Failed to open serial port."), { name: "NetworkError" });
+    };
+    await expect(openSerialLink(port)).rejects.toThrow("Failed to open serial port.");
+  });
+});

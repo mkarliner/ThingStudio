@@ -237,3 +237,11 @@ describe("the install plan", () => {
     expect(plan.remove).toEqual([]);
   });
 });
+
+describe("catching a prompt on a port that won't open", () => {
+  it("says the port wouldn't open, with the reason, instead of 'no reply'", async () => {
+    const err = await catchPrompt(async () => { throw new Error("The port is already open."); }, Date.now() + 400, () => undefined).catch((e) => e);
+    expect(err.step).toBe("opening the port");
+    expect(err.message).toContain("already open");
+  });
+});
