@@ -314,7 +314,9 @@ processor descriptor), a build is a variant inside a family with versions, a boa
 2026-11-06: fetched from the docs site, Ed25519-signed by Mike's key, no rollback, bundled copy as fallback; built 2026-11-06); erase-all by default,
 and a local file's family read from the image with `esptool image_info` rather than asked. Kept open for a future
 manufacturer-supplied repository (apt-style), which is why the loader takes a list of sources (2026-10-25).
-1 entry: `docs/working-notes/decisions/firmware-catalogue.md`.
+Every catalogue link is checked by machine: CI daily and on change, `publish.sh` before upload and after
+publishing (2026-11-17).
+2 entries: `docs/working-notes/decisions/firmware-catalogue.md`.
 
 ## Third-party pinning
 

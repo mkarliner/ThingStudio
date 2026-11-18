@@ -13,6 +13,7 @@ import json
 import stat
 import sys
 import time
+import urllib.error
 from pathlib import Path
 
 import pytest
@@ -327,6 +328,42 @@ def test_a_catalogue_image_is_fetched_verified_and_cached_by_hash(store, tmp_pat
     assert path.name == f"{sha}.bin"
     image.unlink()
     assert image_path(store, "esptool", sha, image.as_uri()) == path  # served from the cache
+
+
+def _refuse_download(monkeypatch, exc):
+    def urlopen(*_args, **_kwargs):
+        raise exc
+
+    monkeypatch.setattr(firmware_flash.urllib.request, "urlopen", urlopen)
+
+
+def test_a_missing_image_says_so_and_asks_for_a_report(store, monkeypatch):
+    url = "https://example.com/releases/download/v1/image.bin"
+    _refuse_download(monkeypatch, urllib.error.HTTPError(url, 404, "Not Found", {}, None))
+    with pytest.raises(FirmwareError) as exc:
+        image_path(store, "esptool", "0" * 64, url)
+    message = exc.value.message
+    assert exc.value.step == "download"
+    assert "missing from its download site (HTTP 404)" in message and url in message
+    assert "Pick another version" in message and "Report a problem" in message
+    assert not (store.base_dir / "firmware" / f"{'0' * 64}.bin").exists()
+
+
+def test_a_server_error_says_try_later(store, monkeypatch):
+    url = "https://example.com/image.bin"
+    _refuse_download(monkeypatch, urllib.error.HTTPError(url, 503, "Unavailable", {}, None))
+    with pytest.raises(FirmwareError) as exc:
+        image_path(store, "esptool", "0" * 64, url)
+    assert "refused the firmware (HTTP 503)" in exc.value.message and "Try again later" in exc.value.message
+
+
+def test_no_network_says_check_the_connection(store, monkeypatch):
+    url = "https://example.com/image.bin"
+    _refuse_download(monkeypatch, urllib.error.URLError("nodename nor servname provided"))
+    with pytest.raises(FirmwareError) as exc:
+        image_path(store, "esptool", "0" * 64, url)
+    assert "could not download the firmware (nodename nor servname provided)" in exc.value.message
+    assert "internet connection" in exc.value.message
 
 
 def test_a_wrong_hash_refuses_and_leaves_no_cached_file(store, tmp_path):

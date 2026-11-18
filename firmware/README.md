@@ -176,6 +176,11 @@ before the release exists.
    upload is read back and compared. The release notes name each image, its hash and its tested board. Needs `gh`,
    logged in. Until it runs, the catalogue's new URLs answer 404, so publish the release promptly.
 
+   It also refuses an image that the catalogue (the tag's, or the working tree's) links on a different release,
+   and after `--publish` it downloads every catalogue link on the tag. The Catalogue links workflow checks the
+   same links on every catalogue change and daily, and fails once a release is still unpublished 3 days after the
+   catalogue named it, or the docs site serves no catalogue (`tools/check_catalogue_urls.py`).
+
 ## Signing keys (once)
 
 Installs trust the docs site's catalogue only when a key in `firmware/catalogue-keys.json` signed it

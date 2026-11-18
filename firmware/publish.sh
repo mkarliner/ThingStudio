@@ -15,8 +15,11 @@
 # For each target (tools/firmware_targets.py list) it takes the newest image in firmware/out/<target>/ and refuses
 # when: the image is not at the runtime version; its hash is not in the target's tested.json (record-tested.sh);
 # its build commit is not an ancestor of the tag; the .sha256 beside it disagrees. Also refused: gh missing or not
-# logged in; the tag is not a draft release; main.py missing; an upload that does not read back with the same hash.
-# Nothing is uploaded until every target passes.
+# logged in; the tag is not a draft release; main.py missing; an upload that does not read back with the same hash;
+# a catalogue entry (the tag's firmware/builds.json, or the working tree's, which the docs site serves) that links
+# one of these images on a different release (2026-11-12: catalogued on v0.12.0, uploaded to v0.12.2, five days of
+# 404s nobody reported). Nothing is uploaded until every target passes. With --publish, every catalogue link on the
+# release is then downloaded to check it works (tools/check_catalogue_urls.py).
 #
 # Needs: gh, authenticated by `gh auth login` or GH_TOKEN (a fine-grained token needs only Contents: write on this
 # repository), python3, git, the repository's own history.
@@ -137,6 +140,19 @@ while IFS=$'\t' read -r img _digest; do
 done < "$WORK/images.tsv"
 FILES+=("$MAIN")
 
+# --- the catalogue links each image on this release --------------------------------------------------------------
+# Offline. The tag's catalogue is what installs from this release offer; the working tree's is what the docs site
+# serves. Both must link every image being attached on $TAG, or the editor offers a download that answers 404.
+git -C "$REPO" show "$TAG:firmware/builds.json" > "$WORK/tag-builds.json" \
+    || die "no firmware/builds.json at $TAG"
+NAMES=()
+while IFS=$'\t' read -r img _digest; do NAMES+=("$(basename "$img")"); done < "$WORK/images.tsv"
+python3 "$REPO/tools/check_catalogue_urls.py" --catalogue "$WORK/tag-builds.json" --attaching "$TAG" "${NAMES[@]}" \
+    || die "the catalogue at $TAG links these images on another release -- fix the urls, sign, commit, re-tag"
+python3 "$REPO/tools/check_catalogue_urls.py" --catalogue "$REPO/firmware/builds.json" \
+    --attaching "$TAG" "${NAMES[@]}" \
+    || die "firmware/builds.json (the docs site's copy) links these images on another release -- fix the urls and sign"
+
 # --- upload, then read it back -----------------------------------------------------------------------------------
 note "uploading ${#FILES[@]} files to the $TAG draft"
 gh release upload "$TAG" "${FILES[@]}" --clobber
@@ -185,7 +201,12 @@ note "release notes name each image and its hash"
 if [ "$PUBLISH" = "--publish" ]; then
     gh release edit "$TAG" --draft=false >/dev/null
     note "published $TAG"
+    note "downloading every catalogue link at $TAG"
+    python3 "$REPO/tools/check_catalogue_urls.py" --catalogue "$WORK/tag-builds.json" --require-tag "$TAG" \
+        || die "$TAG is published, but the catalogue links above don't download -- fix them before anyone flashes"
 else
-    note "still a draft. Look at it, then publish:"
+    note "still a draft. Look at it, then publish, then check the catalogue's links:"
     note "  gh release edit $TAG --draft=false"
+    note "  git show $TAG:firmware/builds.json > /tmp/builds-$TAG.json"
+    note "  python3 tools/check_catalogue_urls.py --catalogue /tmp/builds-$TAG.json --require-tag $TAG"
 fi

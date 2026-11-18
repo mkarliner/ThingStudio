@@ -101,6 +101,9 @@ jobs:
           PY
       - name: every target complete and in step with the catalogue
         run: python3 tools/firmware_catalogue.py --check
+      # The live link check is catalogue-links.yml (network); its logic is tested offline here.
+      - name: the catalogue link checker's own tests
+        run: cd tools && python3 test_check_catalogue_urls.py
       - name: every target has a tested image at the runtime version (warning)
         run: python3 tools/firmware_targets.py current --warn
       # The Docs workflow publishes the catalogue only when this passes; signing is a maintainer step after a

@@ -162,5 +162,6 @@ edit didn't land"; cache-bust with a query parameter (`https://…?fresh=2`). 1 
 ## Custom firmware builds
 
 Building the images in a cloud session (ESP-IDF from GitHub, registry components overridden), image sizes per
-target at runtime 15.0.0, NimBLE's 4-connection limit, esptool 3.x lacking the C5 (2026-11-04).
+target at runtime 15.0.0, NimBLE's 4-connection limit, esptool 3.x lacking the C5 (2026-11-04); catalogue links
+on the wrong release for five days, unreported, and the site copy silently gone (2026-11-17).
 `docs/working-notes/learnings/firmware-builds.md`.

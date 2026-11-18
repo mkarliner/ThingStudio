@@ -29,6 +29,7 @@ import subprocess
 import sys
 import threading
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 import uuid
@@ -456,6 +457,24 @@ def _cached_path(store: PersistedStore, sha256: str, tool: str) -> Path:
     return store.base_dir / "firmware" / f"{sha256}{_expected_suffix(tool)}"
 
 
+def _download_failure(url: str, exc: OSError) -> str:
+    """One line for a failed image download: what happened, then what to do. A catalogue link that answers 404 is
+    our mistake, not the user's network, and nobody reports a silent bounce (2026-11-17: the 15.1.0 links named
+    the wrong release for five days), so that case asks to be told."""
+    if isinstance(exc, urllib.error.HTTPError):
+        if exc.code in (404, 410):
+            return (
+                f"this firmware is missing from its download site (HTTP {exc.code}): {url}. Pick another version or "
+                "use your own image file, and please report it (Help → Report a problem)"
+            )
+        return (
+            f"the download site refused the firmware (HTTP {exc.code}): {url}. Try again later, or use your own "
+            "image file"
+        )
+    reason = exc.reason if isinstance(exc, urllib.error.URLError) else exc
+    return f"could not download the firmware ({reason}): {url}. Check the internet connection and try again"
+
+
 def image_path(store: PersistedStore, tool: str, sha256: str, url: str) -> Path:
     """The image on disk for one catalogue version: the cached copy when its hash still matches, else downloaded
     and verified. A wrong hash deletes the download and refuses -- there is no retry and no fallback."""
@@ -486,7 +505,7 @@ def image_path(store: PersistedStore, tool: str, sha256: str, url: str) -> Path:
         raise
     except OSError as exc:
         path.unlink(missing_ok=True)
-        raise FirmwareError("download", f"could not fetch {url}: {exc}") from exc
+        raise FirmwareError("download", _download_failure(url, exc)) from exc
     got = _sha256(path)
     if got != sha256:
         path.unlink(missing_ok=True)

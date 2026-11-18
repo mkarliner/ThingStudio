@@ -1,0 +1,43 @@
+name: Catalogue links
+
+# Every download link in the firmware catalogue (firmware/builds.json) has to work, and the docs site has to serve
+# the catalogue. Both failed silently in November 2026: the 15.1.0 links named the wrong release for five days with
+# no report, and the site's copy vanished when an unsigned catalogue was skipped with only a warning
+# (learnings/firmware-builds.md). Hence a check that doesn't depend on anyone noticing:
+#
+# - on a push to main that changes the catalogue: every link works, or its release isn't published yet;
+# - every day: the same, plus a release still unpublished 3 days after the catalogue named it, plus the site copy.
+#
+# A failed scheduled run emails whoever last changed the schedule below. The network is the point, so this is its
+# own workflow rather than a step in ci.yml, whose jobs stay offline.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "firmware/builds.json"
+      - "tools/check_catalogue_urls.py"
+      - ".github/workflows/catalogue-links.yml"
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  links:
+    name: catalogue links and the site copy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+      - name: every link downloads
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          # The site copy is checked on the schedule only: right after a push, the Docs workflow may not have
+          # published the new catalogue yet.
+          SITE: ${{ github.event_name != 'push' && '--site https://docs.thingstudio.net/catalogue/builds.json' || '' }}
+        run: python3 tools/check_catalogue_urls.py --max-pending-days 3 $SITE

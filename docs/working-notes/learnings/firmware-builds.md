@@ -41,3 +41,12 @@ Status: detail file, started 2026-11-04. See `learnings.md` for the index.
   only the classic 14.x images its runtime refuses. Release URLs are known before the release exists, so
   `firmware/README.md` "Publishing" now runs `firmware_catalogue.py --image` before the tag; v0.12.1 carries the
   entries.
+- **2026-11-17 — The 15.1.0 links named the wrong release, and nobody said.** `bench.py --catalogue v0.12.0` wrote
+  the 15.1.0 URLs (`ed76f4aa`, 12 Nov); `publish.sh v0.12.2` uploaded the images to v0.12.2. Released v0.12.2 offered
+  ThingStudio images that answered 404 (preselected, newest first, once the supplier was switched) until Mike hit it
+  on 17 Nov. No tester reported it. The same change left `builds.json` unsigned, so the Docs workflow skipped the
+  site copy with a warning and `docs.thingstudio.net/catalogue/builds.json` went 404 too. Two failures, both silent.
+  Now: `tools/check_catalogue_urls.py` downloads every link (CI on catalogue changes and daily, with the site copy),
+  `publish.sh` refuses to attach an image the catalogue links on another release and checks every link after
+  `--publish`, and the editor's 404 asks the user to report it. A release page answers scripts 403 at will; ask the
+  API (`/repos/{o}/{r}/releases/tags/{tag}`) whether a release is published, and say so when it gives no clear answer.

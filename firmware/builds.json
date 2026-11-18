@@ -208,7 +208,7 @@
         {
           "version": "15.1.0",
           "date": "2026-11-12",
-          "url": "https://github.com/mkarliner/ThingStudio/releases/download/v0.12.0/thingstudio-classic-esp32-15.1.0-e8d4804.bin",
+          "url": "https://github.com/mkarliner/ThingStudio/releases/download/v0.12.2/thingstudio-classic-esp32-15.1.0-e8d4804.bin",
           "sha256": "047bd3e7ee725fad5cb6a9db97100f3d71c4938021ea83c233e3094def3c1f74"
         },
         {
@@ -232,7 +232,7 @@
         {
           "version": "15.1.0",
           "date": "2026-11-12",
-          "url": "https://github.com/mkarliner/ThingStudio/releases/download/v0.12.0/thingstudio-esp32-c3-15.1.0-e8d4804.bin",
+          "url": "https://github.com/mkarliner/ThingStudio/releases/download/v0.12.2/thingstudio-esp32-c3-15.1.0-e8d4804.bin",
           "sha256": "600ebe883819743d057156155aa69db9ddc771ee15933a677a802c5f2018a14e"
         },
         {
@@ -256,7 +256,7 @@
         {
           "version": "15.1.0",
           "date": "2026-11-12",
-          "url": "https://github.com/mkarliner/ThingStudio/releases/download/v0.12.0/thingstudio-esp32-c5-15.1.0-e8d4804.bin",
+          "url": "https://github.com/mkarliner/ThingStudio/releases/download/v0.12.2/thingstudio-esp32-c5-15.1.0-e8d4804.bin",
           "sha256": "d5b60ab9308f0d097ff2a968ec0017cc738b29ac3998b34bbbe6f012e549791e"
         },
         {

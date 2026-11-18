@@ -116,3 +116,18 @@ Worth keeping open, and cheap to keep open now:
   acceptance — never silent. Not built now; recorded so the loader's shape does not foreclose it.
 
 2 entries of this topic live in `outstanding-items/firmware-catalogue-repositories.md` when it is picked up.
+
+## Every catalogue link is checked by machine (Mike, 2026-11-17)
+
+A broken download link fails silently: the user sees a 404, gives up, and no one is told (the 15.1.0 links,
+`learnings/firmware-builds.md`, 2026-11-17). So the catalogue's links are checked, not trusted:
+
+- `tools/check_catalogue_urls.py` downloads the first byte of every link. An asset missing from a published release
+  is an error; one on a release not published yet is a warning for 3 days, then an error.
+- `.github/workflows/catalogue-links.yml` runs it on every catalogue change on `main` and daily; the daily run also
+  needs the docs site to serve the catalogue. A failed scheduled run emails whoever last changed its schedule.
+- `firmware/publish.sh` refuses to attach an image that the tag's or the working tree's catalogue links on another
+  release, and after `--publish` checks every link on the tag.
+- The editor's download error says what to do and, for a 404, asks to be told.
+
+A second catalogue source (the repositories item above) would need: the same check run against its URL.
