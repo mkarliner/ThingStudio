@@ -103,6 +103,8 @@ def test_first_run_copies_the_example_packages(tmp_path) -> None:
         "lsm6ds3_int.node.py",
         "rm68090.node.json",
         "rm68090.node.py",
+        "roster.node.json",
+        "roster.node.py",
     ]
     for name in copied:
         assert (tmp_path / "custom-nodes" / name).read_bytes() == (EXAMPLE_NODES_DIR / name).read_bytes()

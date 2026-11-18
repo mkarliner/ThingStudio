@@ -1,0 +1,91 @@
+{
+  "type": "examples/roster",
+  "kind": "sink",
+  "eventSource": true,
+  "label": "roster",
+  "description": "Keeps the latest message from each sender, by a key field, and sends the list when it changes. Entries not heard from within the timeout are dropped or marked inactive.",
+  "icon": "≣",
+  "group": "examples",
+  "ports": {
+    "inputs": [
+      {
+        "name": "msg",
+        "type": "any"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "msg",
+        "type": "any"
+      }
+    ]
+  },
+  "properties": [
+    {
+      "name": "key",
+      "label": "key field",
+      "kind": "text",
+      "default": "addr",
+      "help": "the field that identifies a sender: a message field such as addr or topic, or payload.<name> for one inside the payload"
+    },
+    {
+      "name": "timeoutS",
+      "label": "timeout (s)",
+      "kind": "number",
+      "default": 30,
+      "min": 1,
+      "help": "an entry not heard from for this long has expired"
+    },
+    {
+      "name": "expired",
+      "label": "expired entries",
+      "kind": "select",
+      "default": "drop",
+      "options": [
+        {
+          "value": "drop",
+          "label": "drop them"
+        },
+        {
+          "value": "inactive",
+          "label": "keep, marked inactive"
+        }
+      ]
+    },
+    {
+      "name": "merge",
+      "label": "keep fields a new message leaves empty",
+      "kind": "boolean",
+      "default": true,
+      "help": "an empty value ('' or None) in a new message doesn't replace the stored one, e.g. a device's name"
+    },
+    {
+      "name": "maxEntries",
+      "label": "max entries",
+      "kind": "number",
+      "default": 50,
+      "min": 1,
+      "help": "when full, the inactive and then the longest-silent entry make room"
+    },
+    {
+      "name": "sortBy",
+      "label": "sort by (highest first)",
+      "kind": "text",
+      "default": "",
+      "help": "a field of the entries, such as rssi; blank sorts the most recently heard first"
+    },
+    {
+      "name": "minIntervalMs",
+      "label": "send at most every (ms)",
+      "kind": "number",
+      "default": 2000,
+      "min": 0
+    },
+    {
+      "name": "id",
+      "label": "id",
+      "kind": "nodeId",
+      "default": ""
+    }
+  ]
+}

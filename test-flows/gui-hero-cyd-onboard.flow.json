@@ -1,7 +1,7 @@
 {
   "formatVersion": 1,
   "flowName": "gui-hero-cyd-onboard",
-  "notes": "CYD GUI demo with no extra hardware and no WiFi. Three pages, changing every 8 s:\n- Light: the on-board LDR (GPIO 34) as 0-100 %, with a bar and a 6.4-minute trend (journal: 77 rows of 5 s).\n- Board: free memory and uptime.\n- Nearby: Bluetooth devices heard in the last 30 s, and the strongest three by signal.\n\nSetup:\n- Needs the roster custom node (mike/roster) in ~/.thingstudio/custom-nodes/.\n- Light is calibrated in the 'light' function (DARK_PERCENT, BRIGHT_PERCENT), from Mike's CYD. Another unit may need\n  its own: read the adc percent with the LDR covered and in dim light.\n- Hard-reset the board before deploying: Bluetooth needs an unfragmented heap.\n\nWhy no WiFi: with the GUI running, a classic ESP32 without PSRAM has ESP-IDF heap for one radio, not WiFi and\nBluetooth together. With a wifi status node in the flow, Deploy failed: \"Bluetooth radio failed to start\n(OSError(116,))\" (2026-11-18). If the board joins WiFi at boot for the editor link, turn that off too.\nWhy no chip temperature: the classic ESP32's sensor returns a fixed value.\n\nOpen items:\n- roster exists only in Mike's custom-nodes folder, so anyone else opening this flow gets a missing node. Ship it as\n  a seeded example node to make the demo work for testers.\n- The user docs don't mention the one-radio limit. Add a line to custom-firmware.md's \"Memory and the board\" or the\n  ble node page, so a tester doesn't hit the same deploy failure.",
+  "notes": "CYD GUI demo with no extra hardware and no WiFi. Three pages, changing every 8 s:\n- Light: the on-board LDR (GPIO 34) as 0-100 %, with a bar and a 6.4-minute trend (journal: 77 rows of 5 s).\n- Board: free memory and uptime.\n- Nearby: Bluetooth devices heard in the last 30 s, and the strongest three by signal.\n\nSetup:\n- Uses the roster example node (examples/roster). A new install gets it in ~/.thingstudio/custom-nodes/ on first\n  run; on an older install, copy roster.node.json and roster.node.py from backend/src/thingstudio_backend/example_nodes/.\n- Light is calibrated in the 'light' function (DARK_PERCENT, BRIGHT_PERCENT), from Mike's CYD. Another unit may need\n  its own: read the adc percent with the LDR covered and in dim light.\n- Hard-reset the board before deploying: Bluetooth needs an unfragmented heap.\n\nWhy no WiFi: with the GUI running, a classic ESP32 without PSRAM has ESP-IDF heap for one radio, not WiFi and\nBluetooth together. With a wifi status node in the flow, Deploy failed: \"Bluetooth radio failed to start\n(OSError(116,))\" (2026-11-18). If the board joins WiFi at boot for the editor link, turn that off too.\nWhy no chip temperature: the classic ESP32's sensor returns a fixed value.\n\nOpen items:\n- The user docs don't mention the one-radio limit. Add a line to custom-firmware.md's \"Memory and the board\" or the\n  ble node page, so a tester doesn't hit the same deploy failure.",
   "nodes": [
     {
       "id": "n01-ldr",
@@ -209,7 +209,7 @@
     },
     {
       "id": "n19-roster",
-      "type": "mike/roster",
+      "type": "examples/roster",
       "properties": {
         "key": "addr",
         "timeoutS": 30,

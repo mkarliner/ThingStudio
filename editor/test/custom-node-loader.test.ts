@@ -167,7 +167,7 @@ describe("the example packages the backend ships", () => {
     .sort();
 
   it("are the expected ones", () => {
-    expect(names).toEqual(["dht22", "doubler", "lsm6ds3", "lsm6ds3_int", "rm68090"]);
+    expect(names).toEqual(["dht22", "doubler", "lsm6ds3", "lsm6ds3_int", "rm68090", "roster"]);
   });
 
   it("all load, and compile into a flow whose Python parses", async () => {

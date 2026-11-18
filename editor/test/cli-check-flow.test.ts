@@ -8,12 +8,33 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { beforeAll, describe, expect, it } from "vitest";
-import { checkFlowText } from "../src/cli/check-flow.js";
+import { checkFlowText, type CustomNodes } from "../src/cli/check-flow.js";
+import { loadAllCustomNodes } from "../src/app/custom-node-loader.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const editorDir = join(__dirname, "..");
 const flowsDir = join(__dirname, "..", "..", "test-flows");
 const examplesDir = join(__dirname, "..", "..", "tutorials");
+// The example custom nodes a new install gets (backend/.../example_nodes/): an example flow may use them, and no other
+// custom node, so the repo's flows compile with what ships.
+const exampleNodesDir = join(__dirname, "..", "..", "backend", "src", "thingstudio_backend", "example_nodes");
+
+async function exampleNodes(): Promise<CustomNodes> {
+  const { loaded, problems } = await loadAllCustomNodes({
+    async list() {
+      const names = readdirSync(exampleNodesDir).filter((f) => f.endsWith(".node.json")).map((f) => f.slice(0, -".node.json".length)).sort();
+      return { names, packages: names.map((name) => ({ name, file: join(exampleNodesDir, `${name}.node.json`) })) };
+    },
+    async read(name) {
+      return {
+        descriptor: readFileSync(join(exampleNodesDir, `${name}.node.json`), "utf8"),
+        implementation: readFileSync(join(exampleNodesDir, `${name}.node.py`), "utf8"),
+        compile: null,
+      };
+    },
+  });
+  return { dir: exampleNodesDir, loaded, problems };
+}
 
 function firstExisting(paths: string[]): string {
   for (const p of paths) if (existsSync(p)) return p;
@@ -101,10 +122,12 @@ describe("checkFlowText", () => {
     expect(r.notes.join("\n")).toMatch(/MQTT broker credentials were not resolved/);
   });
 
-  it("accepts every example GUI flow and the blink flow", () => {
+  it("accepts every example GUI flow and the blink flow, with the shipped example nodes", async () => {
+    const customNodes = await exampleNodes();
+    expect(customNodes.problems).toEqual([]);
     for (const dir of [flowsDir, examplesDir]) {
       for (const file of readdirSync(dir).filter((f) => /^(gui-|blink).*\.flow\.json$/.test(f))) {
-        const r = checkFlowText(readFileSync(join(dir, file), "utf8"));
+        const r = checkFlowText(readFileSync(join(dir, file), "utf8"), { customNodes });
         expect(r.errors, `${dir}/${file}`).toEqual([]);
       }
     }

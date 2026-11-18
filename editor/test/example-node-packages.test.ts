@@ -7,7 +7,7 @@
 // example is the proof that a custom node can be a hardware-interrupt source.
 
 import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { compile } from "../src/compiler/compile.js";
 import type { GraphData } from "../src/compiler/graph.js";
@@ -31,7 +31,10 @@ function bareCtx(): CodegenContext {
 
 describe("shipped example node packages", () => {
   it("every example .node.json validates against the format", () => {
-    for (const name of ["doubler", "dht22", "lsm6ds3", "lsm6ds3_int"]) {
+    // Every package in the folder, not a list: a new example can't be left out of the check.
+    const names = readdirSync(dir).filter((f) => f.endsWith(".node.json")).map((f) => f.slice(0, -".node.json".length));
+    expect(names).toContain("roster");
+    for (const name of names) {
       expect(descriptorOf(name).type, name).toContain("/");
     }
   });
