@@ -3864,10 +3864,14 @@ lists what loaded. Each node appears in the palette under its <code>group</code>
 <p>A package with a problem isn't loaded, and the console says which file
 and why. The others still load. If two packages use the same <code>type</code>, the
 first one by file name is loaded and the other is reported.</p>
-<p>The folder starts with two examples, <code>doubler</code> and <code>dht22</code>, under
-<strong>examples</strong> in the palette. Read them, change them or delete them.
-ThingStudio adds them only the first time it runs, so deleted examples
-stay deleted.</p>
+<p>The folder starts with six examples. Under <strong>examples</strong> in the palette:
+<code>doubler</code>, <code>dht22</code>, and <code>roster</code>, which keeps the latest message from each
+sender (such as each Bluetooth device nearby). Under <strong>hardware</strong>:
+<code>lsm6ds3</code>, <code>lsm6ds3_int</code> and <code>rm68090</code>. Read them, change them or delete
+them. ThingStudio adds them only the first time it runs, so deleted
+examples stay deleted. An example added in a later release doesn't reach
+an existing folder: copy its two files from
+<a href="https://github.com/mkarliner/ThingStudio/tree/main/backend/src/thingstudio_backend/example_nodes">the repository</a>.</p>
 <h2 id="the-descriptor-namenodejson">The descriptor: <code>&lt;name&gt;.node.json</code></h2>
 <p>Example — a node that doubles a numeric payload:</p>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>

@@ -5249,10 +5249,14 @@ A package with a problem isn't loaded, and the console says which file
 and why. The others still load. If two packages use the same `type`, the
 first one by file name is loaded and the other is reported.
 
-The folder starts with two examples, `doubler` and `dht22`, under
-**examples** in the palette. Read them, change them or delete them.
-ThingStudio adds them only the first time it runs, so deleted examples
-stay deleted.
+The folder starts with six examples. Under **examples** in the palette:
+`doubler`, `dht22`, and `roster`, which keeps the latest message from each
+sender (such as each Bluetooth device nearby). Under **hardware**:
+`lsm6ds3`, `lsm6ds3_int` and `rm68090`. Read them, change them or delete
+them. ThingStudio adds them only the first time it runs, so deleted
+examples stay deleted. An example added in a later release doesn't reach
+an existing folder: copy its two files from
+[the repository](https://github.com/mkarliner/ThingStudio/tree/main/backend/src/thingstudio_backend/example_nodes).
 
 ## The descriptor: `<name>.node.json`
 
