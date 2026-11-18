@@ -63,6 +63,10 @@
 					ipv4 24
 					ipv6 48
 				}
+				# The proxy in front of Caddy adds these with the full client address; client_ip above
+				# already carries the masked one, so drop them (found 2026-11-18: every line had a full IP).
+				request>headers>X-Forwarded-For delete
+				request>headers>X-Real-Ip delete
 			}
 		}
 	}
