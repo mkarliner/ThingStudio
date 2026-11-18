@@ -323,7 +323,9 @@ publishing (2026-11-17).
 Anything fetched from outside the repo is untrusted until it is pinned to an immutable identifier, installed
 without its own code running, and covered by a check that fails when it changes; per-source pin inventory,
 exceptions and the mechanical-not-vigilant reasoning move here from `AGENTS.md` (2026-10-30, the AGENTS.md
-diet). 1 entry: `docs/working-notes/decisions/third-party-pinning.md`.
+diet). A high advisory with no fix is accepted by name in `editor/audit-accepted.json`, with a reason and a
+review-by date; the gate fails again when the date passes or the advisory goes (2026-11-18, picomatch).
+2 entries: `docs/working-notes/decisions/third-party-pinning.md`.
 
 ## Handoff notes
 

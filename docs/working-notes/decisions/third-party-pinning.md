@@ -44,3 +44,21 @@ Stated exceptions, not accidents:
 
 npm's own package hygiene (install scripts, `npx` policy, lockfile regeneration on this tree) is a separate
 section of `AGENTS.md`; its incident lives in `learnings/editor-build-tooling.md`.
+
+## A known-vulnerable dependency with no fix: accepted by name, with a review date (Mike, 2026-11-18)
+
+CI fails on any high or critical npm advisory (2026-10-24). On 2026-11-18 one arrived with no fixed version:
+picomatch <= 4.0.7, GHSA-fc5q-39xc-vjpf, reached only through dev tools (vite, vitest, tinyglobby, fdir). CI went
+red on every push, including commits that touched only notes. Commenting the step out, or gating only shipped
+dependencies (`--omit=dev`), would have stopped checking the build tools for good; leaving it red trains people to
+ignore red. So:
+
+- `tools/npm_audit_gate.py` replaces `npm audit --audit-level=high`. It fails on the same advisories, except those
+  listed in `editor/audit-accepted.json`, each with the advisory id, the package, the reason it is safe, and a
+  review-by date (a month out by default).
+- An entry fails the gate again when its date passes (look for a fix, re-check the reason) or when its advisory no
+  longer appears (delete it). The list only shrinks unless someone decides otherwise, in a reviewed commit.
+- Accepting one advisory accepts nothing else, in that package or any other.
+
+A second ecosystem (pip for the backend, if it gets an audit step) would need: the same file shape beside its own
+lockfile, and the same gate reading its audit tool's report.

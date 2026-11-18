@@ -28,8 +28,14 @@ jobs:
       # discover it (2026-10-24: six advisories had accumulated since the August lock, two of them high, with
       # every other CI step green). `high`, not `moderate`: the moderates here were test-only, and blocking on
       # those trains people to bypass the gate. If a high ever has no fix, that is an explicit accepted-risk
-      # decision in docs/working-notes/, not a step to comment out.
-      - run: npm audit --audit-level=high
+      # decision in docs/working-notes/, not a step to comment out: the gate below is `npm audit
+      # --audit-level=high` with named exceptions in editor/audit-accepted.json, each with a reason and a
+      # review-by date, failing again when the date passes or the advisory goes (2026-11-18: picomatch,
+      # GHSA-fc5q-39xc-vjpf, no fixed version; decisions/third-party-pinning.md).
+      - name: npm audit (high and critical, accepted risks excepted)
+        run: python3 ../tools/npm_audit_gate.py
+      - name: the audit gate's own tests
+        run: cd ../tools && python3 test_npm_audit_gate.py
       - run: npx tsc --noEmit
       - run: npm test
       # The real bundle, not just the typecheck: tsc does not look inside .vue files, so a stale import
