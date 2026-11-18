@@ -132,6 +132,12 @@ where is written down.
 
 ### 6. Words
 
+- **Wording decided in the marketing repo (Mike, 2026-11-18): read ThingStudioMarketing
+  `drafts/browser-first-positioning.md` first.** The two forms are ThingStudio Web and ThingStudio App
+  ("installed" in running prose; not "desktop": both open in a browser). Pitch line: "Runs entirely in your
+  browser. No cloud, no account, no cookies." Address: web.thingstudio.net. The board setup page is "Set up a
+  board", not "flasher". Say what the server does: it keeps a three-day access log, so never "the server keeps
+  nothing". The landing page version is on ThingStudioWeb branch `browser-first`.
 - The landing page and docs: what the online version does and doesn't do (USB only, Chrome/Edge desktop, no
   flashing yet). Adjust the "local only" message: the page still sends nothing anywhere except GoatCounter.
 - A docs page or section: "Use it in your browser", covering the board needing MicroPython first, with links
