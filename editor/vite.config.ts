@@ -172,12 +172,38 @@ function runtimeSources(): Plugin {
   };
 }
 
+// The libraries a deploy may send (online build, main.ts's installFlowDependencies): read by the backend's own
+// dependencies.py, the code behind /api/dependencies, so the online and installed editors offer the same list. A
+// separate chunk, loaded only when a deploy needs it.
+function flowDependencies(): Plugin {
+  const virtualId = "virtual:flow-dependencies";
+  const resolved = `\0${virtualId}`;
+  return {
+    name: "thingstudio-flow-dependencies",
+    resolveId(id) {
+      return id === virtualId ? resolved : null;
+    },
+    load(id) {
+      if (id !== resolved) return null;
+      const script = [
+        "import json, sys",
+        "from pathlib import Path",
+        "sys.path.insert(0, 'backend/src')",
+        "from thingstudio_backend.dependencies import dependencies_json, load_dependencies",
+        "print(json.dumps(dependencies_json(load_dependencies(Path('device-runtime/src')))))",
+      ].join("\n");
+      const json = execSync("python3 -", { cwd: REPO_ROOT, input: script, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
+      return `export const dependencies = ${json.trim()}.dependencies;\n`;
+    },
+  };
+}
+
 // The online demo (`vite build --mode demo`, docs/working-notes/online-editor-demo-scoping.md): the same editor with
 // nothing behind it -- no board, no backend. __DEMO__ is a compile-time constant, so every `if (!__DEMO__)` branch is
 // dropped from the demo bundle along with the transports, the admin-API client and the firmware dialog it alone
 // reaches (test/demo-build.test.ts checks). Output goes to dist-demo/, beside the normal dist/.
 export default defineConfig(({ mode }) => ({
-  plugins: [vue(), demoPage(mode), firmwareMirror(mode), runtimeSources()],
+  plugins: [vue(), demoPage(mode), firmwareMirror(mode), runtimeSources(), flowDependencies()],
   define: {
     __RUNTIME_BUILD_SHA__: JSON.stringify(runtimeBuildSha()),
     __EDITOR_BUILD__: JSON.stringify(editorBuild()),

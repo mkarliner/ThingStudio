@@ -156,6 +156,19 @@ export class WebSerialTransport implements DeviceTransport {
     }
   }
 
+  /** The open port, for a job that needs it to itself (Install runtime, Remove flow): disconnect first, then
+   * hand this to the job. null when not connected. */
+  get port(): WebSerialPort | null {
+    return this.#port;
+  }
+
+  /** Writes text as-is, no framing: MicroPython's own prompt after STOP_TO_PROMPT, and Ctrl-D to restart the
+   * listener from there (the backend's raw_write, for the direct link). */
+  async rawWrite(text: string): Promise<void> {
+    if (!this.#writer) throw new Error("WebSerialTransport is not connected (no writable stream)");
+    await this.#writer.write(new TextEncoder().encode(text));
+  }
+
   /** Encode one message, base64/line-wrap it, and write it to the device. */
   async send(message: Message): Promise<void> {
     if (!this.#writer) throw new Error("WebSerialTransport is not connected (no writable stream)");

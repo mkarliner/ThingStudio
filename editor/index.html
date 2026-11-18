@@ -20,7 +20,11 @@
      that need one are marked device-only and not shown; demo-only ones show only there. CSS rather than the
      hidden attribute, because main.ts sets `hidden` on some of these as the connection changes. */
   body:not(.demo) .demo-only { display: none !important; }
-  body.demo .device-only { display: none !important; }
+  /* Online in a browser with Web Serial, main.ts adds class="board" and the board controls come back. */
+  body.demo:not(.board) .device-only { display: none !important; }
+  body.demo.board .no-board-only { display: none !important; }
+  body.demo .installed-only { display: none !important; }
+  body.demo:not(.board) .board-only { display: none !important; }
   #demo-banner { flex: 0 0 auto; padding: 7px 12px; background: #2a2412; color: #e8d9a8;
     border-bottom: 1px solid #4a3f1c; font-size: 12px; line-height: 1.4; }
   #demo-banner a { color: #ffd479; }
@@ -218,8 +222,12 @@
   <!-- Demo banner (online demo only). Placeholder copy; the final wording comes from the ThingStudioMarketing
        repo. main.ts fills in the version. -->
   <div id="demo-banner" class="demo-only" role="note">
-    This is a demo of the Thingstudio editor. It doesn't connect to a board. Try an example, change it, and press
-    Compile to see the Python it makes. To run it on a board, <a href="https://thingstudio.net/">download Thingstudio</a>.
+    <span class="no-board-only">This is the ThingStudio editor in your browser. This browser can't reach a board: try an
+    example, change it, and press Compile to see the Python it makes. To run it on a board, use Chrome or Edge on a
+    desktop, or <a href="https://thingstudio.net/">download ThingStudio</a>.</span>
+    <span class="board-only">ThingStudio in your browser. Plug in a board and click Connect. A new board needs
+    <a href="/install.html" target="_blank" rel="noopener">setting up</a> first. Nothing is sent anywhere: the board is
+    reached over the USB cable.</span>
     <span id="demo-version" class="demo-version"></span>
   </div>
   <div id="toolbar">
@@ -235,7 +243,7 @@
         <div id="fileMenuList" class="menu-list" role="menu" hidden>
           <button id="clear-canvas" role="menuitem" title="Start a new, empty flow: removes every node, pane and setting">New flow</button>
           <button id="btnOpenFlow" role="menuitem" title="Open a flow file, via the OS's own open dialog">Open…<span class="menu-key" data-key="O"></span></button>
-          <button id="btnSaveFlow" class="device-only" role="menuitem" title="Save to this flow's file. A flow that has no file yet asks where, like Save As.">Save<span class="menu-key" data-key="S"></span></button>
+          <button id="btnSaveFlow" class="installed-only" role="menuitem" title="Save to this flow's file. A flow that has no file yet asks where, like Save As.">Save<span class="menu-key" data-key="S"></span></button>
           <button id="btnSaveFlowAs" role="menuitem" title="Save this flow to a file you choose, via the OS's own save dialog">Save As…<span class="menu-key" data-key="S" data-shift="1"></span></button>
           <hr id="recentSep" />
           <div id="recentHeading" class="menu-row">Open recent</div>
@@ -336,7 +344,7 @@
       </details>
 
       <details class="panel" open>
-        <summary><span class="device-only">Device console</span><span class="demo-only">Console</span></summary>
+        <summary><span class="device-only">Device console</span><span class="demo-only no-board-only">Console</span></summary>
         <label class="panel-action console-level" title="How much to show. Normal: your flow's output, warnings, errors and results. Info: also routine reports (board detected, memory, libraries, network status). Debug: also raw protocol messages and boot output.">
           Show <select id="consoleLevel">
             <option value="normal">Normal</option>

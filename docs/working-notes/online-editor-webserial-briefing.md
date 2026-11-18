@@ -234,7 +234,18 @@ catalogue and images from task 2 (done for the page: `tools/fetch_firmware_mirro
 `editor/src/raw-repl/` (the client, the install plan, a Web Serial link) with `backend/test/test_raw_repl.py`'s cases
 ported to `editor/test/raw-repl.test.ts`, and Install runtime on the page (`editor/src/install/runtime.ts`). The
 runtime's files come from `device-runtime/runtime_manifest.py` at build time (`vite.config.ts`'s `runtimeSources()`).
-Not yet tried on a board. Remove flow is in the client but not on any page yet; it joins the editor in task 1.
+Not yet tried on a board.
+
+**Status, task 1 (2026-11-18):** the online build now connects over Web Serial when the browser has it
+(`editor/src/app/edition.ts`: `CAN_REACH_BOARD` at run time; backend-only code stays behind `__DEMO__` inline so the
+bundler drops it). Online with a board: Connect (direct), Deploy (the library list built in by
+`vite.config.ts`'s `flowDependencies()`, which runs the backend's own `dependencies.py`), Check status, Board settings
+(no password is remembered: that's for the installed editor's WiFi link), Restart, the command box and the prompt
+(`WebSerialTransport.rawWrite`), Install runtime and Remove flow (the raw-REPL client), Install firmware (opens the
+install page). Greyed out: custom nodes in the palette. Hidden: the port list, Save to a file handle. The banner and
+first console line say whether this browser can reach a board. `tools/demo_request_check.py` checks both cases.
+Still to do in task 1: grey out user board definitions (Pins… says "built-in" already) and check the rest of section
+A's list in the UI. Tasks 3, 5 (hardware), 6 (sessionStorage) and 7 (words) are open.
 
 Before touching anything that sends or parses frames: read `interfaces/protocol/SPEC.md` and run the conformance
 vectors (`cd editor && npm test`, `test/protocol-conformance.test.ts`). npm commands run on Mike's Mac, or in the

@@ -133,10 +133,18 @@ def run(page, check: Check, tmp: Path) -> list[dict]:
 
     visible = {sel: page.locator(sel).is_visible() for sel in ("#demo-banner", "#btnCompile", "#btnConnect", "#btnDeploy", "#backendPortSelect", "#btnSaveFlow", "#cmdInput")}
     check.report("banner and Compile shown", visible["#demo-banner"] and visible["#btnCompile"])
-    hidden = [s for s in ("#btnConnect", "#btnDeploy", "#backendPortSelect", "#btnSaveFlow", "#cmdInput") if visible[s]]
-    check.report("board controls hidden", not hidden, f"still visible: {', '.join(hidden)}" if hidden else "")
     tools_visible = page.get_by_role("button", name="Tools ▾").is_visible()
-    check.report("Tools menu hidden", not tools_visible)
+    # The online editor offers board controls when the browser has Web Serial (src/app/edition.ts, 2026-11-18),
+    # and never the installed editor's backend ones (port list, Save to a file handle).
+    has_serial = page.evaluate("() => 'serial' in navigator")
+    never = [s for s in ("#backendPortSelect", "#btnSaveFlow") if visible[s]]
+    check.report("backend controls hidden", not never, f"still visible: {', '.join(never)}" if never else "")
+    if has_serial:
+        missing = [s for s in ("#btnConnect", "#btnDeploy", "#cmdInput") if not visible[s]]
+        check.report("board controls shown (Web Serial)", not missing and tools_visible, f"missing: {', '.join(missing)}" if missing else "")
+    else:
+        hidden = [s for s in ("#btnConnect", "#btnDeploy", "#cmdInput") if visible[s]]
+        check.report("board controls hidden (no Web Serial)", not hidden and not tools_visible, f"still visible: {', '.join(hidden)}" if hidden else "")
 
     examples: list[dict] = []
     items = page.locator("#examplesMenuList > button")

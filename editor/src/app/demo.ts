@@ -53,6 +53,8 @@ export interface DemoHooks {
   log(text: string, cls?: "ok" | "err" | ""): void;
   /** The editor's version, for the banner. */
   versionLabel: string;
+  /** This browser can reach a board (Web Serial). */
+  canReachBoard: boolean;
 }
 
 const el = <T extends HTMLElement = HTMLElement>(id: string): T => document.getElementById(id) as T;
@@ -91,7 +93,12 @@ export async function startDemo(hooks: DemoHooks): Promise<void> {
     preview.scrollIntoView({ block: "nearest" });
   });
 
-  hooks.log("[demo] No board here: Compile shows the Python a board would run. Examples ▾ has more flows.", "");
+  hooks.log(
+    hooks.canReachBoard
+      ? "[online] Connect a board over USB, or press Compile to see the Python a board would run. Examples ▾ has more flows."
+      : "[online] No board in this browser: Compile shows the Python a board would run. Examples ▾ has more flows.",
+    "",
+  );
   const first = DEMO_EXAMPLES[0];
   if (first) await open(first);
 }

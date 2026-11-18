@@ -28,3 +28,9 @@ declare module "virtual:firmware-catalogue" {
 declare module "virtual:runtime-sources" {
   export const runtimeSources: import("./raw-repl/runtime-files.js").RuntimeSources;
 }
+
+// The libraries a deploy may send, read at build time by the backend's dependencies.py (vite.config.ts's
+// flowDependencies()). Online build only.
+declare module "virtual:flow-dependencies" {
+  export const dependencies: import("./compiler/flow-dependencies.js").DependencyInfo[];
+}

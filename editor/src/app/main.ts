@@ -196,6 +196,10 @@ import { downloadTextFile, saveFlowFileAs, openFlowFileFromDisk, writeFlowFile, 
 import { addRecent, removeRecent, loadRecents, storeRecents, type RecentFile } from "../flow-file/recent-files.js";
 import { getCredential as getSavedCredential } from "./rete/saved-values.js";
 import { startDemo } from "./demo.js";
+import { CAN_REACH_BOARD } from "./edition.js";
+import { installRuntimeOn } from "../install/runtime.js";
+import { catchPrompt, removeFlow as removeFlowOverRepl } from "../raw-repl/raw-repl.js";
+import { openSerialLink } from "../raw-repl/web-serial-link.js";
 
 const el = <T extends HTMLElement = HTMLElement>(id: string): T => document.getElementById(id) as T;
 
@@ -1629,7 +1633,7 @@ let transport: DeviceTransport = __DEMO__ ? NO_TRANSPORT : new WebSerialTranspor
 // one click racing to decide which it was.
 fireInjectNode.value = (node) => {
   if (!transport.isConnected) {
-    logLine(__DEMO__ ? "[demo] ▶ fires an inject on a connected board. The demo has no board." : "[inject: connect to a device first -- clicking only fires while live]", "");
+    logLine(__DEMO__ && !CAN_REACH_BOARD ? "[demo] ▶ fires an inject on a connected board. This browser can't reach one: use Chrome or Edge on a desktop." : "[inject: connect to a device first -- clicking only fires while live]", "");
     return;
   }
   logLine(`[inject: firing node ${node.id}]`, "");
@@ -2007,8 +2011,15 @@ function updateConnModeUi(): void {
   el("backendUrlInput").hidden = !backend || !import.meta.env.DEV;
   el("backendPortSelect").hidden = !backend;
   el("btnRefreshPorts").hidden = !backend;
-  el("btnInstallRuntime").hidden = !backend;
-  el("btnInstallFirmware").hidden = !backend;
+  // Online (no backend) both run in the browser: Install runtime over Web Serial, Install firmware on the install page.
+  el("btnInstallRuntime").hidden = !backend && !__DEMO__;
+  el("btnInstallFirmware").hidden = !backend && !__DEMO__;
+}
+if (__DEMO__ && CAN_REACH_BOARD) {
+  // The online editor reaches a board one way: the browser's own serial port (Web Serial).
+  el<HTMLSelectElement>("connModeSelect").value = "direct";
+  document.body.classList.add("board");
+  updateConnModeUi();
 }
 if (!__DEMO__) {
   el("connModeSelect").addEventListener("change", updateConnModeUi);
@@ -2305,6 +2316,8 @@ async function connectOverNetwork(t: BackendTransport, host: string, tcpPort: nu
 }
 
 async function rememberBoardPassword(hostname: string, password: string): Promise<void> {
+  // The board password is for the installed editor's WiFi link; the online editor has neither, so keeps none.
+  if (__DEMO__) return;
   try {
     await putCredential(currentBackendWsUrl(), "board", hostname, { password });
   } catch (err) {
@@ -2335,7 +2348,7 @@ function updateBoardSettingsButton(): void {
     : "The board's network name and WiFi password. Changes are made over USB.";
 }
 
-if (!__DEMO__) {
+if (CAN_REACH_BOARD) {
   el("btnBoardSettings").addEventListener("click", () => {
     const hello = lastHello;
     if (!hello || !hello.hostname) return;
@@ -2361,7 +2374,7 @@ function boardSettingsTarget(hello: HelloMessage, portValue: string): string {
   return `Changing the ${hello.chipType} board${port}, currently named ${hello.hostname}${flow}.`;
 }
 
-if (!__DEMO__) {
+if (CAN_REACH_BOARD) {
   el("bsSave").addEventListener("click", (e) => {
     // Validate and save before the dialog closes, so a problem is shown in it rather than lost.
     e.preventDefault();
@@ -2408,7 +2421,7 @@ async function saveBoardSettings(): Promise<void> {
   // Keep this computer's copy of the password under the board's (possibly new) name.
   if (newPassword !== null) {
     await rememberBoardPassword(hostname, newPassword);
-  } else if (newHostname !== null && hello.authRequired && !clear) {
+  } else if (!__DEMO__ && newHostname !== null && hello.authRequired && !clear) {
     try {
       const saved = await getCredential(currentBackendWsUrl(), "board", hello.hostname);
       if (typeof saved.password === "string") await rememberBoardPassword(hostname, saved.password);
@@ -2485,7 +2498,7 @@ el("btnDocsGettingStarted").addEventListener("click", () => {
 // backend (/api/alive); the board's runtime from the last HELLO.
 el("btnAbout").addEventListener("click", async () => {
   const lines: string[] = [];
-  if (__DEMO__) lines.push("Thingstudio online demo: no board, no backend");
+  if (__DEMO__) lines.push(CAN_REACH_BOARD ? "ThingStudio online editor: boards over USB (Web Serial), no backend" : "ThingStudio online editor: no board in this browser, no backend");
   else try {
     const res = await fetch(`${backendHttpBaseUrl(currentBackendWsUrl())}/api/alive`, { cache: "no-store" });
     const body = (await res.json()) as { version?: string };
@@ -2785,6 +2798,11 @@ async function refreshFirmwareTargets(): Promise<void> {
   }
 }
 
+if (__DEMO__ && CAN_REACH_BOARD) {
+  // Online, flashing is the install page's job (install.html): one flasher, used from the page and from here.
+  el("btnInstallFirmware").addEventListener("click", () => window.open("/install.html", "_blank", "noopener"));
+}
+
 if (!__DEMO__) {
   el("btnInstallFirmware").addEventListener("click", () => {
     fwFile = null;
@@ -3003,8 +3021,42 @@ async function runFirmwareFlash(): Promise<void> {
   }
 }
 
-if (!__DEMO__) {
+/** Install runtime in the online editor: the same raw-REPL install as the install page (install/runtime.ts), on the
+ * connected board's port or one the user picks. */
+async function installRuntimeInBrowser(): Promise<void> {
+  let port = transport instanceof WebSerialTransport ? transport.port : null;
+  if (!port) {
+    try {
+      port = await (navigator as unknown as { serial: { requestPort(): Promise<WebSerialPort> } }).serial.requestPort();
+    } catch {
+      logLine("[install runtime] no port chosen", "");
+      return;
+    }
+  } else {
+    if (!boardAtPrompt && lastHelloVersion !== null) {
+      // A running listener ignores Ctrl-C: ask it to stop at the prompt first (2026-09-24).
+      await transport.send({ type: "STOP_TO_PROMPT" }).catch(() => undefined);
+      await new Promise((r) => setTimeout(r, 300));
+    }
+    logLine("[install runtime] disconnecting first -- installing needs the port to itself", "");
+    await transport.disconnect();
+    setConnectedUi(false);
+  }
+  logLine("[install runtime] checking the board, then installing the runtime -- this resets the board", "");
+  const result = await installRuntimeOn(port, (text) => logLine(`[install runtime] ${text}`, ""), () => undefined);
+  if (!result.ok) {
+    logAdvice("[install runtime failed]", result.advice ?? { text: "unknown failure" }, "err");
+    return;
+  }
+  logLine('[install runtime OK] board restarting. Click "Connect" and pick its port.', "ok");
+}
+
+if (CAN_REACH_BOARD) {
   el("btnInstallRuntime").addEventListener("click", exclusiveBoardJob(async () => {
+    if (__DEMO__) {
+      await installRuntimeInBrowser();
+      return;
+    }
     const wsUrl = currentBackendWsUrl();
     const portName = el<HTMLSelectElement>("backendPortSelect").value;
     if (!portName) {
@@ -3066,10 +3118,10 @@ if (!__DEMO__) {
   el("btnConnect").addEventListener("click", async () => {
     lastHelloVersion = null;
     lastHelloChipType = null;
-    void loadUserDefinitions();
+    if (!__DEMO__) void loadUserDefinitions();
     const mode = currentConnMode();
 
-    if (mode === "direct") {
+    if (__DEMO__ || mode === "direct") {
       // Frozen fallback per design doc §4's 2026-08-16 addendum: local-only,
       // no remote access, no auth story -- kept alongside the backend path
       // rather than retired. Genuinely still useful, not just legacy: it
@@ -3095,7 +3147,7 @@ if (!__DEMO__) {
       transport = t;
       setConnectedUi(true);
       logLine("[connected @ 115200 baud, direct WebSerial -- opening the port does not reset the board]", "");
-    } else {
+    } else if (!__DEMO__) {
       const wsUrl = currentBackendWsUrl();
       const portName = el<HTMLSelectElement>("backendPortSelect").value;
       const selection = parsePortSelection(portName);
@@ -3189,7 +3241,7 @@ async function requestHelloOrExplain(): Promise<void> {
   }
 }
 
-if (!__DEMO__) {
+if (CAN_REACH_BOARD) {
   el("btnCheckStatus").addEventListener("click", async () => {
     // Same HELLO_REQUEST as the Connect handler above, available any time
     // while connected -- no reset, no redeploy, just "tell me what you are
@@ -3224,10 +3276,16 @@ async function installFlowDependencies(source: string): Promise<Record<string, s
   const modules = findImportedModules(source);
   let list: DependencyInfo[];
   try {
-    const res = await fetch(`${backendHttpBaseUrl(currentBackendWsUrl())}/api/dependencies`, { cache: "no-store" });
-    const body = (await res.json()) as { dependencies?: DependencyInfo[]; error?: string };
-    if (!res.ok || !body.dependencies) throw new Error(body.error ?? `backend answered ${res.status}`);
-    list = body.dependencies;
+    if (__DEMO__) {
+      // The online build carries the list, read at build time by the backend's own dependencies.py
+      // (vite.config.ts's flowDependencies()), loaded only when a deploy needs it.
+      list = (await import("virtual:flow-dependencies")).dependencies;
+    } else {
+      const res = await fetch(`${backendHttpBaseUrl(currentBackendWsUrl())}/api/dependencies`, { cache: "no-store" });
+      const body = (await res.json()) as { dependencies?: DependencyInfo[]; error?: string };
+      if (!res.ok || !body.dependencies) throw new Error(body.error ?? `backend answered ${res.status}`);
+      list = body.dependencies;
+    }
     libraryModules = new Set(list.flatMap((d) => d.files.map((f) => topModuleOfBoardFile(f.name))));
   } catch (err) {
     logLine(
@@ -3397,7 +3455,7 @@ function reportPiecesFailed(failure: TransferFailure): void {
   if (memory) logAdvice("[deploy failed]", { text: memory, doc: DEPLOY_MEMORY_DOC }, "err");
 }
 
-if (!__DEMO__) {
+if (CAN_REACH_BOARD) {
   el("btnDeploy").addEventListener("click", async () => {
     const btn = el<HTMLButtonElement>("btnDeploy");
     btn.disabled = true;
@@ -3420,7 +3478,7 @@ if (!__DEMO__) {
         logLine("[deploying without a version check -- no HELLO received this connection]", "");
       }
 
-      await loadUserDefinitions();
+      if (!__DEMO__) await loadUserDefinitions();
       await resolveConfigCredentials();
       logTargetResolution(updateActiveTarget());
       const preview = await refreshPreviewNow();
@@ -3606,6 +3664,54 @@ function updateBoardToolsUi(): void {
 }
 updateBoardToolsUi();
 
+/** Remove flow in the online editor: wait for a prompt (pressing reset if the flow won't let go), delete the saved
+ * flow, reset. The browser's version of board_recovery.py's remove_flow(). */
+async function removeFlowInBrowser(): Promise<void> {
+  if (!window.confirm("Remove the saved flow from the board? The flow on your canvas isn't affected.")) return;
+  let port = transport instanceof WebSerialTransport ? transport.port : null;
+  if (!port) {
+    try {
+      port = await (navigator as unknown as { serial: { requestPort(): Promise<WebSerialPort> } }).serial.requestPort();
+    } catch {
+      logLine("[remove flow] no port chosen", "");
+      return;
+    }
+  } else {
+    if (!boardAtPrompt && lastHelloVersion !== null) {
+      await transport.send({ type: "STOP_TO_PROMPT" }).catch(() => undefined);
+      await new Promise((r) => setTimeout(r, 300));
+    }
+    await transport.disconnect();
+    setConnectedUi(false);
+  }
+  const chosen = port;
+  logLine("[remove flow] stopping the board…", "");
+  try {
+    const link = await catchPrompt(() => openSerialLink(chosen), Date.now() + 60_000, (text) => logLine(`[remove flow] ${text}`, ""));
+    try {
+      logLine("[remove flow] Board stopped. Removing the saved flow…", "");
+      await removeFlowOverRepl(link);
+    } finally {
+      await link.close().catch(() => undefined);
+    }
+  } catch (err) {
+    logAdvice("[remove flow failed]", { text: err instanceof Error ? err.message : String(err), doc: DOC_BOARD_STUCK }, "err");
+    return;
+  }
+  logLine('[remove flow OK] The saved flow is gone and the board has restarted without it. Click "Connect".', "ok");
+}
+
+/** Writes text as-is to the board at MicroPython's prompt, over whichever link is open. */
+async function writeRaw(text: string): Promise<void> {
+  if (transport instanceof WebSerialTransport) {
+    await transport.rawWrite(text);
+    return;
+  }
+  const bt = backendTransportOrNull();
+  if (!bt) throw new Error("the prompt needs a connected board");
+  bt.rawWrite(text);
+}
+
 function backendTransportOrNull(): BackendTransport | null {
   return !__DEMO__ && transport instanceof BackendTransport ? transport : null;
 }
@@ -3620,9 +3726,7 @@ async function sendCommand(): Promise<void> {
   logLine(`» ${code}`, "");
   try {
     if (boardAtPrompt) {
-      const bt = backendTransportOrNull();
-      if (!bt) throw new Error("the prompt needs the backend connection");
-      bt.rawWrite(code + "\r");
+      await writeRaw(code + "\r");
     } else {
       await transport.send({ type: "EXEC", code });
     }
@@ -3631,7 +3735,7 @@ async function sendCommand(): Promise<void> {
   }
 }
 
-if (!__DEMO__) {
+if (CAN_REACH_BOARD) {
   el("btnSendCmd").addEventListener("click", () => void sendCommand());
   el<HTMLInputElement>("cmdInput").addEventListener("keydown", (ev) => {
     const input = ev.target as HTMLInputElement;
@@ -3694,7 +3798,7 @@ async function waitForBoardBack(): Promise<void> {
   }
 }
 
-if (!__DEMO__) {
+if (CAN_REACH_BOARD) {
   el("btnRestartSoft").addEventListener("click", async () => {
     if (boardAtPrompt) {
       el<HTMLButtonElement>("btnResume").click();
@@ -3725,10 +3829,9 @@ if (!__DEMO__) {
   });
 
   el("btnResume").addEventListener("click", async () => {
-    const bt = backendTransportOrNull();
-    if (!bt) return;
+    if (!transport.isConnected) return;
     try {
-      bt.rawWrite("\x04"); // Ctrl-D: MicroPython soft reset -> main.py -> listener + saved flow
+      await writeRaw("\x04"); // Ctrl-D: MicroPython soft reset -> main.py -> listener + saved flow
     } catch (err) {
       logLine(`[restart failed] ${err instanceof Error ? err.message : String(err)}`, "err");
       return;
@@ -3741,6 +3844,10 @@ if (!__DEMO__) {
   });
 
   el("btnRemoveFlow").addEventListener("click", exclusiveBoardJob(async () => {
+    if (__DEMO__) {
+      await removeFlowInBrowser();
+      return;
+    }
     const portName = el<HTMLSelectElement>("backendPortSelect").value;
     if (!portName) {
       logLine('[remove flow failed] choose the board\'s port first (⟳ next to it looks for boards again)', "err");
@@ -3863,5 +3970,6 @@ if (__DEMO__) {
     compile: demoCompile,
     log: logLine,
     versionLabel: editorVersionLabel(__EDITOR_BUILD__),
+    canReachBoard: CAN_REACH_BOARD,
   });
 }
