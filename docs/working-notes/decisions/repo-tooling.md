@@ -26,3 +26,7 @@ Status: detail file, split out of `decisions.md` on 2026-09-06 to keep that inde
   `docs/requirements.txt`, shared with `docs.yml`. Kept to GNU make 3.81 (macOS's). `make` also symlinks
   `thingstudio-backend` into the first writable `~/.local/bin`/`/opt/homebrew/bin`/`/usr/local/bin` on PATH
   (never replacing a non-link), so it can be started straight after a build.
+- **2026-11-18 — Major features on a branch; `main` stays releasable** (Mike): "I may have to fix main if users
+  come up with problems now, this applies to all major features from now on." First one: `online-editor-webserial`,
+  built in a cloud session's clone and pushed to GitHub; Mike tests it on boards in a `git worktree`, so his own
+  checkout stays on `main` for fixes. Rule in `AGENTS.md`, "Commits".

@@ -2513,7 +2513,7 @@ el("btnDocsGettingStarted").addEventListener("click", () => {
 // backend (/api/alive); the board's runtime from the last HELLO.
 el("btnAbout").addEventListener("click", async () => {
   const lines: string[] = [];
-  if (__DEMO__) lines.push(CAN_REACH_BOARD ? "ThingStudio online editor: boards over USB (Web Serial), no backend" : "ThingStudio online editor: no board in this browser, no backend");
+  if (__DEMO__) lines.push(CAN_REACH_BOARD ? "ThingStudio Web: boards over USB (Web Serial), no backend" : "ThingStudio Web: no board in this browser, no backend");
   else try {
     const res = await fetch(`${backendHttpBaseUrl(currentBackendWsUrl())}/api/alive`, { cache: "no-store" });
     const body = (await res.json()) as { version?: string };

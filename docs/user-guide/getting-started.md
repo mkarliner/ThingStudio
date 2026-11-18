@@ -1,8 +1,9 @@
 # Getting started
 
-There are two ways to use ThingStudio: installed on your computer, or as a web page. The steps below install it.
-To start in Chrome or Edge with nothing to install, see [Use it in your browser](in-your-browser.md). The installed
-version adds a WiFi link to the board, custom nodes and the command line.
+ThingStudio comes two ways: ThingStudio Web, which runs entirely in your browser, and ThingStudio App, installed
+on your computer. The steps below install the App. To start in Chrome or Edge with nothing to install, see
+[Use it in your browser](in-your-browser.md). The App adds a WiFi link to the board, custom nodes and the command
+line. It runs a small server on your computer and opens in your browser, so there's no window of its own.
 
 From a new board to a blinking LED in six steps, then one more:
 

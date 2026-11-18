@@ -108,10 +108,10 @@
         <span class="palette-icon">⟳</span>
         <span class="palette-label">Reload custom nodes</span>
       </button>
-      <!-- Online (Mike, 2026-11-18): what the installed editor adds is shown greyed out, not hidden. -->
-      <button v-else class="palette-row load-custom-row" disabled title="Custom nodes are read from your computer's .thingstudio folder, so they need the installed ThingStudio.">
+      <!-- Online (Mike, 2026-11-18): what ThingStudio App adds is shown greyed out, not hidden. -->
+      <button v-else class="palette-row load-custom-row" disabled title="Custom nodes are read from your computer's .thingstudio folder, so they need ThingStudio App.">
         <span class="palette-icon">⟳</span>
-        <span class="palette-label">Custom nodes: in the installed ThingStudio</span>
+        <span class="palette-label">Custom nodes: in ThingStudio App</span>
       </button>
     </template>
   </div>

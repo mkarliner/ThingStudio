@@ -75,10 +75,21 @@ ThingStudioMarketing repo, not here.
 - **[LAUNCH]** **The online editor: boards over Web Serial, and an install page (Mike, 2026-11-18).** Replaces the
   demo at demo.thingstudio.net. Built on the branch `online-editor-webserial`: the install page (flash, then Install
   runtime), Connect/Deploy and the board jobs over Web Serial, credentials kept for the tab, the comment node, the
-  LED-pins console line, the "Use it in your browser" page. Left: hardware checks beyond the CYD (an S3 on native
-  USB, a Pico W, stock-MicroPython installs, Remove flow), greying out user board definitions, a request-check run
-  without Web Serial, then the Caddyfile and release-workflow changes live, merge and release. Plan and status:
+  LED-pins console line, the "Use it in your browser" page. Hardware checked on the ESP32, S2, S3, C3, C5, Pico
+  and Pico W (2026-11-18); the nRF52 when it turns up. Left: the release steps -- DNS and Pangolin for
+  web.thingstudio.net with demo.thingstudio.net redirecting (next item), the Caddyfile live, a release-workflow
+  run, merge and release. Plan and status:
   `online-editor-webserial-briefing.md`; item: `outstanding-items/online-and-offline-editor.md`.
+- **[LAUNCH-NICE]** **Browser editor at web.thingstudio.net (Mike, 2026-11-18, from the marketing repo).** The
+  browser editor moves from demo.thingstudio.net to web.thingstudio.net; the install page gets its own address.
+  demo.thingstudio.net must keep working as a redirect (it is in the HN and Product Hunt threads). Touches
+  Pangolin, Caddy, DNS, the Pages standby, docs links and the landing page buttons. Marketing:
+  ThingStudioMarketing `drafts/browser-first-positioning.md`.
+- **[LAUNCH-NICE]** **Editor server logs no IP addresses (Mike, 2026-11-18).** Done in the Caddyfile on the branch
+  `online-editor-webserial` (the address fields and the proxy's headers are deleted); goes live with it. Left: set up
+  the GoatCounter import from the log.
+  Check what `goatcounter import -format caddy` does with no IP: it may lose unique-visitor counts. The
+  marketing copy doesn't depend on it (it says "no user tracking", not "no IP addresses").
 - **[LAUNCH-NICE]** **Docs site: no third-party requests (Mike, 2026-11-08: "squeaky clean").** Fonts are
   already off (`font: false`). Left: Material calls `api.github.com` on page load to show the repo's stars and
   latest release, because `repo_url` is set. Fix by overriding the `source` partial (keep the plain link, drop

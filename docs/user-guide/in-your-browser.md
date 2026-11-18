@@ -1,8 +1,8 @@
 # Use it in your browser
 
-ThingStudio also runs as a web page, at [demo.thingstudio.net](https://demo.thingstudio.net/). There's nothing to
-install. In Chrome or Edge on a desktop computer, the page reaches your board over its USB cable. It can set up a
-blank board, deploy flows and show the board's output.
+ThingStudio Web runs entirely in your browser, at [web.thingstudio.net](https://web.thingstudio.net/). There's
+nothing to install. In Chrome or Edge on a desktop computer, the page reaches your board over its USB cable. It can
+set up a blank board, deploy flows and show the board's output.
 
 In other browsers, and on phones, the page can't reach a board. You can still build a flow, compile it and read the
 MicroPython it makes.
@@ -12,7 +12,8 @@ carries data, not only power.
 
 ## Set up a board
 
-The [install page](https://demo.thingstudio.net/install) puts MicroPython and the ThingStudio runtime on a board.
+The [Set up a board](https://web.thingstudio.net/install) page puts MicroPython and the ThingStudio runtime on a
+board.
 Writing a new image erases everything on the board.
 
 **ESP32 family:**
@@ -36,8 +37,8 @@ A board that already runs MicroPython needs only **Install runtime**.
 Click **Connect** and pick the board's port. The console names the board's LED pins, if its definition has any.
 Then build a flow, or open one from **Examples**, and click **Compile → Deploy**.
 
-**Tools** has the same board jobs as the installed ThingStudio: Check status, Board settings, Install runtime and
-Remove flow. **Install firmware…** opens the install page.
+**Tools** has the same board jobs as ThingStudio App: Check status, Board settings, Install runtime and Remove
+flow. **Install firmware…** opens Set up a board.
 
 ## What stays on your computer
 
@@ -46,10 +47,10 @@ Remove flow. **Install firmware…** opens the install page.
   **File → Forget WiFi and broker details** clears them sooner.
 - **The board** is reached over the USB cable. Nothing goes through a server.
 
-The site sends the page and the board images, and nothing more. Its server keeps a 3-day access log, with the end
-of each IP address removed.
+The site sends your browser the editor and the board images, then steps out. Its server keeps a three-day access
+log, to run the server and count visits.
 
-## What needs the installed ThingStudio
+## What needs ThingStudio App
 
 - **Connecting to a board over WiFi.** A web page can reach a board only over USB. A deployed flow still uses WiFi,
   MQTT and HTTP as normal.
@@ -60,7 +61,8 @@ of each IP address removed.
 The browser version always follows the newest ThingStudio. When a new runtime comes out, Connect says the board's
 runtime is older than the editor's. Click **Install runtime** to update it.
 
-[Install ThingStudio](getting-started.md#step-1-install-thingstudio) to have all of it.
+[Install ThingStudio App](getting-started.md#step-1-install-thingstudio) to have all of it. It runs on your
+computer and opens in your browser too.
 
 ## If something goes wrong
 
@@ -74,6 +76,6 @@ runtime is older than the editor's. Click **Install runtime** to update it.
   download mode. Unplug it, hold BOOT while you plug it back in, then Connect and pick its port again. It has a new
   name in download mode.
 - **A board that reaches download mode only through its own firmware**, such as the EMF 2022 Tidal badge, stays in
-  it for about a second: too short to pick its port. Write its image with the
-  [installed ThingStudio](getting-started.md#step-1-install-thingstudio). After that, Install runtime and the editor
+  it for about a second: too short to pick its port. Write its image with
+  [ThingStudio App](getting-started.md#step-1-install-thingstudio). After that, Install runtime and the editor
   work here as usual.

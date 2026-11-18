@@ -9,8 +9,9 @@ programmers who are comfortable wiring a breadboard and using a terminal; it doe
 
 **User guide:** https://docs.thingstudio.net/
 
-**Try it in your browser:** https://demo.thingstudio.net/ is the editor with nothing to install. Build a flow and
-read the MicroPython it makes. To run a flow on a real board, install ThingStudio.
+**ThingStudio Web:** https://web.thingstudio.net/ runs entirely in your browser, with nothing to install. In Chrome
+or Edge on a desktop it sets up a board over USB and deploys to it. **ThingStudio App**, below, is the same editor
+installed on your computer, plus the WiFi link to a board, custom nodes and the command line.
 
 ## Install
 

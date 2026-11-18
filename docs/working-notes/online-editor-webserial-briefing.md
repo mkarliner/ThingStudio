@@ -27,6 +27,15 @@ Read first (paths relative to `docs/working-notes/` unless rooted): `outstanding
    rest is built. It lives on the branch `online-editor-webserial`; major features are built on a branch from now on
    (`AGENTS.md`, "Commits").
 
+**Wording, decided in the marketing repo (Mike, 2026-11-18): read ThingStudioMarketing
+`drafts/browser-first-positioning.md` first.** The two forms are ThingStudio Web and ThingStudio App ("installed" in
+running prose; not "desktop": both open in a browser). Pitch line: "Runs entirely in your browser. No cloud, no
+account, no cookies." Address: web.thingstudio.net, with demo.thingstudio.net kept as a redirect. The board setup page
+is "Set up a board", not "flasher". Say what the server does: it keeps a three-day access log, with no IP addresses
+(Mike, 2026-11-18), so never "the server keeps nothing". The editor page loads no GoatCounter script, and its CSP
+would block one: GoatCounter counts the editor from the server's log only. (This replaces the earlier "sends nothing
+anywhere except GoatCounter", which was wrong.)
+
 ## Why now
 
 Over 11 to 17 November the demo server's own log shows 330 human visitors to demo.thingstudio.net. About 50 of
@@ -383,7 +392,7 @@ typing the credentials again; closing the tab clears them; and what's stored whe
 
 - Landing page and docs: what the online editor does and doesn't do (section A), Chrome or Edge on a desktop to
   reach a board, where credentials are kept. Adjust the "local only" message: the page still sends nothing
-  anywhere except GoatCounter.
+  anywhere; the editor is counted from the server's log, not a script.
 - A "Use it in your browser" page, which also covers the UF2 drag.
 - Dated decision entries, not edits to old ones: `decisions/runtime-install-from-editor.md` (WebSerial is back,
   superseding "web serial is deprecated", 2026-09-22), `decisions/editor-firmware-flashing.md` (the browser

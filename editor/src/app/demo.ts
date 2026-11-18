@@ -97,8 +97,8 @@ export async function startDemo(hooks: DemoHooks): Promise<void> {
 
   hooks.log(
     hooks.canReachBoard
-      ? "[online] Connect a board over USB, or press Compile to see the Python a board would run. Examples ▾ has more flows."
-      : "[online] No board in this browser: Compile shows the Python a board would run. Examples ▾ has more flows.",
+      ? "[ThingStudio Web] Connect a board over USB, or press Compile to see the Python a board would run. Examples ▾ has more flows."
+      : "[ThingStudio Web] No board in this browser: Compile shows the Python a board would run. Examples ▾ has more flows.",
     "",
   );
   const first = DEMO_EXAMPLES[0];

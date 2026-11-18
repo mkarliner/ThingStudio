@@ -14,6 +14,13 @@ implementing or changing any code that emits, parses, stores or transmits someth
 defines (the wire protocol in `interfaces/protocol/` first, and each later spec as it lands): read that spec, run its
 conformance test, and do not change the interface itself without Mike's explicit permission in the session.
 
+## Commands handed to Mike: zsh on macOS, no comments
+
+Mike runs the commands a session hands him on a Mac, in zsh, its default shell (Mike, 2026-11-18). Interactive zsh
+doesn't treat `#` as a comment, so a trailing `# note` becomes arguments to the command, and a `~` in it can break the
+line (`~15` read as a directory-stack entry: "not enough directory stack entries"). Give command blocks with no
+comments, and put any explanation in the prose around them.
+
 ## Git writes from the agent sandbox
 
 The agent sandbox and Mike's real Mac share the same live-mounted repo, and the sandbox cannot delete files it just

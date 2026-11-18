@@ -23,6 +23,11 @@
 	root * /srv/thingstudio-demo/current
 	encode zstd gzip
 
+	# The editor moved to web.thingstudio.net (Mike, 2026-11-18). demo.thingstudio.net stays in Pangolin, pointing
+	# here, and is sent on: it's in the Hacker News and Product Hunt threads.
+	@demo host demo.thingstudio.net
+	redir @demo https://web.thingstudio.net{uri} 301
+
 	# Static files, no directory listing (no `browse`), nothing else. /install is the install page, install.html.
 	try_files {path} {path}.html
 	file_server
@@ -48,8 +53,9 @@
 	@unhashed not path /assets/*
 	header @unhashed Cache-Control "no-cache"
 
-	# Access log, kept 3 days, with the end of every IP address masked, so it holds no personal data.
-	# GoatCounter can count page views from it (`goatcounter import -format caddy`), with no script on the page.
+	# Access log, kept 3 days, with no IP addresses at all (Mike, 2026-11-18): the remote and client addresses are
+	# deleted, not masked. GoatCounter counts page views from it (`goatcounter import -format caddy`), with no script
+	# on the page. Check what the import makes of lines with no address: it may lose unique-visitor counts.
 	log {
 		output file /var/log/caddy/thingstudio-demo.access.log {
 			roll_keep_for 72h
@@ -57,16 +63,11 @@
 		format filter {
 			wrap json
 			fields {
-				request>remote_ip ip_mask {
-					ipv4 24
-					ipv6 48
-				}
-				request>client_ip ip_mask {
-					ipv4 24
-					ipv6 48
-				}
-				# The proxy in front of Caddy adds these with the full client address; client_ip above
-				# already carries the masked one, so drop them (found 2026-11-18: every line had a full IP).
+				request>remote_ip delete
+				request>client_ip delete
+				request>remote_port delete
+				# The proxy in front of Caddy adds these with the full client address (found 2026-11-18: every
+				# line had a full IP), so they go too.
 				request>headers>X-Forwarded-For delete
 				request>headers>X-Real-Ip delete
 			}
