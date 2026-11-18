@@ -346,7 +346,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create "$GITHUB_REF_NAME" dist/* \
-            --repo "$GITHUB_REPOSITORY" --draft --title "Thingstudio $GITHUB_REF_NAME" --generate-notes \
+            --repo "$GITHUB_REPOSITORY" --draft --title "ThingStudio $GITHUB_REF_NAME" --generate-notes \
             --notes "Install and getting started: https://docs.thingstudio.net/getting-started/
 
           This release includes esptool (GPL-2.0-or-later) for installing firmware on a board. Its complete source is attached as esptool-$ESPTOOL_VERSION.tar.gz; esptool's license is in each bundle under licenses/esptool-LICENSE."

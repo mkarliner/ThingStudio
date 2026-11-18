@@ -70,26 +70,15 @@ ThingStudioMarketing repo, not here.
   `test-flows/ai-authoring/`, a round 3 with tasks that have no example, then the copy-into-your-assistant
   block and a skill; the first-run workspace `AGENTS.md` waits for a workspace folder. Scoping:
   `ai-authoring-doc-scoping.md`; rounds: `ai-authoring-test-rounds.md`.
-- **[LAUNCH-NICE]** **Online editor demo on thingstudio.net -- live since 2026-11-08.** Being replaced by the full
-  online editor (next item). `outstanding-items/online-editor-demo.md`.
-- **[LAUNCH]** **The online editor: boards over Web Serial, and an install page (Mike, 2026-11-18).** Replaces the
-  demo at demo.thingstudio.net. Built on the branch `online-editor-webserial`: the install page (flash, then Install
-  runtime), Connect/Deploy and the board jobs over Web Serial, credentials kept for the tab, the comment node, the
-  LED-pins console line, the "Use it in your browser" page. Hardware checked on the ESP32, S2, S3, C3, C5, Pico
-  and Pico W (2026-11-18); the nRF52 when it turns up. Left: the release steps -- DNS and Pangolin for
-  web.thingstudio.net with demo.thingstudio.net redirecting (next item), the Caddyfile live, a release-workflow
-  run, merge and release. Plan and status:
-  `online-editor-webserial-briefing.md`; item: `outstanding-items/online-and-offline-editor.md`.
-- **[LAUNCH-NICE]** **Browser editor at web.thingstudio.net (Mike, 2026-11-18, from the marketing repo).** The
-  browser editor moves from demo.thingstudio.net to web.thingstudio.net; the install page gets its own address.
-  demo.thingstudio.net must keep working as a redirect (it is in the HN and Product Hunt threads). Touches
-  Pangolin, Caddy, DNS, the Pages standby, docs links and the landing page buttons. Marketing:
-  ThingStudioMarketing `drafts/browser-first-positioning.md`.
-- **[LAUNCH-NICE]** **Editor server logs no IP addresses (Mike, 2026-11-18).** Done in the Caddyfile on the branch
-  `online-editor-webserial` (the address fields and the proxy's headers are deleted); goes live with it. Left: set up
-  the GoatCounter import from the log.
-  Check what `goatcounter import -format caddy` does with no IP: it may lose unique-visitor counts. The
-  marketing copy doesn't depend on it (it says "no user tracking", not "no IP addresses").
+- **[LAUNCH]** **ThingStudio Web: boards over Web Serial, and Set up a board -- live 2026-11-18 (0.13.0).**
+  web.thingstudio.net, with Set up a board at /setup; demo.thingstudio.net redirects there. Left: the landing
+  page's `browser-first` branch (ThingStudioMarketing), the Pages standby rebuilt from the 0.13.0 zip, the nRF52
+  when it turns up, and whether ThingStudio App's Tools → Install firmware should open Set up a board (Mike's
+  call). Plan and status: `online-editor-webserial-briefing.md`; item:
+  `outstanding-items/online-and-offline-editor.md`.
+- **[LAUNCH-NICE]** **GoatCounter import from the web server's log.** The log has no IP addresses (live
+  2026-11-18). Check what `goatcounter import -format caddy` does with no IP: it may lose unique-visitor counts.
+  The marketing copy doesn't depend on it (it says "no user tracking", not "no IP addresses").
 - **[LAUNCH-NICE]** **Docs site: no third-party requests (Mike, 2026-11-08: "squeaky clean").** Fonts are
   already off (`font: false`). Left: Material calls `api.github.com` on page load to show the repo's stars and
   latest release, because `repo_url` is set. Fix by overriding the `source` partial (keep the plain link, drop
