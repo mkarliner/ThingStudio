@@ -652,6 +652,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../in-your-browser/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Use it in your browser
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../getting-started/" class="md-nav__link">
         
   
@@ -1961,6 +1989,34 @@
     
   
     debug
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/comment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    comment
   
 
     
@@ -3689,6 +3745,8 @@
 <p>Each board has a definition file, and so does each processor. ThingStudio comes with definitions for the boards and processors below. You can <a href="#your-definition-files">change them or add your own</a>.</p>
 <h2 id="picking-the-board">Picking the board</h2>
 <p>Pick the board a flow is for from the <strong>Board</strong> menu in the toolbar. The default, <strong>Auto</strong>, uses the connected board. Auto recognises a board by the name MicroPython reports for it, and the menu shows what it found, for example <strong>Auto: LOLIN S2 Mini</strong>.</p>
+<p>The menu lists processors first, then boards. The processor decides which pins exist and what a flow can do. A board
+adds its own pin names on top, such as <strong>LED_RED</strong>, and its pin cheat sheet.</p>
 <p>Some boards report only their processor. The CYD, for example, reports itself as a generic ESP32. Pick those boards from the menu by hand. You can also pick a processor without a board, for example <strong>ESP32 (any board)</strong>.</p>
 <p>The board menu picks pins, not memory. A classic ESP32 board with no PSRAM can run a GUI flow by flashing the
 <a href="../custom-firmware/">custom firmware for classic ESP32</a>, which carries the runtime and the flow libraries in the

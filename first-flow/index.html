@@ -654,6 +654,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../in-your-browser/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Use it in your browser
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../getting-started/" class="md-nav__link">
         
   
@@ -1939,6 +1967,34 @@
     
   
     debug
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/comment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    comment
   
 
     
@@ -3643,9 +3699,11 @@
 <p>Your first flow: make an LED blink once a second, using three nodes.</p>
 <p>Your board should be connected, with the runtime installed: steps <a href="../connecting/">4</a> and <a href="../installing-runtime/">5</a>.</p>
 <h2 id="find-your-leds-pin">Find your LED's pin</h2>
-<p>Many boards have an LED wired to a GPIO pin. To find it, click <strong>Pins…</strong> next to the <strong>Board</strong> menu. Pins that the
-board names, such as <code>LED</code>, are listed first. <a href="../supported-hardware/">Supported hardware</a> lists the boards ThingStudio
-has definitions for. For any other board, check its documentation.</p>
+<p>Many boards have an LED wired to a GPIO pin. When you connect a board, the console names its LED pins, for example
+<code>LED = GPIO 25</code>. A board that reports only its processor, such as the CYD, needs picking in the <strong>Board</strong> menu first.
+<strong>Pins…</strong>, next to the <strong>Board</strong> menu, shows every pin; the ones the board names, such as <code>LED</code>, are listed first.
+<a href="../supported-hardware/">Supported hardware</a> lists the boards ThingStudio has definitions for. For any other board,
+check its documentation.</p>
 <p>The Pico W and Pico 2 W LEDs are wired through the WiFi chip, not a GPIO pin, so <code>gpio out</code> can't reach them. On
 those boards, or any board without an LED, wire an LED and a 330 Ω resistor from a free GPIO pin to GND. The LED's
 longer leg goes towards the GPIO pin.</p>

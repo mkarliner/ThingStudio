@@ -652,6 +652,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../in-your-browser/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Use it in your browser
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../getting-started/" class="md-nav__link">
         
   
@@ -1813,6 +1841,34 @@
     
   
     debug
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/comment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    comment
   
 
     
@@ -4088,6 +4144,10 @@ what the board sent instead, and what to do:</p>
 <td>Wait, then <strong>Tools → Check status</strong>.</td>
 </tr>
 <tr>
+<td>Runtime already on the board and didn't stop</td>
+<td>Press reset while <strong>Install runtime</strong> waits.</td>
+</tr>
+<tr>
 <td>Install stalled</td>
 <td>Replug the board, click <strong>⟳</strong>, and try again. If it repeats, restart ThingStudio.</td>
 </tr>
@@ -4117,6 +4177,9 @@ what the board sent instead, and what to do:</p>
 </tbody>
 </table>
 <p>The raw error stays in the message, in brackets. Include it if you report a problem.</p>
+<p>Some boards need a power cycle after an image is written or the runtime is installed, before they answer. The
+Freenove ESP32-S3 4.0" display board and the ESP32-C5 board can each take two: unplug the board, plug it back in, and
+connect again.</p>
 <h2 id="install-firmware-fails-or-lists-nothing">Install firmware… fails or lists nothing</h2>
 <p><strong>Tools → Install firmware…</strong> writes MicroPython onto a board in its bootloader. Each refusal names the step:</p>
 <table>

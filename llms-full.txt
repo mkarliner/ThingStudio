@@ -505,12 +505,101 @@ Next: [getting started](../getting-started.md).
 
 ---
 
+Source: https://docs.thingstudio.net/in-your-browser/
+
+# Use it in your browser
+
+ThingStudio Web runs entirely in your browser, at [web.thingstudio.net](https://web.thingstudio.net/). There's
+nothing to install. In Chrome or Edge on a desktop computer, the page reaches your board over its USB cable. It can
+set up a blank board, deploy flows and show the board's output.
+
+In other browsers, and on phones, the page can't reach a board. You can still build a flow, compile it and read the
+MicroPython it makes.
+
+You need a board with one of the processors in [Supported hardware](supported-hardware.md), and a USB cable that
+carries data, not only power.
+
+## Set up a board
+
+The [Set up a board](https://web.thingstudio.net/setup) page puts MicroPython and the ThingStudio runtime on a
+board.
+Writing a new image erases everything on the board.
+
+**ESP32 family:**
+
+1. Plug the board in, click **Connect** and pick its port. The page names the chip it found.
+2. Pick an image. ThingStudio's own image is listed first when there is one for the chip. Tick the box and click
+   **Write it**.
+3. Click **Install runtime** and pick the port again.
+
+**Raspberry Pi Pico, or nRF52:**
+
+1. Pick your board and click **Download the file**.
+2. Hold the board's BOOTSEL button while you plug it in (double-tap reset on an nRF52). A drive appears.
+3. Drag the file onto the drive. The board restarts by itself.
+4. Click **Install runtime** and pick the board's port.
+
+A board that already runs MicroPython needs only **Install runtime**.
+
+## Use the editor
+
+Click **Connect** and pick the board's port. The console names the board's LED pins, if its definition has any.
+Then build a flow, or open one from **Examples**, and click **Compile → Deploy**.
+
+**Tools** has the same board jobs as ThingStudio App: Check status, Board settings, Install runtime and Remove
+flow. **Install firmware…** opens Set up a board.
+
+## What stays on your computer
+
+- **Flows** are saved as files you choose, with **File → Save As…**, and opened with **File → Open…**.
+- **WiFi networks and MQTT brokers** you enter are kept in this browser tab until you close it, and sent nowhere.
+  **File → Forget WiFi and broker details** clears them sooner.
+- **The board** is reached over the USB cable. Nothing goes through a server.
+
+The site sends your browser the editor and the board images, then steps out. Its server keeps a three-day access
+log, to run the server and count visits.
+
+## What needs ThingStudio App
+
+- **Connecting to a board over WiFi.** A web page can reach a board only over USB. A deployed flow still uses WiFi,
+  MQTT and HTTP as normal.
+- **Custom nodes**, and **your own board definitions**. These are read from the `.thingstudio` folder on your
+  computer. The browser shows them, but they can't be used there.
+- **The `thingstudio-compile` command** and the [AI authoring](ai-authoring.md) tools.
+
+The browser version always follows the newest ThingStudio. When a new runtime comes out, Connect says the board's
+runtime is older than the editor's. Click **Install runtime** to update it.
+
+[Install ThingStudio App](getting-started.md#step-1-install-thingstudio) to have all of it. It runs on your
+computer and opens in your browser too.
+
+## If something goes wrong
+
+- **The port isn't listed.** Use a cable that carries data. Some boards need a USB serial driver first.
+- **"Couldn't open the port".** Another program has it open: ThingStudio, Thonny or a serial monitor. Close it and
+  try again.
+- **Install runtime says "Waiting for the board".** Press the board's reset button while it waits.
+- **An ESP32 doesn't answer on Connect.** Hold its BOOT button, tap RESET, release BOOT, and Connect again.
+- **ESP32-S2 boards** need that every time they are written, and appear as a new port afterwards: pick it again.
+- **A board on the chip's own USB, running other firmware** (a conference badge, say): the page can't switch it to
+  download mode. Unplug it, hold BOOT while you plug it back in, then Connect and pick its port again. It has a new
+  name in download mode.
+- **A board that reaches download mode only through its own firmware**, such as the EMF 2022 Tidal badge, stays in
+  it for about a second: too short to pick its port. Write its image with
+  [ThingStudio App](getting-started.md#step-1-install-thingstudio). After that, Install runtime and the editor
+  work here as usual.
+
+
+---
+
 Source: https://docs.thingstudio.net/getting-started/
 
 # Getting started
 
-Want a look first? [Try the editor in your browser](https://demo.thingstudio.net/) before you install anything.
-The demo doesn't connect to a board, but you can build a flow and read the MicroPython it makes.
+ThingStudio comes two ways: ThingStudio Web, which runs entirely in your browser, and ThingStudio App, installed
+on your computer. The steps below install the App. To start in Chrome or Edge with nothing to install, see
+[Use it in your browser](in-your-browser.md). The App adds a WiFi link to the board, custom nodes and the command
+line. It runs a small server on your computer and opens in your browser, so there's no window of its own.
 
 From a new board to a blinking LED in six steps, then one more:
 
@@ -973,9 +1062,11 @@ Your board should be connected, with the runtime installed: steps [4](connecting
 
 ## Find your LED's pin
 
-Many boards have an LED wired to a GPIO pin. To find it, click **Pins…** next to the **Board** menu. Pins that the
-board names, such as `LED`, are listed first. [Supported hardware](supported-hardware.md) lists the boards ThingStudio
-has definitions for. For any other board, check its documentation.
+Many boards have an LED wired to a GPIO pin. When you connect a board, the console names its LED pins, for example
+`LED = GPIO 25`. A board that reports only its processor, such as the CYD, needs picking in the **Board** menu first.
+**Pins…**, next to the **Board** menu, shows every pin; the ones the board names, such as `LED`, are listed first.
+[Supported hardware](supported-hardware.md) lists the boards ThingStudio has definitions for. For any other board,
+check its documentation.
 
 The Pico W and Pico 2 W LEDs are wired through the WiFi chip, not a GPIO pin, so `gpio out` can't reach them. On
 those boards, or any board without an LED, wire an LED and a 330 Ω resistor from a free GPIO pin to GND. The LED's
@@ -2126,6 +2217,9 @@ Each board has a definition file, and so does each processor. ThingStudio comes 
 
 Pick the board a flow is for from the **Board** menu in the toolbar. The default, **Auto**, uses the connected board. Auto recognises a board by the name MicroPython reports for it, and the menu shows what it found, for example **Auto: LOLIN S2 Mini**.
 
+The menu lists processors first, then boards. The processor decides which pins exist and what a flow can do. A board
+adds its own pin names on top, such as **LED_RED**, and its pin cheat sheet.
+
 Some boards report only their processor. The CYD, for example, reports itself as a generic ESP32. Pick those boards from the menu by hand. You can also pick a processor without a board, for example **ESP32 (any board)**.
 
 The board menu picks pins, not memory. A classic ESP32 board with no PSRAM can run a GUI flow by flashing the
@@ -2725,6 +2819,7 @@ See [flows, nodes and messages](../background/flows-and-nodes.md) for how they f
 | show the time of day | [ntp](ntp.md) |
 | wait before passing a message on | [delay](delay.md) |
 | see what's in a message | [debug](debug.md) |
+| explain a flow on the canvas | [comment](comment.md) |
 | send or receive MQTT messages | [mqtt publish](mqtt-publish.md), [mqtt subscribe](mqtt-subscribe.md) |
 | call a web API | [http request](http-request.md) |
 | serve a web page or API from the board | [http in](http-in.md) and [http response](http-response.md) |
@@ -2752,6 +2847,7 @@ Nodes that don't need a network or hardware:
 | [change](change.md) | transform | Sets or deletes one message property or flow variable. |
 | [journal](journal.md) | transform | Keeps the recent history of a number as average, min and max rows, for a histogram. |
 | [debug](debug.md) | sink | Prints a message to the editor's console. |
+| [comment](comment.md) | canvas only | Shows a note on the canvas; does nothing on the board. |
 
 ## Network
 
@@ -3243,6 +3339,34 @@ The value is printed as Python shows it, so a string is in quotes: `payload='hel
 to find the node on the canvas.
 
 The board prints the line, so the console shows it only while the editor is connected.
+
+
+---
+
+Source: https://docs.thingstudio.net/nodes/comment/
+
+# comment
+
+Shows a note on the canvas. It does nothing on the board, and nothing about it is sent there.
+
+Use it to explain a flow where people will see it: beside the node it's about, such as "Set **pin** to your
+board's LED". Example and tutorial flows use it the same way.
+
+## Properties
+
+- **text** — the note. Shown on the canvas as written, with its line breaks.
+- **width (characters)** — default 32. How wide the note is.
+- **max lines** — default 8. Longer text is cut off, and the last line fades to show there's more. Make the
+  note taller, or the text shorter.
+
+## Wiring
+
+This node has no inputs or outputs.
+
+## Behavior
+
+Compile leaves the node out, so it uses no memory on the board. It's saved in the flow file with the rest of the
+flow.
 
 
 ---
@@ -6223,6 +6347,23 @@ Properties explained: [change](nodes/change.md)
 | `valueType` | literal type | string | `"string"` | one of `string`, `number`, `bool` |
 | `value` | value / source property | string | `""` |  |
 
+### comment
+
+Shows a note on the canvas; does nothing on the board.
+
+Type: `comment`. Kind: canvas only. Palette group: general.
+
+Properties explained: [comment](nodes/comment.md)
+
+- Inputs: none
+- Outputs: none
+
+| Property | Editor label | Type | Default | Allowed values and notes |
+| --- | --- | --- | --- | --- |
+| `text` | text | string | `""` |  |
+| `width` | width (characters) | number | `32` |  |
+| `lines` | max lines | number | `8` |  |
+
 ### debug
 
 Prints a message's payload to the console.
@@ -7348,6 +7489,7 @@ what the board sent instead, and what to do:
 | Board is in its bootloader | An ESP32 in download mode. Press reset, not BOOT. If it repeats, install MicroPython. |
 | Board runs CircuitPython, or replied but not as MicroPython | [Install MicroPython](installing-micropython.md). |
 | Runtime still starting | Wait, then **Tools → Check status**. |
+| Runtime already on the board and didn't stop | Press reset while **Install runtime** waits. |
 | Install stalled | Replug the board, click **⟳**, and try again. If it repeats, restart ThingStudio. |
 
 If the port itself won't open, the console says why:
@@ -7359,6 +7501,10 @@ If the port itself won't open, the console says why:
 | board gone from that port | Check the cable, click **⟳**, and connect again. |
 
 The raw error stays in the message, in brackets. Include it if you report a problem.
+
+Some boards need a power cycle after an image is written or the runtime is installed, before they answer. The
+Freenove ESP32-S3 4.0" display board and the ESP32-C5 board can each take two: unplug the board, plug it back in, and
+connect again.
 
 ## Install firmware… fails or lists nothing
 
