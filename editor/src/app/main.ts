@@ -3962,6 +3962,10 @@ if (__DEMO__) {
     openFlowText: async (text) => {
       await loadFlowText(text, null);
       await reteHandle.fitView(); // an example opens whole, whatever the window size
+      // Chrome sometimes paints the wires as two thin outlines after the first zoom-to-fit, until anything redraws
+      // them (Mike, 2026-11-18, on page load; zooming or dragging a node put it right). Fit again on the next frame.
+      await new Promise((r) => requestAnimationFrame(() => r(undefined)));
+      await reteHandle.fitView();
     },
     chooseBoard: (choice) => {
       el<HTMLSelectElement>("boardSelect").value = choice;
