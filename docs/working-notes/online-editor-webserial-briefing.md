@@ -277,8 +277,9 @@ closed. Left for marketing: the landing page
   its firmware, so no port can be picked in time. **Decided (Mike): leave such boards to the installed editor** for
   the write; `in-your-browser.md` says so. Not built, if more such boards turn up: grant the JTAG device once (picker
   open before switching), then follow it on Web Serial's connect event and open it within the window.
-- **Still to try:** a plain S3 on native USB (write, Install runtime, Deploy), an S2 Mini (BOOT+RESET, the port changing),
-  Remove flow from the online editor, redeploy and node status on a Pico W, and an nRF52 drag.
+- **Pico W in the online editor:** deploy and redeploy: OK (Mike, 2026-11-18).
+- **Plain S3:** none to hand (Mike). The Freenove S3 and the C3 cover the chip's own USB; dropped for now.
+- **Still to try:** Remove flow from the online editor, an S2 Mini (BOOT+RESET, the port changing), an nRF52 drag.
 
 **Status, task 6 (2026-11-18):** done. Online, credentials and presets live in the tab's sessionStorage under one key
 (`thingstudio.savedValues`, `saved-values.ts`), page memory where that throws; they survive a reload and go when the
