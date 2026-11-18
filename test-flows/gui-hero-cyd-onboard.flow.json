@@ -1,0 +1,683 @@
+{
+  "formatVersion": 1,
+  "flowName": "gui-hero-cyd-onboard",
+  "notes": "CYD GUI demo with no extra hardware and no WiFi. Three pages, changing every 8 s:\n- Light: the on-board LDR (GPIO 34) as 0-100 %, with a bar and a 6.4-minute trend (journal: 77 rows of 5 s).\n- Board: free memory and uptime.\n- Nearby: Bluetooth devices heard in the last 30 s, and the strongest three by signal.\n\nSetup:\n- Needs the roster custom node (mike/roster) in ~/.thingstudio/custom-nodes/.\n- Light is calibrated in the 'light' function (DARK_PERCENT, BRIGHT_PERCENT), from Mike's CYD. Another unit may need\n  its own: read the adc percent with the LDR covered and in dim light.\n- Hard-reset the board before deploying: Bluetooth needs an unfragmented heap.\n\nWhy no WiFi: with the GUI running, a classic ESP32 without PSRAM has ESP-IDF heap for one radio, not WiFi and\nBluetooth together. With a wifi status node in the flow, Deploy failed: \"Bluetooth radio failed to start\n(OSError(116,))\" (2026-11-18). If the board joins WiFi at boot for the editor link, turn that off too.\nWhy no chip temperature: the classic ESP32's sensor returns a fixed value.\n\nOpen items:\n- roster exists only in Mike's custom-nodes folder, so anyone else opening this flow gets a missing node. Ship it as\n  a seeded example node to make the demo work for testers.\n- The user docs don't mention the one-radio limit. Add a line to custom-firmware.md's \"Memory and the board\" or the\n  ble node page, so a tester doesn't hit the same deploy failure.",
+  "nodes": [
+    {
+      "id": "n01-ldr",
+      "type": "thingstudio/adc",
+      "properties": {
+        "pin": 34,
+        "mode": "relative",
+        "delta": 500,
+        "lower": 0,
+        "upper": 50000,
+        "sense": "outside",
+        "pollMs": 2000
+      }
+    },
+    {
+      "id": "n02-light",
+      "type": "thingstudio/function",
+      "properties": {
+        "code": "# The CYD's LDR (GPIO 34) as a light level, 0-100 %.\n# The adc node's payload is a dict: {'raw': counts, 'volts': ..., 'percent': raw as 0-100}.\n# Calibrate with the adc 'percent' at the two ends (Mike's CYD, 2026-11-18): covered by a hand, and in front of a\n# monitor in a dark room. On this board the LDR bottoms out there, so anything brighter also reads 100.\n# Either order works: a board whose reading rises with light just has BRIGHT_PERCENT above DARK_PERCENT.\nDARK_PERCENT = 75\nBRIGHT_PERCENT = 0\nlevel = (msg['payload']['percent'] - DARK_PERCENT) * 100 / (BRIGHT_PERCENT - DARK_PERCENT)\nmsg['payload'] = round(min(100, max(0, level)))\nreturn msg\n",
+        "outputCount": 1
+      }
+    },
+    {
+      "id": "n03-lightval",
+      "type": "thingstudio/gui_readout",
+      "properties": {
+        "name": "Light",
+        "units": "%",
+        "decimals": 0,
+        "lo": 0,
+        "hi": 100,
+        "staleAfter": 15
+      }
+    },
+    {
+      "id": "n04-lightbar",
+      "type": "thingstudio/gui_bar",
+      "properties": {
+        "name": "Light bar",
+        "lo": 0,
+        "hi": 100,
+        "staleAfter": 15
+      }
+    },
+    {
+      "id": "n05-lighttrend",
+      "type": "thingstudio/gui_trend",
+      "properties": {
+        "name": "Light trend",
+        "lo": 0,
+        "hi": 100,
+        "columns": 60,
+        "colWidth": 3,
+        "height": 60,
+        "staleAfter": 30
+      }
+    },
+    {
+      "id": "n06-tick",
+      "type": "thingstudio/timer",
+      "properties": {
+        "intervalMs": 2000
+      }
+    },
+    {
+      "id": "n07-board",
+      "type": "thingstudio/function",
+      "properties": {
+        "code": "# Board health, read every tick: free memory (kB) and minutes since the flow started.\n# time.time() counts seconds on the board's clock without wrapping, set or not, so the difference is the uptime.\nimport gc\nimport time\nstart = context.get('start', None)\nif start is None:\n    start = time.time()\n    context.set('start', start)\nmemory = {'topic': 'memory', 'payload': gc.mem_free() // 1024}\nuptime = {'topic': 'uptime', 'payload': (time.time() - start) // 60}\nreturn [memory, uptime]\n",
+        "outputCount": 2
+      }
+    },
+    {
+      "id": "n09-mem",
+      "type": "thingstudio/gui_readout",
+      "properties": {
+        "name": "Free memory",
+        "units": "kB",
+        "decimals": 0,
+        "lo": 0,
+        "hi": 160,
+        "staleAfter": 15
+      }
+    },
+    {
+      "id": "n12-pagetick",
+      "type": "thingstudio/timer",
+      "properties": {
+        "intervalMs": 8000
+      }
+    },
+    {
+      "id": "n13-next",
+      "type": "thingstudio/function",
+      "properties": {
+        "code": "msg['payload'] = 'next'\nreturn msg\n",
+        "outputCount": 1
+      }
+    },
+    {
+      "id": "n14-nav",
+      "type": "thingstudio/gui_navigator",
+      "properties": {
+        "name": "nav",
+        "screen": ""
+      }
+    },
+    {
+      "id": "n15-screen",
+      "type": "thingstudio/gui_screen",
+      "properties": {
+        "name": "tft",
+        "minInterval": 200,
+        "wrap": true,
+        "gridColumns": 12,
+        "gridRows": 0
+      }
+    },
+    {
+      "id": "n16-display",
+      "type": "thingstudio/display_spi",
+      "properties": {
+        "controller": "st7789",
+        "frameFormat": "gs4",
+        "spiBus": 2,
+        "baudrate": 27000000,
+        "sck": 14,
+        "mosi": 13,
+        "dc": 2,
+        "cs": 15,
+        "reset": -1,
+        "backlight": 21,
+        "width": 240,
+        "height": 320,
+        "rotation": 1,
+        "xstart": 0,
+        "ystart": 0,
+        "colorOrder": "bgr",
+        "invertColors": false,
+        "dataLatchOrder": true
+      }
+    },
+    {
+      "id": "n17-lightjournal",
+      "type": "thingstudio/journal",
+      "properties": {
+        "rows": 77,
+        "stepSeconds": 5,
+        "steps": 0,
+        "xff": 0.5
+      }
+    },
+    {
+      "id": "n18-ble",
+      "type": "thingstudio/ble_scan",
+      "properties": {
+        "namePrefix": "",
+        "addr": "",
+        "mfrId": "",
+        "serviceUuid": "",
+        "active": true,
+        "repeatMs": 1000,
+        "scanIntervalMs": 320,
+        "scanWindowMs": 100
+      }
+    },
+    {
+      "id": "n22-blecount",
+      "type": "thingstudio/gui_readout",
+      "properties": {
+        "name": "Devices",
+        "units": "",
+        "decimals": 0,
+        "lo": 0,
+        "hi": 60,
+        "staleAfter": 15
+      }
+    },
+    {
+      "id": "n23-dev1",
+      "type": "thingstudio/gui_label",
+      "properties": {
+        "name": "Strongest 1",
+        "maxChars": 15,
+        "staleAfter": 15
+      }
+    },
+    {
+      "id": "n24-dev2",
+      "type": "thingstudio/gui_label",
+      "properties": {
+        "name": "Strongest 2",
+        "maxChars": 15,
+        "staleAfter": 15
+      }
+    },
+    {
+      "id": "n25-dev3",
+      "type": "thingstudio/gui_label",
+      "properties": {
+        "name": "Strongest 3",
+        "maxChars": 15,
+        "staleAfter": 15
+      }
+    },
+    {
+      "id": "n19-roster",
+      "type": "mike/roster",
+      "properties": {
+        "key": "addr",
+        "timeoutS": 30,
+        "expired": "drop",
+        "merge": true,
+        "maxEntries": 50,
+        "sortBy": "rssi",
+        "minIntervalMs": 2000
+      }
+    },
+    {
+      "id": "n21-format",
+      "type": "thingstudio/function",
+      "properties": {
+        "code": "# The roster's list, sorted by signal, as the page's count and three label lines.\nitems = msg['payload']\nout = [{'topic': 'count', 'payload': msg['count']}]\nfor i in range(3):\n    if i < len(items):\n        item = items[i]\n        label = (item.get('name') or item['addr'][-8:])[:11]\n        out.append({'topic': 'device', 'payload': '%s %d' % (label, item['rssi'])})\n    else:\n        out.append({'topic': 'device', 'payload': ''})\nreturn out\n",
+        "outputCount": 4
+      }
+    },
+    {
+      "id": "n26-uptime",
+      "type": "thingstudio/gui_readout",
+      "properties": {
+        "name": "Uptime",
+        "units": "min",
+        "decimals": 0,
+        "lo": 0,
+        "hi": 1440,
+        "staleAfter": 15
+      }
+    }
+  ],
+  "edges": [
+    [
+      "n01-ldr",
+      0,
+      "n02-light",
+      0
+    ],
+    [
+      "n02-light",
+      0,
+      "n03-lightval",
+      0
+    ],
+    [
+      "n02-light",
+      0,
+      "n04-lightbar",
+      0
+    ],
+    [
+      "n06-tick",
+      0,
+      "n07-board",
+      0
+    ],
+    [
+      "n12-pagetick",
+      0,
+      "n13-next",
+      0
+    ],
+    [
+      "n13-next",
+      0,
+      "n14-nav",
+      0
+    ],
+    [
+      "n15-screen",
+      0,
+      "n16-display",
+      0
+    ],
+    [
+      "n02-light",
+      0,
+      "n17-lightjournal",
+      0
+    ],
+    [
+      "n17-lightjournal",
+      0,
+      "n05-lighttrend",
+      0
+    ],
+    [
+      "n18-ble",
+      0,
+      "n19-roster",
+      0
+    ],
+    [
+      "n19-roster",
+      0,
+      "n21-format",
+      0
+    ],
+    [
+      "n21-format",
+      0,
+      "n22-blecount",
+      0
+    ],
+    [
+      "n21-format",
+      1,
+      "n23-dev1",
+      0
+    ],
+    [
+      "n21-format",
+      2,
+      "n24-dev2",
+      0
+    ],
+    [
+      "n21-format",
+      3,
+      "n25-dev3",
+      0
+    ],
+    [
+      "n07-board",
+      0,
+      "n09-mem",
+      0
+    ],
+    [
+      "n07-board",
+      1,
+      "n26-uptime",
+      0
+    ]
+  ],
+  "layout": {
+    "n01-ldr": {
+      "pos": [
+        80,
+        80
+      ]
+    },
+    "n02-light": {
+      "pos": [
+        300,
+        80
+      ]
+    },
+    "n03-lightval": {
+      "pos": [
+        520,
+        80
+      ]
+    },
+    "n04-lightbar": {
+      "pos": [
+        520,
+        150
+      ]
+    },
+    "n05-lighttrend": {
+      "pos": [
+        740,
+        220
+      ]
+    },
+    "n06-tick": {
+      "pos": [
+        80,
+        340
+      ]
+    },
+    "n07-board": {
+      "pos": [
+        300,
+        340
+      ]
+    },
+    "n09-mem": {
+      "pos": [
+        520,
+        340
+      ]
+    },
+    "n12-pagetick": {
+      "pos": [
+        80,
+        510
+      ]
+    },
+    "n13-next": {
+      "pos": [
+        300,
+        510
+      ]
+    },
+    "n14-nav": {
+      "pos": [
+        520,
+        510
+      ]
+    },
+    "n15-screen": {
+      "pos": [
+        80,
+        610
+      ]
+    },
+    "n16-display": {
+      "pos": [
+        300,
+        610
+      ]
+    },
+    "n17-lightjournal": {
+      "pos": [
+        520,
+        220
+      ]
+    },
+    "n18-ble": {
+      "pos": [
+        80,
+        710
+      ]
+    },
+    "n22-blecount": {
+      "pos": [
+        740,
+        710
+      ]
+    },
+    "n23-dev1": {
+      "pos": [
+        740,
+        780
+      ]
+    },
+    "n24-dev2": {
+      "pos": [
+        740,
+        850
+      ]
+    },
+    "n25-dev3": {
+      "pos": [
+        740,
+        920
+      ]
+    },
+    "n19-roster": {
+      "pos": [
+        300,
+        710
+      ]
+    },
+    "n21-format": {
+      "pos": [
+        520,
+        710
+      ]
+    },
+    "n26-uptime": {
+      "pos": [
+        520,
+        410
+      ]
+    }
+  },
+  "configs": [],
+  "panes": [
+    {
+      "id": "pane-1",
+      "name": "Flow 1"
+    }
+  ],
+  "paneOf": {
+    "n01-ldr": "pane-1",
+    "n02-light": "pane-1",
+    "n03-lightval": "pane-1",
+    "n04-lightbar": "pane-1",
+    "n05-lighttrend": "pane-1",
+    "n06-tick": "pane-1",
+    "n07-board": "pane-1",
+    "n09-mem": "pane-1",
+    "n12-pagetick": "pane-1",
+    "n13-next": "pane-1",
+    "n14-nav": "pane-1",
+    "n15-screen": "pane-1",
+    "n16-display": "pane-1",
+    "n17-lightjournal": "pane-1",
+    "n18-ble": "pane-1",
+    "n22-blecount": "pane-1",
+    "n23-dev1": "pane-1",
+    "n24-dev2": "pane-1",
+    "n25-dev3": "pane-1",
+    "n19-roster": "pane-1",
+    "n21-format": "pane-1",
+    "n26-uptime": "pane-1"
+  },
+  "screens": {
+    "n15-screen": {
+      "pages": [
+        {
+          "name": "light",
+          "elements": [
+            {
+              "kind": "text",
+              "text": "Light",
+              "row": 0,
+              "col": 0,
+              "rowSpan": 1,
+              "colSpan": 6
+            },
+            {
+              "kind": "widget",
+              "node": "n03-lightval",
+              "row": 2,
+              "col": 1,
+              "rowSpan": 3,
+              "colSpan": 10
+            },
+            {
+              "kind": "widget",
+              "node": "n04-lightbar",
+              "row": 6,
+              "col": 0,
+              "rowSpan": 1,
+              "colSpan": 12
+            },
+            {
+              "kind": "widget",
+              "node": "n05-lighttrend",
+              "row": 8,
+              "col": 0,
+              "rowSpan": 5,
+              "colSpan": 12
+            },
+            {
+              "kind": "pagedots",
+              "row": 15,
+              "col": 6,
+              "rowSpan": 1,
+              "colSpan": 1
+            }
+          ]
+        },
+        {
+          "name": "board",
+          "elements": [
+            {
+              "kind": "text",
+              "text": "Board",
+              "row": 0,
+              "col": 0,
+              "rowSpan": 1,
+              "colSpan": 12
+            },
+            {
+              "kind": "text",
+              "text": "Free memory",
+              "row": 2,
+              "col": 0,
+              "rowSpan": 1,
+              "colSpan": 12
+            },
+            {
+              "kind": "widget",
+              "node": "n09-mem",
+              "row": 3,
+              "col": 1,
+              "rowSpan": 3,
+              "colSpan": 10
+            },
+            {
+              "kind": "text",
+              "text": "Uptime",
+              "row": 7,
+              "col": 0,
+              "rowSpan": 1,
+              "colSpan": 12
+            },
+            {
+              "kind": "widget",
+              "node": "n26-uptime",
+              "row": 8,
+              "col": 1,
+              "rowSpan": 3,
+              "colSpan": 10
+            },
+            {
+              "kind": "pagedots",
+              "row": 15,
+              "col": 6,
+              "rowSpan": 1,
+              "colSpan": 1
+            }
+          ]
+        },
+        {
+          "name": "nearby",
+          "elements": [
+            {
+              "kind": "text",
+              "text": "Nearby",
+              "row": 0,
+              "col": 0,
+              "rowSpan": 1,
+              "colSpan": 6
+            },
+            {
+              "kind": "text",
+              "text": "Bluetooth devices",
+              "row": 2,
+              "col": 0,
+              "rowSpan": 1,
+              "colSpan": 12
+            },
+            {
+              "kind": "widget",
+              "node": "n22-blecount",
+              "row": 3,
+              "col": 1,
+              "rowSpan": 3,
+              "colSpan": 10
+            },
+            {
+              "kind": "text",
+              "text": "Strongest",
+              "row": 7,
+              "col": 0,
+              "rowSpan": 1,
+              "colSpan": 12
+            },
+            {
+              "kind": "widget",
+              "node": "n23-dev1",
+              "row": 8,
+              "col": 0,
+              "rowSpan": 1,
+              "colSpan": 12
+            },
+            {
+              "kind": "widget",
+              "node": "n24-dev2",
+              "row": 9,
+              "col": 0,
+              "rowSpan": 1,
+              "colSpan": 12
+            },
+            {
+              "kind": "widget",
+              "node": "n25-dev3",
+              "row": 10,
+              "col": 0,
+              "rowSpan": 1,
+              "colSpan": 12
+            },
+            {
+              "kind": "pagedots",
+              "row": 15,
+              "col": 6,
+              "rowSpan": 1,
+              "colSpan": 1
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

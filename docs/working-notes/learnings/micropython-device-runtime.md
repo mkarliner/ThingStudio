@@ -634,3 +634,13 @@ drains a datagram: one serialized round trip at a time. The documented ~100/s re
 Reading: 18 pkt/s is the two-node flow path's rate, not the board's UDP speed; raw stack throughput would
 need its own socket off the trigger loop (a custom node).
 
+
+## A classic ESP32 can't run a GUI, WiFi and Bluetooth at once, 2026-11-18
+
+The CYD demo flow (`test-flows/gui-hero-cyd-onboard.flow.json`: gs4 GUI, LDR, `ble scan` into a `roster` custom
+node, plus `wifi status`) failed at Deploy with `Bluetooth radio failed to start (OSError(116,))`. Both radios draw
+from the ESP-IDF heap, which the GUI has already squeezed (the custom-firmware page's table: about 70 KB free after a
+fresh deploy, 18 KB after two more), and WiFi takes the most of it. Removing every WiFi node and the WiFi config, so
+the flow never starts the WiFi radio, let Bluetooth start, after a hard reset. On a classic ESP32 without PSRAM, a
+GUI flow gets one radio, not both. Not yet in the user docs: a line in `custom-firmware.md`'s "Memory and the board"
+or the ble node page would save a tester the same deploy failure.

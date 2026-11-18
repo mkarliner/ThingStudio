@@ -86,7 +86,8 @@ manifest replacing the port's own frozen set (no filesystem at boot), `cancel_ru
 flow module's framebuffer, the split heap (`gc.mem_free()` sums several regions, so a large message can fail at
 100 KB free), and a flow-only deploy not being a deploy -- libraries are the other half, and a frozen library is the
 fallback source, not the last word (`/lib` is ahead of `.frozen` since runtime 11.1.0), and one lost-exchange
-flake in `test_exchanges.py` on a busy box -- rerun before suspecting code. 34 entries:
+flake in `test_exchanges.py` on a busy box -- rerun before suspecting code, and a classic ESP32 running a GUI having
+ESP-IDF heap for one radio, not WiFi and Bluetooth together (2026-11-18). 35 entries:
 `docs/working-notes/learnings/micropython-device-runtime.md`.
 
 ## Headless browser testing
