@@ -123,7 +123,7 @@
       <template v-if="editingCredentialName">
         <p v-if="credentialLoading" class="field-note">loading...</p>
         <p v-else-if="credentialMissing" class="field-note">
-          No saved {{ descriptor.label }} called "{{ editingCredentialName }}" {{ DEMO ? "in this demo" : "on this computer" }}.
+          No saved {{ descriptor.label }} called "{{ editingCredentialName }}" {{ DEMO ? "in this browser tab" : "on this computer" }}.
           Fill it in and save to create it.
         </p>
         <label v-for="cf in credentialDescriptor?.fields ?? []" :key="cf.name" class="field-row">

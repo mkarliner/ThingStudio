@@ -249,6 +249,9 @@
           <div id="recentHeading" class="menu-row">Open recent</div>
           <!-- main.ts inserts the recent files here, before Clear. -->
           <button id="btnClearRecent" role="menuitem" title="Forget the recent files in this browser. The files themselves are untouched." hidden>Clear recent files</button>
+          <!-- Online only: WiFi and broker details are kept in this tab's sessionStorage (saved-values.ts). -->
+          <hr class="demo-only" />
+          <button id="btnForgetSaved" class="demo-only" role="menuitem" title="Forget the WiFi networks and MQTT brokers saved in this browser tab. They go anyway when the tab closes.">Forget WiFi and broker details</button>
         </div>
       </div>
       <!-- Examples (online demo only): flows bundled with the demo, listed by demo-examples.ts. -->

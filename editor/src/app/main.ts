@@ -194,7 +194,7 @@ import { catalogueLine, choiceProblem, doneLine, flashBoard, jobLine, type Firmw
 // nothing in this file calls them; see the header comment above.
 import { downloadTextFile, saveFlowFileAs, openFlowFileFromDisk, writeFlowFile, readFlowFile, currentLastModified, supportsFileHandles, FilePermissionError, type FlowFileRef } from "../flow-file/file-io.js";
 import { addRecent, removeRecent, loadRecents, storeRecents, type RecentFile } from "../flow-file/recent-files.js";
-import { getCredential as getSavedCredential } from "./rete/saved-values.js";
+import { forgetSavedValues, getCredential as getSavedCredential } from "./rete/saved-values.js";
 import { startDemo } from "./demo.js";
 import { CAN_REACH_BOARD } from "./edition.js";
 import { ledPinsLine } from "./board-leds.js";
@@ -3973,6 +3973,10 @@ async function demoCompile(): Promise<void> {
 }
 
 if (__DEMO__) {
+  el("btnForgetSaved").addEventListener("click", () => {
+    const count = forgetSavedValues();
+    logLine(count ? `[saved details] forgot ${count} saved WiFi/broker detail(s) in this tab` : "[saved details] nothing saved in this tab", "ok");
+  });
   void startDemo({
     openFlowText: async (text) => {
       await loadFlowText(text, null);

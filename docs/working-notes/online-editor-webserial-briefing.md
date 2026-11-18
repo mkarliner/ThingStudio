@@ -245,7 +245,12 @@ bundler drops it). Online with a board: Connect (direct), Deploy (the library li
 install page). Greyed out: custom nodes in the palette. Hidden: the port list, Save to a file handle. The banner and
 first console line say whether this browser can reach a board. `tools/demo_request_check.py` checks both cases.
 Still to do in task 1: grey out user board definitions (Pins… says "built-in" already) and check the rest of section
-A's list in the UI. Tasks 3, 5 (hardware), 6 (sessionStorage) and 7 (words) are open.
+A's list in the UI. Tasks 3, 5 (hardware) and 7 (words) are open.
+
+**Status, task 6 (2026-11-18):** done. Online, credentials and presets live in the tab's sessionStorage under one key
+(`thingstudio.savedValues`, `saved-values.ts`), page memory where that throws; they survive a reload and go when the
+tab closes. File → Forget WiFi and broker details clears them. An example's made-up values are written only where
+the tab has none under that name, so reopening an example keeps what was typed in.
 
 Before touching anything that sends or parses frames: read `interfaces/protocol/SPEC.md` and run the conformance
 vectors (`cd editor && npm test`, `test/protocol-conformance.test.ts`). npm commands run on Mike's Mac, or in the

@@ -2,9 +2,11 @@
 // editor/src/app/rete/saved-values.ts
 //
 // Where the credential and preset fields keep their named values. Normally the backend's store
-// (admin-api-client.ts, ~/.thingstudio/credentials and presets). In the online demo (__DEMO__,
-// docs/working-notes/online-editor-demo-scoping.md, code item 7) there is no backend: values live in this
-// page's memory and are gone on reload. Nothing is written to localStorage or sent anywhere.
+// (admin-api-client.ts, ~/.thingstudio/credentials and presets). Online (__DEMO__) there is no backend: values
+// live in this browser tab's sessionStorage, so they survive a reload and are gone when the tab closes; each tab
+// has its own (Mike, 2026-11-18: "only for a session, not persistent"; online-editor-webserial-briefing.md, B).
+// File → Forget WiFi and broker details clears them sooner. Nothing is sent anywhere. Where sessionStorage can't
+// be used (some private modes), they live in page memory, as the demo's did.
 //
 // One module, so the fields (CredentialRefField.vue, ConfigRefField.vue, PresetRefField.vue) and main.ts's
 // credential resolve never import the admin-API client themselves: the demo bundle then doesn't contain it.
@@ -17,25 +19,68 @@ import type { CredentialType, PresetInfo } from "../../flow-file/admin-api-clien
 
 export type { CredentialType, PresetInfo };
 
-/** The note the demo shows on every credential field. */
-export const DEMO_CREDENTIAL_NOTE = "Demo: nothing is saved or sent. Use made-up values.";
+/** The note the online editor shows on every credential field. */
+export const DEMO_CREDENTIAL_NOTE = "Kept in this browser tab until you close it, and sent nowhere. File → Forget WiFi and broker details clears it now.";
 
 /** A named value that isn't saved (the backend's 404, or not in the demo's memory). */
 export class SavedValueMissing extends Error {}
 
-const memory = new Map<string, Record<string, unknown>>();
+/** One store for the tab: sessionStorage under one key, or page memory where that throws. */
+const STORE_KEY = "thingstudio.savedValues";
+const fallback = new Map<string, Record<string, unknown>>();
+
+function readAll(): Map<string, Record<string, unknown>> {
+  try {
+    const raw = sessionStorage.getItem(STORE_KEY);
+    if (raw === null) return new Map(fallback);
+    const parsed = JSON.parse(raw) as Record<string, Record<string, unknown>>;
+    return new Map(Object.entries(parsed));
+  } catch {
+    return new Map(fallback);
+  }
+}
+
+function writeAll(values: Map<string, Record<string, unknown>>): void {
+  fallback.clear();
+  for (const [k, v] of values) fallback.set(k, v);
+  try {
+    sessionStorage.setItem(STORE_KEY, JSON.stringify(Object.fromEntries(values)));
+  } catch {
+    // No sessionStorage here: page memory (fallback) holds them until reload.
+  }
+}
+
 const memoryKey = (kind: string, type: string, name: string): string => `${kind}\u0000${type}\u0000${name}`;
 const memoryNames = (kind: string, type: string): string[] => {
   const prefix = `${kind}\u0000${type}\u0000`;
-  return [...memory.keys()].filter((k) => k.startsWith(prefix)).map((k) => k.slice(prefix.length)).sort();
+  return [...readAll().keys()].filter((k) => k.startsWith(prefix)).map((k) => k.slice(prefix.length)).sort();
 };
 function memoryGet(kind: string, type: string, name: string): Record<string, unknown> {
-  const value = memory.get(memoryKey(kind, type, name));
-  if (!value) throw new SavedValueMissing(`no ${type} ${kind} called "${name}" in this demo yet`);
+  const value = readAll().get(memoryKey(kind, type, name));
+  if (!value) throw new SavedValueMissing(`no ${type} ${kind} called "${name}" in this browser tab yet`);
   return { ...value };
 }
 async function memoryPut(kind: string, type: string, name: string, data: Record<string, unknown>): Promise<void> {
-  memory.set(memoryKey(kind, type, name), { ...data });
+  const all = readAll();
+  all.set(memoryKey(kind, type, name), { ...data });
+  writeAll(all);
+}
+
+/** Online only: forgets every saved credential and preset in this tab. Returns how many there were. */
+export function forgetSavedValues(): number {
+  const count = readAll().size;
+  writeAll(new Map());
+  try {
+    sessionStorage.removeItem(STORE_KEY);
+  } catch {
+    // nothing stored there
+  }
+  return count;
+}
+
+/** Online only: true when this tab already holds a value under this name (so an example doesn't overwrite it). */
+export function hasSavedCredential(type: CredentialType, name: string): boolean {
+  return readAll().has(memoryKey("credential", type, name));
 }
 
 export async function listCredentials(type: CredentialType): Promise<string[]> {
@@ -73,3 +118,7 @@ export function isMissing(err: unknown): boolean {
 export function errorText(err: unknown): string {
   return err instanceof Error ? err.message : String(err);
 }
+
+/** The tab store itself, for tests: the build fixes `__DEMO__`, so the exported functions above always take the
+ * backend side under vitest. */
+export const tabStoreForTests = { names: memoryNames, get: memoryGet, put: memoryPut };

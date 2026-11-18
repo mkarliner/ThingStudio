@@ -7,7 +7,7 @@
 // Deploy, Tools, the console's command line) is hidden by index.html's CSS and gated out of main.ts.
 
 import { DEMO_EXAMPLES, type DemoExample } from "./demo-examples.js";
-import { putCredential, type CredentialType } from "./rete/saved-values.js";
+import { hasSavedCredential, putCredential, type CredentialType } from "./rete/saved-values.js";
 
 /** Made-up values for the WiFi networks and brokers the examples use, so every example compiles as it opens.
  * They live in this page's memory only (saved-values.ts), like anything a visitor types into those fields. */
@@ -37,7 +37,9 @@ async function withDemoCredentials(text: string): Promise<string> {
     if (type === "wifi" && props.security === "unmanaged") continue;
     const name = typeof props.credentialName === "string" && props.credentialName ? props.credentialName : DEMO_CREDENTIALS[type].name;
     props.credentialName = name;
-    await putCredential(type as CredentialType, name, DEMO_CREDENTIALS[type].values);
+    // Made-up values only where this tab has none under that name: reopening an example never replaces details
+    // someone typed in (they're kept for the session, saved-values.ts).
+    if (!hasSavedCredential(type as CredentialType, name)) await putCredential(type as CredentialType, name, DEMO_CREDENTIALS[type].values);
   }
   return JSON.stringify(flow);
 }
