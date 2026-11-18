@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "cborg": "^6.1.1",
+    "esptool-js": "0.7.1",
     "rete": "2.0.6",
     "rete-area-plugin": "2.3.2",
     "rete-connection-plugin": "2.0.5",

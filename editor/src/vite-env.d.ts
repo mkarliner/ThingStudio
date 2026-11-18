@@ -16,3 +16,10 @@ declare const __EDITOR_BUILD__: { version: string | null; commit: string | null;
 
 // True only in the online demo build (`vite build --mode demo`, vite.config.ts): no board, no backend.
 declare const __DEMO__: boolean;
+
+// The firmware catalogue and the images this site serves (vite.config.ts's firmwareMirror()): the install page's
+// only source of builds, so it offers exactly what was built into the site.
+declare module "virtual:firmware-catalogue" {
+  export const catalogue: import("./install/catalogue.js").Catalogue;
+  export const mirrored: readonly string[];
+}

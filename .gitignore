@@ -47,3 +47,7 @@ firmware/out/
 
 # Copied in by the Docs workflow when the catalogue's signature verifies; the source is firmware/builds.json.
 docs/user-guide/catalogue/
+
+# Images the online build's install page serves, filled by tools/fetch_firmware_mirror.py (hash-checked downloads of
+# what firmware/builds.json pins). Built into editor/dist-demo/firmware/; never committed.
+firmware/mirror/

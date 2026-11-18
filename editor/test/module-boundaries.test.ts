@@ -13,6 +13,7 @@
 //   - `compiler/` (the engine) does not import `node-library/` (which registers
 //     into it) or `app/` (the canvas).
 //   - no editor source imports outside editor/src (except the demo's example flows, as text).
+//   - `install/` (the install page) imports only `definitions/`.
 // Adding a legitimate new cross-layer edge means updating this list on purpose,
 // in the change that adds it.
 import { readFileSync, readdirSync } from "node:fs";
@@ -78,6 +79,13 @@ describe("editor module boundaries", () => {
   it("no editor source imports outside editor/src", () => {
     const bad = violations((e) => e.toTop === "(outside src)" && !allowedOutside(e));
     expect(bad, `relative imports must resolve inside editor/src: ${bad.join(", ")}`).toEqual([]);
+  });
+
+  // The install page (install.html, online build) is a page of its own: it reads the board definitions and nothing
+  // else of the editor's, so it can't come to depend on the canvas or the compiler (2026-11-18).
+  it("install/ imports only definitions/ and itself", () => {
+    const bad = violations((e) => e.fromTop === "install" && e.toTop !== "install" && e.toTop !== "definitions");
+    expect(bad, `install/ must stay a small page of its own: ${bad.join(", ")}`).toEqual([]);
   });
 
   it("the source tree was actually scanned", () => {

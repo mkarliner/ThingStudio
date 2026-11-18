@@ -1,4 +1,5 @@
-# Thingstudio online editor demo: static files only (docs/working-notes/online-editor-demo-scoping.md).
+# ThingStudio online editor: static files only. Web Serial is allowed for this origin only (Permissions-Policy
+# serial=(self)): the install page and, later, the editor reach a board over USB from the browser (docs/working-notes/online-editor-demo-scoping.md).
 #
 # Serves <root>/current, which tools/deploy_demo.sh points at the release in use. It sits behind Pangolin: Pangolin's
 # Traefik terminates TLS for demo.thingstudio.net and forwards plain HTTP down its tunnel to this server's port 8080,
@@ -22,14 +23,15 @@
 	root * /srv/thingstudio-demo/current
 	encode zstd gzip
 
-	# Static files, no directory listing (no `browse`), nothing else.
+	# Static files, no directory listing (no `browse`), nothing else. /install is the install page, install.html.
+	try_files {path} {path}.html
 	file_server
 
 	header {
 		Content-Security-Policy "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; connect-src 'self'; worker-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
 		X-Content-Type-Options "nosniff"
 		Referrer-Policy "strict-origin-when-cross-origin"
-		Permissions-Policy "serial=(), usb=(), hid=(), camera=(), microphone=(), geolocation=()"
+		Permissions-Policy "serial=(self), usb=(), hid=(), camera=(), microphone=(), geolocation=()"
 		Strict-Transport-Security "max-age=31536000"
 		Cross-Origin-Opener-Policy "same-origin"
 		-Server

@@ -84,6 +84,9 @@ checked per `rete-migration-decision.md`'s supply-chain note.
 | rete-render-utils | 2.0.3 | MIT | Shared rendering utilities, peer dependency of `rete-vue-plugin`. Same promotion as `rete` above. |
 | rete-vue-plugin | 2.1.3 | MIT | Vue 3 node/control renderer — `editor/src/app/rete/ThingstudioNode.vue`/`ThingstudioSocket.vue`'s `customize.node`/`customize.socket` hooks. Sole maintainer `ni55an` (Vitaliy Stoliarov, per registry metadata) — the same single-maintainer bus-factor point the decision doc's dependency-risk section makes about the `rete` core. |
 | vue | 3.5.44 | MIT | Peer dependency of `rete-vue-plugin`; the first real framework commitment `editor/` has taken on (not just a library), accepted knowingly per the decision doc. |
+| esptool-js | 0.7.1 (exact pin) | Apache-2.0 | Espressif's Web Serial port of esptool, used only by the online build's install page (`editor/src/install/`) to write ESP32 images from the browser (2026-11-18, `online-editor-webserial-briefing.md` section C). Installed with `--ignore-scripts`; its only script hooks (`prepare`, `prepublishOnly`) run in its own repo, not on install. Bundles Espressif's stub flasher images (Apache-2.0 or MIT). No advisories in `npm audit` at install. |
+| pako | 2.2.0 | MIT AND Zlib | Dependency of esptool-js (compresses images before they're sent to the chip). No advisories at install. |
+| atob-lite | 2.0.0 | MIT | Dependency of esptool-js (base64 decode of the stub flasher). Not the `atob` package that had CVE-2018-3745. No advisories at install. |
 
 `rete-dock-plugin` is deliberately **not** in this table — sub-decision 2
 of the decision doc drops it in favor of the hand-rolled HTML5 drag-and-drop

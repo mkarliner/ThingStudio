@@ -102,6 +102,7 @@ jobs:
         working-directory: editor
         run: |
           npm ci --ignore-scripts
+          python3 ../tools/fetch_firmware_mirror.py
           npm run build:demo
       # The reports are the evidence behind "the demo sends nothing": kept with the release. The second run
       # serves the policy as a <meta> tag, as the GitHub Pages standby copy does.

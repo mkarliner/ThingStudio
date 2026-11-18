@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 /// <reference types="vitest/config" />
 import { execSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { defineConfig, type Plugin } from "vite";
 import vue from "@vitejs/plugin-vue";
@@ -75,12 +75,80 @@ function demoPage(mode: string): Plugin {
   };
 }
 
+// The install page's firmware (docs/working-notes/online-editor-webserial-briefing.md, sections C and D). The page
+// offers the newest version of every catalogue build and serves each image from its own origin, named by its sha256:
+// a browser can't fetch GitHub release assets, and the page's CSP allows its own origin only. The images come from
+// firmware/mirror/, which tools/fetch_firmware_mirror.py fills (downloaded and hash-checked) on a machine with the
+// network. A missing image doesn't fail the build: the page lists that build as not on this site, and the plugin
+// says which are missing. `virtual:firmware-catalogue` gives the page the catalogue and the set it can offer.
+const REPO_ROOT = fileURLToPath(new URL("..", import.meta.url));
+const MIRROR_DIR = `${REPO_ROOT}/firmware/mirror`;
+const FIRMWARE_PATH = /^\/firmware\/([0-9a-f]{64})\.(bin|uf2)$/;
+
+interface MirrorImage {
+  sha256: string;
+  ext: "bin" | "uf2";
+  file: string;
+}
+
+function mirrorImages(): { catalogue: unknown; present: MirrorImage[]; missing: string[] } {
+  const catalogue = JSON.parse(readFileSync(`${REPO_ROOT}/firmware/builds.json`, "utf8")) as {
+    builds: { id: string; versions: { url: string; sha256: string }[] }[];
+  };
+  const present: MirrorImage[] = [];
+  const missing: string[] = [];
+  for (const build of catalogue.builds) {
+    const newest = build.versions[0];
+    if (!newest) continue;
+    const ext = newest.url.toLowerCase().endsWith(".uf2") ? "uf2" : "bin";
+    const file = `${MIRROR_DIR}/${newest.sha256}.${ext}`;
+    if (existsSync(file)) present.push({ sha256: newest.sha256, ext, file });
+    else missing.push(build.id);
+  }
+  return { catalogue, present, missing };
+}
+
+function firmwareMirror(mode: string): Plugin {
+  const virtualId = "virtual:firmware-catalogue";
+  const resolved = `\0${virtualId}`;
+  return {
+    name: "thingstudio-firmware-mirror",
+    resolveId(id) {
+      return id === virtualId ? resolved : null;
+    },
+    load(id) {
+      if (id !== resolved) return null;
+      const { catalogue, present } = mirrorImages();
+      return `export const catalogue = ${JSON.stringify(catalogue)};\nexport const mirrored = ${JSON.stringify(present.map((p) => p.sha256))};\n`;
+    },
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        const m = FIRMWARE_PATH.exec((req.url ?? "").split("?")[0]!);
+        const file = m ? `${MIRROR_DIR}/${m[1]}.${m[2]}` : "";
+        if (!m || !existsSync(file)) return next();
+        res.setHeader("Content-Type", "application/octet-stream");
+        res.end(readFileSync(file));
+      });
+    },
+    generateBundle() {
+      if (mode !== "demo") return;
+      const { present, missing } = mirrorImages();
+      for (const img of present) {
+        this.emitFile({ type: "asset", fileName: `firmware/${img.sha256}.${img.ext}`, source: readFileSync(img.file) });
+      }
+      if (missing.length > 0) {
+        this.warn(`install page: no image in firmware/mirror/ for ${missing.join(", ")} -- run tools/fetch_firmware_mirror.py`);
+      }
+    },
+  };
+}
+
 // The online demo (`vite build --mode demo`, docs/working-notes/online-editor-demo-scoping.md): the same editor with
 // nothing behind it -- no board, no backend. __DEMO__ is a compile-time constant, so every `if (!__DEMO__)` branch is
 // dropped from the demo bundle along with the transports, the admin-API client and the firmware dialog it alone
 // reaches (test/demo-build.test.ts checks). Output goes to dist-demo/, beside the normal dist/.
 export default defineConfig(({ mode }) => ({
-  plugins: [vue(), demoPage(mode)],
+  plugins: [vue(), demoPage(mode), firmwareMirror(mode)],
   define: {
     __RUNTIME_BUILD_SHA__: JSON.stringify(runtimeBuildSha()),
     __EDITOR_BUILD__: JSON.stringify(editorBuild()),
@@ -90,7 +158,13 @@ export default defineConfig(({ mode }) => ({
   // aimed at sites loaded over the internet; the editor is served by the local backend, so splitting it would add
   // complexity for no load-time gain (2026-10-12). Raise the limit rather than ignore a standing warning, so a
   // real jump (a large dependency pulled in by mistake) still shows up.
-  build: { chunkSizeWarningLimit: 800, outDir: mode === "demo" ? "dist-demo" : "dist" },
+  // The online build has a second page, install.html (set up a board: flash it, then the runtime). The installed
+  // editor doesn't: its backend flashes, and has its own dialog.
+  build: {
+    chunkSizeWarningLimit: 800,
+    outDir: mode === "demo" ? "dist-demo" : "dist",
+    rollupOptions: mode === "demo" ? { input: { index: `${REPO_ROOT}/editor/index.html`, install: `${REPO_ROOT}/editor/install.html` } } : {},
+  },
   test: {
     include: ["test/**/*.test.ts"],
     environment: "node",

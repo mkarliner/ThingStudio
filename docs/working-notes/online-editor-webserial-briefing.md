@@ -23,7 +23,9 @@ Read first (paths relative to `docs/working-notes/` unless rooted): `outstanding
    (about 1,550 visits) already acted as a soft launch.
 6. **Scope, then fix the plan, then build.** This document is that plan.
 
-Still open: a separate install page (section D).
+7. **The install page is in, and is built first** (Mike, 2026-11-18), so he can test flashing on boards while the
+   rest is built. It lives on the branch `online-editor-webserial`; major features are built on a branch from now on
+   (`AGENTS.md`, "Commits").
 
 ## Why now
 
@@ -177,7 +179,7 @@ A board that already runs MicroPython can be put into BOOTSEL with `machine.boot
 STM32/pyboard (DFU), and a local file the user chooses (keep **Choose a file…** if it costs nothing; drop it if
 it does).
 
-## D. A separate install page (proposed, Mike to confirm)
+## D. A separate install page (confirmed 2026-11-18, built first)
 
 Mike, 2026-11-18, pointing at Tasmota's web installer: is there a case for a separate install page?
 
@@ -222,6 +224,11 @@ A UF2 board gets the download-and-drag steps instead.
 Board settings already sets the hostname and password over USB. Improv would be a second way to do the same thing.
 
 ## Tasks, in order
+
+**Order changed (Mike, 2026-11-18): the install page first.** Its first version (`editor/install.html`,
+`editor/src/install/`) flashes ESP32 chips with esptool-js and gives UF2 boards their file to drag; it needs the
+catalogue and images from task 2 (done for the page: `tools/fetch_firmware_mirror.py` and `vite.config.ts`'s
+`firmwareMirror()`). The runtime install step joins it when task 4 lands. Then tasks 1 to 7 as below.
 
 Before touching anything that sends or parses frames: read `interfaces/protocol/SPEC.md` and run the conformance
 vectors (`cd editor && npm test`, `test/protocol-conformance.test.ts`). npm commands run on Mike's Mac, or in the
@@ -319,4 +326,4 @@ typing the credentials again; closing the tab clears them; and what's stored whe
 
 ## Open for Mike
 
-1. Section D: a separate install page, as proposed? Needed before task 5 is finished.
+None at the moment.

@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Set up a board for ThingStudio</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+<link rel="icon" href="/favicon.ico" sizes="any" />
+<style>
+  :root {
+    --bg: #0f1115; --panel: #161a21; --border: #2a3140; --text: #d8dee9;
+    --dim: #7c8698; --accent: #4f9eff; --good: #4caf50; --bad: #e05555; --warn: #e0a855;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.55 system-ui, sans-serif; }
+  main { max-width: 680px; margin: 0 auto; padding: 32px 20px 64px; }
+  h1 { font-size: 24px; margin: 0 0 8px; }
+  h2 { font-size: 17px; margin: 28px 0 8px; }
+  p { margin: 8px 0; }
+  a { color: var(--accent); }
+  .dim { color: var(--dim); font-size: 13px; }
+  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 16px 18px; margin: 16px 0; }
+  .choices { display: flex; gap: 12px; flex-wrap: wrap; }
+  button { background: var(--panel); color: var(--text); border: 1px solid var(--border); border-radius: 6px;
+    padding: 9px 16px; font: inherit; font-size: 14px; cursor: pointer; }
+  button:hover:not(:disabled) { border-color: var(--accent); }
+  button:disabled { opacity: 0.45; cursor: not-allowed; }
+  button.primary { border-color: var(--accent); color: var(--accent); }
+  select { background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 6px;
+    padding: 8px; font: inherit; font-size: 14px; width: 100%; }
+  label.check { display: flex; gap: 8px; align-items: flex-start; margin: 12px 0; }
+  ol { padding-left: 22px; }
+  progress { width: 100%; height: 10px; margin: 10px 0 4px; }
+  #status { min-height: 1.5em; }
+  .ok { color: var(--good); }
+  .err { color: var(--bad); }
+  .warn { color: var(--warn); }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Set up a board</h1>
+  <p>This page puts MicroPython on a board so ThingStudio can use it. It runs in your browser: the board is reached
+    over the USB cable, and nothing is sent anywhere.</p>
+  <p class="dim">Writing a new image erases everything on the board, including a flow and its settings.</p>
+
+  <p id="noSerial" class="panel warn" hidden>This browser can't reach a USB board. Use Chrome or Edge on a desktop
+    computer. A Pico or nRF52 board still works from any browser: choose it below and drag the file it gives you.</p>
+
+  <h2>Which kind of board?</h2>
+  <div class="choices">
+    <button id="kindEsp" class="primary">ESP32 family</button>
+    <button id="kindUf2">Raspberry Pi Pico, or nRF52</button>
+  </div>
+
+  <section id="esp" class="panel" hidden>
+    <p>Plug the board in with a USB cable that carries data, then click Connect and pick its port.</p>
+    <p class="dim">If the port doesn't appear, or Connect fails: hold the BOOT button, tap RESET, release BOOT, and try
+      again. Some boards need a USB serial driver first.</p>
+    <button id="btnConnect" class="primary">Connect</button>
+    <div id="espChosen" hidden>
+      <p id="chipLine"></p>
+      <label for="espBuild">Image to write</label>
+      <select id="espBuild"></select>
+      <p id="espNote" class="dim"></p>
+      <label class="check"><input type="checkbox" id="espConfirm" /> <span>I understand this erases everything on the
+        board.</span></label>
+      <button id="btnWrite" class="primary" disabled>Write it</button>
+      <progress id="espProgress" max="100" value="0" hidden></progress>
+    </div>
+  </section>
+
+  <section id="uf2" class="panel" hidden>
+    <label for="uf2Build">Your board</label>
+    <select id="uf2Build"></select>
+    <p id="uf2Note" class="dim"></p>
+    <button id="btnDownload" class="primary">Download the file</button>
+    <ol id="uf2Steps"></ol>
+  </section>
+
+  <p id="status" role="status"></p>
+  <p id="next" class="panel" hidden></p>
+
+  <p class="dim">Other boards: get MicroPython from <a href="https://micropython.org/download/" rel="noopener">micropython.org/download</a>
+    and follow its instructions. <span id="version"></span></p>
+</main>
+<script type="module" src="/src/install/main.ts"></script>
+</body>
+</html>
