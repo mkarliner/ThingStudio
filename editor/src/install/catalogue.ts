@@ -142,3 +142,19 @@ export function nextStepLine(build: InstallBuild): string {
 export function hashMismatchLine(build: InstallBuild, got: string): string {
   return `The image for ${build.label} ${build.version} doesn't match the catalogue (expected ${build.sha256.slice(0, 12)}…, got ${got.slice(0, 12)}…). Nothing was written. Reload the page and try again; if it happens again, please report it.`;
 }
+
+/** Espressif's USB vendor id, and the product id of the chip's built-in USB-Serial/JTAG (what an S3/C3/C6 shows
+ * in download mode, or when its own USB is left to the ROM). */
+export const ESPRESSIF_VID = 0x303a;
+export const USB_JTAG_SERIAL_PID = 0x1001;
+
+/** What to say when Connect gets no bootloader. A board on the chip's own USB that's running its own firmware
+ * (Espressif's vendor id, any other product id) can't be followed by a web page into download mode: the reset
+ * brings up a new USB device, a port the page hasn't been given (2026-11-18, Mike's Tidal badge, EMF 2022). It needs
+ * download mode by hand, then the new port picked. Anything else gets the usual BOOT/RESET advice. */
+export function connectFailureLine(ids: { usbVendorId?: number; usbProductId?: number }, error: string): string {
+  if (ids.usbVendorId === ESPRESSIF_VID && ids.usbProductId !== USB_JTAG_SERIAL_PID) {
+    return `Connect: this board uses the chip's own USB and is running its own firmware, so the page can't switch it to download mode (${error}). Unplug it, hold BOOT while you plug it back in, then Connect and pick its port again: it has a new name in download mode.`;
+  }
+  return `Connect: the board didn't answer as an ESP32 bootloader (${error}). Hold BOOT, tap RESET, release BOOT, then Connect again.`;
+}

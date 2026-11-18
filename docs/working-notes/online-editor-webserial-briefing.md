@@ -268,6 +268,11 @@ closed. Left for marketing: the landing page
   native-USB path without the quirk.
 - **ESP32-C3:** write, Install runtime and Deploy from the online editor: OK. Web Blink (WiFi + http in) deployed
   and worked, so the WiFi memory problem of 2026-09-25 doesn't come back on the browser path.
+- **Tidal badge (EMF 2022, ESP32-S3 on its own USB, running its own firmware):** flashes through the backend, but
+  Connect on the install page found no bootloader. Likely cause, unconfirmed: the reset into download mode brings up
+  a new USB device, a port the page hasn't been given. The page now spots this case by the port's USB ids (Espressif
+  vendor id, not the USB-Serial/JTAG product id) and says to enter download mode by hand and pick the new port.
+  To confirm with Mike: does BOOT-while-plugging-in then Connect work?
 - **Still to try:** a plain S3 on native USB (write, Install runtime, Deploy), an S2 Mini (BOOT+RESET, the port changing),
   Remove flow from the online editor, redeploy and node status on a Pico W, and an nRF52 drag.
 

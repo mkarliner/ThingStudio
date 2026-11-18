@@ -12,6 +12,7 @@ import { BUILTIN_DEFINITION_FILES } from "../src/definitions/builtin.js";
 import { buildDefinitionSet } from "../src/definitions/definitions.js";
 import {
   buildsForFamily,
+  connectFailureLine,
   familyForChipName,
   imagePath,
   installBuilds,
@@ -89,5 +90,19 @@ describe("install page catalogue", () => {
 
   it("says what comes after writing each kind of build", () => {
     for (const build of builds) expect(nextStepLine(build).length, build.id).toBeGreaterThan(10);
+  });
+});
+
+describe("Connect failure advice", () => {
+  it("tells a board on the chip's own USB, running its own firmware, to go into download mode by hand", () => {
+    const line = connectFailureLine({ usbVendorId: 0x303a, usbProductId: 0x4001 }, "Failed to connect with the device");
+    expect(line).toContain("chip's own USB");
+    expect(line).toContain("pick its port again");
+  });
+
+  it("gives the usual BOOT/RESET advice for a USB-serial chip, or the chip's own USB-Serial/JTAG", () => {
+    expect(connectFailureLine({ usbVendorId: 0x1a86, usbProductId: 0x7523 }, "x")).toContain("Hold BOOT, tap RESET");
+    expect(connectFailureLine({ usbVendorId: 0x303a, usbProductId: 0x1001 }, "x")).toContain("Hold BOOT, tap RESET");
+    expect(connectFailureLine({}, "x")).toContain("Hold BOOT, tap RESET");
   });
 });

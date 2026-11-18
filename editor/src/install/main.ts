@@ -17,6 +17,7 @@ import { BUILTIN_DEFINITION_FILES } from "../definitions/builtin.js";
 import { buildDefinitionSet } from "../definitions/definitions.js";
 import {
   buildsForFamily,
+  connectFailureLine,
   familyForChipName,
   hashMismatchLine,
   installBuilds,
@@ -190,10 +191,8 @@ btnConnect.addEventListener("click", async () => {
       description = await loader.main();
     } catch (err) {
       await transport.disconnect().catch(() => undefined);
-      say(
-        `Connect: the board didn't answer as an ESP32 bootloader (${errorText(err)}). Hold BOOT, tap RESET, release BOOT, then Connect again.`,
-        "err",
-      );
+      const ids = (port as { getInfo?(): { usbVendorId?: number; usbProductId?: number } }).getInfo?.() ?? {};
+      say(connectFailureLine(ids, errorText(err)), "err");
       return;
     }
     const family = familyForChipName(loader.chip.CHIP_NAME, families);

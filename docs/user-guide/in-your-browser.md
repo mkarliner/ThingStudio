@@ -70,3 +70,6 @@ runtime is older than the editor's. Click **Install runtime** to update it.
 - **Install runtime says "Waiting for the board".** Press the board's reset button while it waits.
 - **An ESP32 doesn't answer on Connect.** Hold its BOOT button, tap RESET, release BOOT, and Connect again.
 - **ESP32-S2 boards** need that every time they are written, and appear as a new port afterwards: pick it again.
+- **A board on the chip's own USB, running other firmware** (a conference badge, say): the page can't switch it to
+  download mode. Unplug it, hold BOOT while you plug it back in, then Connect and pick its port again. It has a new
+  name in download mode.
