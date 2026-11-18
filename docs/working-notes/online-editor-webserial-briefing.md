@@ -1,7 +1,9 @@
 # Briefing: the online editor with WebSerial (deploy, runtime install and flashing in the browser)
 
-Status: plan, 2026-11-18, revised the same day after Mike's answers and a scoping pass. For implementation
-sessions. Written from a read of the code at commit `f5b96b8d`; line numbers are approximate.
+Status: **shipped, 2026-11-18, in 0.13.0.** ThingStudio Web is live at web.thingstudio.net, Set up a board at
+/setup, demo.thingstudio.net redirects, and the landing page links to it. What's left is in `outstanding-items.md`.
+The plan below is kept as the record. Originally a plan, 2026-11-18, revised the same day after Mike's answers and a
+scoping pass. For implementation sessions. Written from a read of the code at commit `f5b96b8d`; line numbers are approximate.
 
 Read first (paths relative to `docs/working-notes/` unless rooted): `outstanding-items/online-and-offline-editor.md`
 (the item this delivers, slices 1 to 3), `online-editor-demo-scoping.md` (the demo build this replaces),

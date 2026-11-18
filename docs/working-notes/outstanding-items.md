@@ -71,8 +71,9 @@ ThingStudioMarketing repo, not here.
   block and a skill; the first-run workspace `AGENTS.md` waits for a workspace folder. Scoping:
   `ai-authoring-doc-scoping.md`; rounds: `ai-authoring-test-rounds.md`.
 - **[LAUNCH]** **ThingStudio Web: boards over Web Serial, and Set up a board -- live 2026-11-18 (0.13.0).**
-  web.thingstudio.net, with Set up a board at /setup; demo.thingstudio.net redirects there. Left: the landing
-  page's `browser-first` branch (ThingStudioMarketing), the Pages standby rebuilt from the 0.13.0 zip, the nRF52
+  web.thingstudio.net, with Set up a board at /setup; demo.thingstudio.net redirects there. The landing page links
+  to it (ThingStudioWeb `browser-first`, merged 2026-11-18). Left: the Pages standby rebuilt from the 0.13.0 zip,
+  a new hero video (it shows the old demo banner), the nRF52
   when it turns up, and whether ThingStudio App's Tools → Install firmware should open Set up a board (Mike's
   call). Plan and status: `online-editor-webserial-briefing.md`; item:
   `outstanding-items/online-and-offline-editor.md`.
