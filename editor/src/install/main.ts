@@ -55,6 +55,15 @@ function showNext(text: string): void {
   next.hidden = false;
 }
 
+/** The next step with a link in it. Same tab: the board is set up, so this page's job is done. */
+function showNextLink(before: string, label: string, href: string, after: string): void {
+  const a = document.createElement("a");
+  a.href = href;
+  a.textContent = label;
+  next.replaceChildren(before, a, after);
+  next.hidden = false;
+}
+
 function errorText(err: unknown): string {
   return err instanceof Error ? err.message : String(err);
 }
@@ -353,8 +362,14 @@ btnRuntime.addEventListener("click", async () => {
       say(`Install runtime failed. ${result.advice?.text ?? ""}${docs}`, "err");
       return;
     }
-    say(result.frozen ? "Runtime ready: this image carries it, so only the boot file was written. The board is restarting." : "Runtime installed. The board is restarting.", "ok");
-    showNext("Next: open ThingStudio and Connect to the board.");
+    // One plain line either way (Mike, 2026-11-18: "Runtime ready" read as ambiguous). How it was done goes second.
+    say(
+      result.frozen
+        ? "Runtime installed. The board is restarting. (This image already carried the runtime, so only its boot file was written.)"
+        : "Runtime installed. The board is restarting.",
+      "ok",
+    );
+    showNextLink("Next: ", "open the editor", "/", " and click Connect.");
   } finally {
     busy = false;
     btnRuntime.disabled = !hasSerial;

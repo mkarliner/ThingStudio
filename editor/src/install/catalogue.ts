@@ -135,7 +135,7 @@ export function nextStepLine(build: InstallBuild): string {
     return "Next: Install runtime, below. This image already carries the runtime, so it writes only the boot file.";
   }
   if (build.runtime === "install") return "Next: Install runtime, below.";
-  return "Next: open ThingStudio and Connect.";
+  return "Next: open the editor and click Connect.";
 }
 
 /** One line for a failed check of a downloaded image. */
