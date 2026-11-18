@@ -286,7 +286,7 @@ closed. Left for marketing: the landing page
   opened the silent bootloader port, and replugging brought the board back as MicroPython on a new, unpicked port,
   so the page waited a minute and said "no reply". Fixed: the write's success line says to press RESET and pick the
   new port; Install runtime refuses a bootloader port at once; a port gone for 10 s ends the wait with "pick its
-  port again".
+  port again". Rerun with the fixes (Mike, 2026-11-18): write, RESET, pick the new port, Install runtime: clean.
 - **Still to try:** Remove flow from the online editor, an nRF52 drag.
 
 **Status, task 6 (2026-11-18):** done. Online, credentials and presets live in the tab's sessionStorage under one key
