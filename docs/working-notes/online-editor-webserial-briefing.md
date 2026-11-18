@@ -1,150 +1,322 @@
-# Briefing: the online editor with WebSerial (deploy and runtime install in the browser)
+# Briefing: the online editor with WebSerial (deploy, runtime install and flashing in the browser)
 
-Status: brief, 2026-11-18. For an implementation session. Written from a read of the code on 2026-11-18, file
-and line references as of commit `40314493`.
+Status: plan, 2026-11-18, revised the same day after Mike's answers and a scoping pass. For implementation
+sessions. Written from a read of the code at commit `f5b96b8d`; line numbers are approximate.
 
 Read first (paths relative to `docs/working-notes/` unless rooted): `outstanding-items/online-and-offline-editor.md`
-(the item this delivers, slices 1 and 2), `online-editor-demo-scoping.md` (the demo build this extends),
+(the item this delivers, slices 1 to 3), `online-editor-demo-scoping.md` (the demo build this replaces),
 `interfaces/protocol/README.md` and `SPEC.md`, `decisions/runtime-install-from-editor.md`,
-`decisions/editor-firmware-flashing.md`.
+`decisions/editor-firmware-flashing.md`, `decisions/firmware-catalogue.md`, `outstanding-items/credential-storage-design.md`.
+
+## Decided (Mike, 2026-11-18)
+
+1. **The online editor replaces the demo** at demo.thingstudio.net. Phones, Firefox and Safari still get what the
+   demo gives them today: open, edit and compile, with no board.
+2. **Feature subset (after scoping):** accepted as section A lists it. Features the online editor can't offer are
+   shown greyed out, with a line saying they're in the installed editor. That's slightly more confusing than leaving
+   them out, but it shows what the desktop install adds.
+3. **Credentials (after scoping):** kept in the browser for the session only, not persistently (section B). A
+   better scheme may come later. Export is for the second iteration.
+4. **Slice 3, flashing MicroPython from the browser, is in.** This reverses part of
+   `decisions/editor-firmware-flashing.md` ("no browser flasher, no new npm dependency"). Record it as a dated entry.
+5. **Timing:** before the serious launch activities in `marketing-plan.md` section 8. The Hacker News repost
+   (about 1,550 visits) already acted as a soft launch.
+6. **Scope, then fix the plan, then build.** This document is that plan.
+
+Still open: a separate install page (section D).
 
 ## Why now
 
-The Hacker News repost on 2026-11-16 gave a clear signal. Over 11–17 November the demo server's own log shows
-330 human visitors to demo.thingstudio.net, about 50 of whom went far enough to load the compile-hook
-interpreter. The docs show only about 5 people working through the install tutorial (steps 2–6: 4–7 views
-each). GoatCounter undercounts by up to 2.5× (204 demo arrivals from the landing page against 88 recorded
-button clicks), but the ratio holds: people try things in the browser, not by installing. ESPHome and WLED
-users already expect "plug in, click Connect in Chrome".
+Over 11 to 17 November the demo server's own log shows 330 human visitors to demo.thingstudio.net. About 50 of
+them went far enough to load the compile-hook interpreter. In the docs, only about 5 people worked through the
+install tutorial (steps 2 to 6 had 4 to 7 views each). GoatCounter undercounts by up to 2.5× (204 demo arrivals
+from the landing page against 88 recorded button clicks), but the ratio holds: people try things in the browser,
+not by installing. ESPHome and WLED users already expect to plug in a board and click Connect in Chrome.
 
 ## Goal
 
-A hosted build of the editor, in Chrome or Edge on a desktop, that can take a board which already has
-MicroPython, install the Thingstudio runtime on it, and deploy flows to it, all over WebSerial with no backend.
-That is slices 1 and 2 of `online-and-offline-editor.md`. Slice 3 (flashing MicroPython from the browser) is out
-of scope: it reverses `decisions/editor-firmware-flashing.md` and needs its own decision from Mike.
+The editor at demo.thingstudio.net works in Chrome or Edge on a desktop, with no backend. It can take a blank board,
+flash MicroPython, install the Thingstudio runtime, and deploy flows to it. All of this goes over WebSerial,
+except UF2 boards (section C). In any other browser the same page does what the demo does today.
 
 ## Where things stand (checked against code, 2026-11-18)
 
 **Already done:**
 
-- **The transport exists and speaks the current wire format.** `WebSerialTransport`
-  (`editor/src/protocol/transport.ts:100`) does F64 line framing as in SPEC §5. It implements the shared
-  `DeviceTransport` interface (24 October). Connect in direct mode is wired (`main.ts` ~3072: `navigator.serial.requestPort()`).
-  It's hidden: `index.html:266` `<option id="connModeOptionDirect" value="direct" hidden>`.
-- **Deploy logic is transport-agnostic.** HELLO handling, version gate, chunked transfer (`protocol/transfer.ts`,
-  SPEC §7), library skip from the board's reported inventory (`boardDependencies` from HELLO), board settings
-  (`SET_BOARD_SETTINGS`), and `HELLO_REQUEST` on Connect all live in the editor and go through the transport.
-  The long comment at `main.ts` ~1365 saying the editor can't ask for a HELLO is stale: `HELLO_REQUEST` exists
-  and Connect sends it (`main.ts` ~3174). Fix the comment in passing.
-- **The compile is in the browser** (mpy-cross and micropython-wasi WASM), as the demo already shows.
-- **A demo build mode exists:** `npm run build:demo` → `vite build --mode demo`, compile-time `__DEMO__`,
-  `dist-demo/`, `tools/demo_request_check.py`, `packaging/demo-server/`. It is live at demo.thingstudio.net
-  (`outstanding-items.md` still says "not live yet": update it).
+- **The transport exists and uses the current wire format.** `WebSerialTransport`
+  (`editor/src/protocol/transport.ts`) does F64 line framing as in SPEC §5 and implements `DeviceTransport`.
+  Connect in direct mode is wired (`main.ts` ~3089, `navigator.serial.requestPort()`). It's hidden:
+  `index.html` `<option id="connModeOptionDirect" value="direct" hidden>`.
+- **Deploy logic doesn't depend on the transport.** HELLO handling, the version check, chunked transfer
+  (`protocol/transfer.ts`, SPEC §7), skipping libraries the board already has, `SET_BOARD_SETTINGS` and
+  `HELLO_REQUEST` on Connect all live in the editor. The long comment at `main.ts` ~1386 saying the editor can't
+  ask for a HELLO is stale. Fix it in passing.
+- **Compiling runs in the browser** (mpy-cross and micropython-wasi as WASM).
+- **The demo build:** `npm run build:demo`, compile-time `__DEMO__`, `dist-demo/`, `tools/demo_request_check.py`,
+  `packaging/demo-server/`, live at demo.thingstudio.net. `outstanding-items.md` still says "not live yet".
+- **Saved values already have a no-backend path.** `editor/src/app/rete/saved-values.ts` is the one module the
+  credential and preset fields go through. In the demo it keeps values in page memory, lost on reload. A browser
+  store slots in here (section B).
 
-**What still needs the backend, so blocks direct mode today:**
+**What still needs the backend:**
 
 | Need | Today | File |
 |---|---|---|
-| Library list and sources for a deploy | `GET /api/dependencies`. Deploy is blocked with "no library list from the backend" without it. | `main.ts` ~3227, `backend/.../dependencies.py` |
+| Library list and sources for a deploy | `GET /api/dependencies`. Deploy is blocked with "no library list from the backend" without it. | `main.ts` ~3234, `backend/.../dependencies.py` |
 | Runtime sources to install | `GET /api/runtime-sources` | `main.ts` ~2571 |
-| Runtime install | `install_runtime` over the backend WebSocket: raw REPL driven from Python | `raw_repl.py` (353 lines), `runtime_installer.py` (208), `ws_relay.py` `_install_runtime_exclusive` |
-| Remove flow (board recovery) | `remove_flow`, raw REPL | `board_recovery.py` (112), `ws_relay.py` |
-| Command box (raw text to the board) | `raw_write` | `ws_relay.py` `_raw_write` |
-| Flow save/open/list | `/api/flows` | demo build already has a non-backend path (`picker: !__DEMO__`) |
-| Credentials and presets (WiFi, MQTT) | `/api/credentials`, `/api/presets` | `admin_api.py` |
+| Runtime install | `install_runtime` over the backend WebSocket: raw REPL driven from Python | `raw_repl.py`, `runtime_installer.py`, `ws_relay.py` `_install_runtime_exclusive` |
+| Remove flow (board recovery) | `remove_flow`, raw REPL | `board_recovery.py`, `ws_relay.py` |
+| Command box | `raw_write` | `ws_relay.py` `_raw_write` |
+| Firmware flashing | `esptool` subprocess, `uf2` copy to a mounted volume | `firmware-dialog.ts` (no DOM), admin API `/api/firmware/*` |
+| Firmware catalogue | the backend fetches the signed `builds.json` from the docs site | `catalogue_source.py` |
+| Flow save/open/list | `/api/flows` | demo already has a non-backend path (`picker: !__DEMO__`) |
+| Credentials and presets | `/api/credentials`, `/api/presets` | `admin_api.py`; demo: memory only |
 | User board definitions, custom nodes | `/api/definitions`, `/api/custom-nodes` (read `~/.thingstudio`) | built-ins only online |
-| WiFi transport, discovery | raw TCP from the backend | not possible in a browser: USB only online |
-| Firmware flashing | `esptool` subprocess | out of scope (slice 3) |
+| WiFi link to the board, discovery | raw TCP from the backend | not possible from a browser (section A) |
 
-## Tasks
+**Found while scoping, each one blocks something:**
 
-### 1. An "online" build mode
+- **The demo server forbids WebSerial.** The Caddyfile sends `Permissions-Policy: serial=(), usb=(), ...`.
+  `navigator.serial` fails on that page until it says `serial=(self)` (and `usb=(self)` if WebUSB is used).
+- **The CSP allows `connect-src 'self'` only.** Firmware images and the catalogue have to come from the page's own
+  origin. That is also what keeps "the page sends nothing" true.
+- **GitHub release assets can't be fetched from a browser.** GitHub sends no CORS headers on them. micropython.org
+  is not assumed to either. Images have to be mirrored on the editor's origin whatever the CSP says.
+- **26 `!__DEMO__` gates in `main.ts`,** plus `ConfigRefField.vue`, `CredentialRefField.vue`, `PaletteSidebar.vue` and
+  `saved-values.ts`. Some mean "has a backend", some "can reach a board".
 
-Decide with Mike whether this replaces the demo or sits beside it (open question 1). Either way, add a build
-flag next to `__DEMO__` (for example `__ONLINE__`, or a mode value) that keeps the board-facing UI but uses
-direct mode with no backend. Every `!__DEMO__` gate in `main.ts` needs reviewing: about 30 of them, some of
-which mean "has a board" and some "has a backend". Split those two meanings rather than piling on conditions.
-Keep `tools/demo_request_check.py` passing: the page still requests nothing beyond its own assets and
-GoatCounter.
+## A. Feature subset: what the online editor can't do
 
-**Done when:** the online build shows Connect, Deploy, Install runtime and Board settings; hides WiFi connect,
-discovery, firmware flashing, custom nodes and user definitions; and the request check passes.
+"USB only" means the editor's link to the board is USB. A deployed flow still uses WiFi, MQTT and HTTP. All four
+tutorials can be deployed over USB. Web Blink uses the board's own `http in` and a browser on the same network,
+not the editor's WiFi link.
 
-### 2. Libraries and runtime sources as static assets
+| Missing online | Who notices | Can it be added? |
+|---|---|---|
+| Editor ↔ board over WiFi, discovery | Anyone watching debug output from a board that isn't on USB. `wifi-connection.md` | No. A browser can't open raw TCP. A WebSocket listener on the board is blocked from an https page by mixed content and Chrome's local network access rules. Stays local only. |
+| Custom nodes | Readers of `custom-nodes.md`, AI-authoring users | Yes, from a folder the user picks (B4) or one file per session. Not in the first release. |
+| User board definitions, presets | Users with boards outside the built-in 12 | Same as custom nodes. |
+| Command line, `thingstudio-compile`, MCP server | Developers and AI-authoring users | No. These are local tools by nature. |
+| Docs bundled with the installed version | Nobody online | The online editor links to the public docs, which follow `main`, as the online editor will. |
+| A pinned runtime version | Online users, once per runtime release | The online editor always targets the newest runtime. After each runtime release a board shows "runtime older than the editor" and needs Install runtime again. The version check already says so. Mention it in the docs. |
 
-Generate at build time what `/api/dependencies` and `/api/runtime-sources` return today, from the same sources
-the backend reads (`backend/.../dependencies.py`, `device-runtime/runtime_manifest.py`). Emit them as JSON files
-in the build output, and make the two fetches in `main.ts` read from there in the online build. One generator
-for both builds, so the online editor can't drift from the installed one. The runtime version the editor targets
-(`EDITOR_TARGET_VERSION`, currently 15.1.0) must match the runtime sources it ships. Add a test that checks this.
+**Decided (Mike, 2026-11-18):** this subset for the first release. In the editor, the missing features are greyed
+out with one line naming the installed editor and linking to the install page. Name what's missing on the landing
+page and in "Use it in your browser" too. Custom nodes and user definitions online wait for a better storage
+scheme (B4 or later).
 
-**Done when:** a deploy in the online build resolves and sends libraries with no backend, and installing the
-runtime gets its files from the build.
+## B. Credentials and other saved values in the browser
+
+Today a flow file holds only a credential's name. The values live in `~/.thingstudio/credentials/<type>/<name>.json`
+and are resolved when a flow loads (`credential-storage-design.md`). They are compiled into the board's code as
+plain strings, so the WiFi password is in plain text on the board's flash anyway. Presets use the same store
+without secrets. Everything goes through `saved-values.ts`, so each option below changes that one module.
+
+| Option | What the user sees | Protects against | Costs |
+|---|---|---|---|
+| B1. Page memory (the demo today) | Types credentials again on every visit | Everything at rest | Annoying past a first try |
+| B2. Browser storage (IndexedDB), plain | Saved on this browser and computer, with a Forget button | Other sites (same-origin rule). Third-party script, given the CSP. | Readable by anyone who can read the browser profile, and by code served from the origin itself |
+| B3. B2, encrypted with a passphrase (WebCrypto) | Types a passphrase once per visit | Someone reading the profile on disk | A passphrase to forget, with no recovery. No protection against code on the origin, which sees the passphrase when it's typed. |
+| B4. A folder the user picks (File System Access), same layout as `~/.thingstudio` | Picks a folder once; Chrome asks again per visit unless the user allows it permanently | Same as B2 | The online and installed editors can share one folder: credentials, presets, then custom nodes and definitions. Folder handles persist in IndexedDB. To verify: whether macOS's picker reaches a dot-folder, and how much Chrome's per-visit prompt annoys. |
+
+Rejected: back into the flow file (reverses a settled decision); Chrome's password manager API (one id and one
+password per entry, Chrome only, not built for this).
+
+**Decided (Mike, 2026-11-18): browser storage for the session only, not persistent.** Use `sessionStorage`:
+values survive a reload in the same tab and are gone when the tab closes. Each tab has its own, so a second tab
+starts empty. The field note says so in one line, and a Forget button clears them early. Presets go the same way.
+B3 is not needed: it adds a passphrase to protect a value that is already on the board in plain text. B4 stays the
+candidate for "something better later": it's the path to sharing with the installed editor and to custom nodes
+online. Write down what's stored where.
+
+## C. Flashing in the browser (slice 3)
+
+### ESP32 family: esptool-js
+
+- `esptool-js` is Espressif's own WebSerial port of esptool. It's Apache-2.0, like this project, and works in
+  Chrome and Edge. It writes flash and doesn't build images, which is all this needs. It's a new npm dependency:
+  pin it as `decisions/third-party-pinning.md` says and add it to `docs/third-party-licenses.md`.
+- **Keep the catalogue's shape.** The chip family gives the chip and address, a build gives the image, erase
+  before writing is the default. Our merged images go at 0, stock classic ESP32 and S2 at 0x1000. `firmware-dialog.ts`
+  already has no DOM. Give it a second runner next to the admin API job runner.
+- **One port, handed over.** `WebSerialTransport` must release the `SerialPort` before esptool-js opens it. After
+  the flash: hard reset, then the runtime install over the same port (task 4).
+- **Board quirks to test, not chase.** USB-UART boards (classic ESP32): esptool-js resets the board into download
+  mode by itself. S3, C3 and C5 on USB-Serial/JTAG: the same, through the chip's own USB. S2 on native USB
+  (LOLIN S2 Mini): the user holds 0 and taps RST, and after the flash the port re-enumerates, so the user picks
+  it again. One line saying so, no retry chain.
+
+### UF2 boards (Pico, Pico W, Pico 2, XIAO nRF52840)
+
+The board appears as a drive and takes a file copy. There's no serial step.
+
+1. **Download and drag (first release).** The dialog downloads the pinned `.uf2` from our origin and says "hold
+   BOOTSEL, plug in, drag this file onto RPI-RP2". This is what MicroPython's own instructions say. It works in
+   every browser.
+2. **Write the file to the drive from the page (spike).** File System Access, with the user picking the RPI-RP2
+   drive. Chrome refuses to let a page pick some root and system folders. Whether it allows a removable drive's
+   root has to be tried on macOS and Windows before it's planned.
+3. **WebUSB, as picotool does (later, if 1 is too clumsy).** RP2040 and RP2350 only, Chromium only.
+
+A board that already runs MicroPython can be put into BOOTSEL with `machine.bootloader()` over the raw REPL
+(task 4). That removes the button step for a reflash.
+
+### Images on our own origin
+
+- Mirror every image the bundled catalogue offers (15 builds today, stock MicroPython 1.29.0 and our 15.1.0
+  images, about 2 MB each) into the online build's output. Check each one against the catalogue's sha256
+  (SubtleCrypto) before writing it to the board.
+- **Bundle the catalogue in the build. Don't fetch it.** The signature exists so the docs site can't choose what's
+  written to a board. When the catalogue arrives in the same files as the code, whoever controls the origin
+  already controls the code, so the online build ships the catalogue it was built with. A new image means a new
+  deploy of the site, which happens on every release anyway.
+- MicroPython is MIT-licensed, so mirroring its images is allowed. Credit it on the licences page.
+
+### Out of slice 3
+
+STM32/pyboard (DFU), and a local file the user chooses (keep **Choose a file…** if it costs nothing; drop it if
+it does).
+
+## D. A separate install page (proposed, Mike to confirm)
+
+Mike, 2026-11-18, pointing at Tasmota's web installer: is there a case for a separate install page?
+
+**What Tasmota does.** The page is one Install button built on ESP Web Tools: Web Serial plus a manifest
+describing the firmware. The tool reads the chip type from the board and picks the matching build from the
+manifest. After flashing, Improv Wi-Fi (optional) sets up WiFi over the serial port. WLED and ESPHome use the same
+tool.
+
+**Proposal: yes, as a second page in the same online build, using our own flasher rather than ESP Web Tools.**
+For example `demo.thingstudio.net/install`: plug in, Connect, flash, install the runtime, optionally name the
+board, then "Open the editor".
+
+Why a separate page:
+
+- **It's one job with one link.** The landing page, "Getting started" and "Installing MicroPython" can each say
+  "step 1: put Thingstudio on your board" and link to it. People who arrived from ESPHome or WLED expect a page
+  like this.
+- **It serves installed users too.** Today flashing needs the backend and esptool. A desktop user can prepare a
+  board on the web page and then use the installed editor. That removes a step from the install docs.
+- **It closes an old item.** `outstanding-items/tasmota-install-page.md` asks for this, and its prerequisite (a
+  flashable image with the runtime) now exists.
+
+Why not ESP Web Tools:
+
+- It only covers ESP chips. The Pico family and the XIAO nRF52840 are supported boards.
+- It flashes an image and stops. Our own images (classic ESP32, C3, C5) include the runtime, but the S3 and S2 use
+  stock MicroPython and need the runtime install afterwards (task 4). The S3 is the Freenove board in the
+  tutorials.
+- It loads its code from a CDN unless self-hosted, and would be a second flasher beside esptool-js with a second
+  catalogue format (its manifest) to keep in step with `builds.json`.
+
+What it costs on top of tasks 4 and 5: a second Vite entry point and a small page using the same modules
+(`firmware-dialog.ts`, the raw-REPL install, the catalogue and images from task 2). The editor's **Tools → Install
+firmware…** opens the same code, so there is one flasher, used in two places. A board already running the runtime
+gets "already installed, version x; reinstall?" rather than a flash.
+
+**Choosing the build.** esptool-js reads the chip type when it connects. That is the catalogue decision's "ask the
+tool what it already knows", not guessing, so the page can preselect the chip family and offer that family's builds.
+A UF2 board gets the download-and-drag steps instead.
+
+**WiFi on the install page: not in the first version.** In Thingstudio the flow carries its WiFi network, and
+Board settings already sets the hostname and password over USB. Improv would be a second way to do the same thing.
+
+## Tasks, in order
+
+Before touching anything that sends or parses frames: read `interfaces/protocol/SPEC.md` and run the conformance
+vectors (`cd editor && npm test`, `test/protocol-conformance.test.ts`). npm commands run on Mike's Mac, or in the
+session's own extracted copy, never against the live-mounted `editor/node_modules` (`CLAUDE.md`). No protocol
+change without Mike's explicit permission.
+
+### 1. One build, two questions it asks
+
+The online build replaces the demo build, so it can't assume a board. Split the `__DEMO__` gates into two
+questions:
+
+- **Is there a backend?** Decided at compile time. False online, true in the installed editor.
+- **Can the page reach a board?** Decided at run time. In the installed editor, through the backend. Online,
+  `"serial" in navigator`.
+
+Online in Chrome or Edge on a desktop: Connect, Deploy, Install runtime, Install firmware, Board settings, Remove
+flow, the command box. In any other browser the same page behaves as the demo does today, with one line saying
+which browsers can reach a board. Greyed out online, each with one line naming the installed editor: WiFi connect,
+discovery, custom nodes, user definitions.
+
+Change the Caddyfile's `Permissions-Policy` to `serial=(self)` (and `usb=(self)` only if WebUSB is used), and update
+`demo_request_check.py` so it still proves the page requests nothing beyond its own origin and GoatCounter.
+
+**Done when:** the online build shows the right controls in Chrome and the demo's behaviour in Firefox and Safari,
+the installed editor is unchanged, and the request check passes.
+
+### 2. Libraries, runtime sources, catalogue and images as static files
+
+Generate at build time what `/api/dependencies` and `/api/runtime-sources` return today, from the same sources the
+backend reads (`dependencies.py`, `device-runtime/runtime_manifest.py`). One generator for both builds, so the two
+editors can't drift. Add the catalogue and the mirrored images (section C). Add a test that `EDITOR_TARGET_VERSION`
+(15.1.0) matches the runtime sources shipped, and one that every catalogue image is in the output with its sha256.
+
+**Done when:** a deploy resolves libraries with no backend, Install runtime finds its files in the build, and the
+firmware dialog lists builds whose files are in the build.
 
 ### 3. Deploy over WebSerial on real hardware
 
-Unhide direct mode in the online build and run a deploy on the boards the docs list as supported: at least a
-classic ESP32 (USB-UART), an ESP32-S3 on native USB, and a Pico W. Watch for anything the backend's
-`serial_relay.py` does that the browser path doesn't: DTR/RTS left untouched on open, a 5 s write timeout, and
-reading what's available rather than waiting for full chunks. Earlier serial fixes (the classic-ESP32 link, the
-2026-11-07 S3 USB mangling work) need re-checking on this path, since they were tested through the backend.
+Run deploy on a classic ESP32 (USB-UART), an ESP32-S3 on native USB, and a Pico W. Compare with what the backend's
+`serial_relay.py` does: DTR/RTS left alone on open, a 5 s write timeout, reading what's there rather than waiting
+for whole chunks. Check the classic-ESP32 serial link fix and the 2026-11-07 S3 USB work again on this path; both
+were tested through the backend.
 
-Before touching anything that emits or parses frames, follow `CLAUDE.md`/`AGENTS.md`'s interface rules: read
-`interfaces/protocol/SPEC.md` and run the conformance vectors (`cd editor && npm test`,
-`test/protocol-conformance.test.ts`). Mike runs npm commands on his Mac, or the session runs them in its own
-extracted copy. Never against the live-mounted `editor/node_modules`. No protocol change without Mike's
-explicit permission.
+**Done when:** deploy, redeploy, NODE_STATUS, DEBUG output and Board settings work on all three boards, and the
+conformance test passes.
 
-**Done when:** deploy, redeploy, NODE_STATUS and DEBUG output, and Board settings all work over WebSerial on the
-three boards, and the conformance test passes.
+### 4. Raw REPL in TypeScript: runtime install, Remove flow, command box
 
-### 4. Runtime install and Remove flow over WebSerial
-
-Port the raw-REPL client to TypeScript over the WebSerial port: enter raw REPL, exec, chunked file write, hard
-reset, with every read time-bounded as in `raw_repl.py`. Port the install sequence from `runtime_installer.py`
-and `ws_relay.py`. That includes:
+Port the raw-REPL client: enter raw REPL, exec, chunked file write, hard reset, every read time-bounded as in
+`raw_repl.py`. Port the install sequence from `runtime_installer.py` and `ws_relay.py`, including:
 
 - the 2026-09-23 fixes (read latency, prompt handling, progress, timeouts, board diagnosis);
-- precompiled `.mpy` runtime files (`precompileRuntime`, already in the editor);
-- the custom-image case (14.1.0: a board with a frozen inventory module gets only `/main.py`);
-- getting a running listener to stop. It ignores Ctrl-C, and a native-USB board doesn't reset on port open,
-  so read what `_install_runtime_exclusive` does before assuming.
+- the precompiled `.mpy` runtime files (`precompileRuntime`, already in the editor);
+- the custom-image case (a board with a frozen inventory module gets only `/main.py`);
+- stopping a running listener. It ignores Ctrl-C, and a native-USB board doesn't reset when the port opens, so read
+  what `_install_runtime_exclusive` does before assuming.
 
-Remove flow (`board_recovery.py`) uses the same primitives, so port it alongside. `raw_write` (the command box)
-becomes a plain write to the port.
+Port Remove flow (`board_recovery.py`) at the same time. The command box becomes a plain write. Port the cases
+in `backend/test/test_raw_repl.py` (they caught a real dropped-bytes bug) and test against a fake port.
 
-The backend has tests for its raw REPL client (`backend/test/test_raw_repl.py`, which caught a real
-dropped-bytes bug). Port those cases with the code, and test against a fake port.
+**Done when:** on the three boards, the online build installs the runtime on fresh MicroPython, deploys a flow,
+and Remove flow recovers a board stuck on a crashing flow.
 
-**Done when:** on the three boards above, the online build installs the runtime on a board with fresh
-MicroPython, then deploys a flow, and Remove flow recovers a board stuck on a crashing flow.
+### 5. Flashing in the browser
 
-### 5. Credentials, flows and storage in the browser
+Section C: esptool-js runner for `firmware-dialog.ts`, download-and-drag for UF2, `machine.bootloader()` for a
+Pico already running MicroPython. Then the File System Access spike for UF2, reported back before it's built.
 
-Mike, 2026-11-08: credentials and similar settings could live in the browser's local storage. Design it with
-him before building (open question 3). A flow that uses WiFi or MQTT needs the credentials at compile time.
-For flows, reuse the demo's save/open path (File System Access in Chrome and Edge, which are the WebSerial
-browsers anyway).
+**Done when:** a blank classic ESP32, a blank S3 and a blank Pico 2 each go from nothing to a deployed flow in
+Chrome, using only the online editor and, for the Pico, one file drag. Every failure names the step and the next
+action, following the project's fault rules.
 
-**Done when:** a WiFi/MQTT flow can be configured, deployed and reopened in the online build, and what's stored
-where is written down.
+If section D is confirmed, the install page is part of this task: a second entry point using the same flasher and
+runtime install. **Done when** then also covers going from a blank board to "Open the editor" on the install page.
 
-### 6. Words
+### 6. Saved values for the session
 
-- The landing page and docs: what the online version does and doesn't do (USB only, Chrome/Edge desktop, no
-  flashing yet). Adjust the "local only" message: the page still sends nothing anywhere except GoatCounter.
-- A docs page or section: "Use it in your browser", covering the board needing MicroPython first, with links
-  to the Pico UF2 and Espressif's own tools until slice 3 exists.
-- Record the decision change: `decisions/runtime-install-from-editor.md` said "web serial is deprecated"
-  (2026-09-22). Mike's 2026-11-18 call to reinstate it supersedes that. Add a dated entry rather than editing
-  the old one. Close or update `ambiguous-browser-only-claim.md`.
+`sessionStorage` behind `saved-values.ts` (section B), with the one-line note and a Forget button. Flows keep the
+demo's save and open (File System Access in Chrome and Edge).
 
-## Open questions for Mike
+**Done when:** a WiFi and MQTT flow can be set up, deployed, and reopened after a reload in the same tab without
+typing the credentials again; closing the tab clears them; and what's stored where is written down.
 
-1. Does the online version replace the demo at demo.thingstudio.net, or sit beside it (for example at
-   app.thingstudio.net), with the demo kept for phones and Firefox/Safari?
-2. Feature subset: is "USB only, built-in boards and nodes, no flashing" acceptable for the first release?
-3. Credentials: local storage as-is, or encrypted with a passphrase? Should they be exportable?
-4. Slice 3 (esptool-js for ESP32 flashing in the browser): decide now or after this ships?
-5. Timing relative to the launch gates in `marketing-plan.md` section 8.
+### 7. Words and records
+
+- Landing page and docs: what the online editor does and doesn't do (section A), Chrome or Edge on a desktop to
+  reach a board, where credentials are kept. Adjust the "local only" message: the page still sends nothing
+  anywhere except GoatCounter.
+- A "Use it in your browser" page, which also covers the UF2 drag.
+- Dated decision entries, not edits to old ones: `decisions/runtime-install-from-editor.md` (WebSerial is back,
+  superseding "web serial is deprecated", 2026-09-22), `decisions/editor-firmware-flashing.md` (the browser
+  flashes, esptool-js is a dependency), `decisions/firmware-catalogue.md` (the online build bundles its catalogue).
+- Close or update `ambiguous-browser-only-claim.md`, `online-and-offline-editor.md` and `online-editor-demo.md`.
+  Fix "not live yet" in `outstanding-items.md`.
+
+## Open for Mike
+
+1. Section D: a separate install page, as proposed? Needed before task 5 is finished.
