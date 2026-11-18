@@ -250,7 +250,8 @@ without Web Serial (Firefox/Safari): board controls hidden, demo behaviour. Task
 
 **Status, task 7 (2026-11-18):** `docs/user-guide/in-your-browser.md` (linked from Getting started and the nav),
 dated decision entries (runtime install, flashing, catalogue), outstanding items updated, the "browser-only" ambiguity
-closed. Left for marketing: the landing page (`ThingStudioMarketing/briefings/local-and-browser-positioning-briefing.md`). Tasks 3, 5 (hardware) and 7 (words) are open.
+closed. Left for marketing: the landing page
+(`ThingStudioMarketing/briefings/local-and-browser-positioning-briefing.md`). Tasks 3 and 5 (hardware) are open.
 
 **Status, task 6 (2026-11-18):** done. Online, credentials and presets live in the tab's sessionStorage under one key
 (`thingstudio.savedValues`, `saved-values.ts`), page memory where that throws; they survive a reload and go when the
