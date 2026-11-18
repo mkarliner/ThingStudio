@@ -259,3 +259,24 @@ describe("a board already running the runtime", () => {
     expect(port.text()).toEqual(["\x03", "\nF64:stop\n", "\x03", "\nF64:stop\n"]);
   });
 });
+
+describe("a port that goes away and doesn't come back", () => {
+  it("says the board came back as a new device, instead of waiting out the minute", async () => {
+    let opens = 0;
+    const once: ClosableLink = { write: async () => { throw new Error("device lost"); }, read: async () => new Uint8Array(), close: async () => undefined };
+    const started = Date.now();
+    const err = await catchPrompt(
+      async () => {
+        if (opens++ === 0) return once;
+        throw new Error("The device has been lost.");
+      },
+      Date.now() + 60_000,
+      () => undefined,
+      undefined,
+      300,
+    ).catch((e) => e);
+    expect(err.step).toBe("waiting for the board's port to come back");
+    expect(err.message).toContain("pick its port");
+    expect(Date.now() - started).toBeLessThan(5000);
+  });
+});

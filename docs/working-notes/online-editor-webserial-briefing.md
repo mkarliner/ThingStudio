@@ -281,7 +281,13 @@ closed. Left for marketing: the landing page
 - **ESP32-C5:** write (ThingStudio's C5 image at 0x2000), Install runtime and Deploy: OK after a couple of power
   cycles, like the Freenove S3. Now in `debugging.md`.
 - **Plain S3:** none to hand (Mike). The Freenove S3 and the C3 cover the chip's own USB; dropped for now.
-- **Still to try:** Remove flow from the online editor, an S2 Mini (BOOT+RESET, the port changing), an nRF52 drag.
+- **S2 Mini:** write OK; Install runtime OK on a second try. The S2's ROM bootloader is its own USB device (pid
+  0x0002) and RTS doesn't reset it, so the board stayed in download mode after the write; the first Install runtime
+  opened the silent bootloader port, and replugging brought the board back as MicroPython on a new, unpicked port,
+  so the page waited a minute and said "no reply". Fixed: the write's success line says to press RESET and pick the
+  new port; Install runtime refuses a bootloader port at once; a port gone for 10 s ends the wait with "pick its
+  port again".
+- **Still to try:** Remove flow from the online editor, an nRF52 drag.
 
 **Status, task 6 (2026-11-18):** done. Online, credentials and presets live in the tab's sessionStorage under one key
 (`thingstudio.savedValues`, `saved-values.ts`), page memory where that throws; they survive a reload and go when the

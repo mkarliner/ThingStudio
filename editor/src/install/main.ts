@@ -18,6 +18,7 @@ import { buildDefinitionSet } from "../definitions/definitions.js";
 import {
   buildsForFamily,
   connectFailureLine,
+  isRomUsbBootloader,
   familyForChipName,
   hashMismatchLine,
   installBuilds,
@@ -273,7 +274,13 @@ btnWrite.addEventListener("click", async () => {
     }
     await closeSession();
     el("espChosen").hidden = true;
-    say(`Written: ${build.label} ${build.version}. If the board doesn't restart by itself, press its RESET button.`, "ok");
+    const romUsb = isRomUsbBootloader((s.transport.device as { getInfo?(): { usbVendorId?: number; usbProductId?: number } }).getInfo?.() ?? {});
+    say(
+      romUsb
+        ? `Written: ${build.label} ${build.version}. Press the board's RESET button now. It comes back as a new port: pick that one for Install runtime.`
+        : `Written: ${build.label} ${build.version}. If the board doesn't restart by itself, press its RESET button.`,
+      "ok",
+    );
     showNext(nextStepLine(build));
   } finally {
     busy = false;

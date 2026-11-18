@@ -48,6 +48,10 @@ export const ENTER_STEP = "entering raw REPL";
 export const CATCH_STEP = "waiting for the board to stop at a prompt";
 /** catchPrompt() never got the port open: nothing was heard because nothing was listening. */
 export const OPEN_STEP = "opening the port";
+/** The port was open, went away, and didn't come back: the board restarted as a different USB device. */
+export const PORT_GONE_STEP = "waiting for the board's port to come back";
+/** How long a vanished port gets to come back (a board re-enumerating across a reset) before that's the answer. */
+export const PORT_GONE_MS = 10_000;
 
 /** 256 raw bytes per base64 chunk: the board holds one chunk's source at a time (ampy/rshell do the same). */
 const FILE_CHUNK_SIZE = 256;
@@ -269,21 +273,29 @@ export async function catchPrompt(
   /** Sent after each Ctrl-C: a way to ask what Ctrl-C can't stop (the install page sends the listener's own
    * STOP_TO_PROMPT frame, on a fresh line). */
   alsoSend?: Uint8Array,
+  portGoneMs: number = PORT_GONE_MS,
 ): Promise<ClosableLink> {
   let link: ClosableLink | null = null;
   let seen: Uint8Array = new Uint8Array();
   let toldToReset = false;
   let everOpened = false;
   let openError = "";
+  let lostAt: number | null = null;
   try {
     while (Date.now() < deadline) {
       if (!link) {
         try {
           link = await open();
           everOpened = true;
+          lostAt = null;
         } catch (err) {
           // Not there yet (a board re-enumerating after a reset) -- or never openable, which the end says.
           openError = errorText(err);
+          if (lostAt !== null && Date.now() - lostAt > portGoneMs) {
+            // 2026-11-18 (Mike, S2 Mini): reset out of its bootloader, the board came back as a new USB device the
+            // page can't open unpicked, and a minute later was reported as "no reply".
+            throw new RawReplError(PORT_GONE_STEP, "the board restarted as a new USB device. Click Install runtime again and pick its port: it may have a new name");
+          }
           await sleep(REOPEN_PAUSE_MS);
           continue;
         }
@@ -296,6 +308,7 @@ export async function catchPrompt(
       } catch {
         await link.close().catch(() => undefined);
         link = null;
+        lostAt ??= Date.now();
         continue;
       }
       seen = concat(seen, chunk);

@@ -13,6 +13,7 @@ import { buildDefinitionSet } from "../src/definitions/definitions.js";
 import {
   buildsForFamily,
   connectFailureLine,
+  isRomUsbBootloader,
   familyForChipName,
   imagePath,
   installBuilds,
@@ -104,5 +105,15 @@ describe("Connect failure advice", () => {
     expect(connectFailureLine({ usbVendorId: 0x1a86, usbProductId: 0x7523 }, "x")).toContain("Hold BOOT, tap RESET");
     expect(connectFailureLine({ usbVendorId: 0x303a, usbProductId: 0x1001 }, "x")).toContain("Hold BOOT, tap RESET");
     expect(connectFailureLine({}, "x")).toContain("Hold BOOT, tap RESET");
+  });
+});
+
+describe("the ROM bootloader on a chip's own USB", () => {
+  it("is recognised by Espressif's vendor id and the S2/S3 ROM product ids", () => {
+    expect(isRomUsbBootloader({ usbVendorId: 0x303a, usbProductId: 0x0002 })).toBe(true);
+    expect(isRomUsbBootloader({ usbVendorId: 0x303a, usbProductId: 0x0009 })).toBe(true);
+    expect(isRomUsbBootloader({ usbVendorId: 0x303a, usbProductId: 0x4001 })).toBe(false);
+    expect(isRomUsbBootloader({ usbVendorId: 0x303a, usbProductId: 0x1001 })).toBe(false);
+    expect(isRomUsbBootloader({})).toBe(false);
   });
 });

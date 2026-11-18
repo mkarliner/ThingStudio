@@ -158,3 +158,13 @@ export function connectFailureLine(ids: { usbVendorId?: number; usbProductId?: n
   }
   return `Connect: the board didn't answer as an ESP32 bootloader (${error}). Hold BOOT, tap RESET, release BOOT, then Connect again.`;
 }
+
+/** The product ids the ROM bootloader shows on the chip's own USB (USB-OTG download mode): esptool-js's
+ * IMAGE_CHIP_ID for the S2 and S3. A port with one of these is the bootloader, not MicroPython. */
+export const ROM_USB_OTG_PIDS: ReadonlySet<number> = new Set([0x0002, 0x0009]);
+
+/** True when a port is a chip's ROM bootloader on its own USB: it stays there after a write until RESET is pressed,
+ * then comes back as a different USB device (2026-11-18, Mike's S2 Mini). */
+export function isRomUsbBootloader(ids: { usbVendorId?: number; usbProductId?: number }): boolean {
+  return ids.usbVendorId === ESPRESSIF_VID && ids.usbProductId !== undefined && ROM_USB_OTG_PIDS.has(ids.usbProductId);
+}

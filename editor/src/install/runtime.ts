@@ -8,6 +8,7 @@
 
 import { runtimeSources } from "virtual:runtime-sources";
 import { explainInstallFailure, type Advice } from "../app/board-diagnosis.js";
+import { isRomUsbBootloader } from "./catalogue.js";
 import { CATCH_STEP, ENTER_STEP, RawReplError, boardMachine, catchPrompt, classifyReply, installRuntime, isFrozenImage, type ClosableLink } from "../raw-repl/raw-repl.js";
 import { frozenInstall, fullInstall } from "../raw-repl/runtime-files.js";
 import { openSerialLink, type SerialPortLike } from "../raw-repl/web-serial-link.js";
@@ -103,6 +104,13 @@ export async function installRuntimeOn(
   onProgress: (percent: number) => void,
 ): Promise<InstallResult> {
   let link: ClosableLink | null = null;
+  // The ROM bootloader on the chip's own USB never answers Ctrl-C: say so now, not after a minute (2026-11-18, S2).
+  if (isRomUsbBootloader(port.getInfo?.() ?? {})) {
+    return {
+      ok: false,
+      advice: { text: "This port is the board's bootloader, still in download mode. Press the board's RESET button, then click Install runtime and pick its port again: it has a new name." },
+    };
+  }
   try {
     link = await catchPrompt(opener(port), Date.now() + CATCH_TIMEOUT_MS, onStatus, ASK_LISTENER_TO_STOP);
     onStatus("Board stopped. Checking what it runs…");
