@@ -19,6 +19,15 @@ export interface SerialPortLike {
 
 export const RAW_REPL_BAUD = 115200;
 const WRITE_TIMEOUT_MS = 5000;
+/** How long one closing step may take before it's left behind. */
+export const CLOSE_STEP_MS = 1000;
+
+/** Waits for `p` for at most CLOSE_STEP_MS; its result and any error are ignored. */
+async function bounded(p: Promise<unknown>): Promise<void> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  await Promise.race([p.catch(() => undefined), new Promise((r) => (timer = setTimeout(r, CLOSE_STEP_MS)))]);
+  clearTimeout(timer);
+}
 
 export async function openSerialLink(port: SerialPortLike, baudRate = RAW_REPL_BAUD): Promise<ClosableLink> {
   await port.open({ baudRate });
@@ -89,16 +98,26 @@ export async function openSerialLink(port: SerialPortLike, baudRate = RAW_REPL_B
         clearTimeout(timer);
       }
     },
+    // Every step is bounded: a board that has just reset (or been unplugged) can leave any of them waiting forever,
+    // and a close that never returns hid a finished install's result (Mike, CYD, 2026-11-18: the runtime was on the
+    // board, the page never said so). Closing is cleanup; it never decides an outcome.
     async close(): Promise<void> {
       if (closed) return;
       closed = true;
-      await reader.cancel().catch(() => undefined);
-      await pump;
-      reader.releaseLock();
-      // A write the board never took leaves close() waiting on it; give it a second, then let go regardless.
-      await Promise.race([writer.close().catch(() => undefined), new Promise((r) => setTimeout(r, 1000))]);
-      writer.releaseLock();
-      await port.close().catch(() => undefined);
+      await bounded(reader.cancel());
+      await bounded(pump);
+      try {
+        reader.releaseLock();
+      } catch {
+        // still locked by a read that never ended; the port close below lets it go
+      }
+      await bounded(writer.close());
+      try {
+        writer.releaseLock();
+      } catch {
+        // as above
+      }
+      await bounded(port.close());
     },
   };
 }

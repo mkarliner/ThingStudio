@@ -112,6 +112,7 @@ export async function installRuntimeOn(
     const diagnosis = err instanceof RawReplError && (err.step === ENTER_STEP || err.step === CATCH_STEP) ? classifyReply(err.seen) : null;
     return { ok: false, advice: explainInstallFailure(message, diagnosis) };
   } finally {
+    // The outcome is decided above; closing never holds it back (web-serial-link.ts bounds each step).
     await link?.close().catch(() => undefined);
   }
 }

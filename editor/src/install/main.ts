@@ -44,6 +44,8 @@ const status = el("status");
 const next = el("next");
 
 function say(text: string, cls: "" | "ok" | "err" | "warn" = ""): void {
+  // Also in DevTools' console, timestamped, so a report can show the whole sequence, not just the last line.
+  if (text) console.info(`[install] ${new Date().toISOString().slice(11, 23)} ${text}`);
   status.textContent = text;
   status.className = cls;
 }
