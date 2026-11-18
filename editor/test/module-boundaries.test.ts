@@ -13,7 +13,8 @@
 //   - `compiler/` (the engine) does not import `node-library/` (which registers
 //     into it) or `app/` (the canvas).
 //   - no editor source imports outside editor/src (except the demo's example flows, as text).
-//   - `install/` (the install page) imports only `definitions/`.
+//   - `install/` (the install page) imports only `definitions/`, `raw-repl/` and `app/board-diagnosis.ts`.
+//   - `raw-repl/` (MicroPython's raw REPL) imports no other editor subsystem.
 // Adding a legitimate new cross-layer edge means updating this list on purpose,
 // in the change that adds it.
 import { readFileSync, readdirSync } from "node:fs";
@@ -55,8 +56,10 @@ function violations(check: (e: Edge) => boolean): string[] {
 }
 
 describe("editor module boundaries", () => {
-  it("only app/ and cli/ import app/", () => {
-    const bad = violations((e) => e.toTop === "app" && e.fromTop !== "app" && e.fromTop !== "cli");
+  it("only app/ and cli/ import app/ (and install/, board-diagnosis.ts alone)", () => {
+    const bad = violations(
+      (e) => e.toTop === "app" && e.fromTop !== "app" && e.fromTop !== "cli" && !(e.fromTop === "install" && e.spec === "../app/board-diagnosis.js"),
+    );
     expect(bad, `lower layers must not import app/: ${bad.join(", ")}`).toEqual([]);
   });
 
@@ -83,9 +86,21 @@ describe("editor module boundaries", () => {
 
   // The install page (install.html, online build) is a page of its own: it reads the board definitions and nothing
   // else of the editor's, so it can't come to depend on the canvas or the compiler (2026-11-18).
-  it("install/ imports only definitions/ and itself", () => {
-    const bad = violations((e) => e.fromTop === "install" && e.toTop !== "install" && e.toTop !== "definitions");
+  // It also uses the raw-REPL client (raw-repl/, self-contained like protocol/) and the editor's own advice for a
+  // board that won't install (app/board-diagnosis.ts, which imports nothing), so both pages give the same advice.
+  it("install/ imports only definitions/, raw-repl/ and app/board-diagnosis.ts", () => {
+    const bad = violations(
+      (e) =>
+        e.fromTop === "install" &&
+        !["install", "definitions", "raw-repl"].includes(e.toTop) &&
+        e.spec !== "../app/board-diagnosis.js",
+    );
     expect(bad, `install/ must stay a small page of its own: ${bad.join(", ")}`).toEqual([]);
+  });
+
+  it("raw-repl/ imports no other editor subsystem", () => {
+    const bad = violations((e) => e.fromTop === "raw-repl" && e.toTop !== "raw-repl");
+    expect(bad, `raw-repl/ must stay self-contained: ${bad.join(", ")}`).toEqual([]);
   });
 
   it("the source tree was actually scanned", () => {

@@ -228,7 +228,13 @@ Board settings already sets the hostname and password over USB. Improv would be 
 **Order changed (Mike, 2026-11-18): the install page first.** Its first version (`editor/install.html`,
 `editor/src/install/`) flashes ESP32 chips with esptool-js and gives UF2 boards their file to drag; it needs the
 catalogue and images from task 2 (done for the page: `tools/fetch_firmware_mirror.py` and `vite.config.ts`'s
-`firmwareMirror()`). The runtime install step joins it when task 4 lands. Then tasks 1 to 7 as below.
+`firmwareMirror()`). Then tasks 1 to 7 as below.
+
+**Status, 2026-11-18:** the install page is built (`1979aad`), and task 4's raw-REPL port is built and on it:
+`editor/src/raw-repl/` (the client, the install plan, a Web Serial link) with `backend/test/test_raw_repl.py`'s cases
+ported to `editor/test/raw-repl.test.ts`, and Install runtime on the page (`editor/src/install/runtime.ts`). The
+runtime's files come from `device-runtime/runtime_manifest.py` at build time (`vite.config.ts`'s `runtimeSources()`).
+Not yet tried on a board. Remove flow is in the client but not on any page yet; it joins the editor in task 1.
 
 Before touching anything that sends or parses frames: read `interfaces/protocol/SPEC.md` and run the conformance
 vectors (`cd editor && npm test`, `test/protocol-conformance.test.ts`). npm commands run on Mike's Mac, or in the

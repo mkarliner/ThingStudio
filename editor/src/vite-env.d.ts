@@ -23,3 +23,8 @@ declare module "virtual:firmware-catalogue" {
   export const catalogue: import("./install/catalogue.js").Catalogue;
   export const mirrored: readonly string[];
 }
+
+// The runtime's files, read from device-runtime/ at build time (vite.config.ts's runtimeSources()).
+declare module "virtual:runtime-sources" {
+  export const runtimeSources: import("./raw-repl/runtime-files.js").RuntimeSources;
+}

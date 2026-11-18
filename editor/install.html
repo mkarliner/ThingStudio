@@ -79,12 +79,22 @@
     <ol id="uf2Steps"></ol>
   </section>
 
+  <h2 id="runtimeHeading">Then: install the ThingStudio runtime</h2>
+  <section id="runtime" class="panel">
+    <p>For a board that runs MicroPython, including one you've just written above. Plug it in, click Install runtime
+      and pick its port. This restarts the board.</p>
+    <p class="dim">A board that already has a flow keeps it. If the page waits, press the board's reset button.</p>
+    <button id="btnRuntime" class="primary">Install runtime</button>
+    <progress id="rtProgress" max="100" value="0" hidden></progress>
+  </section>
+
   <p id="status" role="status"></p>
   <p id="next" class="panel" hidden></p>
 
   <p class="dim">Other boards: get MicroPython from <a href="https://micropython.org/download/" rel="noopener">micropython.org/download</a>
     and follow its instructions. <span id="version"></span></p>
 </main>
+<script type="module" src="/vendor/mpy-cross/load.mjs"></script>
 <script type="module" src="/src/install/main.ts"></script>
 </body>
 </html>

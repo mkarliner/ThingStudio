@@ -143,12 +143,41 @@ function firmwareMirror(mode: string): Plugin {
   };
 }
 
+// The runtime the install page pushes onto a board (online build, src/raw-repl/runtime-files.ts): the same files the
+// backend's runtime_installer.py reads, from the same device-runtime/runtime_manifest.py, so the two installers can't
+// drift. The manifest is Python, so Python reads it; the build already needs python3 (the release workflow sets it up,
+// and tools/fetch_firmware_mirror.py runs beside it).
+function runtimeSources(): Plugin {
+  const virtualId = "virtual:runtime-sources";
+  const resolved = `\0${virtualId}`;
+  return {
+    name: "thingstudio-runtime-sources",
+    resolveId(id) {
+      return id === virtualId ? resolved : null;
+    },
+    load(id) {
+      if (id !== resolved) return null;
+      const script = [
+        "import importlib.util, json, sys",
+        "spec = importlib.util.spec_from_file_location('m', 'runtime_manifest.py')",
+        "m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)",
+        "names = list(m.CORE_FILES) + [m.LISTENER_FILE]",
+        "files = [{'name': n, 'source': open('src/' + n, encoding='utf-8').read()} for n in names]",
+        "print(json.dumps({'files': files, 'mainFile': m.MAIN_FILE, 'bootScript': m.BOOT_SCRIPT.decode(),",
+        "  'legacyRootFiles': list(getattr(m, 'LEGACY_ROOT_FILES', []))}))",
+      ].join("\n");
+      const json = execSync("python3 -", { cwd: `${REPO_ROOT}/device-runtime`, input: script, encoding: "utf8" });
+      return `export const runtimeSources = ${json.trim()};\n`;
+    },
+  };
+}
+
 // The online demo (`vite build --mode demo`, docs/working-notes/online-editor-demo-scoping.md): the same editor with
 // nothing behind it -- no board, no backend. __DEMO__ is a compile-time constant, so every `if (!__DEMO__)` branch is
 // dropped from the demo bundle along with the transports, the admin-API client and the firmware dialog it alone
 // reaches (test/demo-build.test.ts checks). Output goes to dist-demo/, beside the normal dist/.
 export default defineConfig(({ mode }) => ({
-  plugins: [vue(), demoPage(mode), firmwareMirror(mode)],
+  plugins: [vue(), demoPage(mode), firmwareMirror(mode), runtimeSources()],
   define: {
     __RUNTIME_BUILD_SHA__: JSON.stringify(runtimeBuildSha()),
     __EDITOR_BUILD__: JSON.stringify(editorBuild()),

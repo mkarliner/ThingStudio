@@ -128,16 +128,14 @@ export function buildsForFamily(builds: readonly InstallBuild[], familyId: strin
   return [...mine.filter((b) => b.supplier === "thingstudio"), ...mine.filter((b) => b.supplier !== "thingstudio")];
 }
 
-/** What to do after a build is written. Until the page installs the runtime itself (task 4 of the plan), it says
- * where that step is done today. */
+/** What to do after a build is written: the runtime is the next step on this page for every build (ThingStudio's
+ * own images carry it but still need their boot file). */
 export function nextStepLine(build: InstallBuild): string {
   if (build.supplier === "thingstudio") {
-    return "Next: the runtime is in this image, but the board still needs its boot file. In the installed ThingStudio: Connect, then Tools → Install runtime….";
+    return "Next: Install runtime, below. This image already carries the runtime, so it writes only the boot file.";
   }
-  if (build.runtime === "install") {
-    return "Next: install the ThingStudio runtime. In the installed ThingStudio: Connect, then Tools → Install runtime….";
-  }
-  return "Next: open the editor and Connect.";
+  if (build.runtime === "install") return "Next: Install runtime, below.";
+  return "Next: open ThingStudio and Connect.";
 }
 
 /** One line for a failed check of a downloaded image. */

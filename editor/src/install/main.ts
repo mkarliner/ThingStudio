@@ -4,13 +4,14 @@
 // The install page (install.html, online build only): puts MicroPython, or ThingStudio's own image, on a board from
 // the browser. ESP32 chips are written over Web Serial with esptool-js; UF2 boards (Pico, nRF52) get their file to
 // drag onto the drive their bootloader shows. Plan: docs/working-notes/online-editor-webserial-briefing.md,
-// sections C and D. The runtime install step joins this page when the raw-REPL port lands (task 4).
+// sections C and D. Then Install runtime (runtime.ts) puts the ThingStudio runtime on any board running MicroPython.
 //
 // One deterministic path per kind of board, as the installed editor's dialog has (AGENTS.md, fault handling):
 // connect -> the chip says what it is -> pick an image -> confirm the erase -> download and check it -> write ->
 // reset. Each failure says which step, what came back, and what to do; nothing is retried on the user's behalf.
 
 import { ESPLoader, Transport, type IEspLoaderTerminal } from "esptool-js";
+import { installRuntimeOn } from "./runtime.js";
 import { catalogue, mirrored } from "virtual:firmware-catalogue";
 import { BUILTIN_DEFINITION_FILES } from "../definitions/builtin.js";
 import { buildDefinitionSet } from "../definitions/definitions.js";
@@ -311,6 +312,48 @@ el("btnDownload").addEventListener("click", async () => {
     showNext(nextStepLine(build));
   } catch (err) {
     say(errorText(err), "err");
+  }
+});
+
+// --- Install runtime: any board running MicroPython -----------------------------------------------------------
+
+const btnRuntime = el<HTMLButtonElement>("btnRuntime");
+const rtProgress = el<HTMLProgressElement>("rtProgress");
+btnRuntime.disabled = !hasSerial;
+
+btnRuntime.addEventListener("click", async () => {
+  if (busy) return;
+  busy = true;
+  btnRuntime.disabled = true;
+  btnConnect.disabled = true;
+  next.hidden = true;
+  try {
+    // Asked for before anything else, while the click still counts as the user's gesture.
+    let port: ConstructorParameters<typeof Transport>[0];
+    try {
+      port = await (navigator as unknown as { serial: { requestPort(): Promise<typeof port> } }).serial.requestPort();
+    } catch {
+      say("No port chosen. Click Install runtime and pick the board's port.", "warn");
+      return;
+    }
+    await closeSession();
+    el("espChosen").hidden = true;
+    rtProgress.hidden = false;
+    rtProgress.value = 0;
+    say("Stopping the board…");
+    const result = await installRuntimeOn(port, (text) => say(text), (pct) => (rtProgress.value = pct));
+    if (!result.ok) {
+      const docs = result.advice?.doc ? ` See “${result.advice.doc.label}” in the docs.` : "";
+      say(`Install runtime failed. ${result.advice?.text ?? ""}${docs}`, "err");
+      return;
+    }
+    say(result.frozen ? "Runtime ready: this image carries it, so only the boot file was written. The board is restarting." : "Runtime installed. The board is restarting.", "ok");
+    showNext("Next: open ThingStudio and Connect to the board.");
+  } finally {
+    busy = false;
+    btnRuntime.disabled = !hasSerial;
+    btnConnect.disabled = false;
+    updateWriteButton();
   }
 });
 
