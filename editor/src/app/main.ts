@@ -197,6 +197,7 @@ import { addRecent, removeRecent, loadRecents, storeRecents, type RecentFile } f
 import { getCredential as getSavedCredential } from "./rete/saved-values.js";
 import { startDemo } from "./demo.js";
 import { CAN_REACH_BOARD } from "./edition.js";
+import { ledPinsLine } from "./board-leds.js";
 import { installRuntimeOn } from "../install/runtime.js";
 import { catchPrompt, removeFlow as removeFlowOverRepl } from "../raw-repl/raw-repl.js";
 import { openSerialLink } from "../raw-repl/web-serial-link.js";
@@ -1522,7 +1523,9 @@ const transportEvents: TransportEvents = {
         boardSelect.value = after.choice;
         logLine(`[board] ${after.note}`, "");
       }
-      logTargetResolution(updateActiveTarget());
+      const resolved = updateActiveTarget();
+      logTargetResolution(resolved);
+      logLedPins(resolved);
       const decision = decideDeploy(message.runtimeVersion, EDITOR_TARGET_VERSION);
       logLine(`[version check] ${decision.reason}`, decision.allowed ? "ok" : "err");
       // Belt-and-braces companion check, non-blocking -- see
@@ -1916,6 +1919,14 @@ function logTargetResolution(resolution: TargetResolution): void {
   if (resolution.mismatch) logLine(`[board] ${resolution.mismatch}`, "err");
 }
 
+// The board's LED pins, said once per board (on connect and when the Board menu changes), not on every deploy.
+let lastLedLine: string | null = null;
+function logLedPins(resolution: TargetResolution): void {
+  const line = ledPinsLine(resolution.target);
+  if (line && line !== lastLedLine) logLine(`[board] ${line}`, "");
+  lastLedLine = line;
+}
+
 // What the last load reported, so reloading on every Connect/Deploy only logs what changed.
 let lastDefinitionsReport = "";
 
@@ -1997,7 +2008,9 @@ async function loadCustomNodes(explicit = false): Promise<void> {
 
 populateBoardSelect();
 el("boardSelect").addEventListener("change", () => {
-  logTargetResolution(updateActiveTarget());
+  const resolved = updateActiveTarget();
+  logTargetResolution(resolved);
+  logLedPins(resolved);
   deployedClean = false;
   updateDeployButtonEnabled();
 });

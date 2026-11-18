@@ -6,9 +6,11 @@ Your board should be connected, with the runtime installed: steps [4](connecting
 
 ## Find your LED's pin
 
-Many boards have an LED wired to a GPIO pin. To find it, click **Pins…** next to the **Board** menu. Pins that the
-board names, such as `LED`, are listed first. [Supported hardware](supported-hardware.md) lists the boards ThingStudio
-has definitions for. For any other board, check its documentation.
+Many boards have an LED wired to a GPIO pin. When you connect a board, the console names its LED pins, for example
+`LED = GPIO 25`. A board that reports only its processor, such as the CYD, needs picking in the **Board** menu first.
+**Pins…**, next to the **Board** menu, shows every pin; the ones the board names, such as `LED`, are listed first.
+[Supported hardware](supported-hardware.md) lists the boards ThingStudio has definitions for. For any other board,
+check its documentation.
 
 The Pico W and Pico 2 W LEDs are wired through the WiFi chip, not a GPIO pin, so `gpio out` can't reach them. On
 those boards, or any board without an LED, wire an LED and a 330 Ω resistor from a free GPIO pin to GND. The LED's
