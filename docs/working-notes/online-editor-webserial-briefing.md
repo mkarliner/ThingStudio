@@ -287,7 +287,10 @@ closed. Left for marketing: the landing page
   so the page waited a minute and said "no reply". Fixed: the write's success line says to press RESET and pick the
   new port; Install runtime refuses a bootloader port at once; a port gone for 10 s ends the wait with "pick its
   port again". Rerun with the fixes (Mike, 2026-11-18): write, RESET, pick the new port, Install runtime: clean.
-- **Still to try:** Remove flow from the online editor, an nRF52 drag.
+- **Remove flow from the online editor:** OK on a Pico (Mike, 2026-11-18).
+- **nRF52:** not to hand (Mike); the drag path is the Pico's, already clean. Try when it turns up.
+
+Hardware checks done. Next: the release steps (Caddyfile on the server, a release-workflow run, merge, release).
 
 **Status, task 6 (2026-11-18):** done. Online, credentials and presets live in the tab's sessionStorage under one key
 (`thingstudio.savedValues`, `saved-values.ts`), page memory where that throws; they survive a reload and go when the
