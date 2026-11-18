@@ -50,3 +50,7 @@ Status: detail file, started 2026-11-04. See `learnings.md` for the index.
   `publish.sh` refuses to attach an image the catalogue links on another release and checks every link after
   `--publish`, and the editor's 404 asks the user to report it. A release page answers scripts 403 at will; ask the
   API (`/repos/{o}/{r}/releases/tags/{tag}`) whether a release is published, and say so when it gives no clear answer.
+- **2026-11-18 — The classic ESP32's temperature sensor is fixed, not slow.** `esp32.raw_temperature()` on the CYD
+  read 126 °F on every call. Widely reported (often 128 °F, unchanged under a hair dryer); ESPHome discards a raw 128
+  as invalid. The C3/C5/S3 `mcu_temperature()` is a different, calibrated sensor. The `chip temp` custom node
+  refuses the classic chip (`chip-temperature-node-scoping.md`).

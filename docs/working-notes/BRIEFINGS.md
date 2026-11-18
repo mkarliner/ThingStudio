@@ -6,6 +6,9 @@ files to re-enter current work. The per-session handoff rules that produce these
 
 ## Live — active handoffs and open threads
 
+- `landing-page-review-and-feedback-ask-briefing.md` — 2026-11-16 — outside review of thingstudio.net; replace the
+  "Testers wanted" ask with a one-line report (copy agreed), say what the chip table means, two small fixes;
+  four page suggestions parked for Mike to think about.
 - `device-performance-bench-brief.md` — 2026-11-14 — device-performance bench kit and Pico LA written;
   next session runs the kit on the VM with USB passthrough (S3, Pico W, C3), then the ThingStudio flow
   suite and the internal results note.
