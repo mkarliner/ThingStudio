@@ -28,8 +28,9 @@ will start again after a reset or power cycle.
 
 ThingStudio is designed to be private, and as open and hackable as possible:
 
-- **Fully local.** Development happens on your computer. There's no cloud service and no account.
-- **Works offline.** Once installed, it needs no internet connection, docs included.
+- **No cloud, no account.** ThingStudio Web runs entirely in your browser, and ThingStudio App on your computer.
+  Neither uses a cloud service, an account or cookies.
+- **Works offline.** ThingStudio App needs no internet connection once installed, docs included.
 - **Git friendly.** ThingStudio's files, your programs and your board definitions, are plain, indented
   JSON that you save where you like. They diff cleanly and sit happily in a git repository. Passwords and
   other credentials are stored separately, so a committed program holds no secrets.
