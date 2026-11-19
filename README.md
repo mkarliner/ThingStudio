@@ -2,7 +2,7 @@
 
 ThingStudio is a visual, low-code way to program microcontrollers. You build a flow of nodes and wires in a
 node-based editor in your browser, in the style of [Node-RED](https://nodered.org/). ThingStudio compiles the flow
-to [MicroPython](https://micropython.org/) and sends it to your board to run. Fully local: no cloud, no account.
+to [MicroPython](https://micropython.org/) and sends it to your board to run. No cloud, no account, no cookies.
 
 It runs on boards with ESP32, RP2040 and RP2350 (Raspberry Pi Pico), nRF52840 and STM32 processors. It's for
 programmers who are comfortable wiring a breadboard and using a terminal; it doesn't teach programming.
