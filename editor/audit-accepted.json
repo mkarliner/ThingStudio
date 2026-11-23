@@ -1,12 +1,4 @@
 {
   "$comment": "High/critical npm advisories accepted as risks, each with a reason and a review-by date. CI (tools/npm_audit_gate.py) fails on any other high/critical advisory, on an entry past its reviewBy, and on an entry whose advisory has gone. Decision and rule: docs/working-notes/decisions/third-party-pinning.md.",
-  "accepted": [
-    {
-      "id": "GHSA-fc5q-39xc-vjpf",
-      "package": "picomatch",
-      "reason": "No fixed version (<= 4.0.7 affected). Dev-only: reached through vite, vitest, tinyglobby and fdir; not in the shipped editor bundle, nothing in editor/src imports it. The ReDoS needs an attacker-supplied glob, and the only globs it sees are our own vite/vitest config.",
-      "reviewBy": "2026-12-18",
-      "accepted": "2026-11-18, Mike"
-    }
-  ]
+  "accepted": []
 }
