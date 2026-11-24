@@ -1984,7 +1984,7 @@ async function loadCustomNodes(explicit = false): Promise<void> {
             : "[custom nodes] none found in ~/.thingstudio/custom-nodes/",
         cls: result.loaded.length > 0 ? ("ok" as const) : ("" as const),
       },
-      ...result.problems.map((p) => ({ text: `[custom nodes] ${p.file} is not loaded: ${p.message}`, cls: "err" as const })),
+      ...result.problems.map((p) => ({ text: p.line ?? `[custom nodes] ${p.file} is not loaded: ${p.message}`, cls: "err" as const })),
     ];
     // What was loaded is part of the report, so an edited .node.json or .node.py counts as a change too.
     const report = JSON.stringify([lines, result.loaded.map((p) => [p.descriptor, p.pythonSource, p.compileHook ?? null])]);
@@ -3338,7 +3338,7 @@ async function installFlowDependencies(source: string): Promise<Record<string, s
       try {
         mpy = compileToMpy(f.source, null);
       } catch (err) {
-        logLine(`[deploy blocked] library ${dep.name}: ${f.name} didn't compile (${err instanceof Error ? err.message : String(err)})`, "err");
+        logLine(`[deploy blocked] library ${dep.name}${dep.origin ? ` (${dep.origin})` : ""}: ${f.name} didn't compile (${err instanceof Error ? err.message : String(err)})`, "err");
         return null;
       }
       files[f.name.replace(/\.py$/, ".mpy")] = mpy;

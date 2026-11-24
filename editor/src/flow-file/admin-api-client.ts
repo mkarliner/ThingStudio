@@ -52,6 +52,16 @@
 // error-response shape) is surfaced as-is rather than re-worded, so the
 // backend's own structured message reaches the editor's console verbatim.
 
+/** /api/custom-nodes' listing. The same shape as app/custom-node-loader.ts's CustomNodeListing, declared here
+ * because lower layers don't import app/ (module-boundaries.test.ts); TypeScript checks the two agree where main.ts
+ * passes this to the loader. */
+export interface CustomNodeListing {
+  names: string[];
+  packages: { name: string; file: string; shadowedBy?: string; bundle?: string }[];
+  skippedBundles?: { bundle: string; folder: string; problems: string[] }[];
+  libraryRefusals?: string[];
+}
+
 export const DEFAULT_BACKEND_WS_URL = "ws://127.0.0.1:8765/ws"; // matches __main__.py's --host 127.0.0.1 --port 8765 default and app.py's /ws route
 
 export class AdminApiError extends Error {
@@ -185,13 +195,24 @@ export async function listCustomNodes(wsUrl: string): Promise<string[]> {
   return body.customNodes;
 }
 
-/** The full listing: names to load, plus every package file found (custom-node-loader.ts). */
-export async function listCustomNodePackages(wsUrl: string): Promise<{ names: string[]; packages: { name: string; file: string; shadowedBy?: string }[] }> {
+/** The full listing: names to load, every package file found, skipped bundles and refused user libraries
+ * (custom-node-loader.ts; node-descriptor SPEC §3.1, library-format SPEC §4). */
+export async function listCustomNodePackages(wsUrl: string): Promise<CustomNodeListing> {
   const res = await request(wsUrl, "/api/custom-nodes");
   if (!res.ok) throw new AdminApiError(`list custom nodes failed: ${await parseErrorBody(res)}`);
-  const body = (await res.json()) as { customNodes: string[]; packages?: { name: string; file: string; shadowedBy?: string }[] };
-  // A backend older than 2026-09-30 sends names only.
-  return { names: body.customNodes, packages: body.packages ?? body.customNodes.map((name) => ({ name, file: `${name}.node.json` })) };
+  const body = (await res.json()) as {
+    customNodes: string[];
+    packages?: CustomNodeListing["packages"];
+    skippedBundles?: CustomNodeListing["skippedBundles"];
+    libraryRefusals?: string[];
+  };
+  return {
+    names: body.customNodes,
+    // A backend older than 2026-09-30 sends names only; one older than 2026-11-24 no bundles or libraries.
+    packages: body.packages ?? body.customNodes.map((name) => ({ name, file: `${name}.node.json` })),
+    ...(body.skippedBundles ? { skippedBundles: body.skippedBundles } : {}),
+    ...(body.libraryRefusals ? { libraryRefusals: body.libraryRefusals } : {}),
+  };
 }
 
 export async function readCustomNode(wsUrl: string, name: string): Promise<CustomNodePackageText> {

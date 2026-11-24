@@ -36,8 +36,8 @@ def test_loads_entries_with_sources(tmp_path: Path) -> None:
     assert deps[0].modules == ("a",)
     assert dependencies_json(deps) == {
         "dependencies": [
-            {"name": "a", "requires": ["b"], "files": [{"name": "a.py", "source": "# a"}]},
-            {"name": "b", "requires": [], "files": [{"name": "b.py", "source": "# b"}]},
+            {"name": "a", "requires": ["b"], "files": [{"name": "a.py", "source": "# a"}], "source": "builtin"},
+            {"name": "b", "requires": [], "files": [{"name": "b.py", "source": "# b"}], "source": "builtin"},
         ]
     }
 

@@ -46,6 +46,7 @@ from .firmware_flash import (
     list_targets,
     save_upload,
 )
+from .library_catalog import library_catalog, library_problems
 from .persisted_store import (
     DefinitionFile,
     PersistedStore,
@@ -110,16 +111,39 @@ def make_admin_routes(store: PersistedStore) -> list[web.RouteDef]:
     async def list_custom_nodes(request: web.Request) -> web.Response:
         # `customNodes`: the names to load, in order. `packages`: every
         # package file found, for messages that name the file -- including
-        # ones shadowed by a same-named package in an earlier folder.
+        # ones shadowed by a same-named package in an earlier folder, and
+        # each one's bundle. `skippedBundles`: bundles skipped whole, with
+        # why (node-descriptor SPEC §3.1). `libraryRefusals`: one console
+        # line per refused user library (library-format SPEC §4), here
+        # because the editor shows them when it loads custom nodes.
+        library_refusals: list[str] = []
+        problems: dict[str, list[str]] | None = None
+        try:
+            _catalog, refusals = library_catalog(store)
+            library_refusals = [r.message for r in refusals]
+            problems = library_problems(refusals)
+        except Exception as exc:  # noqa: BLE001 -- a broken built-in list mustn't hide the custom nodes
+            library_refusals = [f"couldn't check libraries: {exc}"]
+        listings, bundles = store.scan_custom_nodes(problems)
         packages = [
             {
                 "name": p.name,
                 "file": display_path(p.path),
                 **({"shadowedBy": display_path(p.shadowed_by)} if p.shadowed_by else {}),
+                **({"bundle": p.bundle} if p.bundle else {}),
             }
-            for p in store.list_custom_node_packages()
+            for p in listings
         ]
-        return web.json_response({"customNodes": store.list_custom_nodes(), "packages": packages})
+        return web.json_response({
+            "customNodes": [p.name for p in listings if p.shadowed_by is None],
+            "packages": packages,
+            "skippedBundles": [
+                {"bundle": b.name, "folder": display_path(b.path), "problems": list(b.problems)}
+                for b in bundles
+                if b.problems
+            ],
+            "libraryRefusals": library_refusals,
+        })
 
     async def get_custom_node(request: web.Request) -> web.Response:
         name = request.match_info["name"]

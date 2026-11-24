@@ -105,7 +105,7 @@ async def test_list_custom_nodes_starts_empty(tmp_path) -> None:
     async with _client(tmp_path) as client:
         resp = await client.get("/api/custom-nodes")
         assert resp.status == 200
-        assert await resp.json() == {"customNodes": [], "packages": []}
+        assert await resp.json() == {"customNodes": [], "packages": [], "skippedBundles": [], "libraryRefusals": []}
 
 
 @pytest.mark.asyncio

@@ -1,9 +1,8 @@
 # Library format — v1 specification (draft)
 
-Status: **draft, 2026-11-24.** Approved in principle by Mike (2026-11-24, as part of the Home Assistant plan:
-`docs/working-notes/user-libraries-and-frozen-builds-scoping.md` part A, plus bundles). Not yet implemented; the
-conformance tests named in §9 arrive with the implementation. Until then this is the contract to build against, not
-a description of shipping behaviour.
+Status: **draft, 2026-11-24.** Approved by Mike (2026-11-24, as part of the Home Assistant plan:
+`docs/working-notes/user-libraries-and-frozen-builds-scoping.md` part A, plus bundles). Implemented in the backend and
+editor on the `user-libraries` branch, 2026-11-24; not yet released or checked on hardware.
 
 This is what a **user library** is: Python code of your own that a flow can import, which ThingStudio sends to the
 board on Deploy exactly as it sends its built-in libraries (`ts_mqtt`, `mqtt_as`, …). It extends the dependency
@@ -18,8 +17,9 @@ catalog defined in `../runtime-api/SPEC.md` §3; nothing about how a library rea
 | A bundle's own libraries | `~/.thingstudio/custom-nodes/<bundle>/lib/` (bundles: `../node-descriptor/SPEC.md` §3.1) | third, bundles in folder-name order |
 
 The libraries folder and every bundle's `lib/` are read when the editor loads custom nodes, and again on
-**Reload custom nodes** (which reloads libraries too). The `thingstudio-compile` CLI reads the same places, or
-`--libraries <dir>` in place of the libraries folder; bundles come with `--custom-nodes <dir>`.
+**Reload custom nodes** (which reloads libraries too). The `thingstudio-compile` CLI loads bundles' packages with
+`--custom-nodes <dir>`; it doesn't read libraries yet, since it checks flows rather than deploying them (a
+`--libraries <dir>` flag is planned).
 
 Within a source, libraries are taken in name order. Order never means override: no source can replace a name
 another source already has (§4).
@@ -75,7 +75,7 @@ reason; every other library still loads. A bundle with a refused library is skip
 | The name is a **firmware module** in `reserved-names.json` (`machine`, `asyncio`, …) | the firmware module |
 | **Two user sources offer the same name** | both origins; **both** are refused, never first-wins |
 | The entry isn't a module or package by §2 (a part that isn't an identifier, a folder without `__init__.py` that holds `.py` files, a bare top-level `__init__.py`) | the offending path |
-| A file **doesn't compile** with the editor's `mpy-cross` (checked by the editor when it loads the catalog) | the file and `mpy-cross`'s error |
+| A file **doesn't compile** with the editor's `mpy-cross`. Checked when the editor compiles the library for a deploy that needs it: that deploy is blocked, the message naming the library, its origin and the file | the file and `mpy-cross`'s error |
 | Its `requires` form a **cycle** among user libraries | every library in the cycle |
 
 Shadowing is refused because `/lib` comes first on the board's `sys.path` by design: a user `machine.py` would
@@ -141,10 +141,12 @@ custom node bundle ha-fork skipped: its library ts_ha was refused
 `vectors/libraries.json` holds folder trees with the catalog entries or refusals they must produce (format in
 `vectors/README.md`). Tests to add with the implementation:
 
-- `backend/test/test_user_libraries.py`: the vectors against the backend's catalog merge (`/api/dependencies`).
-- `editor/test/user-libraries.test.ts`: a flow whose custom node imports a user library resolves, compiles and sends
-  it; the `mpy-cross` refusal.
-- `device-runtime/test/`: on the unix port, a user-named module and package install into `/lib` and import.
+- `backend/test/test_user_libraries.py` (built): every vector against the backend's catalog merge and bundle
+  listing, the reserved names against this list, and the HTTP routes.
+- `editor/test/custom-node-loader.test.ts` (built): bundles all or nothing in the editor, and refusals reaching the
+  console.
+- Still to add: an editor test that a flow whose custom node imports a user library resolves, compiles and sends it,
+  with the `mpy-cross` case; and on the unix port, a user-named module and package installing into `/lib`.
 
 Change this format only with Mike's explicit permission once it ships: users will have written libraries against
 it.

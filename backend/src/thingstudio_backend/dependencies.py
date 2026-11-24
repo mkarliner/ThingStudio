@@ -50,6 +50,10 @@ class Dependency:
     name: str
     requires: tuple[str, ...]
     files: tuple[DependencyFile, ...]
+    # "builtin" (runtime_manifest.py) or "user" (interfaces/library-format/SPEC.md, user_libraries.py), and for a
+    # user library where it came from: "libraries" or "bundle:<name>".
+    source: str = "builtin"
+    origin: str | None = None
 
     @property
     def modules(self) -> tuple[str, ...]:
@@ -152,14 +156,26 @@ def _check_no_cycles(by_name: dict[str, Dependency]) -> None:
 
 
 def dependencies_json(deps: list[Dependency]) -> dict:
-    """The /api/dependencies body."""
+    """The /api/dependencies body: built-ins, then user libraries (library-format SPEC §3)."""
     return {
         "dependencies": [
             {
                 "name": d.name,
                 "requires": list(d.requires),
                 "files": [{"name": f.board_name, "source": f.source} for f in d.files],
+                "source": d.source,
+                **({"origin": d.origin} if d.origin is not None else {}),
             }
             for d in deps
         ]
     }
+
+
+def runtime_module_names(runtime_src_dir: Path | None = None) -> set[str]:
+    """The runtime's own modules (CORE_FILES, plus the listener), which no user library may shadow."""
+    manifest = _load_manifest(runtime_src_dir or asset_dirs().runtime_src)
+    names = {f[:-3] for f in getattr(manifest, "CORE_FILES", []) if isinstance(f, str) and f.endswith(".py")}
+    listener = getattr(manifest, "LISTENER_FILE", None)
+    if isinstance(listener, str) and listener.endswith(".py"):
+        names.add(listener[:-3])
+    return names

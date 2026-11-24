@@ -17,6 +17,13 @@
 #                                         (custom-node-authoring-scoping.md
 #                                         Decision 3/4's two-file package
 #                                         format, mirrored here unchanged)
+#     custom-nodes/<bundle>/          -- a bundle: packages that belong
+#                                         together, plus lib/ (2026-11-24,
+#                                         interfaces/node-descriptor/SPEC.md
+#                                         §3.1). Read-only here.
+#     libraries/                      -- the user's own libraries
+#                                         (interfaces/library-format/SPEC.md;
+#                                         user_libraries.py). Read-only here.
 #     presets/<type>/<name>.json      -- named per-node-kind property
 #                                         bundles (added 2026-09-22, see the
 #                                         "Presets" section further down)
@@ -132,6 +139,8 @@ import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 
+from .user_libraries import LibrarySource
+
 _NAME_RE = re.compile(r"^[A-Za-z0-9_-]{1,100}$")
 
 # Fixed set, not free-form -- matches config-types.ts's own CONFIG_TYPES
@@ -174,6 +183,23 @@ class CustomNodeListing:
     name: str
     path: Path
     shadowed_by: Path | None = None
+    # The bundle folder name when the package sits in a bundle (node-descriptor SPEC §3.1), else None.
+    bundle: str | None = None
+
+
+@dataclass(frozen=True)
+class CustomNodeBundle:
+    """One bundle folder (node-descriptor SPEC §3.1). `problems` is empty for a bundle that loads; otherwise the
+    bundle is skipped whole and each problem is one console line's reason."""
+
+    name: str
+    path: Path
+    packages: tuple[str, ...]
+    problems: tuple[str, ...] = ()
+
+
+# A bundle folder's name: lowercase letters, digits, '-' and '_', starting with a letter or digit.
+_BUNDLE_NAME_RE = re.compile(r"^[a-z0-9][a-z0-9_-]*$")
 
 
 def display_path(path: Path) -> str:
@@ -275,6 +301,7 @@ class PersistedStore:
         # format, but beside the install, not in ~/.thingstudio). Writes and
         # deletes only ever touch custom_nodes_dir.
         self.custom_node_dirs: list[Path] = [self.custom_nodes_dir]
+        self.libraries_dir = self.base_dir / "libraries"
         self.credentials_dir = self.base_dir / "credentials"
         self.presets_dir = self.base_dir / "presets"
         self.processors_dir = self.base_dir / "processors"
@@ -314,11 +341,27 @@ class PersistedStore:
 
     # -- custom node packages ------------------------------------------
 
-    def list_custom_node_packages(self) -> list[CustomNodeListing]:
-        """Every package in every search folder, in search order, sorted by
-        name within a folder. A name already found in an earlier folder is
-        still listed, marked `shadowed_by`, so the editor can say so."""
+    def _bundle_dirs(self, folder: Path) -> list[Path]:
+        """A search folder's bundle folders, in name order. Names starting
+        with '.' or '_' are ignored (node-descriptor SPEC §3.1)."""
+        if not folder.is_dir():
+            return []
+        return sorted(
+            (d for d in folder.iterdir() if d.is_dir() and not d.name.startswith((".", "_"))),
+            key=lambda d: d.name,
+        )
+
+    def scan_custom_nodes(
+        self, library_problems: dict[str, list[str]] | None
+    ) -> tuple[list[CustomNodeListing], list[CustomNodeBundle]]:
+        """Packages and bundles, in load order (node-descriptor SPEC §3.1):
+        per search folder, its top-level packages by name, then its bundles
+        by folder name. A bundle with any problem is skipped whole and its
+        packages aren't listed. `library_problems` maps a library origin
+        ("bundle:<name>") to the libraries refused there, which skip that
+        bundle too (user_libraries.py decides those)."""
         listings: list[CustomNodeListing] = []
+        bundles: list[CustomNodeBundle] = []
         first_seen: dict[str, Path] = {}
         for folder in self.custom_node_dirs:
             if not folder.is_dir():
@@ -327,19 +370,83 @@ class PersistedStore:
                 name = path.name[: -len(".node.json")]
                 listings.append(CustomNodeListing(name=name, path=path, shadowed_by=first_seen.get(name)))
                 first_seen.setdefault(name, path)
-        return listings
+            for bundle_dir in self._bundle_dirs(folder):
+                names = sorted(p.name[: -len(".node.json")] for p in bundle_dir.glob("*.node.json"))
+                problems: list[str] = []
+                if not _BUNDLE_NAME_RE.match(bundle_dir.name):
+                    problems.append(
+                        f"folder name {bundle_dir.name!r} isn't a bundle name -- use lowercase letters, digits, - and _"
+                    )
+                for name in names:
+                    if not _NAME_RE.match(name):
+                        problems.append(f"{name}.node.json: package name must be letters, digits, '_' and '-' only")
+                    if not (bundle_dir / f"{name}.node.py").is_file():
+                        problems.append(f"{name}.node.py is missing: a package needs both files")
+                    if name in first_seen:
+                        problems.append(f"package {name} is already loaded from {display_path(first_seen[name])}")
+                for library in (library_problems or {}).get(f"bundle:{bundle_dir.name}", []):
+                    problems.append(f"its library {library} was refused")
+                bundles.append(CustomNodeBundle(bundle_dir.name, bundle_dir, tuple(names), tuple(problems)))
+                if problems:
+                    continue
+                for name in names:
+                    path = bundle_dir / f"{name}.node.json"
+                    listings.append(CustomNodeListing(name=name, path=path, bundle=bundle_dir.name))
+                    first_seen[name] = path
+        return listings, bundles
 
-    def list_custom_nodes(self) -> list[str]:
+    def list_custom_node_packages(self, library_problems: dict[str, list[str]] | None = None) -> list[CustomNodeListing]:
+        """Every package in every search folder and loadable bundle, in load
+        order. A name already found earlier is still listed, marked
+        `shadowed_by`, so the editor can say so."""
+        return self.scan_custom_nodes(library_problems)[0]
+
+    def list_custom_node_bundles(self, library_problems: dict[str, list[str]] | None = None) -> list[CustomNodeBundle]:
+        """Every bundle folder, with the problems that skip it (none for one that loads)."""
+        return self.scan_custom_nodes(library_problems)[1]
+
+    def list_custom_nodes(self, library_problems: dict[str, list[str]] | None = None) -> list[str]:
         """Package names, each once, in the order the editor should load them."""
-        return [p.name for p in self.list_custom_node_packages() if p.shadowed_by is None]
+        return [p.name for p in self.list_custom_node_packages(library_problems) if p.shadowed_by is None]
+
+    def library_sources(self) -> list[LibrarySource]:
+        """Where user libraries come from, in order (library-format SPEC §1):
+        the libraries folder, then each bundle's lib/, bundles by name."""
+        sources = [LibrarySource("libraries", self.libraries_dir)]
+        for folder in self.custom_node_dirs:
+            for bundle_dir in self._bundle_dirs(folder):
+                if _BUNDLE_NAME_RE.match(bundle_dir.name) and (bundle_dir / "lib").is_dir():
+                    sources.append(LibrarySource(f"bundle:{bundle_dir.name}", bundle_dir / "lib"))
+        return sources
+
+    def _bundle_holding(self, name: str) -> Path | None:
+        """The bundle folder whose package `name` is, when it isn't a single
+        package at the top of a search folder."""
+        for folder in self.custom_node_dirs:
+            if (folder / f"{name}.node.json").is_file():
+                return None
+        for folder in self.custom_node_dirs:
+            for bundle_dir in self._bundle_dirs(folder):
+                if (bundle_dir / f"{name}.node.json").is_file():
+                    return bundle_dir
+        return None
+
+    def _refuse_bundle_write(self, name: str) -> None:
+        bundle_dir = self._bundle_holding(name)
+        if bundle_dir is not None:
+            raise PersistedStoreError(
+                f"NODE_ERROR: custom node {name!r} is part of the bundle {bundle_dir.name!r} -- "
+                f"edit its files in {display_path(bundle_dir)} instead"
+            )
 
     def _find_custom_node(self, name: str) -> Path:
         """The folder holding package `name`: the first search folder that has
-        its descriptor, else the user's folder (so "not found" names it)."""
+        its descriptor, else a bundle that has it, else the user's folder (so
+        "not found" names it)."""
         for folder in self.custom_node_dirs:
             if (folder / f"{name}.node.json").is_file():
                 return folder
-        return self.custom_nodes_dir
+        return self._bundle_holding(name) or self.custom_nodes_dir
 
     def read_custom_node(self, name: str) -> CustomNodePackage:
         _validate_name(name, kind="custom node")
@@ -376,6 +483,7 @@ class PersistedStore:
 
     def write_custom_node(self, name: str, descriptor: str, implementation: str, compile: str | None = None) -> None:
         _validate_name(name, kind="custom node")
+        self._refuse_bundle_write(name)
         _validate_json_text(descriptor, what=f"custom node {name!r} descriptor")
         # implementation/compile are opaque Python source text -- never parsed,
         # never executed here (see header); no validation beyond "is a
@@ -387,6 +495,7 @@ class PersistedStore:
 
     def delete_custom_node(self, name: str) -> None:
         _validate_name(name, kind="custom node")
+        self._refuse_bundle_write(name)
         descriptor_path = self.custom_nodes_dir / f"{name}.node.json"
         impl_path = self.custom_nodes_dir / f"{name}.node.py"
         compile_path = self.custom_nodes_dir / f"{name}.compile.py"

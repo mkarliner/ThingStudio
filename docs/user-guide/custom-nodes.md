@@ -332,12 +332,47 @@ When a node imports one of these, ThingStudio sends it to the board with the flo
 | `bme280_float`, `ft6336u` | the BME280 sensor and FT6336U touch drivers |
 | `mqtt_as` | Peter Hinch's asyncio MQTT client |
 
-A library of your own can't be sent yet. Code two of your nodes share goes in each `.node.py`.
+Your own libraries are sent the same way (below).
 
 For Bluetooth, use `ts_ble.radio()`, not `bluetooth.BLE()`: the board has one radio, and the ble nodes use the same
 one. `radio().scan(...)` and `radio().advertise(...)` share it as `ble scan` and `ble advertise` do, and
 `ts_ble.decode(adv)` and `ts_ble.build_adv(...)` read and build advertising data. The radio is turned off on each
 redeploy.
+
+### Your own libraries
+
+Put a Python module of your own in `~/.thingstudio/libraries/`: a file `<name>.py`, or a package as a folder with
+an `__init__.py`. When a node or a function node imports it, ThingStudio sends it to the board on deploy, like the
+libraries above. The editor reads the folder when it loads custom nodes, and **Reload custom nodes** reads it again.
+
+A library is refused, with a line in the console, when its name is already taken: by a library in the table above,
+by a module of ThingStudio's own runtime such as `runtime`, or by a module MicroPython provides such as `machine` or
+`json`. A name that isn't a plain Python name (letters, digits and `_`) is refused too. Two libraries with the same
+name, one in this folder and one in a bundle say, are both refused: rename one. A library that doesn't compile stops
+the deploy that needs it, and the console names the file.
+
+Libraries aren't available in ThingStudio Web.
+
+### Bundles
+
+Nodes that belong together, and the libraries they share, can go in one folder inside `custom-nodes/`:
+
+```
+custom-nodes/
+  home-assistant/
+    ha_sensor.node.json
+    ha_sensor.node.py
+    lib/
+      ts_ha.py
+```
+
+Install a bundle by copying its folder in. Its nodes load like any others, and the modules in its `lib/` work like
+your own libraries. Other folders in a bundle, such as `examples/`, are ignored, and a bundle can't hold another.
+
+A bundle loads whole or not at all. If one of its nodes has a problem, one of its libraries is refused, or one of its
+node names is already used, none of it loads, and the console says why. Edit a bundle's files directly: the editor
+doesn't change them. A folder whose name starts with `.` or `_` is ignored, so `_drafts/` is a safe place for work
+in progress.
 
 ### Persisting values
 

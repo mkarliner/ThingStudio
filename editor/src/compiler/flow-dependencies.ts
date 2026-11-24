@@ -19,6 +19,10 @@ export interface DependencyInfo {
   readonly requires: readonly string[];
   /** Board file name ("mqtt_as.py", or "aioble/core.py" in a package, runtime 15.0.0) and Python source. */
   readonly files: readonly { readonly name: string; readonly source: string }[];
+  /** "builtin" or "user" (interfaces/library-format/SPEC.md); absent from a backend older than 2026-11-24. */
+  readonly source?: "builtin" | "user";
+  /** Where a user library came from: "libraries" or "bundle:<name>". */
+  readonly origin?: string;
 }
 
 const IMPORT_LINE = /^[ \t]*(?:import[ \t]+([\w.]+(?:[ \t]*,[ \t]*[\w.]+)*)|from[ \t]+([\w.]+)[ \t]+import\b)/gm;

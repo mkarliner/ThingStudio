@@ -15,10 +15,11 @@ choose (see [Flow lifecycle](flow-lifecycle.md#save-and-open)).
 | `credentials/` | WiFi and MQTT broker logins, saved by name | No, use the editor |
 | `presets/` | Saved node settings, one folder per node type | Yes |
 | `custom-nodes/` | Your own node types | Yes |
+| `libraries/` | Your own Python libraries | Yes |
 | `boards/` | Board definitions | Yes |
 | `processors/` | Processor definitions | Yes |
 
-Every file is plain JSON, except the `.node.py` file of a custom node. The editor reads these folders through the
+Every file is plain JSON, except the Python files of custom nodes and libraries. The editor reads these folders through the
 ThingStudio backend, so they aren't available when the editor talks to the board directly over USB.
 
 ## Credentials
@@ -42,6 +43,14 @@ and load presets from a node's property panel (see [Presets](working-in-the-edit
 A custom node is two files with the same base name: `<name>.node.json` and `<name>.node.py`. The first time
 ThingStudio starts, it puts two examples here. Deleted examples don't come back. See
 [Custom nodes](custom-nodes.md).
+
+A folder inside `custom-nodes/` is a bundle: nodes that belong together, with the libraries they share in its `lib/`
+(see [Bundles](custom-nodes.md#bundles)).
+
+## Libraries
+
+`libraries/` holds Python modules of your own that your nodes and function nodes import. ThingStudio sends each one
+to the board when a flow needs it (see [Your own libraries](custom-nodes.md#your-own-libraries)).
 
 ## Boards and processors
 

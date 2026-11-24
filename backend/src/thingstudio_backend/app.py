@@ -36,7 +36,8 @@ import json
 
 from .persisted_store import PersistedStoreError
 from .runtime_installer import RuntimeInstaller
-from .dependencies import dependencies_json, load_dependencies
+from .dependencies import dependencies_json
+from .library_catalog import library_catalog
 from .ws_relay import make_websocket_handler
 
 
@@ -98,7 +99,8 @@ def create_app(
     # to compile and install on the board before DEPLOY (dependencies.py).
     async def dependencies_route(_request: web.Request) -> web.Response:
         try:
-            body = dependencies_json(load_dependencies())
+            catalog, refusals = library_catalog(store)
+            body = {**dependencies_json(catalog), "refused": [r.message for r in refusals]}
         except Exception as exc:  # noqa: BLE001 -- reported to the editor, which then can't deploy flows that need one
             return web.json_response({"error": f"couldn't read the library list: {exc}"}, status=500)
         return web.json_response(body)

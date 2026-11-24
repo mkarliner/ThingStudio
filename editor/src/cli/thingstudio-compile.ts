@@ -13,7 +13,7 @@ import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { boardChoices, boardInfo, checkFlowText, nativeArchFor, relayoutFlowText, type CheckResult, type CustomNodes } from "./check-flow.js";
-import { loadAllCustomNodes, type CustomNodeSource } from "../app/custom-node-loader.js";
+import { loadAllCustomNodes, type CustomNodeListing, type CustomNodeSource } from "../app/custom-node-loader.js";
 import { buildCatalog, findNode, renderMarkdown, renderNode } from "./describe.js";
 
 const USAGE = `thingstudio-compile: compile and check a Thingstudio flow file without the editor.
@@ -144,22 +144,61 @@ function printText(file: string, r: CheckResult): void {
   for (const n of r.notes) console.log(`  note: ${n}`);
 }
 
-/** custom-node-loader.ts's source, over a folder on disk: `<name>.node.json` + `<name>.node.py` (+ `<name>.compile.py`). */
+/** custom-node-loader.ts's source, over a folder on disk: `<name>.node.json` + `<name>.node.py` (+ `<name>.compile.py`),
+ * then the folder's bundles (node-descriptor SPEC §3.1), with the backend's structural checks: a bad folder name, a
+ * missing `.node.py`, a package name already loaded. A bundle's `lib/` isn't read here: the CLI checks flows, it
+ * doesn't deploy them, so library refusals (library-format SPEC §4) are only reported by the editor for now. */
+const BUNDLE_NAME = /^[a-z0-9][a-z0-9_-]*$/;
+
 function folderSource(dir: string, shown: string): CustomNodeSource {
+  const folderOf = new Map<string, string>();
+  const stems = (d: string) => readdirSync(d).filter((f) => f.endsWith(".node.json")).map((f) => f.slice(0, -".node.json".length)).sort();
   return {
     async list() {
-      const names = readdirSync(dir).filter((f) => f.endsWith(".node.json")).map((f) => f.slice(0, -".node.json".length)).sort();
-      return { names, packages: names.map((name) => ({ name, file: join(shown, `${name}.node.json`) })) };
+      const names: string[] = [];
+      const packages: CustomNodeListing["packages"] = [];
+      const skippedBundles: NonNullable<CustomNodeListing["skippedBundles"]> = [];
+      for (const name of stems(dir)) {
+        names.push(name);
+        packages.push({ name, file: join(shown, `${name}.node.json`) });
+        folderOf.set(name, dir);
+      }
+      const bundles = readdirSync(dir, { withFileTypes: true })
+        .filter((e) => e.isDirectory() && !/^[._]/.test(e.name))
+        .map((e) => e.name)
+        .sort();
+      for (const bundle of bundles) {
+        const bundleDir = join(dir, bundle);
+        const bundleNames = stems(bundleDir);
+        const problems: string[] = [];
+        if (!BUNDLE_NAME.test(bundle)) problems.push(`folder name "${bundle}" isn't a bundle name -- use lowercase letters, digits, - and _`);
+        for (const name of bundleNames) {
+          if (!existsSync(join(bundleDir, `${name}.node.py`))) problems.push(`${name}.node.py is missing: a package needs both files`);
+          const earlier = folderOf.get(name);
+          if (earlier !== undefined) problems.push(`package ${name} is already loaded from ${earlier === dir ? shown : join(shown, earlier.slice(dir.length + 1))}`);
+        }
+        if (problems.length > 0) {
+          skippedBundles.push({ bundle, folder: join(shown, bundle), problems });
+          continue;
+        }
+        for (const name of bundleNames) {
+          names.push(name);
+          packages.push({ name, file: join(shown, bundle, `${name}.node.json`), bundle });
+          folderOf.set(name, bundleDir);
+        }
+      }
+      return { names, packages, skippedBundles };
     },
     async read(name) {
-      const descriptor = readFileSync(join(dir, `${name}.node.json`), "utf8");
+      const d = folderOf.get(name) ?? dir;
+      const descriptor = readFileSync(join(d, `${name}.node.json`), "utf8");
       let implementation: string;
       try {
-        implementation = readFileSync(join(dir, `${name}.node.py`), "utf8");
+        implementation = readFileSync(join(d, `${name}.node.py`), "utf8");
       } catch {
         throw new Error(`${name}.node.py is missing: a package needs both files`);
       }
-      const hookPath = join(dir, `${name}.compile.py`);
+      const hookPath = join(d, `${name}.compile.py`);
       return { descriptor, implementation, compile: existsSync(hookPath) ? readFileSync(hookPath, "utf8") : null };
     },
   };

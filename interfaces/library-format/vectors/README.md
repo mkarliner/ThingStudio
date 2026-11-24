@@ -27,5 +27,5 @@ executable half of `../SPEC.md`; the prose is the contract. Bundle-layout cases 
   The order is not significant.
 - **`expect.skippedBundles`** (bundle cases): `{bundle, contains}`, likewise.
 - **`expect.packages`** (bundle cases): the custom node package names loaded, in load order.
-- **`checkedBy: "editor"`** on a case: the refusal comes from the editor's `mpy-cross` check, so the backend test skips
-  it and `editor/test/user-libraries.test.ts` runs it.
+- **`checkedBy: "editor"`** on a case: the refusal comes from the editor's `mpy-cross` check at deploy, so the backend
+  test skips it (an editor test for it is still to add, `../SPEC.md` §9).

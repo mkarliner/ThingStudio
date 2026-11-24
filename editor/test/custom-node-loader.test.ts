@@ -201,3 +201,81 @@ describe("the example packages the backend ships", () => {
     execFileSync("python3", ["-c", "import ast, sys; ast.parse(sys.stdin.read())"], { input: py });
   });
 });
+
+// Bundles (2026-11-24, interfaces/node-descriptor/SPEC.md §3.1): all or nothing, and the backend's skipped bundles
+// and refused user libraries (library-format SPEC §4) reach the console as their own lines.
+describe("loadAllCustomNodes with bundles", () => {
+  const BUNDLE = `${DIR}/home-assistant`;
+
+  function bundleBackend(
+    files: Record<string, { descriptor: string; bundle?: string }>,
+    extra: Partial<CustomNodeListing> = {},
+  ): CustomNodeSource {
+    const names = Object.keys(files);
+    return {
+      list: async () => ({
+        names,
+        packages: names.map((name) => {
+          const b = files[name]!.bundle;
+          return { name, file: b ? `${DIR}/${b}/${name}.node.json` : `${DIR}/${name}.node.json`, ...(b ? { bundle: b } : {}) };
+        }),
+        ...extra,
+      }),
+      read: async (name) => ({ descriptor: files[name]!.descriptor, implementation: RUN }),
+    };
+  }
+
+  it("loads a bundle's packages with the top-level ones", async () => {
+    const result = await loadAllCustomNodes(bundleBackend({
+      doubler: { descriptor: transform("my/doubler") },
+      ha_device: { descriptor: transform("ha/device"), bundle: "home-assistant" },
+      ha_sensor: { descriptor: transform("ha/sensor"), bundle: "home-assistant" },
+    }));
+    expect(result.loaded.map((p) => p.descriptor.type)).toEqual(["my/doubler", "ha/device", "ha/sensor"]);
+    expect(result.problems).toEqual([]);
+  });
+
+  it("leaves out the whole bundle when one of its packages is invalid", async () => {
+    const result = await loadAllCustomNodes(bundleBackend({
+      doubler: { descriptor: transform("my/doubler") },
+      ha_device: { descriptor: transform("ha/device"), bundle: "home-assistant" },
+      ha_sensor: { descriptor: "{not json", bundle: "home-assistant" },
+    }));
+    expect(result.loaded.map((p) => p.descriptor.type)).toEqual(["my/doubler"]);
+    expect(result.problems.map((p) => p.line ?? p.message)).toEqual([
+      expect.stringMatching(/^not valid JSON/),
+      `[custom nodes] bundle home-assistant is not loaded: ${BUNDLE}/ha_sensor.node.json didn't load, so the whole bundle is left out`,
+    ]);
+  });
+
+  it("leaves out the whole bundle when one of its packages claims a type already loaded", async () => {
+    const result = await loadAllCustomNodes(bundleBackend({
+      sensor: { descriptor: transform("ha/sensor") },
+      ha_device: { descriptor: transform("ha/device"), bundle: "home-assistant" },
+      ha_sensor: { descriptor: transform("ha/sensor"), bundle: "home-assistant" },
+    }));
+    expect(result.loaded.map((p) => p.descriptor.type)).toEqual(["ha/sensor"]);
+    expect(result.loaded[0]?.file).toBe(`${DIR}/sensor.node.json`);
+    expect(result.problems.some((p) => p.line?.includes("bundle home-assistant is not loaded"))).toBe(true);
+  });
+
+  it("frees a failed bundle's types for packages after it", async () => {
+    const result = await loadAllCustomNodes(bundleBackend({
+      a: { descriptor: transform("x/clash"), bundle: "first" },
+      b: { descriptor: "{not json", bundle: "first" },
+      c: { descriptor: transform("x/clash"), bundle: "second" },
+    }));
+    expect(result.loaded.map((p) => p.file)).toEqual([`${DIR}/second/c.node.json`]);
+  });
+
+  it("reports the backend's skipped bundles and refused libraries as their own lines", async () => {
+    const result = await loadAllCustomNodes(bundleBackend({}, {
+      skippedBundles: [{ bundle: "broken", folder: `${DIR}/broken`, problems: ["half.node.py is missing: a package needs both files"] }],
+      libraryRefusals: ["library machine (libraries) refused: its name shadows the firmware module machine"],
+    }));
+    expect(result.problems.map((p) => p.line)).toEqual([
+      "[libraries] library machine (libraries) refused: its name shadows the firmware module machine",
+      "[custom nodes] bundle broken is not loaded: half.node.py is missing: a package needs both files",
+    ]);
+  });
+});

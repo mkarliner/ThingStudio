@@ -175,7 +175,8 @@ function, so mutable state uses `nonlocal`, not `global`. Pins and buses go thro
 
 ### 3.1 Bundles
 
-Status: **draft, 2026-11-24** (Mike, as part of the Home Assistant plan); not yet implemented. A **bundle** is a
+Status: **draft, 2026-11-24** (Mike, as part of the Home Assistant plan); implemented on the `user-libraries`
+branch, not yet released. A **bundle** is a
 subfolder of a custom-node search folder (`~/.thingstudio/custom-nodes/`, or a `--custom-nodes` folder) holding
 packages that belong together, and optionally the libraries they share. Installing one is copying the folder in.
 
@@ -249,9 +250,9 @@ never executes arbitrary codegen.
 `editor/test/node-descriptor-schema.test.ts` asserts the enums and type-id pattern in
 `custom-node.schema.json` equal the validator's (`PAYLOAD_TYPES`, `NODE_KINDS`, `PROPERTY_KINDS`,
 `TYPE_ID_RE` in `custom-node.ts`), so the published schema can't drift from the code. The validator's
-cross-field rules are covered by `editor/test/custom-node.test.ts`. Bundles (§3.1) get
-`backend/test/test_custom_node_bundles.py`, running `vectors/bundles.json` against the backend's package listing,
-with the implementation.
+cross-field rules are covered by `editor/test/custom-node.test.ts`. Bundles (§3.1):
+`backend/test/test_user_libraries.py` runs `vectors/bundles.json` against the backend's package listing, and
+`editor/test/custom-node-loader.test.ts` covers the editor's all-or-nothing rule.
 
 Change this descriptor format only with Mike's explicit permission — users have written `.node.json`
 packages against it.
