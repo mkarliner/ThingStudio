@@ -1,0 +1,142 @@
+[
+  {
+    "name": "module-requires-builtin",
+    "tree": { "libraries/sensors.py": "import ts_mqtt\nimport machine\nfrom json import dumps\n" },
+    "expect": {
+      "libraries": [{ "name": "sensors", "files": [["sensors.py", "sensors.py"]], "requires": ["ts_mqtt"], "origin": "libraries" }],
+      "refused": []
+    }
+  },
+  {
+    "name": "package-with-submodule",
+    "tree": {
+      "libraries/meter/__init__.py": "from meter.core import read\n",
+      "libraries/meter/core.py": "import mqtt_as\nimport time\n\ndef read():\n    return 0\n",
+      "libraries/meter/README.md": "ignored"
+    },
+    "expect": {
+      "libraries": [{
+        "name": "meter",
+        "files": [["meter/__init__.py", "meter/__init__.py"], ["meter/core.py", "meter/core.py"]],
+        "requires": ["mqtt_as"],
+        "origin": "libraries"
+      }],
+      "refused": []
+    }
+  },
+  {
+    "name": "user-requires-user",
+    "tree": {
+      "libraries/alpha.py": "import beta\n",
+      "libraries/beta.py": "import ts_wifi\n"
+    },
+    "expect": {
+      "libraries": [
+        { "name": "alpha", "files": [["alpha.py", "alpha.py"]], "requires": ["beta"], "origin": "libraries" },
+        { "name": "beta", "files": [["beta.py", "beta.py"]], "requires": ["ts_wifi"], "origin": "libraries" }
+      ],
+      "refused": []
+    }
+  },
+  {
+    "name": "ignored-entries",
+    "tree": {
+      "libraries/_scratch.py": "x = 1\n",
+      "libraries/.hidden.py": "x = 1\n",
+      "libraries/notes.txt": "not python",
+      "libraries/assets/logo.bin": "binary",
+      "libraries/ok.py": "x = 1\n"
+    },
+    "expect": {
+      "libraries": [{ "name": "ok", "files": [["ok.py", "ok.py"]], "requires": [], "origin": "libraries" }],
+      "refused": []
+    }
+  },
+  {
+    "name": "shadows-builtin-library",
+    "tree": { "libraries/mqtt_as.py": "x = 1\n" },
+    "expect": {
+      "libraries": [],
+      "refused": [{ "library": "mqtt_as", "origin": "libraries", "contains": "built-in library" }]
+    }
+  },
+  {
+    "name": "shadows-runtime-module",
+    "tree": { "libraries/runtime.py": "x = 1\n", "libraries/main.py": "x = 1\n" },
+    "expect": {
+      "libraries": [],
+      "refused": [
+        { "library": "runtime", "origin": "libraries", "contains": "runtime module" },
+        { "library": "main", "origin": "libraries", "contains": "runtime module" }
+      ]
+    }
+  },
+  {
+    "name": "shadows-firmware-module",
+    "tree": { "libraries/machine.py": "x = 1\n", "libraries/asyncio/__init__.py": "x = 1\n" },
+    "expect": {
+      "libraries": [],
+      "refused": [
+        { "library": "machine", "origin": "libraries", "contains": "firmware module" },
+        { "library": "asyncio", "origin": "libraries", "contains": "firmware module" }
+      ]
+    }
+  },
+  {
+    "name": "name-not-identifier",
+    "tree": { "libraries/my-lib.py": "x = 1\n", "libraries/good/bad-part.py": "x = 1\n", "libraries/good/__init__.py": "" },
+    "expect": {
+      "libraries": [],
+      "refused": [
+        { "library": "my-lib", "origin": "libraries", "contains": "my-lib.py" },
+        { "library": "good", "origin": "libraries", "contains": "good/bad-part.py" }
+      ]
+    }
+  },
+  {
+    "name": "folder-without-init",
+    "tree": { "libraries/forgot/core.py": "x = 1\n", "libraries/data/readme.txt": "no python here" },
+    "expect": {
+      "libraries": [],
+      "refused": [{ "library": "forgot", "origin": "libraries", "contains": "__init__.py" }]
+    }
+  },
+  {
+    "name": "clash-between-user-sources",
+    "tree": {
+      "libraries/ts_ha.py": "x = 1\n",
+      "custom-nodes/home-assistant/lib/ts_ha.py": "x = 2\n",
+      "custom-nodes/home-assistant/ha_sensor.node.json": "@node:sink",
+      "custom-nodes/home-assistant/ha_sensor.node.py": "@py:sink"
+    },
+    "expect": {
+      "libraries": [],
+      "refused": [
+        { "library": "ts_ha", "origin": "libraries", "contains": "bundle:home-assistant" },
+        { "library": "ts_ha", "origin": "bundle:home-assistant", "contains": "libraries" }
+      ],
+      "skippedBundles": [{ "bundle": "home-assistant", "contains": "ts_ha" }],
+      "packages": []
+    }
+  },
+  {
+    "name": "requires-cycle",
+    "tree": { "libraries/ping.py": "import pong\n", "libraries/pong.py": "import ping\n" },
+    "expect": {
+      "libraries": [],
+      "refused": [
+        { "library": "ping", "origin": "libraries", "contains": "cycle" },
+        { "library": "pong", "origin": "libraries", "contains": "cycle" }
+      ]
+    }
+  },
+  {
+    "name": "does-not-compile",
+    "checkedBy": "editor",
+    "tree": { "libraries/broken.py": "def f(:\n    pass\n" },
+    "expect": {
+      "libraries": [],
+      "refused": [{ "library": "broken", "origin": "libraries", "contains": "broken.py" }]
+    }
+  }
+]

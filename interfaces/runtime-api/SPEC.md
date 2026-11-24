@@ -82,6 +82,10 @@ The editor fetches this catalog from the backend at `/api/dependencies`, which v
 folders are created under `/lib` as its files arrive and removed when they are empty. Packages need runtime 15.0.0
 (2026-11-03); before it, a board file name with a folder was refused as `BadName`.
 
+**User libraries** (draft, 2026-11-24, not yet implemented): the served catalog also carries the user's own
+libraries and bundles' libraries, after the built-ins, each entry with `source` (`"user"`; built-ins `"builtin"`)
+and `origin`. Their layout, names and refusal rules are `../library-format/SPEC.md`; this manifest is unchanged.
+
 ## 4. Versioning
 
 The runtime reports `runtimeVersion` (major.minor.patch) in `HELLO`. The deploy gate

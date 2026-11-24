@@ -15,6 +15,7 @@ with permission."**
 | Device runtime API + dependency manifest (generated code ↔ device) | shipped | [`runtime-api/SPEC.md`](runtime-api/SPEC.md) |
 | Node descriptor (built-in + custom node format) | shipped, known divergence | [`node-descriptor/SPEC.md`](node-descriptor/SPEC.md) |
 | Node compile context (package compile-time hook) | **draft, pending review** | [`node-compile-context/SPEC.md`](node-compile-context/SPEC.md) |
+| Library format (your own libraries; a bundle's `lib/`) | **draft, not yet implemented** | [`library-format/SPEC.md`](library-format/SPEC.md) |
 | Board / processor descriptor (`~/.thingstudio/{boards,processors}/*.json`) | shipped | [`board-descriptor/SPEC.md`](board-descriptor/SPEC.md) |
 
 ## How to work with one
@@ -26,7 +27,9 @@ with permission."**
    `backend/test/test_conformance.py`. Runtime API: `editor/test/runtime-api-conformance.test.ts`,
    `device-runtime/test/test_runtime_api.py`. Node descriptor: `editor/test/node-descriptor-schema.test.ts`. Board
    descriptor: `editor/test/board-descriptor-schema.test.ts`. Node compile context:
-   `editor/test/{compile-context,compile-hook,compile-hooks,compile-hooked-package}.test.ts`.
+   `editor/test/{compile-context,compile-hook,compile-hooks,compile-hooked-package}.test.ts`. Library format
+   (once implemented): `backend/test/test_user_libraries.py`, `editor/test/user-libraries.test.ts`; bundles:
+   `backend/test/test_custom_node_bundles.py`.
 3. **Do not change the interface** (an id, field, framing rule, descriptor shape, or API signature — adding or
    removing one) **without Mike's explicit permission in the session.** Adding conformance vectors and fixing an
    implementation that has drifted is allowed; moving the contract under boards and saved flows already in the

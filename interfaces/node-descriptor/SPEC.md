@@ -173,6 +173,48 @@ kind: `async def run(msg, properties)` (transform/sink) or `async def emit(prope
 function, so mutable state uses `nonlocal`, not `global`. Pins and buses go through `runtime.shared(...)`
 — see `../runtime-api/SPEC.md`.
 
+### 3.1 Bundles
+
+Status: **draft, 2026-11-24** (Mike, as part of the Home Assistant plan); not yet implemented. A **bundle** is a
+subfolder of a custom-node search folder (`~/.thingstudio/custom-nodes/`, or a `--custom-nodes` folder) holding
+packages that belong together, and optionally the libraries they share. Installing one is copying the folder in.
+
+```
+custom-nodes/
+  doubler.node.json            a single package, as today
+  doubler.node.py
+  home-assistant/              a bundle
+    README.md                  ignored by the loader
+    ha_device.node.json
+    ha_device.node.py
+    ha_device.compile.py
+    ha_sensor.node.json
+    ha_sensor.node.py
+    lib/
+      ts_ha.py                 the bundle's own library
+    examples/                  ignored by the loader
+```
+
+- **Name.** The folder name is lowercase letters, digits, `-` and `_`, starting with a letter or digit. A folder
+  starting with `.` or `_` is ignored; any other name that breaks the rule is reported and skipped.
+- **One level.** A bundle's packages are the `<name>.node.json` + `<name>.node.py` (+ optional `<name>.compile.py`)
+  at its top, exactly as at the top of a search folder. Below the bundle's top only `lib/` is read; other subfolders
+  (`examples/`, `docs/`) and other files are ignored, and bundles do not nest.
+- **Libraries.** `lib/` is a library source under `../library-format/SPEC.md`. A bundle may hold only `lib/` and no
+  packages.
+- **Load order.** In each search folder: its top-level packages in name order, then its bundles in folder-name
+  order, each bundle's packages in name order. Package names are unique across all of these: a package name or
+  `type` already loaded is reported and not loaded, as between search folders today.
+- **All or nothing.** A bundle is skipped whole, with one console line per reason, if any of its packages fails
+  validation (descriptor, port counts, a missing `.node.py`), any of its package names or types is already taken
+  by an earlier package, or any library in its `lib/` is refused. A bundle missing one node is a broken bundle,
+  not a smaller one. Everything else still loads.
+- **Read-only to the editor.** Creating, editing and deleting a custom node from the editor acts on single packages
+  at the top of the user's folder only. A bundle's packages are edited as files.
+- **Where.** ThingStudio App and `thingstudio-compile`, as for single packages; not ThingStudio Web.
+
+Conformance cases: `vectors/bundles.json` (format: `../library-format/vectors/README.md`).
+
 ## 4. Convergence: what is built, and what is still coming
 
 v1's divergence — a built-in described in up to seven hand-maintained places, a custom node in two
@@ -207,7 +249,9 @@ never executes arbitrary codegen.
 `editor/test/node-descriptor-schema.test.ts` asserts the enums and type-id pattern in
 `custom-node.schema.json` equal the validator's (`PAYLOAD_TYPES`, `NODE_KINDS`, `PROPERTY_KINDS`,
 `TYPE_ID_RE` in `custom-node.ts`), so the published schema can't drift from the code. The validator's
-cross-field rules are covered by `editor/test/custom-node.test.ts`.
+cross-field rules are covered by `editor/test/custom-node.test.ts`. Bundles (§3.1) get
+`backend/test/test_custom_node_bundles.py`, running `vectors/bundles.json` against the backend's package listing,
+with the implementation.
 
 Change this descriptor format only with Mike's explicit permission — users have written `.node.json`
 packages against it.

@@ -1,0 +1,14 @@
+{
+  "description": "Module names MicroPython firmware provides on the ports ThingStudio supports (ESP32 family, RP2, nRF, STM32, unix). A user library with one of these names is refused (SPEC.md section 4). Built-in library names and runtime module names are refused too, but are not listed here: they come from runtime_manifest.py (DEPENDENCIES, CORE_FILES) so they cannot drift.",
+  "updated": "2026-11-24",
+  "runtime": ["listener", "main", "boot"],
+  "firmware": [
+    "array", "asyncio", "binascii", "bluetooth", "btree", "builtins", "cmath", "collections", "cryptolib",
+    "deflate", "dht", "errno", "esp", "esp32", "espnow", "framebuf", "gc", "hashlib", "heapq", "io", "json",
+    "machine", "math", "micropython", "mip", "neopixel", "network", "ntptime", "onewire", "os", "platform",
+    "pyb", "random", "re", "requests", "rp2", "select", "socket", "ssl", "struct", "sys", "time", "tls",
+    "uasyncio", "ubinascii", "ucollections", "uctypes", "uerrno", "uhashlib", "uheapq", "uio", "ujson",
+    "uos", "uplatform", "urandom", "ure", "urequests", "uselect", "usocket", "ussl", "ustruct", "usys",
+    "utime", "uzlib", "vfs", "webrepl", "zlib"
+  ]
+}

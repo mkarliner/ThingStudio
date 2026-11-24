@@ -1,0 +1,122 @@
+[
+  {
+    "name": "bundle-loads-with-library",
+    "tree": {
+      "custom-nodes/doubler.node.json": "@node:transform",
+      "custom-nodes/doubler.node.py": "@py:transform",
+      "custom-nodes/home-assistant/README.md": "ignored",
+      "custom-nodes/home-assistant/ha_sensor.node.json": "@node:sink",
+      "custom-nodes/home-assistant/ha_sensor.node.py": "@py:sink",
+      "custom-nodes/home-assistant/ha_device.node.json": "@node:source",
+      "custom-nodes/home-assistant/ha_device.node.py": "@py:source",
+      "custom-nodes/home-assistant/lib/ts_ha.py": "import ts_mqtt\n"
+    },
+    "expect": {
+      "packages": ["doubler", "ha_device", "ha_sensor"],
+      "libraries": [{ "name": "ts_ha", "files": [["ts_ha.py", "ts_ha.py"]], "requires": ["ts_mqtt"], "origin": "bundle:home-assistant" }],
+      "refused": [],
+      "skippedBundles": []
+    }
+  },
+  {
+    "name": "broken-bundle-skipped-whole",
+    "tree": {
+      "custom-nodes/doubler.node.json": "@node:transform",
+      "custom-nodes/doubler.node.py": "@py:transform",
+      "custom-nodes/broken/good.node.json": "@node:sink",
+      "custom-nodes/broken/good.node.py": "@py:sink",
+      "custom-nodes/broken/half.node.json": "@node:sink",
+      "custom-nodes/broken/lib/brokenlib.py": "x = 1\n"
+    },
+    "expect": {
+      "packages": ["doubler"],
+      "libraries": [],
+      "refused": [],
+      "skippedBundles": [{ "bundle": "broken", "contains": "half.node.py" }]
+    }
+  },
+  {
+    "name": "bundle-package-name-taken",
+    "tree": {
+      "custom-nodes/ha_sensor.node.json": "@node:sink",
+      "custom-nodes/ha_sensor.node.py": "@py:sink",
+      "custom-nodes/home-assistant/ha_sensor.node.json": "@node:sink",
+      "custom-nodes/home-assistant/ha_sensor.node.py": "@py:sink",
+      "custom-nodes/home-assistant/ha_switch.node.json": "@node:sink",
+      "custom-nodes/home-assistant/ha_switch.node.py": "@py:sink"
+    },
+    "expect": {
+      "packages": ["ha_sensor"],
+      "libraries": [],
+      "refused": [],
+      "skippedBundles": [{ "bundle": "home-assistant", "contains": "ha_sensor" }]
+    }
+  },
+  {
+    "name": "two-bundles-same-library",
+    "tree": {
+      "custom-nodes/ha-fork/x.node.json": "@node:sink",
+      "custom-nodes/ha-fork/x.node.py": "@py:sink",
+      "custom-nodes/ha-fork/lib/ts_ha.py": "x = 1\n",
+      "custom-nodes/home-assistant/y.node.json": "@node:sink",
+      "custom-nodes/home-assistant/y.node.py": "@py:sink",
+      "custom-nodes/home-assistant/lib/ts_ha.py": "x = 2\n"
+    },
+    "expect": {
+      "packages": [],
+      "libraries": [],
+      "refused": [
+        { "library": "ts_ha", "origin": "bundle:ha-fork", "contains": "bundle:home-assistant" },
+        { "library": "ts_ha", "origin": "bundle:home-assistant", "contains": "bundle:ha-fork" }
+      ],
+      "skippedBundles": [
+        { "bundle": "ha-fork", "contains": "ts_ha" },
+        { "bundle": "home-assistant", "contains": "ts_ha" }
+      ]
+    }
+  },
+  {
+    "name": "ignored-subfolders-and-no-nesting",
+    "tree": {
+      "custom-nodes/home-assistant/ha_sensor.node.json": "@node:sink",
+      "custom-nodes/home-assistant/ha_sensor.node.py": "@py:sink",
+      "custom-nodes/home-assistant/examples/demo.flow.json": "{}",
+      "custom-nodes/home-assistant/examples/extra.node.json": "@node:sink",
+      "custom-nodes/home-assistant/examples/extra.node.py": "@py:sink",
+      "custom-nodes/home-assistant/nested/inner.node.json": "@node:sink",
+      "custom-nodes/home-assistant/nested/inner.node.py": "@py:sink",
+      "custom-nodes/_drafts/draft.node.json": "@node:sink",
+      "custom-nodes/_drafts/draft.node.py": "@py:sink",
+      "custom-nodes/.git/config": "ignored"
+    },
+    "expect": {
+      "packages": ["ha_sensor"],
+      "libraries": [],
+      "refused": [],
+      "skippedBundles": []
+    }
+  },
+  {
+    "name": "bad-bundle-name",
+    "tree": {
+      "custom-nodes/Home Assistant/ha_sensor.node.json": "@node:sink",
+      "custom-nodes/Home Assistant/ha_sensor.node.py": "@py:sink"
+    },
+    "expect": {
+      "packages": [],
+      "libraries": [],
+      "refused": [],
+      "skippedBundles": [{ "bundle": "Home Assistant", "contains": "name" }]
+    }
+  },
+  {
+    "name": "library-only-bundle",
+    "tree": { "custom-nodes/shared-utils/lib/smoothing.py": "def ema(a, b, k):\n    return a + k * (b - a)\n" },
+    "expect": {
+      "packages": [],
+      "libraries": [{ "name": "smoothing", "files": [["smoothing.py", "smoothing.py"]], "requires": [], "origin": "bundle:shared-utils" }],
+      "refused": [],
+      "skippedBundles": []
+    }
+  }
+]
