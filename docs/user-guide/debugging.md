@@ -198,8 +198,11 @@ flow has run.
 When a deploy fails this way, work through these in order:
 
 1. **Tools → Remove flow…** — so nothing is resumed at start-up.
-2. **Power cycle the board** — unplug its USB cable and plug it back in, or **Tools → Reset board (hard)**.
+2. **Power cycle the board** — unplug its USB cable and plug it back in. On an ESP32-C3, **Tools → Reset board
+   (hard)** isn't reliable enough here.
 3. Deploy again.
+
+The editor shows a **POWER CYCLE THE BOARD** popup when a deploy fails for lack of memory.
 
 Removing the flow alone doesn't help: the running flow keeps its memory until the chip restarts. A soft restart
 doesn't either: it restarts the interpreter over the same heap regions and returns no chip memory. Only a power

@@ -156,7 +156,7 @@ import { checkRuntimeBuild, decideDeploy } from "../protocol/version.js";
 import { DEFAULT_TIMING, TransferSession, type TransferEvent, type TransferFailure } from "../protocol/transfer.js";
 import { explainDeployImportError, networkWarningBeforeDeploy } from "./import-error-help.js";
 import { editorVersionLabel, editorVersionLine } from "./editor-version.js";
-import { DEPLOY_MEMORY_DOC, DEPLOY_MEMORY_HINT, deployMemoryAdvice, looksLikeOutOfMemory, lowFlowMemoryWarning, lowMemoryWarningBeforeDeploy } from "./memory-advice.js";
+import { DEPLOY_MEMORY_DOC, DEPLOY_MEMORY_HINT, POWER_CYCLE_DIALOG_TEXT, deployMemoryAdvice, looksLikeOutOfMemory, lowFlowMemoryWarning, lowMemoryWarningBeforeDeploy } from "./memory-advice.js";
 import { dependencyHash, findImportedModules, librariesToSend, libraryMessages, resolveDependencies, topModuleOfBoardFile, type DependencyInfo } from "../compiler/flow-dependencies.js";
 import { createThingstudioEditor, type ThingstudioEditor } from "./rete/editor-setup.js";
 import { NODE_FACTORIES, CustomNode, type AnyThingstudioNode } from "./rete/nodes.js";
@@ -3403,7 +3403,10 @@ async function installFlowDependencies(source: string): Promise<Record<string, s
                 : `library ${name}: unexpected answer`;
       logLine(`[deploy failed] ${why}, flow unchanged`, "err");
       const text = outcome.kind === "pieces-failed" ? outcome.failure.message : outcome.kind === "refused" ? outcome.message : null;
-      if (looksLikeOutOfMemory(text)) logAdvice("[deploy failed]", memoryAdvice(), "err");
+      if (looksLikeOutOfMemory(text)) {
+        logAdvice("[deploy failed]", memoryAdvice(), "err");
+        showPowerCycleDialog();
+      }
       boardDependencies = null;
       return null;
     }
@@ -3416,6 +3419,15 @@ async function installFlowDependencies(source: string): Promise<Record<string, s
  * (a library install, or a flow start). DEPLOY_MEMORY_HINT is the single sentence they all show. */
 function memoryAdvice(): Advice {
   return { text: `board out of memory. ${DEPLOY_MEMORY_HINT}`, doc: DEPLOY_MEMORY_DOC };
+}
+
+/** The power-cycle popup that goes with every deploy-path memory failure (memory-advice.ts). One at a time: a
+ * failed deploy can report more than one DEPLOY_ERROR. */
+function showPowerCycleDialog(): void {
+  const dialog = el<HTMLDialogElement>("powerCycleDialog");
+  if (dialog.open) return;
+  el("powerCycleText").textContent = POWER_CYCLE_DIALOG_TEXT;
+  dialog.showModal();
 }
 
 /** Sends flows and libraries (protocol/transfer.ts, the `editor.transfer` machine in interfaces/protocol/states.json).
@@ -3467,7 +3479,10 @@ function reportRestartDuringDeploy(hello: HelloMessage, deployId: string): boole
 function reportPiecesFailed(failure: TransferFailure): void {
   logLine(`[deploy failed] ${failure.code}: ${failure.message}`, "err");
   const memory = deployMemoryAdvice(failure.code, failure.message);
-  if (memory) logAdvice("[deploy failed]", { text: memory, doc: DEPLOY_MEMORY_DOC }, "err");
+  if (memory) {
+    logAdvice("[deploy failed]", { text: memory, doc: DEPLOY_MEMORY_DOC }, "err");
+    showPowerCycleDialog();
+  }
 }
 
 if (CAN_REACH_BOARD) {
@@ -3601,7 +3616,10 @@ if (CAN_REACH_BOARD) {
           const importAdvice = outcome.code === "ImportError" ? explainDeployImportError(outcome.message, libraryModules) : null;
           if (importAdvice) logAdvice("[deploy failed]", importAdvice, "err");
           const deployMemory = deployMemoryAdvice(outcome.code, outcome.message);
-          if (deployMemory) logAdvice("[deploy failed]", { text: deployMemory, doc: DEPLOY_MEMORY_DOC }, "err");
+          if (deployMemory) {
+            logAdvice("[deploy failed]", { text: deployMemory, doc: DEPLOY_MEMORY_DOC }, "err");
+            showPowerCycleDialog();
+          }
           if (outcome.code === "MissingDependency") {
             // This editor's idea of the board's libraries was wrong (changed by another editor, or a
             // failed write). Forget it, so the next Deploy sends every library the flow needs.

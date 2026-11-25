@@ -27,7 +27,13 @@ export const LOW_IDF_HEAP_BYTES = 30_000;
  *
  * One constant for every memory failure on the deploy path, so the three of them cannot drift apart. */
 export const DEPLOY_MEMORY_HINT =
-  "Tools → Remove flow…, then power cycle the board (unplug its USB cable and plug it back in, or Tools → Reset board (hard)), then deploy. If it still fails, the flow may be too big for this board.";
+  "Tools → Remove flow…, then power cycle the board (unplug its USB cable and plug it back in), then deploy. If it still fails, the flow may be too big for this board. POWER CYCLE THE BOARD.";
+
+/** The popup shown with it (Mike, 2026-11-25): the long line is easy to glaze over, so the one thing to do is said
+ * again in capitals at its end and in a dialog. Tools → Reset board (hard) is no longer offered for this: on the
+ * ESP32-C3 only unplugging the board reliably let the next deploy fit. */
+export const POWER_CYCLE_DIALOG_TEXT =
+  "The board ran out of memory. Unplug its USB cable, plug it back in, then deploy again. If it fails again, choose Tools → Remove flow… first.";
 
 /** The docs page that carries the rest: the second step, the custom image, the boards it applies to. */
 export const DEPLOY_MEMORY_DOC = { label: "MemoryError or a library that won't load", path: "debugging/#memoryerror-or-a-library-that-wont-load" };

@@ -2,7 +2,7 @@
 // editor/test/memory-advice.test.ts -- when the console suggests restarting the board (2026-10-07).
 
 import { describe, expect, it } from "vitest";
-import { DEPLOY_MEMORY_DOC, DEPLOY_MEMORY_HINT, LOW_IDF_HEAP_BYTES, deployMemoryAdvice, looksLikeOutOfMemory, lowFlowMemoryWarning, lowMemoryWarningBeforeDeploy } from "../src/app/memory-advice.js";
+import { DEPLOY_MEMORY_DOC, DEPLOY_MEMORY_HINT, LOW_IDF_HEAP_BYTES, POWER_CYCLE_DIALOG_TEXT, deployMemoryAdvice, looksLikeOutOfMemory, lowFlowMemoryWarning, lowMemoryWarningBeforeDeploy } from "../src/app/memory-advice.js";
 
 describe("lowMemoryWarningBeforeDeploy", () => {
   it("warns for a networking flow on an ESP32 with little ESP-IDF memory (the CYD's 1 KB case)", () => {
@@ -17,6 +17,14 @@ describe("lowMemoryWarningBeforeDeploy", () => {
     expect(lowMemoryWarningBeforeDeploy({ freeIdfHeapBytes: 1368 }, false)).toBeNull();
     expect(lowMemoryWarningBeforeDeploy({ freeIdfHeapBytes: null }, true)).toBeNull();
     expect(lowMemoryWarningBeforeDeploy(null, true)).toBeNull();
+  });
+});
+
+describe("the deploy memory advice", () => {
+  it("ends with POWER CYCLE THE BOARD and no longer offers a hard reset (Mike, 2026-11-25)", () => {
+    expect(DEPLOY_MEMORY_HINT.endsWith("POWER CYCLE THE BOARD.")).toBe(true);
+    expect(DEPLOY_MEMORY_HINT).not.toContain("Reset board (hard)");
+    expect(POWER_CYCLE_DIALOG_TEXT).toMatch(/Unplug its USB cable/);
   });
 });
 
