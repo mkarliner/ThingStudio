@@ -23,6 +23,7 @@ import type { CodegenContext, PinResourceSpec, ResourceSpec, SpiResourceSpec } f
 import { pinLabel, type PinId } from "../definitions/definitions.js";
 import { checkPin, checkSpi } from "../definitions/pin-check.js";
 import { claimResource, pullText, sharedSpi, type Pull } from "./hardware-shared.js";
+import { flowUsesMqtt } from "./mqtt-usage.js";
 import { resolveI2cBus, i2cBusFromPins } from "./i2c-shared.js";
 
 /** The descriptor fields `checkResources` reads -- `NodeDescriptor` and the package-codegen wrapper's narrower
@@ -77,7 +78,7 @@ const WIFI_NODE_TYPES = [
 
 function flowUsesWifi(ctx: CodegenContext): boolean {
   if (!ctx.findNodesOfType) return false;
-  return WIFI_NODE_TYPES.some((t) => (ctx.findNodesOfType!(t)?.length ?? 0) > 0);
+  return WIFI_NODE_TYPES.some((t) => (ctx.findNodesOfType!(t)?.length ?? 0) > 0) || flowUsesMqtt(ctx);
 }
 
 function checkPinResource(ctx: CodegenContext, node: GraphNode, what: string, spec: PinResourceSpec): void {

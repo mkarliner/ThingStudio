@@ -7,7 +7,10 @@
 //
 // Each hook starts with WIFI_DERIVATION, then calls _ts_wifi(ctx) and adds its own field checks.
 
-export const WIFI_DERIVATION = `def _ts_wifi(ctx):
+import { MQTT_USAGE_PYTHON } from "../mqtt-usage.js";
+
+export const WIFI_DERIVATION = `${MQTT_USAGE_PYTHON}
+def _ts_wifi(ctx):
     configs = [c for c in ctx['flow']['configs'] if c['type'] == 'thingstudio/config/wifi']
     if not configs:
         return None, 'needs a WiFi network -- set "WiFi" in its properties (every WiFi node in a flow shares one)'
@@ -27,7 +30,7 @@ export const WIFI_DERIVATION = `def _ts_wifi(ctx):
     if security == 'password' and not password:
         return None, 'WiFi config for ssid "' + ssid + '" has no password but security is "password"'
 
-    mqtt = any(n['type'] in ('thingstudio/mqtt_publish', 'thingstudio/mqtt_subscribe') for n in ctx['flow']['nodes'])
+    mqtt = _ts_uses_mqtt(ctx)
     return {'ssid': ssid, 'password': password, 'security': security, 'deferToMqtt': mqtt}, None
 `;
 

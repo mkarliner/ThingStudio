@@ -274,6 +274,9 @@ export function compile(graphData: GraphData, registry: Map<string, NodeDefiniti
     findConfigsOfType(type: string): { id: string; properties: Record<string, unknown> }[] {
       return [...configsById.values()].filter((c) => c.type === type);
     },
+    flowNodes(): GraphNode[] {
+      return graphData.nodes;
+    },
     screens: graphData.screens,
     isInputWired: (nodeId: string): boolean => (incomingCount.get(nodeId) ?? 0) > 0,
     findWiredTargets: (nodeId: string): GraphNode[] => (childrenOf.get(nodeId) ?? []).map((l) => nodesById.get(l[3])!),

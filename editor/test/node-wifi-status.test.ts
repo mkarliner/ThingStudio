@@ -148,6 +148,26 @@ describe("thingstudio/wifi_status package", () => {
       });
     });
 
+    it("defers to mqtt for a custom node with a broker configRef, not only the built-in MQTT nodes", async () => {
+      const g = graph(
+        { pollMs: 1000 },
+        [wifiConfig({ ssid: "net", password: "pw" }), { id: "b1", type: "thingstudio/config/mqtt-broker", properties: { broker: "b", port: 1883 } }],
+        [{ id: "h1", type: "custom/ha_light", properties: { name: "lamp", broker: "b1" } }],
+      );
+      const { hooks } = await codegen(g);
+      expect(hooks.results.get("1")!.properties.deferToMqtt).toBe(true);
+    });
+
+    it("does not defer to mqtt for a broker config no node references", async () => {
+      const g = graph(
+        { pollMs: 1000 },
+        [wifiConfig({ ssid: "net", password: "pw" }), { id: "b1", type: "thingstudio/config/mqtt-broker", properties: { broker: "b", port: 1883 } }],
+        [{ id: "h1", type: "custom/ha_light", properties: { name: "b2" } }],
+      );
+      const { hooks } = await codegen(g);
+      expect(hooks.results.get("1")!.properties.deferToMqtt).toBe(false);
+    });
+
     it("refuses a flow with no WiFi config", async () => {
       expect(await hookError(graph({ pollMs: 1000 }))).toMatch(/needs a WiFi network/);
     });

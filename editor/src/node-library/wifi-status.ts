@@ -172,6 +172,7 @@ import { CompileError } from "../compiler/errors.js";
 import type { GraphNode } from "../compiler/graph.js";
 import type { CodegenContext } from "../compiler/node-definition.js";
 import { pyStringLiteral } from "./py-literals.js";
+import { flowUsesMqtt, graphUsesMqtt } from "./mqtt-usage.js";
 
 /** The `thingstudio/config/wifi` config type's own `security` values
  * (config-types.ts's own `fields` entry for it) -- defined here, not in
@@ -225,7 +226,8 @@ export function resolveWifiCredentials(
 /** The WiFi config type -- a singleton (config-types.ts's `singleton`, 2026-09-25): at most one per flow. */
 export const WIFI_CONFIG_TYPE = "thingstudio/config/wifi";
 
-/** Every node type that needs the station interface up, so uses the flow's WiFi config. */
+/** Every built-in node type that needs the station interface up, so uses the flow's WiFi config. A node that uses
+ * MQTT needs it too, whatever its type (mqtt-usage.ts); callers check both. */
 export const WIFI_NODE_TYPES: readonly string[] = [
   "thingstudio/wifi_status",
   "thingstudio/wifi_gate",
@@ -316,7 +318,7 @@ export function computeWifiProvisionMarker(graphData: {
   selfProvision: boolean;
   allowReprovision: boolean;
 } | null {
-  if (!graphData.nodes.some((n) => WIFI_NODE_TYPES.includes(n.type))) return null;
+  if (!graphData.nodes.some((n) => WIFI_NODE_TYPES.includes(n.type)) && !graphUsesMqtt(graphData)) return null;
   const wifi = (graphData.configs ?? []).filter((c) => c.type === WIFI_CONFIG_TYPE);
   if (wifi.length !== 1) return null;
   const config = wifi[0]!;
@@ -336,7 +338,8 @@ export function computeWifiProvisionMarker(graphData: {
  * above documents: real compiles always provide it, this is purely a
  * fallback for hand-rolled test-suite mocks that predate this function. */
 export function flowHasMqttNodes(ctx: CodegenContext): boolean {
-  return (ctx.findNodesOfType?.("thingstudio/mqtt_publish").length ?? 0) > 0 || (ctx.findNodesOfType?.("thingstudio/mqtt_subscribe").length ?? 0) > 0;
+  // 2026-11-25: any node with a broker configRef counts, not just the two built-ins (mqtt-usage.ts).
+  return flowUsesMqtt(ctx);
 }
 
 /** Builds the shared "bring the station interface up, optionally with

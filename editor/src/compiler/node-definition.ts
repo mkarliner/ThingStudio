@@ -169,6 +169,9 @@ export interface CodegenContext {
    * zero/many are both CompileErrors -- see resolveFlowWifiCredentials()).
    */
   findNodesOfType?(type: string): GraphNode[];
+  /** Every node in the flow, in graph order (node-library/mqtt-usage.ts's "uses MQTT" rule reads their
+   * properties). Optional, like findNodesOfType: absent in hand-rolled mocks. */
+  flowNodes?(): GraphNode[];
   /**
    * Every config of this type in the flow, in file order. Added 2026-09-25 for singleton config types
    * (config-types.ts's `singleton`, e.g. WiFi): a node asks for "the flow's WiFi config" rather than

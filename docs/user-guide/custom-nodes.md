@@ -339,8 +339,10 @@ one. `radio().scan(...)` and `radio().advertise(...)` share it as `ble scan` and
 `ts_ble.decode(adv)` and `ts_ble.build_adv(...)` read and build advertising data. The radio is turned off on each
 redeploy.
 
-For MQTT, `ts_mqtt.ensure_client(...)` returns the flow's one client for a broker, the same one the mqtt nodes use.
-Two client methods are for nodes that announce themselves, such as a Home Assistant device:
+For MQTT, give your node a `configRef` to `thingstudio/config/mqtt-broker`. Any node holding the flow's broker
+counts as an MQTT node, so the flow's WiFi is left to the MQTT client, as it is for the mqtt nodes.
+`ts_mqtt.ensure_client(...)` returns the flow's one client for a broker, the same one the mqtt nodes use. Two client
+methods are for nodes that announce themselves, such as a Home Assistant device:
 
 - `client.set_will(topic, msg, retain=False, qos=0)` sets the message the broker publishes if the board drops off
   without saying goodbye. Call it in setup, before anything connects. A different will on the same broker is an
