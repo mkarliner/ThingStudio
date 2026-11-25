@@ -359,3 +359,12 @@ they belong to. Applies to this file and to `docs/working-notes/decisions.md`/`o
 even when its text wraps across several physical source lines — the constraint is line width, not entry count.
 Markdown headers are exempt. Governs new and edited content going forward — not a retroactive rewrap of every
 existing file.
+
+## ThingStudioExtras is a user of ThingStudio (Mike, 2026-11-25)
+
+`mkarliner/ThingStudioExtras` (optional custom-node bundles, Home Assistant first) is a separate project that works
+from the user guide and an installed ThingStudio only, to dogfood both. It asks for core changes through requests:
+a pull request against `docs/user-guide/` for docs, an issue for behaviour (Extras `docs/core-requests/`). So a
+change that affects custom-node authors (descriptor fields, compile hooks, libraries and bundles, `ts_mqtt`,
+`runtime`) isn't finished until `custom-nodes.md` or the relevant user-guide page says it: Extras can't see anything
+else. Don't fix Extras' bundles from this repo.
