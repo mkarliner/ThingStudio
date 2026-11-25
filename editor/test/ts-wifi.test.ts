@@ -57,6 +57,18 @@ describe("ts_wifi.ensure_station", () => {
     expect(out).toContain("WLAN_CONNECT STA_IF net");
   });
 
+  it("forgets a flow's settings on redeploy, so the next flow may differ, and leaves the radio up", () => {
+    const out = run(
+      'import runtime\nimport ts_wifi\n' +
+        'ts_wifi.ensure_station("net", "pw", "password", False)\n' +
+        'for fn in list(runtime._cleanups.values()):\n    fn()\nruntime._cleanups.clear()\n' +
+        'sta = ts_wifi.ensure_station("net", "pw", "password", True)\n' +
+        'print("SECOND OK", sta.active())\n',
+    );
+    expect(out).toContain("SECOND OK True");
+    expect(out).not.toContain("WLAN_ACTIVE STA_IF False");
+  });
+
   it("is idempotent: a second call with the same settings does nothing", () => {
     const out = run(
       'import ts_wifi\n' +

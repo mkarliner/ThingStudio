@@ -11,8 +11,15 @@
 #   - "unmanaged" security: just bring the interface up, no connect().
 #   - defer_to_mqtt: mqtt_as owns reconnection; join once at import on ESP32 if not already connected.
 #   - otherwise: connect() if not already connected.
+#
+# The settings are per flow, not per boot (2026-11-25): a redeploy cleanup forgets them, so the next flow starts
+# fresh. Without it, a WiFi-only flow followed by an MQTT flow failed with "two nodes asked for different WiFi
+# settings" (defer_to_mqtt False vs True) until the flow was removed or the board restarted. The cleanup leaves the
+# radio as it is: the next flow's ensure_station() finds the station connected and doesn't reconnect, so a WiFi
+# session carrying the deploy survives.
 
 import network
+import runtime
 import sys
 
 _sta = None
@@ -30,6 +37,7 @@ def ensure_station(ssid, password, security="password", defer_to_mqtt=False):
         return _sta
 
     _settings = settings
+    runtime.register_cleanup("ts_wifi", _forget)
     _sta = network.WLAN(network.STA_IF)
     _sta.active(True)
 
@@ -40,3 +48,9 @@ def ensure_station(ssid, password, security="password", defer_to_mqtt=False):
         elif not _sta.isconnected():
             _sta.connect(ssid, password)
     return _sta
+
+
+def _forget():
+    """Redeploy cleanup: forget this flow's settings, keep the radio up."""
+    global _settings
+    _settings = None
