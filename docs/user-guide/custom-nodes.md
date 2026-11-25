@@ -341,8 +341,9 @@ redeploy.
 
 For MQTT, give your node a `configRef` to `thingstudio/config/mqtt-broker`. Any node holding the flow's broker
 counts as an MQTT node, so the flow's WiFi is left to the MQTT client, as it is for the mqtt nodes.
-`ts_mqtt.ensure_client(...)` returns the flow's one client for a broker, the same one the mqtt nodes use. Two client
-methods are for nodes that announce themselves, such as a Home Assistant device:
+`ts_mqtt.ensure_client(...)` returns the flow's one client for a broker, the same one the mqtt nodes use. It needs
+the WiFi and broker passwords, which only a [compile hook](#compile-time-namecompilepy) can read, from
+`ctx["referencedConfigs"]`. Two client methods are for nodes that announce themselves, such as a Home Assistant device:
 
 - `client.set_will(topic, msg, retain=False, qos=0)` sets the message the broker publishes if the board drops off
   without saying goodbye. Call it in setup, before anything connects. A different will on the same broker is an

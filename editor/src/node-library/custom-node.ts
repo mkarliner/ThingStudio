@@ -887,6 +887,10 @@ export function buildCustomNodeDefinition(descriptor: CustomNodeDescriptor, pyth
   };
   if (descriptor.description !== undefined) def.description = descriptor.description;
   if (descriptor.requires !== undefined) def.requires = descriptor.requires;
+  // The property fields too (2026-11-25): the compile-hook context reads the configRef fields from the
+  // definition to fill ctx['referencedConfigs'] (compile-context.ts). Without them a custom node's hook always got
+  // {} there, against interfaces/node-compile-context/SPEC.md, and could not resolve a WiFi or broker config.
+  if (descriptor.properties !== undefined) def.properties = descriptor.properties;
   return { ...def, ...packageCodegen(descriptor, pythonSource) };
 }
 

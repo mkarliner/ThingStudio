@@ -1,0 +1,25 @@
+{
+  "formatVersion": 1,
+  "flowName": "will-test",
+  "nodes": [
+    {
+      "id": "1",
+      "type": "custom/will_test",
+      "properties": {
+        "topic": "tstest/avail",
+        "brokerConfigId": "ef01cb90-dda3-4708-86a0-c7d52db02539",
+        "wifiConfigId": "1b1ff863-cb83-4567-af04-4d720eee028b"
+      }
+    },
+    { "id": "2", "type": "thingstudio/debug", "properties": {} }
+  ],
+  "edges": [["1", 0, "2", 0]],
+  "layout": {
+    "1": { "pos": [80, 140], "size": [120, 34] },
+    "2": { "pos": [260, 140], "size": [96, 34] }
+  },
+  "configs": [
+    { "id": "1b1ff863-cb83-4567-af04-4d720eee028b", "type": "thingstudio/config/wifi", "properties": { "credentialName": "mihome", "security": "password" } },
+    { "id": "ef01cb90-dda3-4708-86a0-c7d52db02539", "type": "thingstudio/config/mqtt-broker", "properties": { "credentialName": "lan-mqtt-broker" } }
+  ]
+}

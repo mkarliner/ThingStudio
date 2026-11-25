@@ -6,6 +6,7 @@ import type { GraphData } from "../src/compiler/graph.js";
 import type { NodeDescriptor } from "../src/compiler/node-descriptor.js";
 import type { Target } from "../src/definitions/target.js";
 import { buildCompileContext, COMPILE_CONTEXT_VERSION } from "../src/node-library/compile-context.js";
+import { buildCustomNodeDefinition, validateCustomNodeDescriptor } from "../src/node-library/custom-node.js";
 
 const descriptor: NodeDescriptor = {
   type: "custom/sensor",
@@ -92,6 +93,33 @@ describe("buildCompileContext", () => {
       bus1: { bus: 0, scl: 22, sda: 21 },
       wifi1: { ssid: "net", password: "secret" },
     });
+  });
+
+  it("fills referencedConfigs for a custom node loaded from its .node.json, not just a hand-built descriptor", () => {
+    // 2026-11-25: buildCustomNodeDefinition dropped the property fields, so a custom hook always got {} here.
+    const custom = validateCustomNodeDescriptor({
+      type: "custom/will_test",
+      kind: "source",
+      eventSource: true,
+      label: "will test",
+      ports: { outputs: [{ name: "msg", type: "any" }] },
+      properties: [
+        { name: "broker", label: "broker", kind: "configRef", configType: "thingstudio/config/mqtt-broker", default: "" },
+        { name: "wifi", label: "WiFi", kind: "configRef", configType: "thingstudio/config/wifi", singleton: true, default: "" },
+      ],
+    });
+    const def = buildCustomNodeDefinition(custom, "async def wait(properties):\n    pass\n\nasync def emit(properties):\n    return {}\n");
+    const node = { id: "1", type: "custom/will_test", properties: { broker: "b1", wifi: "" } };
+    const g: GraphData = {
+      nodes: [node],
+      links: [],
+      configs: [
+        { id: "b1", type: "thingstudio/config/mqtt-broker", properties: { broker: "h", password: "s" } },
+        { id: "w1", type: "thingstudio/config/wifi", properties: { ssid: "net", password: "pw" } },
+      ],
+    };
+    const ctx = buildCompileContext({ graphData: g, node, descriptor: def, target: null });
+    expect(ctx.referencedConfigs).toEqual({ b1: { broker: "h", password: "s" }, w1: { ssid: "net", password: "pw" } });
   });
 
   it("redacts flow.configs but not referencedConfigs", () => {

@@ -1,0 +1,15 @@
+{
+  "type": "custom/will_test",
+  "kind": "source",
+  "eventSource": true,
+  "label": "will test",
+  "group": "examples",
+  "description": "Test node for ts_mqtt's Last Will and connect callback (Home Assistant phase 0). Sets a retained 'offline' will on the topic, publishes a retained 'online' on every connect, and sends a message each time it does.",
+  "ports": { "outputs": [{ "name": "msg", "type": "any" }] },
+  "properties": [
+    { "name": "topic", "label": "availability topic", "kind": "text", "default": "tstest/avail" },
+    { "name": "brokerConfigId", "label": "MQTT Broker", "kind": "configRef", "configType": "thingstudio/config/mqtt-broker", "singleton": true, "default": "" },
+    { "name": "wifiConfigId", "label": "WiFi", "kind": "configRef", "configType": "thingstudio/config/wifi", "singleton": true, "default": "" },
+    { "name": "nodeId", "label": "node id", "kind": "nodeId", "default": "" }
+  ]
+}
