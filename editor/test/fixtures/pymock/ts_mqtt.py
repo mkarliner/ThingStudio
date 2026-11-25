@@ -16,6 +16,12 @@
 # re-checks the connection about once a second while it waits: a subscribe-only flow has no publish call to notice
 # a reconnect.
 #
+# Last Will and connect callbacks (for ts_ha, Home Assistant phase 0.4). set_will() goes onto the existing mqtt_as
+# client with its _set_last_will(): that only sets the _lw_* attributes, which _connect() reads on every connect,
+# mqtt_as's own reconnects included, so the will is sent each time. Rebuilding the client instead would lose its
+# queue and events. on_connect() callbacks run after the first connect and on each reconnect ensure_connected()
+# notices (after the resubscribe), so a node can re-announce itself, e.g. publish "online" over a retained will.
+#
 # A "subscribed" signal for a publish to wait on is deliberately not built yet; the registry is where it belongs
 # (outstanding-items/mqtt-pubsub-boot-race.md), and ensure_connected()/subscribe() are the seam for it.
 
@@ -80,6 +86,8 @@ class _Client:
         self.events = {}        # node id -> asyncio.Event
         self.last_state = {}    # node id -> last reported connected state
         self.dispatcher = None
+        self.will = None        # (topic, msg, retain, qos) once set_will() has been called
+        self.connect_callbacks = []
         runtime.register_cleanup('mqtt-%s-%s' % (broker, port), self.stop)
 
     # -- lifecycle ----------------------------------------------------------------------------------------------
@@ -106,6 +114,37 @@ class _Client:
             self.dispatcher = None
         _clients.pop((self.broker, self.port), None)
 
+    def set_will(self, topic, msg, retain=False, qos=0):
+        """The broker's Last Will for this client: published by the broker if the board drops off without a clean
+        disconnect. Must be set before the first connect (it goes in the CONNECT packet). One will per client: a
+        second, different will is a loud error, like ensure_client()'s settings rule; the same will again is fine."""
+        will = (topic, msg, bool(retain), qos)
+        if self.will is not None:
+            if self.will != will:
+                raise ValueError(
+                    'ts_mqtt: two nodes asked for different Last Wills on broker %s:%s -- one client has one will'
+                    % (self.broker, self.port))
+            return
+        if self.connected:
+            raise ValueError(
+                'ts_mqtt: set_will() on broker %s:%s after it connected -- set the will before the first connect '
+                '(in node setup, before any publish or subscribe)' % (self.broker, self.port))
+        self.client._set_last_will(topic, msg, bool(retain), qos)
+        self.will = will
+
+    def on_connect(self, callback):
+        """Run `callback()` after the first connect and after each reconnect ensure_connected() notices. It may
+        be a plain function or a coroutine function. A callback registered after the client is already up does not
+        run until the next reconnect, so register it in node setup. A reconnect is only noticed when something calls
+        ensure_connected(); wait_message() does so about once a second, so a node that subscribes is covered."""
+        self.connect_callbacks.append(callback)
+
+    async def _run_connect_callbacks(self):
+        for callback in list(self.connect_callbacks):
+            result = callback()
+            if hasattr(result, 'send'):  # a coroutine: MicroPython has no inspect.iscoroutine
+                await result
+
     def _report(self, node_id):
         now = bool(self.client.isconnected())
         if self.last_state.get(node_id) != now:
@@ -124,6 +163,7 @@ class _Client:
                 # mqtt_as reconnected: resubscribe from the registry's current set.
                 self.link_up = True
                 await self._resubscribe()
+                await self._run_connect_callbacks()
             elif not now:
                 self.link_up = False
             self._report(node_id)
@@ -179,6 +219,7 @@ class _Client:
             self.link_up = True
             await self._resubscribe()
             self._start_dispatcher()
+            await self._run_connect_callbacks()
         self._report(node_id)
 
     async def _resubscribe(self):

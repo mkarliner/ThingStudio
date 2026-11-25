@@ -339,6 +339,16 @@ one. `radio().scan(...)` and `radio().advertise(...)` share it as `ble scan` and
 `ts_ble.decode(adv)` and `ts_ble.build_adv(...)` read and build advertising data. The radio is turned off on each
 redeploy.
 
+For MQTT, `ts_mqtt.ensure_client(...)` returns the flow's one client for a broker, the same one the mqtt nodes use.
+Two client methods are for nodes that announce themselves, such as a Home Assistant device:
+
+- `client.set_will(topic, msg, retain=False, qos=0)` sets the message the broker publishes if the board drops off
+  without saying goodbye. Call it in setup, before anything connects. A different will on the same broker is an
+  error.
+- `client.on_connect(callback)` runs `callback` after the first connect and after each reconnect, for example to
+  publish `online` over a retained `offline` will. It can be a plain or an `async` function. Register it in
+  setup too.
+
 ### Your own libraries
 
 Put a Python module of your own in `~/.thingstudio/libraries/`: a file `<name>.py`, or a package as a folder with

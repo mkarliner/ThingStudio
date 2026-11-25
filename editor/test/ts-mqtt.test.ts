@@ -1,7 +1,8 @@
 // The shared ts_mqtt library (device-runtime/src/vendor/thingstudio_mqtt/ts_mqtt.py), run against pymock's
 // mqtt_as/network/runtime fixtures. Covers the behaviour the old mqtt-shared.ts codegen had (one client per
 // broker, one connect across racing nodes, the WiFi wait, the retry/reason text, redeploy cleanup) plus the new
-// per-node subscription registry (routing, last-node unsubscribe, resubscribe on reconnect).
+// per-node subscription registry (routing, last-node unsubscribe, resubscribe on reconnect), and the Last Will and
+// connect callbacks ts_ha needs (set_will, on_connect).
 
 import { execFileSync } from "node:child_process";
 import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
@@ -151,6 +152,75 @@ describe("ts_mqtt library", () => {
     );
     expect(out).toContain("STOPPED False");
     expect(out).toContain("CLIENTS {}");
+  });
+
+  it("sends the Last Will set before the first connect, and keeps it for mqtt_as's reconnects", () => {
+    const out = run(
+      PRELUDE +
+        "c = " + CLIENT +
+        "c.set_will('dev/avail', b'offline', True, 1)\n" +
+        "async def _main():\n" +
+        "    await c.ensure_connected('n1')\n" +
+        "    m = mqtt_as.CLIENTS[-1]\n" +
+        "    print('LW', m._lw_topic, m._lw_msg, m._lw_retain, m._lw_qos)\n" +
+        "asyncio.run(_main())\n",
+    );
+    expect(out).toContain("MQTT_WILL topic='dev/avail' msg=b'offline' retain=True qos=1");
+    expect(out).toContain("LW dev/avail b'offline' True 1");
+  });
+
+  it("accepts the same will twice but refuses a different one loudly", () => {
+    const out = run(
+      PRELUDE + "c = " + CLIENT + "c.set_will('a', b'x')\nc.set_will('a', b'x')\nprint('SAME OK')\n",
+    );
+    expect(out).toContain("SAME OK");
+    expect(() => run(PRELUDE + "c = " + CLIENT + "c.set_will('a', b'x')\nc.set_will('a', b'y')\n")).toThrow(
+      /different Last Wills/,
+    );
+  });
+
+  it("refuses a will after the first connect", () => {
+    expect(() =>
+      run(
+        PRELUDE +
+          "c = " + CLIENT +
+          "asyncio.run(c.ensure_connected('n1'))\n" +
+          "c.set_will('a', b'x')\n",
+      ),
+    ).toThrow(/after it connected/);
+  });
+
+  it("runs connect callbacks after the first connect and after each reconnect, plain or async", () => {
+    const out = run(
+      PRELUDE +
+        "c = " + CLIENT +
+        "calls = []\n" +
+        "c.on_connect(lambda: calls.append('plain'))\n" +
+        "async def _announce():\n" +
+        "    await c.publish('n1', 'dev/avail', b'online', True)\n" +
+        "c.on_connect(_announce)\n" +
+        "async def _main():\n" +
+        "    await c.ensure_connected('n1')\n" +
+        "    await c.subscribe('n1', 't', 0)\n" +
+        "    print('FIRST', calls)\n" +
+        "    await c.ensure_connected('n1')\n" +
+        "    print('STEADY', calls)\n" +
+        "    c.client.connected = False\n" +
+        "    await c.ensure_connected('n1')\n" +
+        "    c.client.connected = True\n" +
+        "    await c.ensure_connected('n1')\n" +
+        "    print('AGAIN', calls)\n" +
+        "    print('ORDER', c.client.subscriptions)\n" +
+        "asyncio.run(_main())\n",
+    );
+    expect(out).toContain("FIRST ['plain']");
+    expect(out).toContain("STEADY ['plain']");
+    expect(out).toContain("AGAIN ['plain', 'plain']");
+    expect(out.match(/MQTT_PUBLISH topic='dev\/avail' payload=b'online' retain=True/g)?.length).toBe(2);
+    // On reconnect the resubscribe comes before the callbacks.
+    const resub = out.lastIndexOf("MQTT_SUBSCRIBE topic='t'");
+    const announce = out.lastIndexOf("MQTT_PUBLISH topic='dev/avail'");
+    expect(resub).toBeLessThan(announce);
   });
 
   it("keeps the connect path's WiFi wait, bounded retries and refusal explanations", () => {

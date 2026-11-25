@@ -26,6 +26,7 @@ config = {
     "ssid": None,
     "wifi_pw": None,
     "queue_len": 0,
+    "will": None,
 }
 
 
@@ -79,7 +80,21 @@ class MQTTClient:
         self._tasks = []
         self._sock = None
         self.closed = False
+        # Last Will, as the real MQTT_base.__init__ sets it from config['will'] (or _set_last_will() later).
+        self._lw_topic = False
+        if self.cfg.get("will") is not None:
+            self._set_last_will(*self.cfg["will"])
         CLIENTS.append(self)
+
+    def _set_last_will(self, topic, msg, retain=False, qos=0):
+        if qos not in (0, 1):
+            raise ValueError("Only qos 0 and 1 are supported.")
+        if not topic:
+            raise ValueError("Empty topic.")
+        self._lw_topic = topic
+        self._lw_msg = msg
+        self._lw_qos = qos
+        self._lw_retain = retain
 
     def _close(self):
         self.closed = True
@@ -89,6 +104,8 @@ class MQTTClient:
         if MQTTClient.CONNECT_DELAY_S:
             await asyncio.sleep(MQTTClient.CONNECT_DELAY_S)
         print("MQTT_CONNECT server=%s port=%s" % (self.cfg.get("server"), self.cfg.get("port")))
+        if self._lw_topic:
+            print("MQTT_WILL topic=%r msg=%r retain=%s qos=%s" % (self._lw_topic, self._lw_msg, self._lw_retain, self._lw_qos))
         self.connected = True
 
     async def publish(self, topic, msg, retain=False, qos=0):
