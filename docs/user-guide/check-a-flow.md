@@ -3,9 +3,12 @@
 `thingstudio-compile` compiles and checks a flow file from the command line, with the same errors the editor gives.
 Use it in a script, in CI, or to let an AI assistant check a flow it has written.
 
+It needs a copy of ThingStudio built from source: the packages and the installer script don't include it yet. See
+[From source](installation-details.md#from-source) for getting the repository and building it.
+
 ## Build it
 
-From the `editor/` folder:
+From the `editor/` folder of that copy:
 
 ```text
 npm ci --ignore-scripts
