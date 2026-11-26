@@ -3693,7 +3693,8 @@ output has type <code>any</code> (see <a href="../../working-in-the-editor/#wiri
 <h2 id="behavior">Behavior</h2>
 <p>The code is the body of an <code>async def</code>, so <code>return</code> and <code>await</code> work at its top level. <code>asyncio</code> and <code>runtime</code> are
 already defined; import anything else in the code, such as <code>import machine</code>. A library ThingStudio provides, such as
-<code>mqtt_as</code>, is installed on the board when you deploy (see <a href="../../flow-lifecycle/#libraries">Libraries</a>).</p>
+<code>mqtt_as</code>, is installed on the board when you deploy (see <a href="../../flow-lifecycle/#libraries">Libraries</a>). So is a library of your own (see
+<a href="../../custom-nodes/#your-own-libraries">Your own libraries</a>).</p>
 <p>Don't call <code>time.sleep()</code> or run a long loop: either stops every other chain while it runs. Use
 <code>await asyncio.sleep(1)</code> instead (see <a href="../../background/event-driven/#the-one-rule-dont-block">The one rule: don't block</a>).</p>
 <p>Local variables start again for every message. Keep values between messages in <code>context</code>, <code>flow</code> or <code>settings</code>.</p>

@@ -3654,8 +3654,10 @@
 <h1 id="check-a-flow-without-the-editor">Check a flow without the editor</h1>
 <p><code>thingstudio-compile</code> compiles and checks a flow file from the command line, with the same errors the editor gives.
 Use it in a script, in CI, or to let an AI assistant check a flow it has written.</p>
+<p>It needs a copy of ThingStudio built from source: the packages and the installer script don't include it yet. See
+<a href="../installation-details/#from-source">From source</a> for getting the repository and building it.</p>
 <h2 id="build-it">Build it</h2>
-<p>From the <code>editor/</code> folder:</p>
+<p>From the <code>editor/</code> folder of that copy:</p>
 <div class="highlight"><pre><span></span><code>npm ci --ignore-scripts
 npm run build:cli
 </code></pre></div>

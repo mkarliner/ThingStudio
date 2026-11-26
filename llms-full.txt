@@ -1215,16 +1215,38 @@ Every install has a `tutorials` folder. [Tutorial flows](tutorial-flows.md#where
 
 ## From source
 
-For working on ThingStudio itself. You need Python 3.10 or later, Node.js 22 (22.23 is known to work, 24.13 isn't), and `make`. `make` checks your
-Node.js before it builds. On a Mac,
-`make` comes with the Xcode command line tools (`xcode-select --install`).
+For working on ThingStudio itself, or for trying a feature before it's released. You need git, Python 3.11 or later,
+Node.js 22 (22.23 is known to work, 24.13 isn't), and `make`. `make` checks your Python and Node.js before it builds.
+On a Mac, `make` comes with the Xcode command line tools (`xcode-select --install`).
+
+Get the repository:
+
+```
+git clone https://github.com/mkarliner/ThingStudio.git
+cd ThingStudio
+```
 
 In the repository folder, run `make`. This builds the editor and the user guide, installs ThingStudio into a `.venv`
 folder, and puts the `thingstudio-backend` command on your PATH. Run `make` again after updating the repository. It
-only rebuilds what changed. If your `python3` is older than 3.10, name a newer one: `make PYTHON=python3.12`.
+only rebuilds what changed. If your `python3` is older than 3.11, name a newer one: `make PYTHON=python3.12`.
 
 Start it with `thingstudio-backend`, or `make run`. On a Mac, start it from Apple's **Terminal** app. macOS blocks
 WiFi connections from a copy run from source in other terminals, such as iTerm.
+
+### A feature that isn't released yet
+
+New work is built on a branch before it reaches a release. To try it, check out that branch before running `make`,
+replacing `branch-name` with the branch you were pointed to:
+
+```
+git fetch origin
+git checkout branch-name
+make
+```
+
+A branch build is unsupported: it can change or break without notice, and its user guide (`/docs` in the editor it
+builds) describes that branch, not the latest release. To go back, check out `main` and run `make` again, or install a
+release as in [Getting started](getting-started.md).
 
 
 ---
@@ -2038,10 +2060,11 @@ choose (see [Flow lifecycle](flow-lifecycle.md#save-and-open)).
 | `credentials/` | WiFi and MQTT broker logins, saved by name | No, use the editor |
 | `presets/` | Saved node settings, one folder per node type | Yes |
 | `custom-nodes/` | Your own node types | Yes |
+| `libraries/` | Your own Python libraries | Yes |
 | `boards/` | Board definitions | Yes |
 | `processors/` | Processor definitions | Yes |
 
-Every file is plain JSON, except the `.node.py` file of a custom node. The editor reads these folders through the
+Every file is plain JSON, except the Python files of custom nodes and libraries. The editor reads these folders through the
 ThingStudio backend, so they aren't available when the editor talks to the board directly over USB.
 
 ## Credentials
@@ -2065,6 +2088,14 @@ and load presets from a node's property panel (see [Presets](working-in-the-edit
 A custom node is two files with the same base name: `<name>.node.json` and `<name>.node.py`. The first time
 ThingStudio starts, it puts two examples here. Deleted examples don't come back. See
 [Custom nodes](custom-nodes.md).
+
+A folder inside `custom-nodes/` is a bundle: nodes that belong together, with the libraries they share in its `lib/`
+(see [Bundles](custom-nodes.md#bundles)).
+
+## Libraries
+
+`libraries/` holds Python modules of your own that your nodes and function nodes import. ThingStudio sends each one
+to the board when a flow needs it (see [Your own libraries](custom-nodes.md#your-own-libraries)).
 
 ## Boards and processors
 
@@ -3101,7 +3132,8 @@ With one output, a returned list is passed on as the message itself. Set **outpu
 
 The code is the body of an `async def`, so `return` and `await` work at its top level. `asyncio` and `runtime` are
 already defined; import anything else in the code, such as `import machine`. A library ThingStudio provides, such as
-`mqtt_as`, is installed on the board when you deploy (see [Libraries](../flow-lifecycle.md#libraries)).
+`mqtt_as`, is installed on the board when you deploy (see [Libraries](../flow-lifecycle.md#libraries)). So is a library of your own (see
+[Your own libraries](../custom-nodes.md#your-own-libraries)).
 
 Don't call `time.sleep()` or run a long loop: either stops every other chain while it runs. Use
 `await asyncio.sleep(1)` instead (see [The one rule: don't block](../background/event-driven.md#the-one-rule-dont-block)).
@@ -5687,12 +5719,60 @@ When a node imports one of these, ThingStudio sends it to the board with the flo
 | `bme280_float`, `ft6336u` | the BME280 sensor and FT6336U touch drivers |
 | `mqtt_as` | Peter Hinch's asyncio MQTT client |
 
-A library of your own can't be sent yet. Code two of your nodes share goes in each `.node.py`.
+Your own libraries are sent the same way (below).
 
 For Bluetooth, use `ts_ble.radio()`, not `bluetooth.BLE()`: the board has one radio, and the ble nodes use the same
 one. `radio().scan(...)` and `radio().advertise(...)` share it as `ble scan` and `ble advertise` do, and
 `ts_ble.decode(adv)` and `ts_ble.build_adv(...)` read and build advertising data. The radio is turned off on each
 redeploy.
+
+For MQTT, give your node a `configRef` to `thingstudio/config/mqtt-broker`. Any node holding the flow's broker
+counts as an MQTT node, so the flow's WiFi is left to the MQTT client, as it is for the mqtt nodes.
+`ts_mqtt.ensure_client(...)` returns the flow's one client for a broker, the same one the mqtt nodes use. It needs
+the WiFi and broker passwords, which only a [compile hook](#compile-time-namecompilepy) can read, from
+`ctx["referencedConfigs"]`. Two client methods are for nodes that announce themselves, such as a Home Assistant device:
+
+- `client.set_will(topic, msg, retain=False, qos=0)` sets the message the broker publishes if the board drops off
+  without saying goodbye. Call it in setup, before anything connects. A different will on the same broker is an
+  error.
+- `client.on_connect(callback)` runs `callback` after the first connect and after each reconnect, for example to
+  publish `online` over a retained `offline` will. It can be a plain or an `async` function. Register it in
+  setup too.
+
+### Your own libraries
+
+Put a Python module of your own in `~/.thingstudio/libraries/`: a file `<name>.py`, or a package as a folder with
+an `__init__.py`. When a node or a function node imports it, ThingStudio sends it to the board on deploy, like the
+libraries above. The editor reads the folder when it loads custom nodes, and **Reload custom nodes** reads it again.
+
+A library is refused, with a line in the console, when its name is already taken: by a library in the table above,
+by a module of ThingStudio's own runtime such as `runtime`, or by a module MicroPython provides such as `machine` or
+`json`. A name that isn't a plain Python name (letters, digits and `_`) is refused too. Two libraries with the same
+name, one in this folder and one in a bundle say, are both refused: rename one. A library that doesn't compile stops
+the deploy that needs it, and the console names the file.
+
+Libraries aren't available in ThingStudio Web.
+
+### Bundles
+
+Nodes that belong together, and the libraries they share, can go in one folder inside `custom-nodes/`:
+
+```
+custom-nodes/
+  home-assistant/
+    ha_sensor.node.json
+    ha_sensor.node.py
+    lib/
+      ts_ha.py
+```
+
+Install a bundle by copying its folder in. Its nodes load like any others, and the modules in its `lib/` work like
+your own libraries. Other folders in a bundle, such as `examples/`, are ignored, and a bundle can't hold another.
+
+A bundle loads whole or not at all. If one of its nodes has a problem, one of its libraries is refused, or one of its
+node names is already used, none of it loads, and the console says why. Edit a bundle's files directly: the editor
+doesn't change them. A folder whose name starts with `.` or `_` is ignored, so `_drafts/` is a safe place for work
+in progress.
 
 ### Persisting values
 
@@ -6163,9 +6243,12 @@ Source: https://docs.thingstudio.net/check-a-flow/
 `thingstudio-compile` compiles and checks a flow file from the command line, with the same errors the editor gives.
 Use it in a script, in CI, or to let an AI assistant check a flow it has written.
 
+It needs a copy of ThingStudio built from source: the packages and the installer script don't include it yet. See
+[From source](installation-details.md#from-source) for getting the repository and building it.
+
 ## Build it
 
-From the `editor/` folder:
+From the `editor/` folder of that copy:
 
 ```text
 npm ci --ignore-scripts
@@ -7584,8 +7667,11 @@ flow has run.
 When a deploy fails this way, work through these in order:
 
 1. **Tools → Remove flow…** — so nothing is resumed at start-up.
-2. **Power cycle the board** — unplug its USB cable and plug it back in, or **Tools → Reset board (hard)**.
+2. **Power cycle the board** — unplug its USB cable and plug it back in. On an ESP32-C3, **Tools → Reset board
+   (hard)** isn't reliable enough here.
 3. Deploy again.
+
+The editor shows a **POWER CYCLE THE BOARD** popup when a deploy fails for lack of memory.
 
 Removing the flow alone doesn't help: the running flow keeps its memory until the chip restarts. A soft restart
 doesn't either: it restarts the interpreter over the same heap regions and returns no chip memory. Only a power

@@ -1324,6 +1324,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#libraries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Libraries
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#boards-and-processors" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3632,6 +3643,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#libraries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Libraries
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#boards-and-processors" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3707,6 +3729,11 @@ choose (see <a href="../flow-lifecycle/#save-and-open">Flow lifecycle</a>).</p>
 <td>Yes</td>
 </tr>
 <tr>
+<td><code>libraries/</code></td>
+<td>Your own Python libraries</td>
+<td>Yes</td>
+</tr>
+<tr>
 <td><code>boards/</code></td>
 <td>Board definitions</td>
 <td>Yes</td>
@@ -3718,7 +3745,7 @@ choose (see <a href="../flow-lifecycle/#save-and-open">Flow lifecycle</a>).</p>
 </tr>
 </tbody>
 </table>
-<p>Every file is plain JSON, except the <code>.node.py</code> file of a custom node. The editor reads these folders through the
+<p>Every file is plain JSON, except the Python files of custom nodes and libraries. The editor reads these folders through the
 ThingStudio backend, so they aren't available when the editor talks to the board directly over USB.</p>
 <h2 id="credentials">Credentials</h2>
 <p>A WiFi or MQTT broker config node holds only the name of a credential. The SSID, password, broker address and login
@@ -3735,6 +3762,11 @@ and load presets from a node's property panel (see <a href="../working-in-the-ed
 <p>A custom node is two files with the same base name: <code>&lt;name&gt;.node.json</code> and <code>&lt;name&gt;.node.py</code>. The first time
 ThingStudio starts, it puts two examples here. Deleted examples don't come back. See
 <a href="../custom-nodes/">Custom nodes</a>.</p>
+<p>A folder inside <code>custom-nodes/</code> is a bundle: nodes that belong together, with the libraries they share in its <code>lib/</code>
+(see <a href="../custom-nodes/#bundles">Bundles</a>).</p>
+<h2 id="libraries">Libraries</h2>
+<p><code>libraries/</code> holds Python modules of your own that your nodes and function nodes import. ThingStudio sends each one
+to the board when a flow needs it (see <a href="../custom-nodes/#your-own-libraries">Your own libraries</a>).</p>
 <h2 id="boards-and-processors">Boards and processors</h2>
 <p>At every start, ThingStudio writes the built-in definitions into <code>boards/</code> and <code>processors/</code>, replacing files of the
 same name. An upgrade's changes therefore arrive on the next start.</p>
