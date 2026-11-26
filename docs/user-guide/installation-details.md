@@ -56,13 +56,35 @@ Every install has a `tutorials` folder. [Tutorial flows](tutorial-flows.md#where
 
 ## From source
 
-For working on ThingStudio itself. You need Python 3.10 or later, Node.js 22 (22.23 is known to work, 24.13 isn't), and `make`. `make` checks your
-Node.js before it builds. On a Mac,
-`make` comes with the Xcode command line tools (`xcode-select --install`).
+For working on ThingStudio itself, or for trying a feature before it's released. You need git, Python 3.11 or later,
+Node.js 22 (22.23 is known to work, 24.13 isn't), and `make`. `make` checks your Python and Node.js before it builds.
+On a Mac, `make` comes with the Xcode command line tools (`xcode-select --install`).
+
+Get the repository:
+
+```
+git clone https://github.com/mkarliner/ThingStudio.git
+cd ThingStudio
+```
 
 In the repository folder, run `make`. This builds the editor and the user guide, installs ThingStudio into a `.venv`
 folder, and puts the `thingstudio-backend` command on your PATH. Run `make` again after updating the repository. It
-only rebuilds what changed. If your `python3` is older than 3.10, name a newer one: `make PYTHON=python3.12`.
+only rebuilds what changed. If your `python3` is older than 3.11, name a newer one: `make PYTHON=python3.12`.
 
 Start it with `thingstudio-backend`, or `make run`. On a Mac, start it from Apple's **Terminal** app. macOS blocks
 WiFi connections from a copy run from source in other terminals, such as iTerm.
+
+### A feature that isn't released yet
+
+New work is built on a branch before it reaches a release. To try it, check out that branch before running `make`,
+replacing `branch-name` with the branch you were pointed to:
+
+```
+git fetch origin
+git checkout branch-name
+make
+```
+
+A branch build is unsupported: it can change or break without notice, and its user guide (`/docs` in the editor it
+builds) describes that branch, not the latest release. To go back, check out `main` and run `make` again, or install a
+release as in [Getting started](getting-started.md).

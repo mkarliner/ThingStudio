@@ -50,7 +50,7 @@ ThingStudio has three parts:
 
 ## Build from source
 
-You need Python 3.10 or later, Node.js 22.12 or later, and `make`. In the repository folder:
+You need Python 3.11 or later, Node.js 22.12 or later, and `make`. In the repository folder:
 
 ```sh
 make                  # build the editor and docs, install into .venv, put thingstudio-backend on PATH

@@ -13,7 +13,7 @@
 # The link goes in the first writable one of ~/.local/bin, /opt/homebrew/bin, /usr/local/bin that is on
 # PATH. Set BINDIR=/some/dir to choose. An existing file there that isn't a link is never replaced.
 #
-# Needs Python 3.10+, Node.js 22.12+ and git; make checks and says what's missing. PYTHON=/path/to/python3.12 picks the Python.
+# Needs Python 3.11+, Node.js 22.12+ and git; make checks and says what's missing. PYTHON=/path/to/python3.12 picks the Python.
 # Written for GNU make 3.81, the version macOS ships.
 #
 # device-runtime tests need a MicroPython unix-port build; see device-runtime/test/README.md.
@@ -54,9 +54,9 @@ check-node:
 	@command -v git >/dev/null || echo "warning: git not found; the editor won't know which device-runtime it was built with."
 
 check-python:
-	@command -v $(PYTHON) >/dev/null || { echo "'$(PYTHON)' not found. Install Python 3.10+, or name one: make PYTHON=/path/to/python3.12"; exit 1; }
-	@$(PYTHON) -c 'import sys; sys.exit(sys.version_info < (3, 10))' || { \
-	  echo "Thingstudio needs Python 3.10 or later. '$(PYTHON)' is $$($(PYTHON) --version 2>&1)."; \
+	@command -v $(PYTHON) >/dev/null || { echo "'$(PYTHON)' not found. Install Python 3.11+, or name one: make PYTHON=/path/to/python3.12"; exit 1; }
+	@$(PYTHON) -c 'import sys; sys.exit(sys.version_info < (3, 11))' || { \
+	  echo "ThingStudio needs Python 3.11 or later (some of its pinned packages do). '$(PYTHON)' is $$($(PYTHON) --version 2>&1)."; \
 	  echo "Name a newer one: make PYTHON=/path/to/python3.12"; exit 1; }
 	@$(PYTHON) -c 'import venv, ensurepip' 2>/dev/null || { \
 	  echo "'$(PYTHON)' can't create a virtual environment (no venv/ensurepip module)."; \
