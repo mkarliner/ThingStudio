@@ -29,6 +29,7 @@ const SAMPLE_MESSAGES: Message[] = [
     largestIdfHeapBlockBytes: 31_744,
     safeMode: false,
     hostname: null,
+    chipId: null,
     authRequired: false,
     authScheme: null,
     hasWifi: false,
@@ -53,6 +54,7 @@ const SAMPLE_MESSAGES: Message[] = [
     safeMode: true, // board in boot-loop safe mode (2026-09-23)
     // WiFi transport fields (2026-09-24): a board with a password set, listening.
     hostname: "ts-kitchen",
+    chipId: "a0b1c2d3e4f5",
     authRequired: true,
     authScheme: "hmac-sha256-nonce",
     hasWifi: true,

@@ -33,6 +33,7 @@ const HELLO: Message = {
   largestIdfHeapBlockBytes: null,
   safeMode: false,
   hostname: null,
+  chipId: null,
   authRequired: false,
   authScheme: null,
   hasWifi: false,

@@ -405,6 +405,7 @@ function validateHello(obj: Record<string, unknown>): Omit<HelloMessage, "type">
     largestIdfHeapBlockBytes: expectOptionalNonNegativeInt(obj, "largestIdfHeapBlockBytes", "HELLO"),
     safeMode: expectOptionalBool(obj, "safeMode", "HELLO") ?? false,
     hostname: expectOptionalString(obj, "hostname", "HELLO"),
+    chipId: expectOptionalString(obj, "chipId", "HELLO"),
     authRequired: expectOptionalBool(obj, "authRequired", "HELLO") ?? false,
     authScheme: expectOptionalString(obj, "authScheme", "HELLO"),
     hasWifi: expectOptionalBool(obj, "hasWifi", "HELLO") ?? false,

@@ -64,7 +64,7 @@ exchange is tested.
 - **`HELLO_REQUEST`** (10, editor → board): editor sends it in `editor/src/app/main.ts`; board handles it by a board.listener row in `interfaces/protocol/states.json`.
 - **`NODE_STATUS`** (11, board → editor): board sends it in `device-runtime/src/listener.py`; editor acts on it in `editor/src/app/main.ts`.
 - **`EXEC`** (12, editor → board): editor sends it in `editor/src/app/main.ts`; board handles it by a board.listener row in `interfaces/protocol/states.json`.
-- **`STOP_TO_PROMPT`** (13, editor → board): editor sends it in `editor/src/app/main.ts`; board handles it by a board.listener row in `interfaces/protocol/states.json`.
+- **`STOP_TO_PROMPT`** (13, editor → board): editor sends it in `editor/src/app/main.ts`, `editor/src/install/runtime.ts`; board handles it by a board.listener row in `interfaces/protocol/states.json`.
 - **`SET_BOARD_SETTINGS`** (14, editor → board): editor sends it in `editor/src/app/main.ts`; board handles it by a board.listener row in `interfaces/protocol/states.json`.
 - **`BOARD_SETTINGS_RESULT`** (15, board → editor): board sends it in `device-runtime/src/listener.py`; editor acts on it in `editor/src/app/main.ts`.
 - **`DEP_PUT`** (16, editor → board): editor sends it in `editor/src/compiler/flow-dependencies.ts`; board handles it by a board.listener row in `interfaces/protocol/states.json`.

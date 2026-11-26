@@ -172,6 +172,10 @@ export interface HelloMessage {
    * checked; `hasWifi` means the firmware has network.WLAN; `networkAddress` is the IP the board is
    * listening on while its WiFi transport is up. */
   readonly hostname: string | null;
+  /** Added 2026-11-25 (runtime 15.2.0): the board's factory id, lower-case hex -- machine.unique_id(), or a
+   * port fallback (nRF52 FICR). Stable across reflashing and renames; the Home Assistant device id is
+   * "ts_" + this. Null from older runtimes and boards with no identifier. */
+  readonly chipId: string | null;
   readonly authRequired: boolean;
   readonly authScheme: string | null;
   readonly hasWifi: boolean;

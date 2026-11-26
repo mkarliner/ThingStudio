@@ -113,11 +113,18 @@ renumbered.
 | `largestIdfHeapBlockBytes` | uint | optional (ESP32 only) |
 | `safeMode` | bool | optional, default false |
 | `hostname` | string | optional |
+| `chipId` | string | optional |
 | `authRequired` | bool | optional, default false |
 | `authScheme` | string | optional |
 | `hasWifi` | bool | optional, default false |
 | `networkAddress` | string | optional |
 | `dependencies` | map string→string | optional |
+
+`chipId` (added 2026-11-25, runtime 15.2.0): the board's factory identifier, as lower-case hex with no separators.
+It is `machine.unique_id()`, or, on a port where that comes back empty, a port-specific fallback: on the nRF52, the
+8 bytes of the FICR `DEVICEID` registers at `0x10000060` (to be confirmed on the XIAO nRF52840). Absent when the
+board has no identifier. It stays the same across reflashing, renames and ports, and isn't secret (it already
+appears in MQTT topics and Home Assistant ids).
 
 ### DEPLOY — → device
 | Field | Type | |

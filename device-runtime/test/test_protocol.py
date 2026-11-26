@@ -34,6 +34,7 @@ SAMPLE_MESSAGES = [
         "largestIdfHeapBlockBytes": 31744,
         "safeMode": False,
         "hostname": None,
+        "chipId": None,
         "authRequired": False,
         "authScheme": None,
         "hasWifi": False,
@@ -57,6 +58,7 @@ SAMPLE_MESSAGES = [
         "safeMode": False,
         # WiFi transport fields (2026-09-24): a board with a password set, listening.
         "hostname": "ts-kitchen",
+        "chipId": "a0b1c2d3e4f5",
         "authRequired": True,
         "authScheme": "hmac-sha256-nonce",
         "hasWifi": True,

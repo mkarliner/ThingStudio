@@ -435,6 +435,9 @@ def _validate_hello(obj, name):
         # which is also what turns the WiFi transport on. hasWifi: the firmware has network.WLAN.
         # networkAddress: the station IP while the WiFi transport is listening, else absent.
         "hostname": _expect_optional_string(obj, "hostname", name),
+        # Added 2026-11-25 (runtime 15.2.0): the board's factory id, lower-case hex (SPEC §5). Absent from older
+        # runtimes and from boards with no identifier.
+        "chipId": _expect_optional_string(obj, "chipId", name),
         "authRequired": _expect_optional_bool(obj, "authRequired", name) or False,
         "authScheme": _expect_optional_string(obj, "authScheme", name),
         "hasWifi": _expect_optional_bool(obj, "hasWifi", name) or False,
