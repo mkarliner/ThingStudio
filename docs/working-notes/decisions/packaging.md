@@ -52,3 +52,14 @@
   certificate chains. `PLATFORM_CONSTRAINTS` in `make_bundle.py` applies it; the bundle build failed on
   Intel first, which is how the gap was found (2026-10-25).
   `docs/third-party-licenses.md`, "Bundled in the release archives".
+- **2026-11-25 — Reopened: a double-click launcher for ThingStudio App on macOS and Windows (Mike).** Running the
+  backend from a terminal is friction. Scoping, not yet a build decision: a menu-bar / tray launcher that supervises
+  the unchanged backend and opens the editor in the default browser; macOS as a signed, notarized, stapled `.app` in
+  a DMG; no editor window (no Electron or Tauri). Supersedes "No double-click app" (2026-09-26) once Mike answers the
+  scoping doc's open questions. Linux stays CLI. Project doc `app-launcher-scoping.md`.
+- **2026-11-25 — Launcher answers (Mike).** Windows signed "if easy": apply to the SignPath Foundation (free for
+  open source; Azure Artifact Signing is closed to UK individuals, an OV certificate needs a hardware key), else stay
+  unsigned; signing no longer removes SmartScreen's first-download warning anyway. macOS: the DMG leads in
+  `getting-started.md`, `curl | sh` under "Command line". The `thingstudio service` helper and LaunchAgent recipe
+  are dropped on macOS and Windows ("Start at login" in the app replaces them); the systemd user unit stays for
+  Linux and the Pi. Windows install route still open. Project doc `app-launcher-scoping.md`.
