@@ -1367,10 +1367,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#boards" class="md-nav__link">
+  <a href="#processors" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Boards
+        Processors
       
     </span>
   </a>
@@ -1378,10 +1378,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#processors-without-a-board-definition" class="md-nav__link">
+  <a href="#boards" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Processors without a board definition
+        Boards
       
     </span>
   </a>
@@ -3610,10 +3610,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#boards" class="md-nav__link">
+  <a href="#processors" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Boards
+        Processors
       
     </span>
   </a>
@@ -3621,10 +3621,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#processors-without-a-board-definition" class="md-nav__link">
+  <a href="#boards" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Processors without a board definition
+        Boards
       
     </span>
   </a>
@@ -3718,9 +3718,56 @@
 
 
 <h1 id="supported-hardware">Supported hardware</h1>
-<p>The boards, processors, displays, touch panels, sensors and other hardware below have built-in support. "Tested" means flows have
+<p>The processors, boards, displays, touch panels, sensors and other hardware below have built-in support. "Tested" means flows have
 been deployed and run on that hardware. Pin details for boards and processors are in
 <a href="../boards/">Boards and processors</a>.</p>
+<h2 id="processors">Processors</h2>
+<p>Any board with one of these processors can be used, even without its own board definition, by picking the
+processor from the <strong>Board</strong> menu, for example <strong>ESP32-C3 (any board)</strong>. Its board-specific pins, such as an LED, aren't labelled.</p>
+<table>
+<thead>
+<tr>
+<th>Processor</th>
+<th>Tested</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ESP32</td>
+<td>Yes, on the CYD</td>
+</tr>
+<tr>
+<td>ESP32-S2</td>
+<td>Yes, on the LOLIN S2 Mini</td>
+</tr>
+<tr>
+<td>ESP32-S3</td>
+<td>Yes, on the Freenove board</td>
+</tr>
+<tr>
+<td>ESP32-C3</td>
+<td>Yes, on a generic ESP32-C3 board, over USB and WiFi; also on the <a href="../custom-firmware/">custom image</a></td>
+</tr>
+<tr>
+<td>ESP32-C5</td>
+<td>Yes, on the ESP32-C5-340X, over USB; also on the <a href="../custom-firmware/">custom image</a></td>
+</tr>
+<tr>
+<td>RP2040</td>
+<td>Yes, on the Pico and Pico W</td>
+</tr>
+<tr>
+<td>RP2350</td>
+<td>Yes, on the Pico 2</td>
+</tr>
+<tr>
+<td>nRF52840</td>
+<td>Smoke tested on the Seeed XIAO nRF52840 (Sense)</td>
+</tr>
+</tbody>
+</table>
+<p>The <a href="../nodes/#bluetooth">ble nodes</a> run on the ESP32, ESP32-S3, ESP32-C3 and ESP32-C5. On other processors
+Deploy refuses them.</p>
 <h2 id="boards">Boards</h2>
 <p>Each board below has a definition: a pin cheat sheet that names the board's own pins, such as its LED, marks the
 pins that are reserved and why, and lists the pins each SPI and I2C bus can use. <strong>Pins…</strong> in the editor shows it.
@@ -3801,53 +3848,6 @@ serial port for the ESP32 family, a mounted drive for RP2040, RP2350 and nRF52 b
 downloaded. A board in this list preselects its build, but any board on a supported chip can be flashed the same
 way. The Pyboard is the exception: it installs over DFU, which the editor doesn't offer; see
 <a href="../installing-micropython/">Install MicroPython</a>.</p>
-<h2 id="processors-without-a-board-definition">Processors without a board definition</h2>
-<p>Any board with one of these processors can be used by picking the processor from the <strong>Board</strong> menu, for example
-<strong>ESP32-C3 (any board)</strong>. Its board-specific pins, such as an LED, aren't labelled.</p>
-<table>
-<thead>
-<tr>
-<th>Processor</th>
-<th>Tested</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>ESP32</td>
-<td>Yes, on the CYD</td>
-</tr>
-<tr>
-<td>ESP32-S2</td>
-<td>Yes, on the LOLIN S2 Mini</td>
-</tr>
-<tr>
-<td>ESP32-S3</td>
-<td>Yes, on the Freenove board</td>
-</tr>
-<tr>
-<td>ESP32-C3</td>
-<td>Yes, on a generic ESP32-C3 board, over USB and WiFi; also on the <a href="../custom-firmware/">custom image</a></td>
-</tr>
-<tr>
-<td>ESP32-C5</td>
-<td>Yes, on the ESP32-C5-340X, over USB; also on the <a href="../custom-firmware/">custom image</a></td>
-</tr>
-<tr>
-<td>RP2040</td>
-<td>Yes, on the Pico and Pico W</td>
-</tr>
-<tr>
-<td>RP2350</td>
-<td>Yes, on the Pico 2</td>
-</tr>
-<tr>
-<td>nRF52840</td>
-<td>Smoke tested on the Seeed XIAO nRF52840 (Sense)</td>
-</tr>
-</tbody>
-</table>
-<p>The <a href="../nodes/#bluetooth">ble nodes</a> run on the ESP32, ESP32-S3, ESP32-C3 and ESP32-C5. On other processors
-Deploy refuses them.</p>
 <h2 id="displays">Displays</h2>
 <p>The <a href="../nodes/gui/">GUI nodes</a> that draw on these displays are provisional.</p>
 <table>

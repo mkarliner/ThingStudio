@@ -47,7 +47,7 @@
 
 ## Boards and networks
 
-- [Supported hardware](https://docs.thingstudio.net/supported-hardware/): The boards, processors, displays, touch panels, sensors and other hardware below have built-in support.
+- [Supported hardware](https://docs.thingstudio.net/supported-hardware/): The processors, boards, displays, touch panels, sensors and other hardware below have built-in support.
 - [Boards and processors](https://docs.thingstudio.net/boards/): Each board and processor has a definition file that says which pins a flow may use.
 - [Kitchen-sink board](https://docs.thingstudio.net/kitchen-sink-board/): How to wire a test board for the input and output nodes: a potentiometer, a push button and a NeoPixel on a LuatOS ESP32C3-CORE.
 - [Custom firmware](https://docs.thingstudio.net/custom-firmware/): A ThingStudio custom image is MicroPython with ThingStudio's runtime and every flow library built in.
