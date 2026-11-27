@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "serial": 3,
+  "serial": 5,
   "builds": [
     {
       "id": "esp32-generic",
@@ -206,6 +206,12 @@
       "note": "The runtime is frozen into this image, so Install runtime only writes the boot script. 14.1.0 and later also freeze the library list, so Deploy sends nothing; earlier versions still push every library a flow uses.",
       "versions": [
         {
+          "version": "15.2.0",
+          "date": "2026-11-27",
+          "url": "https://github.com/mkarliner/ThingStudio/releases/download/v0.14.0/thingstudio-classic-esp32-15.2.0-5f18e7b.bin",
+          "sha256": "e5ad47f641c531422be14f6aec98261541dd8a1df21ab9cd6b3d67980652a4fe"
+        },
+        {
           "version": "15.1.0",
           "date": "2026-11-12",
           "url": "https://github.com/mkarliner/ThingStudio/releases/download/v0.12.2/thingstudio-classic-esp32-15.1.0-e8d4804.bin",
@@ -230,6 +236,12 @@
       "note": "The runtime and every flow library are frozen into this image, so Install runtime only writes the boot script and Deploy sends no libraries.",
       "versions": [
         {
+          "version": "15.2.0",
+          "date": "2026-11-27",
+          "url": "https://github.com/mkarliner/ThingStudio/releases/download/v0.14.0/thingstudio-esp32-c3-15.2.0-5f18e7b.bin",
+          "sha256": "23d350c1e2b7ae74c259ae97491ded395ef1ab7b4f141e539ab9076e6c7733c6"
+        },
+        {
           "version": "15.1.0",
           "date": "2026-11-12",
           "url": "https://github.com/mkarliner/ThingStudio/releases/download/v0.12.2/thingstudio-esp32-c3-15.1.0-e8d4804.bin",
@@ -253,6 +265,12 @@
       "runtime": "install",
       "note": "The runtime and every flow library are frozen into this image, so Install runtime only writes the boot script and Deploy sends no libraries.",
       "versions": [
+        {
+          "version": "15.2.0",
+          "date": "2026-11-27",
+          "url": "https://github.com/mkarliner/ThingStudio/releases/download/v0.14.0/thingstudio-esp32-c5-15.2.0-5f18e7b.bin",
+          "sha256": "eb4a619f361a44d732c3905bdcc51d929465c9d68f34da33d568820e0fb449d5"
+        },
         {
           "version": "15.1.0",
           "date": "2026-11-12",
