@@ -143,7 +143,10 @@ def compile(ctx, properties):
     if wifi is None:
         return {'errors': ['no WiFi config in this flow']}
 
-    mqtt = any(n['type'].startswith('thingstudio/mqtt_') for n in ctx['flow']['nodes'])
+    # An MQTT node is any node holding the flow's broker config, custom ones included.
+    broker_ids = [c['id'] for c in ctx['flow']['configs'] if c['type'] == 'thingstudio/config/mqtt-broker']
+    mqtt = any(isinstance(v, str) and v in broker_ids
+               for n in ctx['flow']['nodes'] for v in (n.get('properties') or {}).values())
     return {
         'properties': {
             'ssid': wifi.get('ssid', ''),

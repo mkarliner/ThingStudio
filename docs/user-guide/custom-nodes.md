@@ -296,8 +296,8 @@ _i2c = runtime.shared('i2c', properties['bus']['bus'])  # the flow's shared bus,
 ```
 
 The bus/pins come from the config; keep the same `runtime.shared` key a built-in would use so a
-clash is reported, not silently shared. (Network configs — WiFi, MQTT — expose only the
-credential's name, not the secret, so a custom node can't make a WiFi connection from one.)
+clash is reported, not silently shared. A network config (WiFi, MQTT broker) gives Python only
+the credential's name: [The flow's WiFi](#the-flows-wifi-ts_wifi) says how a node reaches the network.
 
 ### Cleanup
 
@@ -339,24 +339,148 @@ one. `radio().scan(...)` and `radio().advertise(...)` share it as `ble scan` and
 `ts_ble.decode(adv)` and `ts_ble.build_adv(...)` read and build advertising data. The radio is turned off on each
 redeploy.
 
-For MQTT, give your node a `configRef` to `thingstudio/config/mqtt-broker`. Any node holding the flow's broker
-counts as an MQTT node, so the flow's WiFi is left to the MQTT client, as it is for the mqtt nodes.
-`ts_mqtt.ensure_client(...)` returns the flow's one client for a broker, the same one the mqtt nodes use. It needs
-the WiFi and broker passwords, which only a [compile hook](#compile-time-namecompilepy) can read, from
-`ctx["referencedConfigs"]`. Two client methods are for nodes that announce themselves, such as a Home Assistant device:
+#### The flow's WiFi: `ts_wifi`
 
-- `client.set_will(topic, msg, retain=False, qos=0)` sets the message the broker publishes if the board drops off
-  without saying goodbye. Call it in setup, before anything connects. A different will on the same broker is an
-  error.
-- `client.on_connect(callback)` runs `callback` after the first connect and after each reconnect, for example to
-  publish `online` over a retained `offline` will. It can be a plain or an `async` function. Register it in
-  setup too.
+A node that uses the network joins the flow's one WiFi network, as the built-in network nodes do. Give it a WiFi
+field:
+
+```json
+{ "name": "wifi", "label": "WiFi", "kind": "configRef", "configType": "thingstudio/config/wifi", "singleton": true, "default": "" }
+```
+
+In Python that field holds only the credential's name. The SSID and password reach your node through a
+[compile hook](#compile-time-namecompilepy), which reads the WiFi config from `ctx["referencedConfigs"]` and returns
+the values as properties. The WiFi config has `ssid`, `password` and `security` (`password`, `open` or
+`unmanaged`). This hook returns them the way the built-in nodes do:
+
+```python
+def compile(ctx, properties):
+    configs = ctx['flow']['configs']
+    wifi_ids = [c['id'] for c in configs if c['type'] == 'thingstudio/config/wifi']
+    broker_ids = [c['id'] for c in configs if c['type'] == 'thingstudio/config/mqtt-broker']
+    wifi = (ctx.get('referencedConfigs') or {}).get(wifi_ids[0]) if len(wifi_ids) == 1 else None
+    if wifi is None:
+        return {'errors': ['needs the flow\'s WiFi -- set "WiFi" in its properties']}
+    security = wifi.get('security')
+    if security not in ('open', 'unmanaged'):
+        security = 'password'
+    mqtt = any(isinstance(v, str) and v in broker_ids
+               for n in ctx['flow']['nodes'] for v in (n.get('properties') or {}).values())
+    return {'properties': {
+        'ssid': str(wifi.get('ssid') or '').strip(),
+        'password': str(wifi.get('password') or ''),
+        'security': security,
+        'deferToMqtt': mqtt,
+    }}
+```
+
+Then, in your node's setup:
+
+```python
+import ts_wifi
+
+_sta = ts_wifi.ensure_station(properties['ssid'], properties['password'], properties['security'], properties['deferToMqtt'])
+```
+
+`ts_wifi.ensure_station(ssid, password, security='password', defer_to_mqtt=False)` returns the board's WiFi station,
+a `network.WLAN`. It starts the join and doesn't wait for it, so check `_sta.isconnected()` before sending, or treat
+a failed send as the network being down. Every node in a flow passes the same four values: the first call joins, and
+later calls return the same station. Different values raise `ValueError`, naming both sets. A redeploy forgets the
+values and leaves the board on the network.
+
+The four values are:
+
+- `security`: with `unmanaged`, the station is turned on but not joined, and
+  [WiFi provisioning](wifi-provisioning.md) joins it instead.
+- `defer_to_mqtt`: `True` when any node in the flow holds the flow's MQTT broker config, otherwise `False`. Work it
+  out as the hook above does, or your node's values won't match the built-in nodes'. With `True`, the MQTT client
+  keeps the connection up.
+- `ssid` and `password`: as the WiFi config holds them, with the SSID trimmed.
+
+While the network is down, socket calls such as `sendto` and `getaddrinfo` raise `OSError`. Uncaught, it is
+reported against your node, like any error. Catch it to say what failed, as `udp send` does:
+`udp_send to <host>:<port> failed: ...`.
+
+#### The flow's MQTT client: `ts_mqtt`
+
+An MQTT node holds the flow's broker as well as its WiFi, and a `nodeId` field for the client to report under:
+
+```json
+{ "name": "broker", "label": "MQTT Broker", "kind": "configRef", "configType": "thingstudio/config/mqtt-broker", "singleton": true, "default": "" },
+{ "name": "nodeId", "label": "node id", "kind": "nodeId", "default": "" }
+```
+
+Holding the broker makes your node an MQTT node, so the hook above gives it `deferToMqtt` `True`. The broker config
+has `broker`, `port` (default `1883`), `username` and `password`. Extend the hook to return them, with the broker
+password under a name of its own such as `brokerPassword`. The hook should also refuse `unmanaged` WiFi, as the mqtt
+nodes do: the MQTT client needs the WiFi password to rejoin.
+
+Then, in setup:
+
+```python
+import ts_wifi
+import ts_mqtt
+
+ts_wifi.ensure_station(properties['ssid'], properties['password'], properties['security'], properties['deferToMqtt'])
+_client = ts_mqtt.ensure_client(
+    properties['broker'], properties['port'], properties['ssid'], properties['password'],
+    properties['security'], properties['username'], properties['brokerPassword'])
+_node_id = properties['nodeId']
+```
+
+`ts_mqtt.ensure_client(broker, port, ssid, wifi_password, security='password', username='', password='')` returns
+the flow's one client for that broker and port, the client the mqtt nodes use. Different settings for the same broker
+raise `ValueError`. A redeploy stops the client and leaves WiFi up.
+
+Every client call except `set_will` and `on_connect` takes your node's id first. The client reports your node's
+status (`connected`, `disconnected` or `error`) under that id, and keeps each node's subscriptions and messages
+separate. The client's calls are:
+
+| Call | What it does |
+| --- | --- |
+| `await client.ensure_connected(node_id)` | The first call connects: it waits up to 15 s for WiFi, then tries the broker 3 times, 1 s apart. If all fail, it reports `error` and raises `OSError`: `mqtt connect to <broker>:<port> failed after 3 attempts (...)`. Later calls don't raise: the client reconnects by itself, and the call reports `connected` or `disconnected` when that changes. |
+| `await client.publish(node_id, topic, payload, retain=False, qos=0)` | Publishes `payload`, as bytes (encode a `str` first). It calls `ensure_connected` first. While the broker is unreachable, it waits and publishes after the reconnect. |
+| `await client.subscribe(node_id, topic, qos=0)` | Subscribes your node to `topic`; `+` and `#` work. Call `ensure_connected` first: before the first connect, `subscribe` waits. |
+| `await client.unsubscribe(node_id, topic)` | Drops your node's subscription. The broker is told when no node on the client still holds the topic. |
+| `await client.wait_message(node_id)` | The next message for your node, as `(topic, payload, retained)`. `topic` and `payload` are bytes. |
+| `client.set_will(topic, msg, retain=False, qos=0)` | Sets the message the broker publishes if the board drops off without saying goodbye. Call it in setup, before anything connects: later raises `ValueError`, and so does a different will on the same broker. |
+| `client.on_connect(callback)` | Runs `callback` after the first connect and after each reconnect, for example to publish `online` over a retained `offline` will. It can be a plain or an `async` function. Register it in setup. |
+
+QoS is 0 or 1; 2 raises `ValueError`.
+
+A node receives the messages whose topic matches one of its own subscriptions, and no others. A message that matches
+two nodes goes to both, and a message no node subscribed to is dropped. Each node's messages wait in its own queue
+from the moment it subscribes, up to 20; past that, the oldest is dropped.
+
+After a reconnect, the client subscribes every node's topics again, then runs the `on_connect` callbacks. It notices a
+reconnect only inside `ensure_connected`. `wait_message` checks about once a second and `publish` on each call, so a
+node that subscribes or publishes is covered.
+
+An event source that receives on the shared client:
+
+```python
+_state = {'ready': False, 'last': None}
+
+async def wait(properties):
+    if not _state['ready']:
+        await _client.ensure_connected(_node_id)
+        await _client.subscribe(_node_id, 'home/light/set', 1)
+        _state['ready'] = True
+    _state['last'] = await _client.wait_message(_node_id)
+
+async def emit(properties):
+    topic, payload, retained = _state['last']
+    return {'payload': payload.decode(), 'topic': topic.decode(), 'retained': retained}
+```
 
 ### Your own libraries
 
 Put a Python module of your own in `~/.thingstudio/libraries/`: a file `<name>.py`, or a package as a folder with
 an `__init__.py`. When a node or a function node imports it, ThingStudio sends it to the board on deploy, like the
 libraries above. The editor reads the folder when it loads custom nodes, and **Reload custom nodes** reads it again.
+
+A library can `import runtime` for the calls above, such as `runtime.shared` and `runtime.register_cleanup`. A node
+has `runtime` without importing it.
 
 A library is refused, with a line in the console, when its name is already taken: by a library in the table above,
 by a module of ThingStudio's own runtime such as `runtime`, or by a module MicroPython provides such as `machine` or

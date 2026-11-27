@@ -19,9 +19,12 @@ const context = {
   flow: {
     nodes: [
       { id: "n1", type: "custom/wifi", properties: {} },
-      { id: "m1", type: "thingstudio/mqtt_publish", properties: {} },
+      { id: "m1", type: "custom/ha_light", properties: { broker: "b1" } },
     ],
-    configs: [{ id: "w1", type: "thingstudio/config/wifi", properties: { ssid: "net" } }],
+    configs: [
+      { id: "w1", type: "thingstudio/config/wifi", properties: { ssid: "net" } },
+      { id: "b1", type: "thingstudio/config/mqtt-broker", properties: { broker: "mqtt.local" } },
+    ],
   },
   referencedConfigs: { w1: { ssid: "net", password: "pw", security: "password" } },
   target: null,
@@ -42,7 +45,10 @@ def compile(ctx, properties):
             break
     if wifi is None:
         return {'errors': ['no WiFi config in this flow']}
-    mqtt = any(n['type'].startswith('thingstudio/mqtt_') for n in ctx['flow']['nodes'])
+    # An MQTT node is any node holding the flow's broker config, custom ones included.
+    broker_ids = [c['id'] for c in ctx['flow']['configs'] if c['type'] == 'thingstudio/config/mqtt-broker']
+    mqtt = any(isinstance(v, str) and v in broker_ids
+               for n in ctx['flow']['nodes'] for v in (n.get('properties') or {}).values())
     return {
         'properties': {
             'ssid': wifi.get('ssid', ''),
