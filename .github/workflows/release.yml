@@ -86,6 +86,9 @@ jobs:
   demo:
     name: build and check the online demo
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      actions: read # a runtime-bump release's own images come from their Firmware images run (gh run download)
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -98,11 +101,16 @@ jobs:
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
         with:
           python-version: "3.12"
+      # A tag's own images aren't on its release until firmware/publish.sh attaches them to the draft, which needs
+      # this job first, so the mirror takes them from the Firmware images run that built them (same sha256 check).
       - name: Build the demo
         working-directory: editor
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CI_FOR_TAG: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || '' }}
         run: |
           npm ci --ignore-scripts
-          python3 ../tools/fetch_firmware_mirror.py
+          python3 ../tools/fetch_firmware_mirror.py ${CI_FOR_TAG:+--ci-for-tag "$CI_FOR_TAG"}
           npm run build:demo
       # The reports are the evidence behind "the demo sends nothing": kept with the release. The second run
       # serves the policy as a <meta> tag, as the GitHub Pages standby copy does.
