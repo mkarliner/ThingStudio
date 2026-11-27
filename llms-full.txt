@@ -5843,6 +5843,10 @@ After a reconnect, the client subscribes every node's topics again, then runs th
 reconnect only inside `ensure_connected`. `wait_message` checks about once a second and `publish` on each call, so a
 node that subscribes or publishes is covered.
 
+On the first connect, the `on_connect` callbacks finish before `ensure_connected` returns, so a `publish` waiting for
+that connect goes out after them. A callback can publish too. A reconnect has no such order: a `publish` waiting for
+the broker can go out as soon as the link is back, before the callbacks run.
+
 An event source that receives on the shared client:
 
 ```python
