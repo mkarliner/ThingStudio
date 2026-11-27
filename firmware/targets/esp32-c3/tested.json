@@ -1,4 +1,10 @@
 {
+  "23d350c1e2b7ae74c259ae97491ded395ef1ab7b4f141e539ab9076e6c7733c6": {
+    "image": "thingstudio-esp32-c3-15.2.0-5f18e7b.bin",
+    "board": "ESP32-C3 module board",
+    "date": "2026-11-27",
+    "tested": "bench.py: install clean; HELLO 15.2.0 with all 35 libraries frozen; ble-scan-debug-c5.flow.json deployed 3x, each over the last. Memory at boot: free 153 KB, IDF 147 KB free, largest 112 KB. After the last deploy: free 107 KB, IDF 86 KB free, largest 72 KB."
+  },
   "600ebe883819743d057156155aa69db9ddc771ee15933a677a802c5f2018a14e": {
     "image": "thingstudio-esp32-c3-15.1.0-e8d4804.bin",
     "board": "ESP32-C3 module board",
