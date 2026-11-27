@@ -269,7 +269,7 @@ When you write or generate a flow file — `test-flows/`, docs examples, anythin
 to right, kept visually tight (columns ~220 px, ~36 px between stacked nodes, ~66 px between chains; full rules in
 `docs/user-guide/ai-authoring.md#layout`). `editor/dist-cli/thingstudio-compile.mjs --relayout <flow.json>` lays it
 out, `--layout` checks it, and `editor/test/flow-layout.test.ts` fails the build for a shipped flow with a leftward
-wire. A user's own flow keeps their layout. Mike, 2026-10-22; "kept tight", 2026-10-23. Background:
+wire (a feedback wire back into a two-faced node's own input excepted). A user's own flow keeps their layout. Mike, 2026-10-22; "kept tight", 2026-10-23. Background:
 `decisions/flow-authoring.md`.
 
 ## Third-party software tracking

@@ -622,6 +622,11 @@ output. All three come from the same per-instance closure, so they share state t
 Use it when the node has to react to messages and also act on its own (a clock that echoes a message and then
 ticks, or a subscription you can change at run time). A `transform` cannot be two-faced.
 
+The two faces are independent: a message into `run` never comes out of the output, like a Node-RED Dashboard switch
+with pass-through off. So `run` must never make `wait` return; the output fires only on something from outside, such
+as a press, a command or a tick. That is what lets a flow wire the output round to the node's own input, to report
+the real state back, without the message going round forever.
+
 ## Compile time: `<name>.compile.py`
 
 A package can also include an optional compile-time hook, `<name>.compile.py`, defining one function:

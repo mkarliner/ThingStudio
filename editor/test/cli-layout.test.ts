@@ -7,7 +7,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { checkLayout, relayout, SPACING, type LayoutEdge, type LayoutNode } from "../src/cli/layout.js";
+import { checkLayout, feedbackEdges, relayout, SPACING, type LayoutEdge, type LayoutNode } from "../src/cli/layout.js";
 import { checkFlowText, relayoutFlowText } from "../src/cli/check-flow.js";
 
 const n = (id: string, width = 100, height = 34): LayoutNode => ({ id, width, height });
@@ -107,6 +107,56 @@ describe("relayout", () => {
       const layoutWarnings = checkFlowText(out, { layout: true }).warnings.filter((w) => w.startsWith("layout:"));
       expect(layoutWarnings, file).toEqual([]);
     }
+  });
+});
+
+describe("feedback wires (a two-faced node's state coming back to its own input)", () => {
+  // sw is two-faced (a sink that is also an event source): sw -> fn -> sw is the real state coming back, which the
+  // compiler doesn't count as a cycle. fn also drives an actuator.
+  const nodes: LayoutNode[] = [{ ...n("sw"), twoFaced: true }, n("fn"), n("act"), n("init")];
+  const loop: LayoutEdge[] = [["sw", 0, "fn", 0], ["fn", 0, "act", 0], ["fn", 1, "sw", 0], ["init", 0, "fn", 0]];
+
+  it("finds only the wire that closes the loop", () => {
+    expect([...feedbackEdges(nodes, loop)]).toEqual([2]);
+    expect(feedbackEdges(nodes.map((x) => ({ ...x, twoFaced: false })), loop).size).toBe(0);
+  });
+
+  it("doesn't flag the feedback wire running left", () => {
+    const pos = { sw: [80, 80], init: [80, 150], fn: [300, 80], act: [520, 80] } as Record<string, [number, number]>;
+    expect(checkLayout(nodes, loop, pos)).toEqual([]);
+    const plain = nodes.map((x) => ({ ...x, twoFaced: false }));
+    expect(checkLayout(plain, loop, pos).join("\n")).toMatch(/wire fn -> sw runs right to left/);
+  });
+
+  it("still flags a wire into a two-faced node that isn't a loop", () => {
+    const w = checkLayout(nodes, [["init", 0, "sw", 0]], { sw: [80, 80], init: [300, 80], fn: [80, 200], act: [80, 300] });
+    expect(w.join("\n")).toMatch(/wire init -> sw runs right to left/);
+  });
+
+  it("relayout puts the two-faced node in the source column and the loop to its right", () => {
+    const p = relayout(nodes, loop);
+    expect(p.sw![0]).toBe(SPACING.origin[0]);
+    expect(p.init![0]).toBe(SPACING.origin[0]);
+    expect(p.fn![0]).toBeGreaterThan(p.sw![0]);
+    expect(p.act![0]).toBeGreaterThan(p.fn![0]);
+    expect(checkLayout(nodes, loop, p)).toEqual([]);
+  });
+
+  it("a toggle gui button wired through a function back to itself relays out with no layout warning", () => {
+    const text = JSON.stringify({
+      formatVersion: 1, flowName: "loop",
+      nodes: [
+        { id: "b", type: "thingstudio/gui_button", properties: {} },
+        { id: "f", type: "thingstudio/function", properties: { code: "return msg", outputCount: 1 } },
+      ],
+      edges: [["b", 0, "f", 0], ["f", 0, "b", 0]],
+      layout: {},
+      configs: [],
+    });
+    const out = relayoutFlowText(text);
+    const pos = JSON.parse(out).layout;
+    expect(pos.f.pos[0]).toBeGreaterThan(pos.b.pos[0]);
+    expect(checkFlowText(out, { layout: true }).warnings.filter((w) => w.startsWith("layout:"))).toEqual([]);
   });
 });
 

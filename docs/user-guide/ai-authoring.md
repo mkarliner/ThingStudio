@@ -89,6 +89,9 @@ rearrange the nodes or zoom to fit. Lay it out the way a careful person would:
 
 - **Left to right.** Sources (timers, inputs, subscriptions) on the left, outputs on the right, and every wire running
   to a node further right. Don't wrap a long chain back to the left edge on a second row.
+- **Feedback wires run back.** A two-faced node, such as a toggle `gui button`, can take its own result back: its
+  output goes through other nodes and returns to its input with the real state. Put the two-faced node in the source
+  column and its chain to the right; the one wire back to its input is the only wire that runs right to left.
 - **Columns about 220 px apart**, left edge to left edge. Nodes are 84-132 px wide, so that leaves about 90 px for the
   wire. Use the same column positions for the whole flow, so columns line up.
 - **Tight rows.** Nodes are 34 px tall (a function node with several outputs is taller). Stack branches in one

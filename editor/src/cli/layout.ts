@@ -9,6 +9,12 @@
 // Node boxes are small (34 px tall, 84-132 px wide; a function node with several outputs is taller), so "tight"
 // here means a gap of about 90 px for a wire to run across and about 36 px between stacked nodes.
 //
+// A two-faced node (a sink that is also an event source, e.g. a toggle gui button or an HA switch) may be wired from
+// its own output round to its own input: the device's real state coming back. The compiler doesn't count that as a
+// cycle -- the input face never fires the output face (decisions/gui-layout.md, 2026-10-09) -- so that one wire has
+// to run leftwards. It is a feedback wire: the check doesn't flag it, and relayout places the loop as if it weren't
+// there, with the two-faced node in the column its other inputs give it and the loop returning to it (2026-11-27).
+//
 // Both functions are pure: a flow's nodes (with their real sizes), wires and positions in, warnings or new positions
 // out. The command line wires them to --layout and --relayout; a user's own flow is never checked or moved unless
 // they ask, and the editor never repositions nodes on load.
@@ -17,6 +23,8 @@ export interface LayoutNode {
   id: string;
   width: number;
   height: number;
+  /** A sink that is also an event source: a wire from its own output round to its input is feedback. */
+  twoFaced?: boolean;
 }
 export type LayoutEdge = [string, number, string, number];
 export type Positions = Record<string, [number, number]>;
@@ -66,10 +74,45 @@ function gaps(intervals: [number, number][], max: number): [number, number][] {
   return out;
 }
 
+/**
+ * The wires that bring a two-faced node's own output back to its input: an edge into a two-faced node T from a node
+ * reachable from T's output. Reaching follows wires the way the compiler's cycle walk does, stopping at any other
+ * two-faced node (its input face ends a chain there). Returned as edge indexes into `edges`.
+ */
+export function feedbackEdges(nodes: LayoutNode[], edges: LayoutEdge[]): Set<number> {
+  const twoFaced = new Set(nodes.filter((n) => n.twoFaced).map((n) => n.id));
+  const out = new Set<number>();
+  if (twoFaced.size === 0) return out;
+  const children = new Map<string, string[]>();
+  for (const [from, , to] of edges) {
+    if (!children.has(from)) children.set(from, []);
+    children.get(from)!.push(to);
+  }
+  for (const t of twoFaced) {
+    const reached = new Set<string>([t]);
+    const stack = [t];
+    while (stack.length > 0) {
+      const cur = stack.pop()!;
+      if (cur !== t && twoFaced.has(cur)) continue;
+      for (const next of children.get(cur) ?? []) {
+        if (!reached.has(next)) {
+          reached.add(next);
+          stack.push(next);
+        }
+      }
+    }
+    edges.forEach(([from, , to], i) => {
+      if (to === t && reached.has(from)) out.add(i);
+    });
+  }
+  return out;
+}
+
 /** Layout warnings for a flow, each starting "layout:". Empty when the flow follows the rules. */
 export function checkLayout(nodes: LayoutNode[], edges: LayoutEdge[], pos: Positions): string[] {
   const out: string[] = [];
   const byId = new Map(nodes.map((n) => [n.id, n]));
+  const feedback = feedbackEdges(nodes, edges);
   const r = (v: number) => Math.round(v);
 
   const unplaced = nodes.filter((n) => !pos[n.id]).map((n) => n.id);
@@ -86,7 +129,8 @@ export function checkLayout(nodes: LayoutNode[], edges: LayoutEdge[], pos: Posit
   const backwards: string[] = [];
   const cramped: string[] = [];
   const kinked: string[] = [];
-  for (const [from, , to] of edges) {
+  for (const [i, [from, , to]] of edges.entries()) {
+    if (feedback.has(i)) continue;
     const a = byId.get(from);
     const b = byId.get(to);
     if (!a || !b || !pos[from] || !pos[to]) continue;
@@ -155,14 +199,17 @@ export function relayout(nodes: LayoutNode[], edges: LayoutEdge[]): Positions {
   const byId = new Map(nodes.map((n) => [n.id, n]));
   const preds = new Map<string, string[]>(ids.map((id) => [id, []]));
   const neighbours = new Map<string, Set<string>>(ids.map((id) => [id, new Set()]));
-  for (const [from, , to] of edges) {
+  const feedback = feedbackEdges(nodes, edges);
+  for (const [i, [from, , to]] of edges.entries()) {
     if (!byId.has(from) || !byId.has(to) || from === to) continue;
-    preds.get(to)!.push(from);
+    // A feedback wire keeps its loop in one chain but doesn't decide anyone's column or row.
+    if (!feedback.has(i)) preds.get(to)!.push(from);
     neighbours.get(from)!.add(to);
     neighbours.get(to)!.add(from);
   }
 
-  // Longest path from a source; a cycle (the compiler rejects these) is cut rather than looped on.
+  // Longest path from a source. Feedback wires are left out above; any other cycle (the compiler rejects those) is cut
+  // rather than looped on.
   const depth = new Map<string, number>();
   const visit = (id: string, stack: Set<string>): number => {
     const known = depth.get(id);

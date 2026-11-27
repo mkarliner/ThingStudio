@@ -312,7 +312,9 @@ function layoutNodes(file: FlowFile, lib: Library): LayoutNode[] {
   return file.nodes.map((n) => {
     const built = lib.registry.has(n.type) ? buildNode(n.type, n.properties, lib) : null;
     const b = built as unknown as { width?: number; height?: number } | null;
-    return { id: n.id, width: b?.width ?? 128, height: b?.height ?? 34 };
+    const def = lib.registry.get(n.type);
+    const twoFaced = def !== undefined && def.kind !== "source" && def.codegenEventSource !== undefined;
+    return { id: n.id, width: b?.width ?? 128, height: b?.height ?? 34, ...(twoFaced ? { twoFaced } : {}) };
   });
 }
 
