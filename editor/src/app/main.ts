@@ -2517,9 +2517,9 @@ el("btnAbout").addEventListener("click", async () => {
   else try {
     const res = await fetch(`${backendHttpBaseUrl(currentBackendWsUrl())}/api/alive`, { cache: "no-store" });
     const body = (await res.json()) as { version?: string };
-    lines.push(`Thingstudio ${body.version ?? "(version not reported)"}`);
+    lines.push(`ThingStudio ${body.version ?? "(version not reported)"}`);
   } catch {
-    lines.push("Thingstudio (version unknown: can't reach its backend)");
+    lines.push("ThingStudio (version unknown: can't reach its backend)");
   }
   lines.push(editorVersionLine(__EDITOR_BUILD__));
   const v = EDITOR_TARGET_VERSION;
