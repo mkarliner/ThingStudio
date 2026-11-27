@@ -4543,6 +4543,10 @@ output. All three come from the same per-instance closure, so they share state t
 </code></pre></div>
 <p>Use it when the node has to react to messages and also act on its own (a clock that echoes a message and then
 ticks, or a subscription you can change at run time). A <code>transform</code> cannot be two-faced.</p>
+<p>The two faces are independent: a message into <code>run</code> never comes out of the output, like a Node-RED Dashboard switch
+with pass-through off. So <code>run</code> must never make <code>wait</code> return; the output fires only on something from outside, such
+as a press, a command or a tick. That is what lets a flow wire the output round to the node's own input, to report
+the real state back, without the message going round forever.</p>
 <h2 id="compile-time-namecompilepy">Compile time: <code>&lt;name&gt;.compile.py</code></h2>
 <p>A package can also include an optional compile-time hook, <code>&lt;name&gt;.compile.py</code>, defining one function:</p>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">compile</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">properties</span><span class="p">):</span>

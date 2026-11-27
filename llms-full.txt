@@ -6009,6 +6009,11 @@ output. All three come from the same per-instance closure, so they share state t
 Use it when the node has to react to messages and also act on its own (a clock that echoes a message and then
 ticks, or a subscription you can change at run time). A `transform` cannot be two-faced.
 
+The two faces are independent: a message into `run` never comes out of the output, like a Node-RED Dashboard switch
+with pass-through off. So `run` must never make `wait` return; the output fires only on something from outside, such
+as a press, a command or a tick. That is what lets a flow wire the output round to the node's own input, to report
+the real state back, without the message going round forever.
+
 ## Compile time: `<name>.compile.py`
 
 A package can also include an optional compile-time hook, `<name>.compile.py`, defining one function:
@@ -6176,6 +6181,9 @@ rearrange the nodes or zoom to fit. Lay it out the way a careful person would:
 
 - **Left to right.** Sources (timers, inputs, subscriptions) on the left, outputs on the right, and every wire running
   to a node further right. Don't wrap a long chain back to the left edge on a second row.
+- **Feedback wires run back.** A two-faced node, such as a toggle `gui button`, can take its own result back: its
+  output goes through other nodes and returns to its input with the real state. Put the two-faced node in the source
+  column and its chain to the right; the one wire back to its input is the only wire that runs right to left.
 - **Columns about 220 px apart**, left edge to left edge. Nodes are 84-132 px wide, so that leaves about 90 px for the
   wire. Use the same column positions for the whole flow, so columns line up.
 - **Tight rows.** Nodes are 34 px tall (a function node with several outputs is taller). Stack branches in one
