@@ -1,8 +1,27 @@
 # Supported hardware
 
-The boards, processors, displays, touch panels, sensors and other hardware below have built-in support. "Tested" means flows have
+The processors, boards, displays, touch panels, sensors and other hardware below have built-in support. "Tested" means flows have
 been deployed and run on that hardware. Pin details for boards and processors are in
 [Boards and processors](boards.md).
+
+## Processors
+
+Any board with one of these processors can be used, even without its own board definition, by picking the
+processor from the **Board** menu, for example **ESP32-C3 (any board)**. Its board-specific pins, such as an LED, aren't labelled.
+
+| Processor | Tested |
+| --- | --- |
+| ESP32 | Yes, on the CYD |
+| ESP32-S2 | Yes, on the LOLIN S2 Mini |
+| ESP32-S3 | Yes, on the Freenove board |
+| ESP32-C3 | Yes, on a generic ESP32-C3 board, over USB and WiFi; also on the [custom image](custom-firmware.md) |
+| ESP32-C5 | Yes, on the ESP32-C5-340X, over USB; also on the [custom image](custom-firmware.md) |
+| RP2040 | Yes, on the Pico and Pico W |
+| RP2350 | Yes, on the Pico 2 |
+| nRF52840 | Smoke tested on the Seeed XIAO nRF52840 (Sense) |
+
+The [ble nodes](nodes/index.md#bluetooth) run on the ESP32, ESP32-S3, ESP32-C3 and ESP32-C5. On other processors
+Deploy refuses them.
 
 ## Boards
 
@@ -30,25 +49,6 @@ serial port for the ESP32 family, a mounted drive for RP2040, RP2350 and nRF52 b
 downloaded. A board in this list preselects its build, but any board on a supported chip can be flashed the same
 way. The Pyboard is the exception: it installs over DFU, which the editor doesn't offer; see
 [Install MicroPython](installing-micropython.md).
-
-## Processors without a board definition
-
-Any board with one of these processors can be used by picking the processor from the **Board** menu, for example
-**ESP32-C3 (any board)**. Its board-specific pins, such as an LED, aren't labelled.
-
-| Processor | Tested |
-| --- | --- |
-| ESP32 | Yes, on the CYD |
-| ESP32-S2 | Yes, on the LOLIN S2 Mini |
-| ESP32-S3 | Yes, on the Freenove board |
-| ESP32-C3 | Yes, on a generic ESP32-C3 board, over USB and WiFi; also on the [custom image](custom-firmware.md) |
-| ESP32-C5 | Yes, on the ESP32-C5-340X, over USB; also on the [custom image](custom-firmware.md) |
-| RP2040 | Yes, on the Pico and Pico W |
-| RP2350 | Yes, on the Pico 2 |
-| nRF52840 | Smoke tested on the Seeed XIAO nRF52840 (Sense) |
-
-The [ble nodes](nodes/index.md#bluetooth) run on the ESP32, ESP32-S3, ESP32-C3 and ESP32-C5. On other processors
-Deploy refuses them.
 
 ## Displays
 

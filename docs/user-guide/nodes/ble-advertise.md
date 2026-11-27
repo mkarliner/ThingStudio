@@ -31,7 +31,7 @@ advertisement accepts connections, so other devices can connect to them.
 An advertisement holds 31 bytes. The flags take 3, the name its length plus 2, and the data's header 4 (manufacturer
 or 16-bit service) or 18 (128-bit service). The node's status says how many are left for the payload.
 
-A flow has one ble advertise node. It runs on the processors [Supported hardware](../supported-hardware.md#processors-without-a-board-definition) lists for the ble nodes.
+A flow has one ble advertise node. It runs on the processors [Supported hardware](../supported-hardware.md#processors) lists for the ble nodes.
 
 ## Errors
 

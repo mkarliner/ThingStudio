@@ -51,7 +51,7 @@ than the flow handles them, the oldest are dropped.
 
 The radio is shared with WiFi on an ESP32. A long scan window slows WiFi and MQTT.
 
-It runs on the processors [Supported hardware](../supported-hardware.md#processors-without-a-board-definition) lists for the ble nodes.
+It runs on the processors [Supported hardware](../supported-hardware.md#processors) lists for the ble nodes.
 
 ## Errors
 
