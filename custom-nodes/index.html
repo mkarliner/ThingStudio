@@ -3350,6 +3350,34 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Libraries you can import">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-flows-wifi-ts_wifi" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The flow's WiFi: ts_wifi
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-flows-mqtt-client-ts_mqtt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The flow's MQTT client: ts_mqtt
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
         
           <li class="md-nav__item">
@@ -3823,6 +3851,34 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Libraries you can import">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-flows-wifi-ts_wifi" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The flow's WiFi: ts_wifi
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-flows-mqtt-client-ts_mqtt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The flow's MQTT client: ts_mqtt
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
         
           <li class="md-nav__item">
@@ -4179,8 +4235,8 @@ I2C node can join the same bus a built-in <code>i2c</code>/<code>bme280</code> n
 <div class="highlight"><pre><span></span><code><span class="n">_i2c</span> <span class="o">=</span> <span class="n">runtime</span><span class="o">.</span><span class="n">shared</span><span class="p">(</span><span class="s1">'i2c'</span><span class="p">,</span> <span class="n">properties</span><span class="p">[</span><span class="s1">'bus'</span><span class="p">][</span><span class="s1">'bus'</span><span class="p">])</span>  <span class="c1"># the flow's shared bus, by its number</span>
 </code></pre></div>
 <p>The bus/pins come from the config; keep the same <code>runtime.shared</code> key a built-in would use so a
-clash is reported, not silently shared. (Network configs — WiFi, MQTT — expose only the
-credential's name, not the secret, so a custom node can't make a WiFi connection from one.)</p>
+clash is reported, not silently shared. A network config (WiFi, MQTT broker) gives Python only
+the credential's name: <a href="#the-flows-wifi-ts_wifi">The flow's WiFi</a> says how a node reaches the network.</p>
 <h3 id="cleanup">Cleanup</h3>
 <p>If your node opens something that needs closing on redeploy — a socket,
 typically — register it:</p>
@@ -4240,23 +4296,146 @@ redeployed flow can leave the old socket open and fail with
 one. <code>radio().scan(...)</code> and <code>radio().advertise(...)</code> share it as <code>ble scan</code> and <code>ble advertise</code> do, and
 <code>ts_ble.decode(adv)</code> and <code>ts_ble.build_adv(...)</code> read and build advertising data. The radio is turned off on each
 redeploy.</p>
-<p>For MQTT, give your node a <code>configRef</code> to <code>thingstudio/config/mqtt-broker</code>. Any node holding the flow's broker
-counts as an MQTT node, so the flow's WiFi is left to the MQTT client, as it is for the mqtt nodes.
-<code>ts_mqtt.ensure_client(...)</code> returns the flow's one client for a broker, the same one the mqtt nodes use. It needs
-the WiFi and broker passwords, which only a <a href="#compile-time-namecompilepy">compile hook</a> can read, from
-<code>ctx["referencedConfigs"]</code>. Two client methods are for nodes that announce themselves, such as a Home Assistant device:</p>
+<h4 id="the-flows-wifi-ts_wifi">The flow's WiFi: <code>ts_wifi</code></h4>
+<p>A node that uses the network joins the flow's one WiFi network, as the built-in network nodes do. Give it a WiFi
+field:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="w"> </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"wifi"</span><span class="p">,</span><span class="w"> </span><span class="nt">"label"</span><span class="p">:</span><span class="w"> </span><span class="s2">"WiFi"</span><span class="p">,</span><span class="w"> </span><span class="nt">"kind"</span><span class="p">:</span><span class="w"> </span><span class="s2">"configRef"</span><span class="p">,</span><span class="w"> </span><span class="nt">"configType"</span><span class="p">:</span><span class="w"> </span><span class="s2">"thingstudio/config/wifi"</span><span class="p">,</span><span class="w"> </span><span class="nt">"singleton"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="nt">"default"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="w"> </span><span class="p">}</span>
+</code></pre></div>
+<p>In Python that field holds only the credential's name. The SSID and password reach your node through a
+<a href="#compile-time-namecompilepy">compile hook</a>, which reads the WiFi config from <code>ctx["referencedConfigs"]</code> and returns
+the values as properties. The WiFi config has <code>ssid</code>, <code>password</code> and <code>security</code> (<code>password</code>, <code>open</code> or
+<code>unmanaged</code>). This hook returns them the way the built-in nodes do:</p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">compile</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">properties</span><span class="p">):</span>
+    <span class="n">configs</span> <span class="o">=</span> <span class="n">ctx</span><span class="p">[</span><span class="s1">'flow'</span><span class="p">][</span><span class="s1">'configs'</span><span class="p">]</span>
+    <span class="n">wifi_ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span><span class="p">[</span><span class="s1">'id'</span><span class="p">]</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">configs</span> <span class="k">if</span> <span class="n">c</span><span class="p">[</span><span class="s1">'type'</span><span class="p">]</span> <span class="o">==</span> <span class="s1">'thingstudio/config/wifi'</span><span class="p">]</span>
+    <span class="n">broker_ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span><span class="p">[</span><span class="s1">'id'</span><span class="p">]</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">configs</span> <span class="k">if</span> <span class="n">c</span><span class="p">[</span><span class="s1">'type'</span><span class="p">]</span> <span class="o">==</span> <span class="s1">'thingstudio/config/mqtt-broker'</span><span class="p">]</span>
+    <span class="n">wifi</span> <span class="o">=</span> <span class="p">(</span><span class="n">ctx</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'referencedConfigs'</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">wifi_ids</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">wifi_ids</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">wifi</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s1">'errors'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'needs the flow</span><span class="se">\'</span><span class="s1">s WiFi -- set "WiFi" in its properties'</span><span class="p">]}</span>
+    <span class="n">security</span> <span class="o">=</span> <span class="n">wifi</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'security'</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">security</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">'open'</span><span class="p">,</span> <span class="s1">'unmanaged'</span><span class="p">):</span>
+        <span class="n">security</span> <span class="o">=</span> <span class="s1">'password'</span>
+    <span class="n">mqtt</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">broker_ids</span>
+               <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">ctx</span><span class="p">[</span><span class="s1">'flow'</span><span class="p">][</span><span class="s1">'nodes'</span><span class="p">]</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'properties'</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s1">'properties'</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s1">'ssid'</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">wifi</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'ssid'</span><span class="p">)</span> <span class="ow">or</span> <span class="s1">''</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">(),</span>
+        <span class="s1">'password'</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">wifi</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'password'</span><span class="p">)</span> <span class="ow">or</span> <span class="s1">''</span><span class="p">),</span>
+        <span class="s1">'security'</span><span class="p">:</span> <span class="n">security</span><span class="p">,</span>
+        <span class="s1">'deferToMqtt'</span><span class="p">:</span> <span class="n">mqtt</span><span class="p">,</span>
+    <span class="p">}}</span>
+</code></pre></div>
+<p>Then, in your node's setup:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">ts_wifi</span>
+
+<span class="n">_sta</span> <span class="o">=</span> <span class="n">ts_wifi</span><span class="o">.</span><span class="n">ensure_station</span><span class="p">(</span><span class="n">properties</span><span class="p">[</span><span class="s1">'ssid'</span><span class="p">],</span> <span class="n">properties</span><span class="p">[</span><span class="s1">'password'</span><span class="p">],</span> <span class="n">properties</span><span class="p">[</span><span class="s1">'security'</span><span class="p">],</span> <span class="n">properties</span><span class="p">[</span><span class="s1">'deferToMqtt'</span><span class="p">])</span>
+</code></pre></div>
+<p><code>ts_wifi.ensure_station(ssid, password, security='password', defer_to_mqtt=False)</code> returns the board's WiFi station,
+a <code>network.WLAN</code>. It starts the join and doesn't wait for it, so check <code>_sta.isconnected()</code> before sending, or treat
+a failed send as the network being down. Every node in a flow passes the same four values: the first call joins, and
+later calls return the same station. Different values raise <code>ValueError</code>, naming both sets. A redeploy forgets the
+values and leaves the board on the network.</p>
+<p>The four values are:</p>
 <ul>
-<li><code>client.set_will(topic, msg, retain=False, qos=0)</code> sets the message the broker publishes if the board drops off
-  without saying goodbye. Call it in setup, before anything connects. A different will on the same broker is an
-  error.</li>
-<li><code>client.on_connect(callback)</code> runs <code>callback</code> after the first connect and after each reconnect, for example to
-  publish <code>online</code> over a retained <code>offline</code> will. It can be a plain or an <code>async</code> function. Register it in
-  setup too.</li>
+<li><code>security</code>: with <code>unmanaged</code>, the station is turned on but not joined, and
+  <a href="../wifi-provisioning/">WiFi provisioning</a> joins it instead.</li>
+<li><code>defer_to_mqtt</code>: <code>True</code> when any node in the flow holds the flow's MQTT broker config, otherwise <code>False</code>. Work it
+  out as the hook above does, or your node's values won't match the built-in nodes'. With <code>True</code>, the MQTT client
+  keeps the connection up.</li>
+<li><code>ssid</code> and <code>password</code>: as the WiFi config holds them, with the SSID trimmed.</li>
 </ul>
+<p>While the network is down, socket calls such as <code>sendto</code> and <code>getaddrinfo</code> raise <code>OSError</code>. Uncaught, it is
+reported against your node, like any error. Catch it to say what failed, as <code>udp send</code> does:
+<code>udp_send to &lt;host&gt;:&lt;port&gt; failed: ...</code>.</p>
+<h4 id="the-flows-mqtt-client-ts_mqtt">The flow's MQTT client: <code>ts_mqtt</code></h4>
+<p>An MQTT node holds the flow's broker as well as its WiFi, and a <code>nodeId</code> field for the client to report under:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="w"> </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"broker"</span><span class="p">,</span><span class="w"> </span><span class="nt">"label"</span><span class="p">:</span><span class="w"> </span><span class="s2">"MQTT Broker"</span><span class="p">,</span><span class="w"> </span><span class="nt">"kind"</span><span class="p">:</span><span class="w"> </span><span class="s2">"configRef"</span><span class="p">,</span><span class="w"> </span><span class="nt">"configType"</span><span class="p">:</span><span class="w"> </span><span class="s2">"thingstudio/config/mqtt-broker"</span><span class="p">,</span><span class="w"> </span><span class="nt">"singleton"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="nt">"default"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="w"> </span><span class="p">},</span>
+<span class="p">{</span><span class="w"> </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"nodeId"</span><span class="p">,</span><span class="w"> </span><span class="nt">"label"</span><span class="p">:</span><span class="w"> </span><span class="s2">"node id"</span><span class="p">,</span><span class="w"> </span><span class="nt">"kind"</span><span class="p">:</span><span class="w"> </span><span class="s2">"nodeId"</span><span class="p">,</span><span class="w"> </span><span class="nt">"default"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="w"> </span><span class="p">}</span>
+</code></pre></div>
+<p>Holding the broker makes your node an MQTT node, so the hook above gives it <code>deferToMqtt</code> <code>True</code>. The broker config
+has <code>broker</code>, <code>port</code> (default <code>1883</code>), <code>username</code> and <code>password</code>. Extend the hook to return them, with the broker
+password under a name of its own such as <code>brokerPassword</code>. The hook should also refuse <code>unmanaged</code> WiFi, as the mqtt
+nodes do: the MQTT client needs the WiFi password to rejoin.</p>
+<p>Then, in setup:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">ts_wifi</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">ts_mqtt</span>
+
+<span class="n">ts_wifi</span><span class="o">.</span><span class="n">ensure_station</span><span class="p">(</span><span class="n">properties</span><span class="p">[</span><span class="s1">'ssid'</span><span class="p">],</span> <span class="n">properties</span><span class="p">[</span><span class="s1">'password'</span><span class="p">],</span> <span class="n">properties</span><span class="p">[</span><span class="s1">'security'</span><span class="p">],</span> <span class="n">properties</span><span class="p">[</span><span class="s1">'deferToMqtt'</span><span class="p">])</span>
+<span class="n">_client</span> <span class="o">=</span> <span class="n">ts_mqtt</span><span class="o">.</span><span class="n">ensure_client</span><span class="p">(</span>
+    <span class="n">properties</span><span class="p">[</span><span class="s1">'broker'</span><span class="p">],</span> <span class="n">properties</span><span class="p">[</span><span class="s1">'port'</span><span class="p">],</span> <span class="n">properties</span><span class="p">[</span><span class="s1">'ssid'</span><span class="p">],</span> <span class="n">properties</span><span class="p">[</span><span class="s1">'password'</span><span class="p">],</span>
+    <span class="n">properties</span><span class="p">[</span><span class="s1">'security'</span><span class="p">],</span> <span class="n">properties</span><span class="p">[</span><span class="s1">'username'</span><span class="p">],</span> <span class="n">properties</span><span class="p">[</span><span class="s1">'brokerPassword'</span><span class="p">])</span>
+<span class="n">_node_id</span> <span class="o">=</span> <span class="n">properties</span><span class="p">[</span><span class="s1">'nodeId'</span><span class="p">]</span>
+</code></pre></div>
+<p><code>ts_mqtt.ensure_client(broker, port, ssid, wifi_password, security='password', username='', password='')</code> returns
+the flow's one client for that broker and port, the client the mqtt nodes use. Different settings for the same broker
+raise <code>ValueError</code>. A redeploy stops the client and leaves WiFi up.</p>
+<p>Every client call except <code>set_will</code> and <code>on_connect</code> takes your node's id first. The client reports your node's
+status (<code>connected</code>, <code>disconnected</code> or <code>error</code>) under that id, and keeps each node's subscriptions and messages
+separate. The client's calls are:</p>
+<table>
+<thead>
+<tr>
+<th>Call</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>await client.ensure_connected(node_id)</code></td>
+<td>The first call connects: it waits up to 15 s for WiFi, then tries the broker 3 times, 1 s apart. If all fail, it reports <code>error</code> and raises <code>OSError</code>: <code>mqtt connect to &lt;broker&gt;:&lt;port&gt; failed after 3 attempts (...)</code>. Later calls don't raise: the client reconnects by itself, and the call reports <code>connected</code> or <code>disconnected</code> when that changes.</td>
+</tr>
+<tr>
+<td><code>await client.publish(node_id, topic, payload, retain=False, qos=0)</code></td>
+<td>Publishes <code>payload</code>, as bytes (encode a <code>str</code> first). It calls <code>ensure_connected</code> first. While the broker is unreachable, it waits and publishes after the reconnect.</td>
+</tr>
+<tr>
+<td><code>await client.subscribe(node_id, topic, qos=0)</code></td>
+<td>Subscribes your node to <code>topic</code>; <code>+</code> and <code>#</code> work. Call <code>ensure_connected</code> first: before the first connect, <code>subscribe</code> waits.</td>
+</tr>
+<tr>
+<td><code>await client.unsubscribe(node_id, topic)</code></td>
+<td>Drops your node's subscription. The broker is told when no node on the client still holds the topic.</td>
+</tr>
+<tr>
+<td><code>await client.wait_message(node_id)</code></td>
+<td>The next message for your node, as <code>(topic, payload, retained)</code>. <code>topic</code> and <code>payload</code> are bytes.</td>
+</tr>
+<tr>
+<td><code>client.set_will(topic, msg, retain=False, qos=0)</code></td>
+<td>Sets the message the broker publishes if the board drops off without saying goodbye. Call it in setup, before anything connects: later raises <code>ValueError</code>, and so does a different will on the same broker.</td>
+</tr>
+<tr>
+<td><code>client.on_connect(callback)</code></td>
+<td>Runs <code>callback</code> after the first connect and after each reconnect, for example to publish <code>online</code> over a retained <code>offline</code> will. It can be a plain or an <code>async</code> function. Register it in setup.</td>
+</tr>
+</tbody>
+</table>
+<p>QoS is 0 or 1; 2 raises <code>ValueError</code>.</p>
+<p>A node receives the messages whose topic matches one of its own subscriptions, and no others. A message that matches
+two nodes goes to both, and a message no node subscribed to is dropped. Each node's messages wait in its own queue
+from the moment it subscribes, up to 20; past that, the oldest is dropped.</p>
+<p>After a reconnect, the client subscribes every node's topics again, then runs the <code>on_connect</code> callbacks. It notices a
+reconnect only inside <code>ensure_connected</code>. <code>wait_message</code> checks about once a second and <code>publish</code> on each call, so a
+node that subscribes or publishes is covered.</p>
+<p>An event source that receives on the shared client:</p>
+<div class="highlight"><pre><span></span><code><span class="n">_state</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'ready'</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">'last'</span><span class="p">:</span> <span class="kc">None</span><span class="p">}</span>
+
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">wait</span><span class="p">(</span><span class="n">properties</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">_state</span><span class="p">[</span><span class="s1">'ready'</span><span class="p">]:</span>
+        <span class="k">await</span> <span class="n">_client</span><span class="o">.</span><span class="n">ensure_connected</span><span class="p">(</span><span class="n">_node_id</span><span class="p">)</span>
+        <span class="k">await</span> <span class="n">_client</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span><span class="n">_node_id</span><span class="p">,</span> <span class="s1">'home/light/set'</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">_state</span><span class="p">[</span><span class="s1">'ready'</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">_state</span><span class="p">[</span><span class="s1">'last'</span><span class="p">]</span> <span class="o">=</span> <span class="k">await</span> <span class="n">_client</span><span class="o">.</span><span class="n">wait_message</span><span class="p">(</span><span class="n">_node_id</span><span class="p">)</span>
+
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">emit</span><span class="p">(</span><span class="n">properties</span><span class="p">):</span>
+    <span class="n">topic</span><span class="p">,</span> <span class="n">payload</span><span class="p">,</span> <span class="n">retained</span> <span class="o">=</span> <span class="n">_state</span><span class="p">[</span><span class="s1">'last'</span><span class="p">]</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s1">'payload'</span><span class="p">:</span> <span class="n">payload</span><span class="o">.</span><span class="n">decode</span><span class="p">(),</span> <span class="s1">'topic'</span><span class="p">:</span> <span class="n">topic</span><span class="o">.</span><span class="n">decode</span><span class="p">(),</span> <span class="s1">'retained'</span><span class="p">:</span> <span class="n">retained</span><span class="p">}</span>
+</code></pre></div>
 <h3 id="your-own-libraries">Your own libraries</h3>
 <p>Put a Python module of your own in <code>~/.thingstudio/libraries/</code>: a file <code>&lt;name&gt;.py</code>, or a package as a folder with
 an <code>__init__.py</code>. When a node or a function node imports it, ThingStudio sends it to the board on deploy, like the
 libraries above. The editor reads the folder when it loads custom nodes, and <strong>Reload custom nodes</strong> reads it again.</p>
+<p>A library can <code>import runtime</code> for the calls above, such as <code>runtime.shared</code> and <code>runtime.register_cleanup</code>. A node
+has <code>runtime</code> without importing it.</p>
 <p>A library is refused, with a line in the console, when its name is already taken: by a library in the table above,
 by a module of ThingStudio's own runtime such as <code>runtime</code>, or by a module MicroPython provides such as <code>machine</code> or
 <code>json</code>. A name that isn't a plain Python name (letters, digits and <code>_</code>) is refused too. Two libraries with the same
