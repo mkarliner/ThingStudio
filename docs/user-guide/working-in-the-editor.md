@@ -9,14 +9,14 @@ types that don't fit. What each input type accepts:
 | --- | --- |
 | `any` | any output |
 | `bool` | any output. The value is tested with Python's `bool()`. |
-| `number` | `number`, `int`, `string` |
-| `int` | `int`, `string` |
+| `number` | `number`, `int`, `string`, `any` |
+| `int` | `int`, `string`, `any` |
 | `string` | `string` |
 | `bytes` | `bytes`, `any` |
 
-A `string` that isn't a number fails on the board when it reaches a `number` or `int` input, with a `NODE_ERROR`.
-An `any` output, such as the output of a [function](nodes/function.md) node, connects only to `any`, `bool` and
-`bytes` inputs.
+A value that isn't a number fails on the board when it reaches a `number` or `int` input, with a `NODE_ERROR`. That
+covers a `string` such as `"abc"`, and anything an `any` output sends, such as a [function](nodes/function.md) node
+returning a dict. An `any` output doesn't connect to a `string` input.
 
 An input can take any number of wires. The node runs once for each message that arrives, whichever wire it came
 on. An output can feed any number of inputs.

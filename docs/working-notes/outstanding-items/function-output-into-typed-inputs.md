@@ -1,6 +1,8 @@
 # A function node can't feed `number`/`int`/`string` inputs
 
-Status: open, 2026-10-11. Found during the user docs rewrite (`user-docs-rewrite-briefing.md`, Part 1), while
+Status: resolved 2026-11-28 (Mike): `any` now wires into `number` and `int`, failing on the board with
+`NODE_ERROR` as `string -> number` does (`sockets.ts`, bucket 4). `any` into `string` is still refused. Found by
+the uCompute Junior starter flow, whose buttons drive the buzzer from a function. Originally open, 2026-10-11. Found during the user docs rewrite (`user-docs-rewrite-briefing.md`, Part 1), while
 checking the Wiring section of `working-in-the-editor.md` against `sockets.ts`.
 
 `function`'s output is typed `any` (`function-node.ts`). `NumberSocket`, `IntSocket` and `StringSocket` refuse an

@@ -12,6 +12,7 @@ import twoMoreBlinks from "../../../tutorials/two-more-blinks.flow.json?raw";
 import httpBlink from "../../../tutorials/http-blink.flow.json?raw";
 import blinkFromAnywhere from "../../../tutorials/blink-from-anywhere.flow.json?raw";
 import sensorDashboard from "../../../test-flows/gui-headliner-sensor-freenove-s3-4in.flow.json?raw";
+import ucomputeJunior from "../../../test-flows/ucompute-junior-starter.flow.json?raw";
 
 export interface DemoExample {
   /** The menu item's text. */
@@ -28,4 +29,5 @@ export const DEMO_EXAMPLES: readonly DemoExample[] = [
   { label: "Web Blink: an LED from your browser", text: httpBlink },
   { label: "Blink from anywhere (MQTT)", text: blinkFromAnywhere },
   { label: "Sensor dashboard on a touchscreen", text: sensorDashboard, board: "board:freenove-s3-4in" },
+  { label: "uCompute Junior: clock and buttons", text: ucomputeJunior, board: "board:ucompute-junior" },
 ];

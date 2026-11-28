@@ -66,10 +66,13 @@ describe("wire-type coercion matrix (sockets.ts)", () => {
     expect(compat(new StringSocket(), new BytesSocket())).toBe(false);
   });
 
-  it("bucket 3: refuses any into number/int/string (unchanged)", () => {
-    expect(compat(new NumberSocket(), new AnySocket())).toBe(false);
-    expect(compat(new IntSocket(), new AnySocket())).toBe(false);
+  it("bucket 3: refuses any into string", () => {
     expect(compat(new StringSocket(), new AnySocket())).toBe(false);
+  });
+
+  it("bucket 4: allows any into number/int, so a function node can drive pwm out", () => {
+    expect(compat(new NumberSocket(), new AnySocket())).toBe(true);
+    expect(compat(new IntSocket(), new AnySocket())).toBe(true);
   });
 
   it("any input accepts every source, including untyped any", () => {

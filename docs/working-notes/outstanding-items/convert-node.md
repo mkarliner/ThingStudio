@@ -28,4 +28,7 @@ concrete input and let the existing runtime `NODE_ERROR` catch a genuine mismatc
 already does. That alone unblocks `function` → `pwm out`. The `convert` node is still worth having for the genuine
 ambiguity cases (encoding, rounding), but less urgent if `any` is opened up. Decide the two together.
 
+**2026-11-28:** `any` is now open into `number`/`int` (Mike; `function-output-into-typed-inputs.md`). What's left
+for this node: `bytes` <-> `string`, `any` -> `string`, and `number` -> `int` rounding.
+
 Docs to update when this lands: `working-in-the-editor.md` (Wiring), `faq.md`.

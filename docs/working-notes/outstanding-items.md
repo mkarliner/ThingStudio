@@ -411,10 +411,6 @@ ThingStudioMarketing repo, not here.
   from one authored source shared with the external guide rather than two hand-maintained copies. See
   `documentation-scoping.md`'s addendum and `documentation-tech-selection.md`.
   ([detail](outstanding-items/in-editor-node-reference.md))
-- **A function node can't feed a `number` input -- found 2026-10-11.** `function`'s output is `any`, and
-  `number`/`int`/`string` inputs refuse `any`, so a function can't drive `pwm out`'s duty and there is no
-  conversion node. Options: allow `any` into numbers (fail on the board), typed function outputs, or a
-  conversion node. ([detail](outstanding-items/function-output-into-typed-inputs.md))
 - **`convert` node -- explicit port-type conversion -- new item, 2026-10-11.** Builds the conversions
   `sockets.ts` refuses (`bytes` ↔ `string`, `any` → a concrete type, ...). Pairs with loosening `any`
   compatibility; decide both together. ([detail](outstanding-items/convert-node.md))

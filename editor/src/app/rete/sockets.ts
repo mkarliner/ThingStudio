@@ -33,8 +33,11 @@
 //   3. Ambiguous/format conversions -- refused, explicit conversion node
 //      required (not built this session, scoping note question 4):
 //      `bytes` <-> `string` (encoding is a real decision), and `any` into
-//      any concrete non-bool type (genuinely ambiguous for an
-//      arbitrary-typed value, unlike total `bool(x)`).
+//      `string`.
+//   4. `any` into `number`/`int` -- allowed (Mike, 2026-11-28), failing
+//      on the board with NODE_ERROR as `string -> number` already does.
+//      Without it a function node can't drive `pwm out` at all
+//      (outstanding-items/function-output-into-typed-inputs.md, resolved).
 //
 // `X -> X` (same type) and `anything -> any` are both unconditionally
 // allowed identities, handled per-class below rather than factored into a
@@ -71,7 +74,8 @@ export class NumberSocket extends ClassicPreset.Socket implements ThingstudioSoc
     return (
       socket instanceof NumberSocket || // identity
       socket instanceof IntSocket || // bucket 2: widening, never fails
-      socket instanceof StringSocket // bucket 2: allowed, can fail at runtime (NODE_ERROR)
+      socket instanceof StringSocket || // bucket 2: allowed, can fail at runtime (NODE_ERROR)
+      socket instanceof AnySocket // bucket 4: allowed, can fail at runtime (NODE_ERROR)
     );
   }
 }
@@ -85,7 +89,8 @@ export class IntSocket extends ClassicPreset.Socket implements ThingstudioSocket
     // (int(3.7) -> 3, no error) -- bucket 2's one refused case.
     return (
       socket instanceof IntSocket || // identity
-      socket instanceof StringSocket // bucket 2: allowed, can fail at runtime (NODE_ERROR)
+      socket instanceof StringSocket || // bucket 2: allowed, can fail at runtime (NODE_ERROR)
+      socket instanceof AnySocket // bucket 4: allowed, can fail at runtime (NODE_ERROR)
     );
   }
 }

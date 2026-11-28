@@ -140,10 +140,11 @@ There is nothing to resize to: a page fills a display of one fixed size, and the
 compiles, not by a browser at runtime. An element's cells, its font and its position are fixed numbers on the
 board. See [Laying out pages](nodes/gui.md#laying-out-pages).
 
-## Why won't a function node's output wire into pwm out?
+## Why does pwm out show a NODE_ERROR when a function node feeds it?
 
-A function node's output has the type `any`, and `pwm out`'s input takes a `number`. The editor refuses a wire from
-`any` to `number`, `int` or `string` inputs. See [Wiring](working-in-the-editor.md#wiring).
+The function sent something that isn't a number, such as a dict or the text `"0.5"`. The editor lets a function's
+output wire into a number input, but the value is only checked on the board. Send a plain number:
+`msg['payload'] = 0.5`. See [Wiring](working-in-the-editor.md#wiring).
 
 ## Why does compile fail with "needs a WiFi network"?
 
