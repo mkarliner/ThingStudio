@@ -3841,6 +3841,21 @@ see <a href="#adding-a-processor">Adding a processor</a>.</p>
 <td>Pick by hand. Display and touch pins are labelled. 320x480, SPI bus 1. Rotation 1 is portrait. For landscape, set the display's <code>orientation</code> to 90 (or 270 for the other way up) and keep the screen and display at 320x480. Display and touch (FT6336U) work.</td>
 </tr>
 <tr>
+<td>uCompute Junior (Pico / Pico W)</td>
+<td>RP2040</td>
+<td>Pick by hand. JP Michon's Pico carrier. 240x240 ST7789 on SPI bus 0, no CS; set the display node's SPI mode to 3. Three buttons on one ADC pin (<code>BUTTONS</code>, GPIO 26), buzzer on 11, NeoPixel on 6, SD and add-on socket on SPI bus 1.</td>
+</tr>
+<tr>
+<td>uCompute Junior (Pico 2 / Pico 2 W)</td>
+<td>RP2350</td>
+<td>As above, with a Pico 2 or Pico 2 W in the socket.</td>
+</tr>
+<tr>
+<td>uCompute (RP2040, v1.2/v1.3)</td>
+<td>RP2040</td>
+<td>Pick by hand. The original uCompute with the chip on the board. As the Junior, but backlight on 6, NeoPixel on 23, SD card detect on 7, LED on 25.</td>
+</tr>
+<tr>
 <td>Pyboard v1.0</td>
 <td>STM32F405</td>
 <td>Pins are named <code>X1</code>–<code>X22</code> and <code>Y1</code>–<code>Y12</code>. The four onboard LEDs are on <code>A13</code>, <code>A14</code>, <code>A15</code> and <code>B4</code> (labelled <code>LED_RED</code>–<code>LED_BLUE</code>); the user switch <code>SW</code> is on <code>X17</code>.</td>

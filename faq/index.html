@@ -3884,6 +3884,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#why-does-my-spi-screen-stay-blank-when-the-pins-are-right" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why does my SPI screen stay blank when the pins are right?
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -4333,6 +4344,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#why-does-my-spi-screen-stay-blank-when-the-pins-are-right" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why does my SPI screen stay blank when the pins are right?
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -4532,6 +4554,8 @@ phone by name. A <a href="../nodes/ble-scan/">ble scan</a> node into a debug nod
 the ESP32-C5's radio unable to scan until a power cycle. The radio keeps its share of ESP-IDF memory, the memory WiFi
 and displays also use, even if the next flow has no ble nodes. <strong>Tools → Reset board (hard)</strong> gives it back. See
 <a href="../debugging/#memory">Memory</a>.</p>
+<h2 id="why-does-my-spi-screen-stay-blank-when-the-pins-are-right">Why does my SPI screen stay blank when the pins are right?</h2>
+<p>Some small panels, such as the 240x240 ST7789 on the uCompute boards, have no CS pin. Those usually need SPI mode 3. Set the display spi node's <strong>SPI mode</strong> to 3 and deploy again. See <a href="../nodes/display-spi/">display spi</a>.</p>
 
 
 
