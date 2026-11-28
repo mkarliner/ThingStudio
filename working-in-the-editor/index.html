@@ -3717,11 +3717,11 @@ types that don't fit. What each input type accepts:</p>
 </tr>
 <tr>
 <td><code>number</code></td>
-<td><code>number</code>, <code>int</code>, <code>string</code></td>
+<td><code>number</code>, <code>int</code>, <code>string</code>, <code>any</code></td>
 </tr>
 <tr>
 <td><code>int</code></td>
-<td><code>int</code>, <code>string</code></td>
+<td><code>int</code>, <code>string</code>, <code>any</code></td>
 </tr>
 <tr>
 <td><code>string</code></td>
@@ -3733,9 +3733,9 @@ types that don't fit. What each input type accepts:</p>
 </tr>
 </tbody>
 </table>
-<p>A <code>string</code> that isn't a number fails on the board when it reaches a <code>number</code> or <code>int</code> input, with a <code>NODE_ERROR</code>.
-An <code>any</code> output, such as the output of a <a href="../nodes/function/">function</a> node, connects only to <code>any</code>, <code>bool</code> and
-<code>bytes</code> inputs.</p>
+<p>A value that isn't a number fails on the board when it reaches a <code>number</code> or <code>int</code> input, with a <code>NODE_ERROR</code>. That
+covers a <code>string</code> such as <code>"abc"</code>, and anything an <code>any</code> output sends, such as a <a href="../nodes/function/">function</a> node
+returning a dict. An <code>any</code> output doesn't connect to a <code>string</code> input.</p>
 <p>An input can take any number of wires. The node runs once for each message that arrives, whichever wire it came
 on. An output can feed any number of inputs.</p>
 <p>When an output feeds more than one wire, the first wire gets the message itself and each other wire gets a copy,
