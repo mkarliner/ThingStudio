@@ -62,7 +62,7 @@
       "id": "keys",
       "type": "thingstudio/function",
       "properties": {
-        "code": "# The Junior's three buttons share GP26 through a resistor ladder, so one adc reading says which is down.\n# Thresholds from the maker's own code (read_u16): right < 7000, select < 12000, left < 16000, idle > 40000.\nraw = msg['payload']['raw']\nif raw < 7000:\n    key = 'right'\nelif raw < 12000:\n    key = 'select'\nelif raw < 16000:\n    key = 'left'\nelif raw > 40000:\n    key = None\nelse:\n    return None  # between a press and idle: wait for a clear reading\nlast = context.get('key', None)\ncontext.set('key', key)\nif key is None or last is not None:\n    return None  # a release, or the same press still held\ncount = context.get('count', 0)\nif key == 'right':\n    count += 1\nelif key == 'left':\n    count -= 1\nelse:\n    count = 0\ncontext.set('count', count)\nreturn [{'topic': 'key', 'payload': key}, {'topic': 'count', 'payload': count},\n        {'topic': 'beep', 'payload': 0.5}, {'topic': 'beep', 'payload': 0}]  # buzzer on, then off after 'beep length'\n",
+        "code": "# The Junior's three buttons share GP26 through a resistor ladder, so one adc reading says which is down.\n# Thresholds from the maker's own code (read_u16): right < 7000, select < 12000, left < 16000, idle > 40000.\nraw = msg['payload']['raw']\nif raw < 7000:\n    key = 'right'\nelif raw < 12000:\n    key = 'select'\nelif raw < 16000:\n    key = 'left'\nelif raw > 40000:\n    key = None\nelse:\n    return None  # between a press and idle: wait for a clear reading\nlast = context.get('key', None)\ncontext.set('key', key)\nif key is None or last is not None:\n    return None  # a release, or the same press still held\ncount = context.get('count', 0)\nif key == 'right':\n    count += 1\nelif key == 'left':\n    count -= 1\nelse:\n    count = 0\ncontext.set('count', count)\nreturn [{'topic': 'key', 'payload': key}, {'topic': 'count', 'payload': count},\n        {'topic': 'beep', 'payload': 0}, {'topic': 'beep', 'payload': 0.5}]  # buzzer off after 'beep length', and on now\n",
         "outputCount": 4
       }
     },
@@ -184,13 +184,13 @@
     ],
     [
       "keys",
-      2,
+      3,
       "buzzer",
       0
     ],
     [
       "keys",
-      3,
+      2,
       "beep-len",
       0
     ],
@@ -347,7 +347,7 @@
     "buzzer": {
       "pos": [
         740,
-        320
+        390
       ]
     },
     "screen": {
