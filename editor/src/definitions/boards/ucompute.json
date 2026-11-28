@@ -1,0 +1,32 @@
+{
+  "name": "uCompute (RP2040, v1.2/v1.3)",
+  "processor": "rp2040",
+  "variant": "rpi-pico",
+  "match": [],
+  "pins": {
+    "LED": 25,
+    "TFT_SCK": 2,
+    "TFT_MOSI": 3,
+    "TFT_RST": 4,
+    "TFT_DC": 5,
+    "BACKLIGHT": 6,
+    "PIXEL": 23,
+    "BUTTONS": 26,
+    "BUZZER": 11,
+    "SDA": 20,
+    "SCL": 21,
+    "SD_SCK": 14,
+    "SD_MOSI": 15,
+    "SD_MISO": 12,
+    "SD_CS": 13,
+    "SD_DETECT": 7,
+    "MOD_CS": 8,
+    "MOD_INT": 9,
+    "MOD_RST": 10,
+    "UART_TX": 0,
+    "UART_RX": 1,
+    "ADC1": 27,
+    "ADC2": 28
+  },
+  "notes": "JP Michon's original uCompute, with the RP2040 soldered on the board. Runs the generic Pico firmware, so it reports itself as the Pico: pick it by hand in the Board menu. 240x240 ST7789 on SPI bus 0 (GP2/GP3), no CS pin, backlight on GP6. The maker's code drives it in SPI mode 3 (polarity 1, phase 1). v1.3 can take an SSD1306 OLED (0x3C) instead; it shares I2C bus 0 (GP20/GP21) with a CAT24 EEPROM (0x50). The three buttons share GP26 through a resistor ladder: idle reads above 40000, right below 7000, select below 12000, left below 16000 (read_u16). Buzzer on GP11 (PWM), NeoPixel port on GP23 (8 LEDs by default). MicroSD and the rear expansion port share SPI bus 1 (GP14/GP15/GP12), SD CS GP13, card detect GP7, module CS GP8, INT GP9, RST GP10. H1 header carries GP0/GP1 (UART0), GP16-19, GP22, GP24 (v1.3), GP27 and GP28. Pins are from the maker's README (github.com/JPMichon/RP2040_uCompute); check your own unit."
+}

@@ -460,6 +460,7 @@ Properties explained: [display spi](nodes/display-spi.md)
 | `palette` | palette | object | `[0,65535,63488,2016,31,65504,2047,63519,33808,16904,50712,64800,32768,1024,16,1040]` |  |
 | `spiBus` | SPI bus | number | `2` |  |
 | `baudrate` | baudrate | number | `40000000` |  |
+| `spiMode` | SPI mode (0-3) | number | `0` |  |
 | `sck` | sck pin | number | `12` |  |
 | `mosi` | mosi pin | number | `11` |  |
 | `dc` | dc pin | number | `13` |  |

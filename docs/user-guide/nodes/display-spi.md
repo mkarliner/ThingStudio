@@ -21,6 +21,7 @@ so check them against your own panel, or use a board's labelled pins (see
   the palette and this one is ignored.
 - **SPI bus** — the hardware SPI peripheral. Default 2.
 - **baudrate** — the SPI clock in Hz. Default 40000000.
+- **SPI mode** — clock polarity and phase, 0 to 3. Default 0. Panels with no CS pin, such as the 240x240 ST7789 on the uCompute boards, usually need 3: if the screen stays blank, try 3.
 - **sck pin** / **mosi pin** / **dc pin** — required. Defaults 12, 11 and 13.
 - **cs pin** / **reset pin** / **backlight pin** — `-1` when not wired, the default for all three. Some boards tie
   reset or CS in hardware, or have no backlight control.

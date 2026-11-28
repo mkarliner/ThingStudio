@@ -1,0 +1,30 @@
+{
+  "name": "uCompute Junior (Pico / Pico W)",
+  "processor": "rp2040",
+  "variant": "rpi-pico",
+  "match": [],
+  "gpio": ["0-22", "26-28"],
+  "pins": {
+    "TFT_SCK": 2,
+    "TFT_MOSI": 3,
+    "TFT_RST": 4,
+    "TFT_DC": 5,
+    "PIXEL": 6,
+    "BUTTONS": 26,
+    "BUZZER": 11,
+    "SDA": 20,
+    "SCL": 21,
+    "SD_SCK": 14,
+    "SD_MOSI": 15,
+    "SD_MISO": 12,
+    "SD_CS": 13,
+    "MOD_CS": 8,
+    "MOD_INT": 9,
+    "MOD_RST": 10,
+    "UART_TX": 0,
+    "UART_RX": 1,
+    "ADC1": 27,
+    "ADC2": 28
+  },
+  "notes": "JP Michon's carrier for a socketed Pico or Pico W. Reports itself as the Pico, so pick it by hand in the Board menu (use the Pico 2 entry for a Pico 2 or 2 W). 1.3\" 240x240 ST7789 on SPI bus 0 (GP2/GP3), no CS or backlight pin: the backlight is always on. The maker's code drives it in SPI mode 3 (polarity 1, phase 1). Alternative SSD1306 OLED (0x3C) and a CAT24 EEPROM (0x50) share I2C bus 0 on GP20/GP21. The three buttons share GP26 through a resistor ladder: idle reads above 40000, right below 7000, select below 12000, left below 16000 (read_u16). Buzzer on GP11 (PWM), NeoPixel header on GP6. MicroSD and the add-on module socket share SPI bus 1 (GP14/GP15/GP12), SD CS GP13, module CS GP8, INT GP9, RST GP10. H1 header, left to right: 5V, GND, 3V3, GND, GP16, GP17, GP18, GP19, GP22, GP7, GP27, GP28, GP1, GP0. GP0/GP1 also drive the TX/RX LEDs. The Pico's own LED isn't reachable here. Pins are from the maker's README, walkthrough and test code (github.com/JPMichon/uComputeJr); check your own unit."
+}

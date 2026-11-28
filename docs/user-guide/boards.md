@@ -75,6 +75,9 @@ In the properties panel, a pin field shows the board's name for that pin, such a
 | ESP32-C5-340X (ESP32-C5-KITC-A) | ESP32-C5 | Pick by hand. RGB LED (WS2812) on GPIO 27, button on GPIO 28. Left USB-C is a CH340E on GPIO 11/12, right is native USB on 13/14. If flashing doesn't start: hold BOOT, press RESET, release BOOT. If RESET doesn't restart it, unplug and replug. |
 | CYD (ESP32-2432S028, ST7789) | ESP32 | Pick by hand. Display, touch, SD, RGB LED and speaker pins are labelled. |
 | Freenove ESP32-S3 Display 4.0" (FNK0104S, ST7796) | ESP32-S3 | Pick by hand. Display and touch pins are labelled. 320x480, SPI bus 1. Rotation 1 is portrait. For landscape, set the display's `orientation` to 90 (or 270 for the other way up) and keep the screen and display at 320x480. Display and touch (FT6336U) work. |
+| uCompute Junior (Pico / Pico W) | RP2040 | Pick by hand. JP Michon's Pico carrier. 240x240 ST7789 on SPI bus 0, no CS; set the display node's SPI mode to 3. Three buttons on one ADC pin (`BUTTONS`, GPIO 26), buzzer on 11, NeoPixel on 6, SD and add-on socket on SPI bus 1. |
+| uCompute Junior (Pico 2 / Pico 2 W) | RP2350 | As above, with a Pico 2 or Pico 2 W in the socket. |
+| uCompute (RP2040, v1.2/v1.3) | RP2040 | Pick by hand. The original uCompute with the chip on the board. As the Junior, but backlight on 6, NeoPixel on 23, SD card detect on 7, LED on 25. |
 | Pyboard v1.0 | STM32F405 | Pins are named `X1`–`X22` and `Y1`–`Y12`. The four onboard LEDs are on `A13`, `A14`, `A15` and `B4` (labelled `LED_RED`–`LED_BLUE`); the user switch `SW` is on `X17`. |
 | Seeed XIAO nRF52840 (Sense) | nRF52840 | Pins `D0`–`D10` are labelled. RGB LED on 26, 30 and 6, on when the pin is 0. GPIO 20–25 go to the flash chip. Battery, IMU and microphone pins are labelled; IMU and microphone are on the Sense only. No WiFi. |
 | Wemos D1 R32 | ESP32 | Pick by hand. Pins carry their Arduino names, `D0`–`D13` and `A0`–`A5`. A2–A5 are input only. LED on A0 (GPIO 2). |

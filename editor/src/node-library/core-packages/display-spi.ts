@@ -84,6 +84,7 @@ export const descriptor: NodeDescriptor = {
     { name: "palette", label: "palette", kind: "palette", default: [...DEFAULT_PALETTE_GS4] },
     { name: "spiBus", label: "SPI bus", kind: "number", default: 2, min: 0 },
     { name: "baudrate", label: "baudrate", kind: "number", default: 40000000, min: 1 },
+    { name: "spiMode", label: "SPI mode (0-3)", kind: "number", default: 0, min: 0, max: 3 },
     { name: "sck", label: "sck pin", kind: "pin", default: 12 },
     { name: "mosi", label: "mosi pin", kind: "pin", default: 11 },
     { name: "dc", label: "dc pin", kind: "pin", default: 13 },
@@ -294,6 +295,11 @@ def compile(ctx, properties):
     baud, err = _whole(properties, 'baudrate', 40000000, 1, 'baudrate')
     if err:
         return {'errors': [err]}
+    spi_mode, err = _whole(properties, 'spiMode', 0, 0, 'spiMode')
+    if err:
+        return {'errors': [err]}
+    if spi_mode > 3:
+        return {'errors': ['display_spi spiMode %d must be 0, 1, 2 or 3' % spi_mode]}
     panel_width, err = _whole(properties, 'width', 135, 1, 'width')
     if err:
         return {'errors': [err]}
@@ -352,7 +358,7 @@ def compile(ctx, properties):
 
     return {'properties': {
         'controller': controller, 'frameFormat': fmt, 'indexed': indexed,
-        'palette': palette, 'spiBus': spi_bus, 'baudrate': baud,
+        'palette': palette, 'spiBus': spi_bus, 'baudrate': baud, 'spiMode': spi_mode,
         'sck': int(properties.get('sck', 12)), 'mosi': int(properties.get('mosi', 11)),
         'dc': int(properties.get('dc', 13)),
         'cs': int(properties.get('cs', -1)) if properties.get('cs') not in (None, '') else -1,
@@ -374,8 +380,9 @@ from st7796py import ST7796
 import runtime
 
 _spi = runtime.shared(
-    'spi', properties['spiBus'], (properties['sck'], properties['mosi'], properties['baudrate']),
-    lambda: machine.SPI(properties['spiBus'], baudrate=properties['baudrate'], polarity=0, phase=0,
+    'spi', properties['spiBus'], (properties['sck'], properties['mosi'], properties['baudrate'], properties['spiMode']),
+    lambda: machine.SPI(properties['spiBus'], baudrate=properties['baudrate'],
+                        polarity=properties['spiMode'] >> 1, phase=properties['spiMode'] & 1,
                         sck=machine.Pin(properties['sck']), mosi=machine.Pin(properties['mosi'])))
 _dc = runtime.shared('pin', properties['dc'], ('out', 'none'), lambda: machine.Pin(properties['dc'], machine.Pin.OUT))
 _cs = None

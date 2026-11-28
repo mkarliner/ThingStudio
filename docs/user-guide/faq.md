@@ -234,3 +234,7 @@ The Bluetooth radio stays on between flows once a ble node has started it: switc
 the ESP32-C5's radio unable to scan until a power cycle. The radio keeps its share of ESP-IDF memory, the memory WiFi
 and displays also use, even if the next flow has no ble nodes. **Tools → Reset board (hard)** gives it back. See
 [Memory](debugging.md#memory).
+
+## Why does my SPI screen stay blank when the pins are right?
+
+Some small panels, such as the 240x240 ST7789 on the uCompute boards, have no CS pin. Those usually need SPI mode 3. Set the display spi node's **SPI mode** to 3 and deploy again. See [display spi](nodes/display-spi.md).
